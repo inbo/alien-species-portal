@@ -37,3 +37,9 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+.project
+.settings
+
+# R documentation can be created automatically
+alienSpecies/man/
