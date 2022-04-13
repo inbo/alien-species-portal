@@ -6,10 +6,19 @@ Date: 2021-11-24
 Author: Machteld Varewyck
 Maintainer: Machteld Varewyck <machteld.varewyck@openanalytics.eu>
 Description: INBO shiny application based on the TRIAS package.
+Encoding: UTF-8
 License: MIT + file LICENSE
 Imports: 
+    data.table,
+    DT,
+    INBOtheme,
+    openxlsx,
+	plotly,
 	shiny,
-	remotes
-Suggests: 
-	devtools
+	shinycssloaders,
+	remotes,
+	reshape2,
+	trias
+Suggests:
+	testthat
 RoxygenNote: 7.1.2

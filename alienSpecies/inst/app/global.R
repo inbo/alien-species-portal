@@ -1,5 +1,4 @@
 library(alienSpecies)
-
 library(shiny)
 
 
@@ -22,8 +21,13 @@ library(shiny)
 
 dataDir <- system.file("extdata", package = "alienSpecies")
 
-# Translations
-translations <- read.csv(file.path(dataDir, "translations.csv"))
+exotenData <- loadExotenData(type = "indicators")
+unionlistData <- loadExotenData(type = "unionlist")
+
+# Specify default year to show (and default max to show in time ranges)
+defaultYear <- max(exotenData$first_observed, na.rm = TRUE)
+
+habitats <- attr(exotenData, "habitats")
 
 
 ### Debugging

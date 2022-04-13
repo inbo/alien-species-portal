@@ -29,21 +29,15 @@ function(input, output, session) {
   
   
   results <- reactiveValues(
-    translations = translations[, c("label", "dutch")]
+    # Default language is dutch
+    translations = loadTranslations(language = "nl")
   )
   
   
-  observeEvent(input$translate_nl, {
-      results$translations <- translations[, c("label", "dutch")]
-    })
-  
-  observeEvent(input$translate_fr, {
-      results$translations <- translations[, c("label", "french")]
-    })
-  
-  observeEvent(input$translate_en, {
-      results$translations <- translations[, c("label", "english")]
-    })
+  # Select language
+  observeEvent(input$translate_nl, loadTranslations(language = "nl"))
+  observeEvent(input$translate_fr, loadTranslations(language = "fr"))
+  observeEvent(input$translate_en, loadTranslations(language = "en"))
   
   
   
