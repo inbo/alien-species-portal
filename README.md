@@ -11,3 +11,5 @@ Enkele relevante URLS:
 - [Grofwildjacht-exotenbranch](https://github.com/inbo/reporting-rshiny-grofwildjacht/tree/exoten) => Code voor het toevoegen van een exoten tab aan de grofwildjacht pagina
 - [Species_Dashboard](https://github.com/inbo/IAS_Species_Dashboard) => Code voor het generen van kaartjes (reporting) en gams (indicatoren) voor unielijst soorten & de bijhorende shiny app
 - [VespaR](https://github.com/inbo/vespaR) => Code voor het maken van kaartjes en grafieken ivm vespa velutina beheer & de bijhorende shiny app
+- [T1](https://zenodo.org/record/3060173#.YaEEmdBKiUm) => shapes, zips & geojsons van de verspreiding van soorten van union concern gedurende de eerste rapportage cyclus.
+- [T0](https://zenodo.org/record/3835756#.YaEE4NBKiUm) => shapes, zips & geojsons van de verspreiding van soorten van union concern voor de baseline (van 01-01-2000 tot datum van opname op de lijst).
