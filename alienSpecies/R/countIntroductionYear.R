@@ -3,7 +3,7 @@
 #' @param data data.frame with raw data for plotting
 #' @param cumulative boolean, whether to display cumulative instead of absolute counts 
 #' @param region NULL currently not implemented
-#' @importFrom trias indicator_introduction_year
+#' @importFrom trias indicator_introduction_year indicator_total_year
 #' @return list with plot and data
 #' data that was used for the plot (i.e. without missing values for the )
 #' 
@@ -26,12 +26,12 @@ countIntroductionYear <- function(data, cumulative = FALSE, region = NULL){
     y_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
   )
   
-  do.call(if (cumulative) "indicator_total_year" else "indicator_introduction_year",
+  myPlot <- do.call(if (cumulative) "indicator_total_year" else "indicator_introduction_year",
     plotArgs)
     
   
   ## convert to plotly object
-  p <- ggplotly(plot)
+  p <- ggplotly(myPlot)
   
   ## add info on proportion of used data
 #  attr(p, "proportionInfo") <- paste0("Info beschikbaar en weergegeven voor ", round((sum(!toExclude)/nrow(filteredData))*100, 1),

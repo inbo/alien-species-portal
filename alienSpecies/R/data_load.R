@@ -20,14 +20,19 @@ loadExotenData <- function(
   
   type <- match.arg(type)
   
-  dataFile <- file.path(dataDir, switch(type,
-      "indicators" = "data_input_checklist_indicators.tsv",
+  dataFiles <- file.path(dataDir, switch(type,
+      indicators = "data_input_checklist_indicators.tsv",
+#      "indicators" = c("description.txt", "distribution.txt", "speciesprofile.txt", "taxon.txt"),
       "unionlist" = "eu_concern_species.tsv"))
   
   if (type == "indicators") {
     
     # recode missing values to NA
-    rawData <- fread(dataFile, stringsAsFactors = FALSE, na.strings = "")
+    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
+#    rawData <- lapply(dataFiles, function(dataFile) {
+#        print(dataFile)
+#        fread(file = dataFile, stringsAsFactors = FALSE, na.strings = "")
+#  })
     
     # Warning if new habitat columns
     currentHabitats <- c("marine", "freshwater", "terrestrial")
@@ -118,19 +123,19 @@ loadExotenData <- function(
     
     
     
-    attr(rawData, "Date") <- file.mtime(dataFile)
+    attr(rawData, "Date") <- file.mtime(dataFiles)
     attr(rawData, "habitats") <- currentHabitats
     
     
   } else if (type == "unionlist") {
     
-    rawData <- fread(dataFile, stringsAsFactors = FALSE, na.strings = "")
+    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
     
     ## extract necessary columns
     rawData <- rawData[, c("checklist_scientificName", "english_name", "checklist_kingdom")]
     names(rawData) <- c("scientificName", "englishName", "kingdom")
     
-    attr(rawData, "Date") <- file.mtime(dataFile)
+    attr(rawData, "Date") <- file.mtime(dataFiles)
     
     
   }

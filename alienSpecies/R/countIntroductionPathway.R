@@ -68,14 +68,12 @@ countIntroductionPathwayServer <- function(id, uiText, data, region, pathway, ti
           uiText[uiText$plotFunction == "countIntroductionPathway", ]
         })
       
-      output$titleIntroductionYear <- renderUI({
+      output$titleIntroductionPathway <- renderUI({
           
           h3(HTML(paste(subText()$title, 
                 vectorToTitleString(region()),
-                reactive({ 
-                    if (!is.null(pathway())) 
-                      paste0("(", vectorToTitleString(pathway()), ")")
-                  }),
+                if (!is.null(pathway())) 
+                  paste0("(", vectorToTitleString(pathway()), ")"),
                 yearToTitleString(req(time()))
               )))
           
