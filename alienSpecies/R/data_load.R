@@ -153,13 +153,18 @@ loadExotenData <- function(
 #' @return data.frame
 #' 
 #' @author mvarewyck
-#' @importFrom openxlsx read.xlsx
+#' @importFrom utils read.csv
 #' @export
 loadTranslations <- function(
   dataDir = system.file("extdata", package = "alienSpecies"), 
   language = c("nl", "fr", "en")) {
   
-  read.xlsx(file.path(dataDir, "translations.xlsx"), sheet = language)
+  language <- match.arg(language)
+  uiText <- read.csv(file.path(dataDir, "translations.csv"))[, c("plotFunction", paste0(c("title_", "description_"), language))]
+  
+  colnames(uiText) <- c("plotFunction", "title", "description")
+  
+  return(uiText)
   
 }
 

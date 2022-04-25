@@ -26,7 +26,7 @@ welcomeSectionServer <- function(id, uiText) {
       
       output$welcomeMain <- renderUI({
           
-          HTML(subText()[, id])
+          HTML(subText()$description)
           
         })
       
