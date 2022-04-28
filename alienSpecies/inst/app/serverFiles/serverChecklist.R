@@ -644,5 +644,21 @@ tableIntroductionServer(id = "checklist",
 plotTriasServer(id = "checklist_pathway1",
   uiText = results$translations,
   data = results$exoten_data,
-  plotFunction = "visualize_pathways_level1"
+  triasFunction = "visualize_pathways_level1"
+)
+
+plotTriasServer(id = "checklist_pathway1_trend",
+  uiText = results$translations,
+  data = results$exoten_data,
+  triasFunction = "visualize_pathways_year_level1"
+)
+
+plotTriasServer(id = "checklist_pathway2",
+  uiText = results$translations,
+  data = results$exoten_data,
+  triasFunction = "visualize_pathways_level2",
+  triasArgs = reactive({
+      validate(need(length(input$exoten_pw1) == 1, "Please select single pathway level 1 for this plot"))
+      list(chosen_pathway_level1 = input$exoten_pw1)
+    })
 )

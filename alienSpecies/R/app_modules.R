@@ -135,7 +135,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @importFrom plotly ggplotly
 #' @export
 plotModuleServer <- function(id, plotFunction, data, 
-  cumulative = NULL) {
+  triasFunction = NULL, triasArgs = NULL, cumulative = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -160,8 +160,14 @@ plotModuleServer <- function(id, plotFunction, data,
             if (!is.null(input$type))
               list(type = input$type),
             if (!is.null(cumulative))
-              list(cumulative = cumulative)
+              list(cumulative = cumulative),
+            if (!is.null(triasFunction))
+              list(triasFunction = triasFunction),
+            if (!is.null(triasArgs))
+              list(triasArgs = triasArgs())
           )
+          
+          argList
           
         })
       
@@ -183,15 +189,17 @@ plotModuleServer <- function(id, plotFunction, data,
       
       output$plot <- renderPlotly({  
           
-          if (is(resultFct(), "ggplot"))
-            ggplotly(resultFct()) else if (is(resultFct()$plot, "plotly"))
-            resultFct()$plot
+          resultFct()$plot
           
         })
       
       
       output$dataDownload <- downloadHandler(
-        filename = function() nameFile(content = paste0(plotFunction, "_data"), fileExt = "csv"),
+        filename = function() nameFile(content = paste0(
+              if (!is.null(triasFunction)) 
+                  triasFunction else 
+                  plotFunction, 
+              "_data"), fileExt = "csv"),
         content = function(file) {
           
           resFct <- resultFct()

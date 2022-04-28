@@ -200,9 +200,16 @@ test_that("Introduction pathways per category", {
 
 
 # PLOT: 
-test_that("CBD Level 1 introduction pathways", {
+test_that("CBD Level 1/2 introduction pathways", {
     
     myPlot <- visualize_pathways_level1(df = exoten_data)
+    expect_is(myPlot, "ggplot")
+    
+    myPlot <- visualize_pathways_year_level1(df = exoten_data)
+    expect_is(myPlot, "ggplot")
+    
+    myPlot <- visualize_pathways_level2(df = exoten_data, 
+      chosen_pathway_level1 = exoten_pwLevelOne[1])
     expect_is(myPlot, "ggplot")
     
   })
