@@ -132,6 +132,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @import shiny
 #' @importFrom utils write.table
 #' @importFrom DT datatable formatRound renderDT
+#' @importFrom plotly ggplotly
 #' @export
 plotModuleServer <- function(id, plotFunction, data, 
   cumulative = NULL) {
@@ -153,7 +154,7 @@ plotModuleServer <- function(id, plotFunction, data,
           req(nrow(subData()) > 0)
           
           argList <- c(
-            list(data = subData()),
+            list(df = subData()),
             if (!is.null(input$time))
               list(jaartallen = input$time[1]:input$time[2]),
             if (!is.null(input$type))
@@ -161,7 +162,6 @@ plotModuleServer <- function(id, plotFunction, data,
             if (!is.null(cumulative))
               list(cumulative = cumulative)
           )
-          
           
         })
       
@@ -183,7 +183,9 @@ plotModuleServer <- function(id, plotFunction, data,
       
       output$plot <- renderPlotly({  
           
-          resultFct()$plot
+          if (is(resultFct(), "ggplot"))
+            ggplotly(resultFct()) else if (is(resultFct()$plot, "plotly"))
+            resultFct()$plot
           
         })
       

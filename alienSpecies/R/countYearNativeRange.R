@@ -1,7 +1,7 @@
 #' Create interactive plot for counts per native region and year of introduction
 #' 
 #' Based on \code{countYearProvince} plot from reportingGrofwild package
-#' @param data data.frame with raw data for plotting
+#' @param df data.frame with raw data for plotting
 #' @param jaartallen integer vector, defines the year(s) that should be considered
 #' in the plot; if NULL no selection on year(s) is made
 #' @param type character, native_range level of interest should be one of 
@@ -25,16 +25,16 @@
 #' @importFrom INBOtheme inbo.2015.colours
 #' @importFrom utils tail
 #' @export
-countYearNativerange <- function(data, jaartallen = NULL, 
+countYearNativerange <- function(df, jaartallen = NULL, 
     type = c("native_continent", "native_range"),
     width = NULL, height = NULL) {
   
   type <- match.arg(type)
   
   if (is.null(jaartallen))
-    jaartallen <- sort(unique(data$first_observed))
+    jaartallen <- sort(unique(df$first_observed))
   
-  plotData <- data
+  plotData <- df
   plotData$locatie <- switch(type,
       native_range = plotData$native_range,
       native_continent = plotData$native_continent

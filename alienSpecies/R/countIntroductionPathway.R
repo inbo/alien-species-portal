@@ -2,19 +2,19 @@
 #' 
 #' Split up by pathways at level 1
 #' 
-#' @param data data.frame with raw data for plotting
+#' @param df data.frame with raw data for plotting
 #' @importFrom trias visualize_pathways_level2
 #' @importFrom plotly ggplotly subplot
 #' @return list with plot and data that was used for the plot (i.e. without missing values for the )
 #' 
 #' @export
-countIntroductionPathway <- function(data){
+countIntroductionPathway <- function(df){
   
   ## generate plot
   
-  plots <- lapply(unique(data$pathway_level1), function(x) {
+  plots <- lapply(unique(df$pathway_level1), function(x) {
       p <- visualize_pathways_level2(
-        df = data, 
+        df = df, 
         chosen_pathway_level1 = x,
         x_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
       ) 
@@ -40,7 +40,7 @@ countIntroductionPathway <- function(data){
   
   
   
-  return(list(plot = p, data = data))
+  return(list(plot = p, data = df))
   
   
 }

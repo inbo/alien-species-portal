@@ -83,7 +83,8 @@ tagList(
         ),
         
       tabPanel("Pathways", 
-        tableIntroductionUI(id = "checklist")
+        tableIntroductionUI(id = "checklist"),
+        plotTriasUI(id = "checklist_pathway1")
       ),
       tabPanel("Origin", NULL)
     )

@@ -197,3 +197,12 @@ test_that("Introduction pathways per category", {
     expect_is(tmpResult, "data.frame")
     
   })
+
+
+# PLOT: 
+test_that("CBD Level 1 introduction pathways", {
+    
+    myPlot <- visualize_pathways_level1(df = exoten_data)
+    expect_is(myPlot, "ggplot")
+    
+  })

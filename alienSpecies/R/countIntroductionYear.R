@@ -1,6 +1,6 @@
 #' Plot number of new introductions per year
 #' 
-#' @param data data.frame with raw data for plotting
+#' @param df data.frame with raw data for plotting
 #' @param cumulative boolean, whether to display cumulative instead of absolute counts 
 #' @param region NULL currently not implemented
 #' @importFrom trias indicator_introduction_year indicator_total_year
@@ -8,7 +8,7 @@
 #' data that was used for the plot (i.e. without missing values for the )
 #' 
 #' @export
-countIntroductionYear <- function(data, cumulative = FALSE, region = NULL){
+countIntroductionYear <- function(df, cumulative = FALSE, region = NULL){
   
   ## apply region filter
 #  filteredData <- data[data$locality == region,]
@@ -20,8 +20,8 @@ countIntroductionYear <- function(data, cumulative = FALSE, region = NULL){
   
   ## generate plot
   plotArgs <- list(
-    df = data, 
-    start_year_plot = min(data$first_observed, na.rm = TRUE) - 1,
+    df = df, 
+    start_year_plot = min(df$first_observed, na.rm = TRUE) - 1,
     x_lab = "Jaar",
     y_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
   )
@@ -37,7 +37,7 @@ countIntroductionYear <- function(data, cumulative = FALSE, region = NULL){
 #  attr(p, "proportionInfo") <- paste0("Info beschikbaar en weergegeven voor ", round((sum(!toExclude)/nrow(filteredData))*100, 1),
 #                            " % van de totale gegevens (", sum(!toExclude), "/", nrow(filteredData), ")")
   
-  return(list(plot = p, data = data))
+  return(list(plot = p, data = df))
   
   
 }

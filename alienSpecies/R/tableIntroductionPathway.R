@@ -1,19 +1,19 @@
 
 #' Table with number of new introductions per pathway at level 1 and level 2
 #' 
-#' @param data data.frame with raw data for plotting
+#' @param df data.frame with raw data for plotting
 #' @importFrom reshape2 melt
 #' @importFrom stats xtabs
 #' @importFrom utils head
 #' @return data.frame
 #' 
 #' @export
-tableIntroductionPathway <- function(data) {
+tableIntroductionPathway <- function(df) {
   
-  summaryData <- as.data.frame(xtabs(~ pathway_level1 + pathway_level2, data = data))
+  summaryData <- as.data.frame(xtabs(~ pathway_level1 + pathway_level2, data = df))
   summaryData <- summaryData[summaryData$Freq > 0, ]
   
-  examples <- as.data.frame(tapply(data$species, list(data$pathway_level1, data$pathway_level2), function(x)
+  examples <- as.data.frame(tapply(df$species, list(df$pathway_level1, df$pathway_level2), function(x)
         paste(head(x, n = 5), collapse = ", ")))
   examples$pathway_level1 <- rownames(examples)
   newExamples <- melt(examples, id.vars = "pathway_level1", variable.name = "pathway_level2", value.name = "examples")

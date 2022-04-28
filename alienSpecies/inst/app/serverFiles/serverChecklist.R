@@ -639,3 +639,10 @@ tableIntroductionServer(id = "checklist",
   uiText = results$translations,
   data = results$exoten_data
 )
+
+
+plotTriasServer(id = "checklist_pathway1",
+  uiText = results$translations,
+  data = results$exoten_data,
+  plotFunction = "visualize_pathways_level1"
+)

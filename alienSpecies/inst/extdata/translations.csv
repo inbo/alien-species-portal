@@ -4,4 +4,5 @@ countIntroductionYear-count,Aantal geïntroduceerde uitheemse soorten per jaar i
 countIntroductionYear-cum,Cumulatief aantal geïntroduceerde uitheemse soorten in,,,,,
 countIntroductionPathway,Aantal geïntroduceerde uitheemse soorten per pathway in,,,,,
 countYearNativerange,Aantal geïntroduceerde uitheemse soorten per jaar en per regio van oorsprong in,,,,,
-tableIntroductionPathway,Aantal geïntroduceerde uitheemse soorten per pathway,,,,ntroduction pathways per category,
+tableIntroductionPathway,Aantal geïntroduceerde uitheemse soorten per pathway,,,,Introduction pathways per category,
+visualize_pathways_level1,CBD Level 1 geïntroduceerde uitheemse soorten per pathway,,,,CBD Level 1 introduction pathways,
