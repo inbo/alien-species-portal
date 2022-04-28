@@ -39,7 +39,7 @@ welcomeSectionServer <- function(id, uiText) {
 #' 
 #' @author mvarewyck
 #' @export
-welcomeSectionUI <- function(id, uiText) {
+welcomeSectionUI <- function(id) {
   
   ns <- NS(id)
   

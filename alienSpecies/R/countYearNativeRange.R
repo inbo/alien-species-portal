@@ -97,9 +97,8 @@ countYearNativerange <- function(data, jaartallen = NULL,
 
 
 #' Shiny module for creating the plot \code{\link{countYearNativerange}} - server side
-#' @inheritParams welcomeSectionServer
 #' @param data reactive object, data for \code{\link{countYearNativerange}}
-#' @inheritParams countIntroductionYear
+#' @inheritParams countIntroductionPathwayServer
 #' @return no return value
 #' 
 #' @author mvarewyck

@@ -12,11 +12,9 @@ Imports:
     data.table,
     DT,
     INBOtheme,
-    openxlsx,
-	plotly,
+    plotly,
 	shiny,
 	shinycssloaders,
-	remotes,
 	reshape2,
 	trias
 Suggests:

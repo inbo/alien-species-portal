@@ -633,3 +633,9 @@ countYearNativerangeServer(id = "checklist",
   region = results$exoten_filterLocality,
   time = reactive(input$exoten_time)
 )
+
+
+tableIntroductionServer(id = "checklist",
+  uiText = results$translations,
+  data = results$exoten_data
+)

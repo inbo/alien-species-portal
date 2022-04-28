@@ -35,9 +35,9 @@ function(input, output, session) {
   
   
   # Select language
-  observeEvent(input$translate_nl, loadTranslations(language = "nl"))
-  observeEvent(input$translate_fr, loadTranslations(language = "fr"))
-  observeEvent(input$translate_en, loadTranslations(language = "en"))
+  observeEvent(input$translate_nl, results$translations <- loadTranslations(language = "nl"))
+  observeEvent(input$translate_fr, results$translations <- loadTranslations(language = "fr"))
+  observeEvent(input$translate_en, results$translations <- loadTranslations(language = "en"))
   
   
   

@@ -125,6 +125,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @inheritParams optionsModuleUI
 #' @param plotFunction character, defines the plot function to be called
 #' @param data reactive data.frame, data for chosen species
+#' @inheritParams countIntroductionYear
 #' 
 #' @return no return value; plot output object is created
 #' @author mvarewyck
@@ -197,7 +198,7 @@ plotModuleServer <- function(id, plotFunction, data,
           
           # Note: a data.frame is a list!
           isDataPresent <- ifelse(!is.null(resFct),
-            ifelse(is.data.frame(resFct), !is.null(resFct), !is.null(resFct$plot)),
+            ifelse(is.data.frame(resFct), !is.null(resFct), !is.null(resFct$data)),
             FALSE
           )
           
@@ -216,10 +217,9 @@ plotModuleServer <- function(id, plotFunction, data,
       
       output$table <- DT::renderDT({
           
-          DT::datatable(resultFct()$data, rownames = FALSE, container = resultFct()$header,
-              selection = "single",
-              options = list(dom = 't', pageLength = -1)) %>%
-            formatRound(colnames(resultFct()$data), digits = 0, mark = "")
+          DT::datatable(resultFct()$data, rownames = FALSE,
+            selection = "single",
+            options = list(dom = 'ftp', pageLength = 5))
           
         })
       

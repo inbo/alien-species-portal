@@ -42,7 +42,7 @@ shinyUI(
           position = "fixed-top",
           
           # Main content
-          tabPanel(title = "Checklists", id = "tab-checklist",
+          tabPanel(title = "Global Indicators", id = "tab-checklist",
             uiOutput("checklist_content")),
           
           # Shape data source + contact e-mail

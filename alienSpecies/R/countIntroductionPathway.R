@@ -51,6 +51,8 @@ countIntroductionPathway <- function(data){
 #' Shiny module for creating the plot \code{\link{countIntroductionYear}} - server side
 #' @inheritParams welcomeSectionServer
 #' @param data reactive object, data for \code{\link{countIntroductionYear}}
+#' @param time numeric vector, selected time span
+#' @param pathway character vector, selected pathways 
 #' @inheritParams countIntroductionYear
 #' @return no return value
 #' 

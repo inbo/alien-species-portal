@@ -188,3 +188,12 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio
     expect_is(tmpResult$data, "data.frame")
     
   })
+
+
+# TABLE: tableIntroductionPathway
+test_that("Introduction pathways per category", {
+    
+    tmpResult <- tableIntroductionPathway(data = exoten_data)
+    expect_is(tmpResult, "data.frame")
+    
+  })

@@ -65,15 +65,28 @@ tagList(
   
   ),
   
+  
   tags$div(class = "container",
     
-    countIntroductionYearUI(id = "checklist-count"),
-    countIntroductionYearUI(id = "checklist-cum"),
-    
-    countIntroductionPathwayUI(id = "checklist"),
-    
-    countYearNativerangeUI(id = "checklist")
-  
+    tabsetPanel(
+      
+      tabPanel("Taxa", NULL),
+        
+#        countIntroductionPathwayUI(id = "checklist"),
+#        
+#        countYearNativerangeUI(id = "checklist")
+      
+      tabPanel("Trend", 
+        countIntroductionYearUI(id = "checklist-count"),
+        countIntroductionYearUI(id = "checklist-cum"),
+        "TODO: Trend occupancy union-list species (Trias function?)"
+        ),
+        
+      tabPanel("Pathways", 
+        tableIntroductionUI(id = "checklist")
+      ),
+      tabPanel("Origin", NULL)
+    )
   )
 
 )
