@@ -32,7 +32,7 @@ tableIntroductionPathway <- function(df) {
 
 #' Shiny module for creating the plot \code{\link{tableIntroductionPathway}} - server side
 #' @inheritParams welcomeSectionServer
-#' @param data reactive object, data for \code{\link{countIntroductionYear}}
+#' @param data reactive object, data for \code{\link{tableIntroductionPathway}}
 #' @return no return value
 #' 
 #' @author mvarewyck

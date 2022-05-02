@@ -144,7 +144,9 @@ dim(exoten_data)
 ## PLOT 1
 test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar", {
     
-    tmpResult <- countIntroductionYear(data = exoten_data)
+    tmpResult <- plotTrias(triasFunction = "indicator_introduction_year",
+      df = exoten_data,
+      triasArgs = list(start_year_plot = min(exoten_data$first_observed)))
     expect_is(tmpResult, "list")
     
     expect_is(tmpResult$plot, "plotly")
@@ -157,7 +159,8 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar", {
 ## PLOT 2
 test_that("Grafiek: Cumulatief aantal geïntroduceerde uitheemse soorten per jaar", {
     
-    tmpResult <- cumulativeIntroductionYear(data = exoten_data)
+    tmpResult <- plotTrias(triasFunction = "indicator_total_year",
+      df = exoten_data)
     expect_is(tmpResult, "list")
     
     expect_is(tmpResult$plot, "plotly")
@@ -187,6 +190,8 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio
     expect_is(tmpResult$plot, "plotly")
     expect_is(tmpResult$data, "data.frame")
     
+    trias::indicator_native_range_year(data = exoten_data)
+    
   })
 
 
@@ -199,17 +204,28 @@ test_that("Introduction pathways per category", {
   })
 
 
-# PLOT: 
+# PLOT: CBD Level 1/2 introduction pathways
 test_that("CBD Level 1/2 introduction pathways", {
     
-    myPlot <- visualize_pathways_level1(df = exoten_data)
-    expect_is(myPlot, "ggplot")
+    tmpResult <- plotTrias(triasFunction = "visualalize_pathways_level1", df = exoten_data)
+    expect_is(tmpResult, "list")
     
-    myPlot <- visualize_pathways_year_level1(df = exoten_data)
-    expect_is(myPlot, "ggplot")
+    expect_is(tmpResult$plot, "plotly")
+    expect_is(tmpResult$data, "data.frame")
     
-    myPlot <- visualize_pathways_level2(df = exoten_data, 
-      chosen_pathway_level1 = exoten_pwLevelOne[1])
-    expect_is(myPlot, "ggplot")
+    
+    tmpResult <- plotTrias(triasFunction = "visualize_pathways_year_level1", df = exoten_data)
+    expect_is(tmpResult, "list")
+    
+    expect_is(tmpResult$plot, "plotly")
+    expect_is(tmpResult$data, "data.frame")
+    
+    
+    tmpResult <- plotTrias(triasFunction = "visualize_pathways_level2", df = exoten_data,
+      triasArgs = list("chosen_pathway_level1" = exoten_pwLevelOne[1]))
+    expect_is(tmpResult, "list")
+    
+    expect_is(tmpResult$plot, "plotly")
+    expect_is(tmpResult$data, "data.frame")
     
   })

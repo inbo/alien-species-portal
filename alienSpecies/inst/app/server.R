@@ -51,9 +51,15 @@ function(input, output, session) {
   
   
   # Tabpanel checklist
-  output$checklist_content <- renderUI({
+  output$indicators_content <- renderUI({
       
       source(file.path("uiFiles", "uiChecklist.R"), local = TRUE)$value
+      
+    })
+  
+  output$species_content <- renderUI({
+      
+      source(file.path("uiFiles", "uiSpecies.R"), local = TRUE)$value
       
     })
   

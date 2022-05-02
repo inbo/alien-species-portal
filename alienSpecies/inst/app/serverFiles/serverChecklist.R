@@ -598,23 +598,33 @@ output$nrowsFinal <- renderText({
 
 
 ## Plot number of species per year
-countIntroductionYearServer(id = "checklist-count",
+plotTriasServer(id = "checklist-count",
   data = results$exoten_data,
   uiText = results$translations,
-  region = results$exoten_filterLocality,
-  time = reactive(input$exoten_time)
+  triasFunction = "indicator_introduction_year",
+  triasArgs = reactive({
+      list(
+        start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
+        x_lab = "Jaar",
+        y_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
+      )
+    })
 )
 
 
 ## Plot cumulative number of species per year
-countIntroductionYearServer(id = "checklist-cum",
+plotTriasServer(id = "checklist-cum",
   data = results$exoten_data,
-  cumulative = TRUE,
   uiText = results$translations,
-  region = results$exoten_filterLocality,
-  time = reactive(input$exoten_time)
+  triasFunction = "indicator_total_year",
+  triasArgs = reactive({
+      list(
+        start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
+        x_lab = "Jaar",
+        y_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
+      )
+    })
 )
-
 
 ## Plot number of species per pathway
 countIntroductionPathwayServer(id = "checklist", 
@@ -624,14 +634,12 @@ countIntroductionPathwayServer(id = "checklist",
   pathway = reactive(input$exoten_pw1),
   time = reactive(input$exoten_time)
 )
-  
+
 
 ## Plot number of species per year by native region
 countYearNativerangeServer(id = "checklist",
   uiText = results$translations,
-  data = results$exoten_data,
-  region = results$exoten_filterLocality,
-  time = reactive(input$exoten_time)
+  data = results$exoten_data
 )
 
 

@@ -71,27 +71,27 @@ tagList(
     tabsetPanel(
       
       tabPanel("Taxa", NULL),
-        
+      
 #        countIntroductionPathwayUI(id = "checklist"),
-#        
-#        countYearNativerangeUI(id = "checklist")
       
       tabPanel("Trend", 
-        countIntroductionYearUI(id = "checklist-count"),
-        countIntroductionYearUI(id = "checklist-cum"),
+        plotTriasUI(id = "checklist-count"),
+        plotTriasUI(id = "checklist-cum"),
         "TODO: Trend occupancy union-list species (Trias function?)"
-        ),
-        
+      ),
+      
       tabPanel("Pathways", 
         
         tableIntroductionUI(id = "checklist"),
         plotTriasUI(id = "checklist_pathway1"),
         plotTriasUI(id = "checklist_pathway1_trend"),
         plotTriasUI(id = "checklist_pathway2")
-
+      
       ),
       
-      tabPanel("Origin", NULL)
+      tabPanel("Origin", 
+        countYearNativerangeUI(id = "checklist")
+      )
     )
   )
 

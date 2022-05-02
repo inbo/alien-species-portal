@@ -11,6 +11,7 @@
 #' }
 #' 
 #' @author mvarewyck
+#' @importFrom plotly ggplotly
 #' @export
 plotTrias <- function(triasFunction, df, triasArgs = NULL) {
   
@@ -35,14 +36,13 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL) {
 
 
 
-#' Shiny module for creating the plot \code{\link{countIntroductionYear}} - server side
+#' Shiny module for creating the plot \code{\link{plotTrias}} - server side
 #' @inheritParams welcomeSectionServer
 #' @inheritParams countIntroductionYear
-#' @param data reactive object, data for \code{\link{countIntroductionYear}}
+#' @param data reactive object, data for \code{\link{plotTrias}}
 #' @param triasFunction character, plot function to be called from trias package
 #' @param triasArgs reactive object, extra plot arguments to be passed to the 
 #' trias package
-#' @param time reactive object, selected years 
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -78,7 +78,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL) {
 
 
 
-#' Shiny module for creating the plot \code{\link{countIntroductionYear}} - UI side
+#' Shiny module for creating the plot \code{\link{plotTrias}} - UI side
 #' @template moduleUI
 #' 
 #' @author mvarewyck

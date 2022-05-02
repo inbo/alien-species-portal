@@ -123,6 +123,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' Interactive plot or table (server-side)
 #' 
 #' @inheritParams optionsModuleUI
+#' @inheritParams plotTriasServer
 #' @param plotFunction character, defines the plot function to be called
 #' @param data reactive data.frame, data for chosen species
 #' @inheritParams countIntroductionYear
@@ -135,7 +136,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @importFrom plotly ggplotly
 #' @export
 plotModuleServer <- function(id, plotFunction, data, 
-  triasFunction = NULL, triasArgs = NULL, cumulative = NULL) {
+  triasFunction = NULL, triasArgs = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -159,8 +160,6 @@ plotModuleServer <- function(id, plotFunction, data,
               list(jaartallen = input$time[1]:input$time[2]),
             if (!is.null(input$type))
               list(type = input$type),
-            if (!is.null(cumulative))
-              list(cumulative = cumulative),
             if (!is.null(triasFunction))
               list(triasFunction = triasFunction),
             if (!is.null(triasArgs))

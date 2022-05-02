@@ -42,8 +42,10 @@ shinyUI(
           position = "fixed-top",
           
           # Main content
-          tabPanel(title = "Global Indicators", id = "tab-checklist",
-            uiOutput("checklist_content")),
+          tabPanel(title = "Global Indicators", id = "tab-indicators",
+            uiOutput("indicators_content")),
+          tabPanel(title = "Species Information", id = "tab-species",
+            uiOutput("species_content")),
           
           # Shape data source + contact e-mail
           header = tags$header(tags$div(align = "right",

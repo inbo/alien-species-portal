@@ -29,6 +29,7 @@ countYearNativerange <- function(df, jaartallen = NULL,
     type = c("native_continent", "native_range"),
     width = NULL, height = NULL) {
   
+    
   type <- match.arg(type)
   
   if (is.null(jaartallen))
@@ -104,34 +105,18 @@ countYearNativerange <- function(df, jaartallen = NULL,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-countYearNativerangeServer <- function(id, uiText, data, region, time) {
+countYearNativerangeServer <- function(id, uiText, data) {
   
   moduleServer(id,
     function(input, output, session) {
       
       ns <- session$ns
       
-      subText <- reactive({
-          uiText[uiText$plotFunction == "countYearNativerange", ]
-        })
-      
       output$titleYearNativerange <- renderUI({
           
-          h3(HTML(paste(subText()$title, 
-                vectorToTitleString(region()),
-                yearToTitleString(req(time()))
-              )))
+          h3(HTML(uiText[uiText$plotFunction == "countYearNativerange", ]$title))
           
         })
-      
-      optionsModuleServer(id = "yearNativerange", 
-        data = data,
-        types = reactive(c(
-            "Continent van oorsprong" = "native_continent",
-            "Regio van oorsprong" = "native_range"
-          )), 
-        labelTypes = "Detail niveau", 
-        typesDefault = reactive("native_continent"))
       
       plotModuleServer(id = "yearNativerange",
         plotFunction = "countYearNativerange", 
@@ -159,16 +144,10 @@ countYearNativerangeUI <- function(id) {
       label = uiOutput(ns("titleYearNativerange"))),
     conditionalPanel("input.linkYearNativerange % 2 == 1", ns = ns,
       
-      fixedRow(
-        column(4,
-          optionsModuleUI(id = ns("yearNativerange"),
-            showType = TRUE)
-        ),
-        column(8, 
-          plotModuleUI(id = ns("yearNativerange"))
-        ),
-        tags$hr()
-      )
+      plotModuleUI(id = ns("yearNativerange")),
+      optionsModuleUI(id = ns("yearNativerange"), doWellPanel = FALSE),
+      tags$hr()
+      
     )
   )
   
