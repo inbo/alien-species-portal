@@ -593,6 +593,21 @@ output$nrowsFinal <- renderText({
   })
 
 
+### Table
+
+output$exoten_table <- renderDT({
+    
+    displayData <- results$exoten_data()
+    
+    displayData <- displayData[, c("species", "first_observed", "last_observed", "native_range", "habitat")]
+    
+    DT::datatable(displayData, rownames = FALSE,
+      selection = "single",
+      options = list(pageLength = 5))
+    
+  })
+
+
 ### Plots
 ### -----------------
 
@@ -643,9 +658,14 @@ countYearNativerangeServer(id = "checklist",
 )
 
 
-tableIntroductionServer(id = "checklist",
+plotTriasServer(id = "checklist_tablePathway",
   uiText = results$translations,
-  data = results$exoten_data
+  data = results$exoten_data,
+  triasFunction = "get_table_pathways",
+  triasArgs = reactive({
+      list(species_names = "species")
+    }),
+  outputType = "table"
 )
 
 
@@ -655,7 +675,7 @@ plotTriasServer(id = "checklist_pathway1",
   triasFunction = "visualize_pathways_level1"
 )
 
-plotTriasServer(id = "checklist_pathway1_trend",
+plotTriasServer(id = "checklist_pathway1Trend",
   uiText = results$translations,
   data = results$exoten_data,
   triasFunction = "visualize_pathways_year_level1"

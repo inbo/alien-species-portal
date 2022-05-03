@@ -127,6 +127,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @param plotFunction character, defines the plot function to be called
 #' @param data reactive data.frame, data for chosen species
 #' @inheritParams countIntroductionYear
+#' @inheritParams welcomeSectionServer
 #' 
 #' @return no return value; plot output object is created
 #' @author mvarewyck
@@ -136,7 +137,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @importFrom plotly ggplotly
 #' @export
 plotModuleServer <- function(id, plotFunction, data, 
-  triasFunction = NULL, triasArgs = NULL) {
+  triasFunction = NULL, triasArgs = NULL, outputType = NULL, uiText) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -163,7 +164,11 @@ plotModuleServer <- function(id, plotFunction, data,
             if (!is.null(triasFunction))
               list(triasFunction = triasFunction),
             if (!is.null(triasArgs))
-              list(triasArgs = triasArgs())
+              list(triasArgs = triasArgs()),
+            if (!is.null(outputType))
+              list(outputType = outputType),
+            if (!is.null(uiText))
+              list(uiText = uiText)
           )
           
           argList
@@ -227,6 +232,7 @@ plotModuleServer <- function(id, plotFunction, data,
       output$table <- DT::renderDT({
           
           DT::datatable(resultFct()$data, rownames = FALSE,
+            colnames = resultFct()$columnNames,
             selection = "single",
             options = list(dom = 'ftp', pageLength = 5))
           

@@ -1,19 +1,26 @@
 
-#' Generic function to call plot function from the trias package
+#' Generic function to call plot/table function from the trias package
 #' 
-#' @param triasFunction character, plot function to be called 
+#' @inheritParams welcomeSectionServer
+#' @param triasFunction character, plot function to be called from trias package
 #' @param df data.frame see e.g. \code{\link[trias]{visualize_pathways_level1}}
 #' @param triasArgs list, extra arguments to be passed to the trias plot function
+#' @param outputType character, type of output to be displayed;
+#' should be one of \code{"plot", "table"}
 #' @return list with
 #' \itemize{
-#' \item{plot}{ggplotly object}
+#' \item{plot}{ggplotly object, only available if \code{outputType} is "plot"}
 #' \item{data}{data.frame used for the plot}
 #' }
 #' 
 #' @author mvarewyck
 #' @importFrom plotly ggplotly
 #' @export
-plotTrias <- function(triasFunction, df, triasArgs = NULL) {
+plotTrias <- function(triasFunction, df, triasArgs = NULL,
+  outputType = c("plot", "table"), uiText) {
+  
+  
+  outputType <- match.arg(outputType)
   
   plotArgs <- list(
     df = df
@@ -24,13 +31,23 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL) {
   if (!is.null(triasArgs))
     plotArgs <- c(plotArgs, triasArgs)
   
-  myPlot <- do.call(triasFunction, plotArgs)
+  resultFct <- do.call(triasFunction, plotArgs)
   
   ## convert to plotly object
-  p <- ggplotly(myPlot)
-  
-  
-  return(list(plot = p, data = df))
+  if (outputType == "plot") {
+    
+    p <- ggplotly(resultFct)
+    
+    return(list(plot = p, data = df))
+    
+  } else {
+    
+    return(list(
+        data = resultFct, 
+        columnNames = displayName(colnames(resultFct), translations = uiText)
+    ))
+    
+  }
   
 }
 
@@ -39,8 +56,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL) {
 #' Shiny module for creating the plot \code{\link{plotTrias}} - server side
 #' @inheritParams welcomeSectionServer
 #' @inheritParams countIntroductionYear
+#' @inheritParams plotTrias
 #' @param data reactive object, data for \code{\link{plotTrias}}
-#' @param triasFunction character, plot function to be called from trias package
 #' @param triasArgs reactive object, extra plot arguments to be passed to the 
 #' trias package
 #' @return no return value
@@ -49,7 +66,11 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL) {
 #' @import shiny
 #' @import trias
 #' @export
-plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL) {
+plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
+  outputType = c("plot", "table")) {
+  
+  
+  outputType <- match.arg(outputType)
   
   moduleServer(id,
     function(input, output, session) {
@@ -61,6 +82,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL) {
         })
       
       output$titlePlotTrias <- renderUI({
+          print(subText()$title)
           h3(HTML(subText()$title))
           
         })
@@ -69,7 +91,9 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL) {
         plotFunction = "plotTrias",
         triasFunction = triasFunction, 
         data = data,
-        triasArgs = if (!is.null(triasArgs)) triasArgs else NULL
+        triasArgs = if (!is.null(triasArgs)) triasArgs else NULL,
+        outputType = outputType,
+        uiText = uiText
       )
       
     })
@@ -80,13 +104,13 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL) {
 
 #' Shiny module for creating the plot \code{\link{plotTrias}} - UI side
 #' @template moduleUI
-#' 
+#' @inheritParams plotTrias
 #' @author mvarewyck
 #' @export
-plotTriasUI <- function(id) {
+plotTriasUI <- function(id, outputType = c("plot", "table")) {
   
   ns <- NS(id)
-  
+  outputType <- match.arg(outputType)
   
   tagList(
     
@@ -94,7 +118,9 @@ plotTriasUI <- function(id) {
       label = uiOutput(ns("titlePlotTrias"))),
     conditionalPanel("input.linkPlotTrias % 2 == 1", ns = ns,
       
-      plotModuleUI(id = ns("plotTrias")),
+      if (outputType == "plot")
+          plotModuleUI(id = ns("plotTrias")) else
+          tableModuleUI(id = ns("plotTrias")),
       optionsModuleUI(id = ns("plotTrias"), doWellPanel = FALSE),
       tags$hr()
     

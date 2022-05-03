@@ -198,8 +198,12 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio
 # TABLE: tableIntroductionPathway
 test_that("Introduction pathways per category", {
     
-    tmpResult <- tableIntroductionPathway(data = exoten_data)
-    expect_is(tmpResult, "data.frame")
+    tmpResult <- plotTrias(triasFunction = "get_table_pathways", df = exotenData,
+      triasArgs = list(species_names = "species"),
+      outputType = "table", uiText = NULL)
+    expect_is(tmpResult, "list")
+    
+    expect_is(tmpResult$data, "data.frame")
     
   })
 
@@ -213,8 +217,8 @@ test_that("CBD Level 1/2 introduction pathways", {
     expect_is(tmpResult$plot, "plotly")
     expect_is(tmpResult$data, "data.frame")
     
-    
-    tmpResult <- plotTrias(triasFunction = "visualize_pathways_year_level1", df = exoten_data)
+    visualize_pathways_year_level1(df = exotenData)
+    tmpResult <- plotTrias(triasFunction = "visualize_pathways_year_level1", df = exotenData)
     expect_is(tmpResult, "list")
     
     expect_is(tmpResult$plot, "plotly")

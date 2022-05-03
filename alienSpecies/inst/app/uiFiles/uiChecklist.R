@@ -70,7 +70,9 @@ tagList(
     
     tabsetPanel(
       
-      tabPanel("Taxa", NULL),
+      tabPanel("Taxa", 
+        DT::DTOutput("exoten_table")
+      ),
       
 #        countIntroductionPathwayUI(id = "checklist"),
       
@@ -82,9 +84,9 @@ tagList(
       
       tabPanel("Pathways", 
         
-        tableIntroductionUI(id = "checklist"),
+        plotTriasUI(id = "checklist_tablePathway", outputType = "table"),
         plotTriasUI(id = "checklist_pathway1"),
-        plotTriasUI(id = "checklist_pathway1_trend"),
+        plotTriasUI(id = "checklist_pathway1Trend"),
         plotTriasUI(id = "checklist_pathway2")
       
       ),
