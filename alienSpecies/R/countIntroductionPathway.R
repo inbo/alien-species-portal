@@ -5,7 +5,7 @@
 #' @param df data.frame with raw data for plotting
 #' @importFrom trias visualize_pathways_level2
 #' @importFrom plotly ggplotly subplot
-#' @return list with plot and data that was used for the plot (i.e. without missing values for the )
+#' @return list with plot and data that was used for the plot
 #' 
 #' @export
 countIntroductionPathway <- function(df){

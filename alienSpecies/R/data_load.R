@@ -1,5 +1,8 @@
 #' Read exoten data
 #' 
+#' New data can be processed using code:
+#'  https://trias-project.github.io/indicators/01_get_data_input_checklist_indicators.html
+#' 
 #' For indicator data:
 #' by default data for which \code{first_observed < 1950} is excluded.
 #' For unionlist data:
@@ -42,7 +45,9 @@ loadExotenData <- function(
     ## extract necessary columns
     rawData <- rawData[, c(
         # necessary to use trias function
-        "key",
+        "key", 
+        # full scientific name
+        "scientificName",
         # Period - slider should use first_observed
         "first_observed", "last_observed", 
         # Taxonomy
@@ -54,7 +59,7 @@ loadExotenData <- function(
         # Pathway
         "pathway_level1", "pathway_level2",
         # Habitat
-        # "habitat", ## easier to use the 3 booleans below instead
+        "habitat", ## easier to use the 3 booleans below instead
         ..currentHabitats,
         # Source
         "source",
@@ -70,6 +75,17 @@ loadExotenData <- function(
     ## convert english to dutch names for region
     rawData$locality <- getDutchNames(rawData$locality, type = "regio")
     
+    ## combine pathways
+    rawData$pathway <- paste0(rawData$pathway_level1, ": ", rawData$pathway_level2)
+    
+    ## Extract hyperlinks 
+    
+    ### Extract gbif link
+    rawData$gbifLink <- sapply(strsplit(rawData$source, split = ": "), function(x) x[1])
+    rawData$gbifLink <- paste0("<a href='", rawData$gbifLink, "' target = '_blank'>", 
+      sapply(strsplit(rawData$gbifLink, split = "/"), function(x) tail(x, n = 1)), "</a>")
+    # common name and source: https://www.gbif.org/species/157131005
+
     ## recode `source` variable
     
     ## Remove everything up until (jjjj)<space(s)>.<space(s)>
@@ -90,6 +106,12 @@ loadExotenData <- function(
       "RINSE1" = "RINSE - Registry of non-native species in the Two Seas region countries (Great Britain, France, Belgium and the Netherlands)",
       "RINSE2" = "RINSE - Pathways and vectors of biological invasions in Northwest Europe",
       "WRiMS" = "World Register of Introduced Marine Species (WRiMS)")
+    
+    ### source link
+    # TODO add more links
+    rawData$sourceLink <- ifelse(is.na(rawData$source), "", 
+      paste0("<a href='", sapply(as.character(rawData$source), function(iSource) switch(iSource,
+          WRiMS = "https://www.marinespecies.org/")), "' target = '_blank'>", rawData$source, "</a>"))
     
     ## regroup native_range variable into new native_continent variable
     ## from https://en.wikipedia.org/wiki/United_Nations_geoscheme
@@ -212,5 +234,47 @@ getDutchNames <- function(x, type = c("regio")) {
   }
   
   result
+  
+}
+
+
+
+#' Extract the vernacular names using API requests
+#' 
+#' WIP: Currently all missing for this dataset https://www.gbif.org/dataset/6d9e952f-948c-4483-9807-575348147c7e
+#' WARNING: Takes long time to process
+#' @inheritParams loadExotenData
+#' @param taxonKeys numeric vector, taxon keys for GBIF
+#' @return no return value, data file 'vernacular_names.csv' is written to \code{dataDir}
+#' data.frame with
+#' \itemize{
+#' \item{key}{\code{taxonKeys} entered as input}
+#' \item{name}{character, vernacular name (language); multiple names are pasted togeter}
+#' }
+#' @author mvarewyck
+#' @export
+getVernacularNames <- function(dataDir = system.file("extdata", package = "alienSpecies"),
+  taxonKeys) {
+  
+  extractedNames <- sapply(taxonKeys, function(iKey) {
+      
+      # test: iKey <- 157131005
+      # https://api.gbif.org/v1/species/152543101/vernacularNames
+      myRequest <- httr::GET(paste0("https://api.gbif.org/v1/species/", iKey, "/vernacularNames"))
+      allNames <- httr::content(myRequest)$results
+      if (length(allNames) == 0)
+        return("") else
+        paste(sapply(allNames, function(x) paste0(x$vernacularName, " (", x$language, ")")), 
+          collapse = "</br>")
+      
+    })
+  
+  newData <- data.frame(
+    key = taxonKeys,
+    name = extractedNames)
+  
+  
+  write.csv(newData, file.path(dataDir, "vernacular_names.csv"))
+  
   
 }

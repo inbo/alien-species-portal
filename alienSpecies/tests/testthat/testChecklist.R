@@ -17,6 +17,11 @@ expect_is(unionlistData, "data.frame")
 
 
 ##
+## Combine duplicated keys
+##
+simpleData <- tableIndicators(exotenData = exotenData)
+
+##
 ## Explore data
 ##
 
@@ -161,6 +166,18 @@ test_that("Grafiek: Cumulatief aantal geïntroduceerde uitheemse soorten per jaa
     
     tmpResult <- plotTrias(triasFunction = "indicator_total_year",
       df = exoten_data)
+    expect_is(tmpResult, "list")
+    
+    expect_is(tmpResult$plot, "plotly")
+    expect_is(tmpResult$data, "data.frame")
+    
+  })
+
+test_that("Grafiek: Mate van verspreiding van de Unielijstsoorten", {
+    
+    load(file = file.path(dataDir, "occupancy.RData"))
+    tmpResult <- countOccupancy(df = occupancy)
+    
     expect_is(tmpResult, "list")
     
     expect_is(tmpResult$plot, "plotly")

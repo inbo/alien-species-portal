@@ -27,7 +27,7 @@ nameFile <- function(content, fileExt) {
 #' 
 #' @author mvarewyck
 #' @export
-displayName <- function(text, translations) {
+displayName <- function(text, translations = NULL) {
   
   
   if (is.null(translations)) {

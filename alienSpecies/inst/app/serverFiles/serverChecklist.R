@@ -594,16 +594,12 @@ output$nrowsFinal <- renderText({
 
 
 ### Table
+### -----------------
 
 output$exoten_table <- renderDT({
     
-    displayData <- results$exoten_data()
-    
-    displayData <- displayData[, c("species", "first_observed", "last_observed", "native_range", "habitat")]
-    
-    DT::datatable(displayData, rownames = FALSE,
-      selection = "single",
-      options = list(pageLength = 5))
+    tableIndicators(exotenData = results$exoten_data(),
+      translations = results$translations)
     
   })
 
@@ -640,6 +636,13 @@ plotTriasServer(id = "checklist-cum",
       )
     })
 )
+
+## Plot trend occupancy
+countOccupancyServer(id = "checklist",
+  data = reactive(occupancy),
+  uiText = results$translations
+)
+
 
 ## Plot number of species per pathway
 countIntroductionPathwayServer(id = "checklist", 

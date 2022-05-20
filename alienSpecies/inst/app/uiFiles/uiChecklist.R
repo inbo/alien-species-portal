@@ -66,12 +66,14 @@ tagList(
   ),
   
   
-  tags$div(class = "container",
+  tags$div(class = "container", style = "margin-bottom: 10px;",
     
     tabsetPanel(
       
       tabPanel("Taxa", 
-        DT::DTOutput("exoten_table")
+        tags$div(style = "margin-top: 10px;",
+          DT::DTOutput("exoten_table")
+        )
       ),
       
 #        countIntroductionPathwayUI(id = "checklist"),
@@ -79,7 +81,7 @@ tagList(
       tabPanel("Trend", 
         plotTriasUI(id = "checklist-count"),
         plotTriasUI(id = "checklist-cum"),
-        "TODO: Trend occupancy union-list species (Trias function?)"
+        countOccupancyUI(id = "checklist")
       ),
       
       tabPanel("Pathways", 

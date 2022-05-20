@@ -82,7 +82,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
         })
       
       output$titlePlotTrias <- renderUI({
-          print(subText()$title)
+          
           h3(HTML(subText()$title))
           
         })

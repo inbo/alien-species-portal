@@ -29,6 +29,9 @@ defaultYear <- max(exotenData$first_observed, na.rm = TRUE)
 
 habitats <- attr(exotenData, "habitats")
 
+# Load occupancy data from createOccupancyData()
+load(file = file.path(dataDir, "occupancy.RData"))
+
 
 ### Debugging
 ### -----------

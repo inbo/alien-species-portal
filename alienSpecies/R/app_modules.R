@@ -137,7 +137,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @importFrom plotly ggplotly
 #' @export
 plotModuleServer <- function(id, plotFunction, data, 
-  triasFunction = NULL, triasArgs = NULL, outputType = NULL, uiText) {
+  triasFunction = NULL, triasArgs = NULL, outputType = NULL, uiText = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
