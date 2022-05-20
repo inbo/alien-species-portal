@@ -43,3 +43,6 @@ vignettes/*.pdf
 
 # R documentation can be created automatically
 alienSpecies/man/
+
+# Helper scripts
+/data/*.Rmd
