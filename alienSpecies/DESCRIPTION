@@ -11,12 +11,18 @@ License: MIT + file LICENSE
 Imports: 
     data.table,
     DT,
+    htmlwidgets,
     INBOtheme,
+    leaflet,
     plotly,
 	shiny,
 	shinycssloaders,
 	reshape2,
-	trias
+	rgdal,
+	sf,
+	sp,
+	trias,
+	webshot
 Suggests:
 	testthat
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0

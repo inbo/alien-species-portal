@@ -55,7 +55,6 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 
 #' Shiny module for creating the plot \code{\link{plotTrias}} - server side
 #' @inheritParams welcomeSectionServer
-#' @inheritParams countIntroductionYear
 #' @inheritParams plotTrias
 #' @param data reactive object, data for \code{\link{plotTrias}}
 #' @param triasArgs reactive object, extra plot arguments to be passed to the 

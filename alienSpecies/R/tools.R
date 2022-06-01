@@ -6,16 +6,25 @@
 
 
 #' Name file given content information
+#' @param species character vector, selected species
+#' @param period numeric vector, selected year(s)
 #' @param content character, more information on the file
 #' @param fileExt character, extension of the file
 #' @return character, suggested file name pasting together \code{species},
 #' \code{year}, \code{content}, \code{fileExt}
 #' @author mvarewyck
 #' @export
-nameFile <- function(content, fileExt) {
+nameFile <- function(species = NULL, period = NULL, content, fileExt) {
   
-  paste0(content, ".", fileExt)
-  
+  paste0(
+    if (!is.null(species))
+      paste(species, collapse = "-"),
+    if (!is.null(period))
+      paste(period, collapse = "-"),
+    
+    content, ".", fileExt
+  )
+
 }
 
 
@@ -87,7 +96,7 @@ yearToTitleString <- function(year, brackets = TRUE) {
   
   if (length(year) == 2) {
     ifelse(year[1] != year[2],
-      if (brackets) paste0("(", year[1], " tot ", year[2], ")") else paste0(year[1], " tot ", year[2]),
+      if (brackets) paste0("(", year[1], " - ", year[2], ")") else paste0(year[1], " - ", year[2]),
       if (brackets) paste0("(", year[1], ")") else paste0(year[1])
     )
   } else if (length(year) == 1) {

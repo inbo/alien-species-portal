@@ -24,9 +24,9 @@ optionsModuleUI <- function(id, showType = FALSE, exportData = TRUE, doWellPanel
   
   toReturn <- tagList(
     
-    if(showType)
+    if (showType)
       uiOutput(ns("type")),
-    if(exportData)
+    if (exportData)
       downloadButton(ns("dataDownload"), "Download data")
   
   )
@@ -43,7 +43,6 @@ optionsModuleUI <- function(id, showType = FALSE, exportData = TRUE, doWellPanel
 #' User input for controlling specific plot (server-side)
 #'
 #' @inheritParams optionsModuleUI
-#' @param data reactive data.frame, data for chosen species
 #' @param types, defines the species types that can be selected
 #' @param labelTypes character, the displayed label for selecting options field
 #' @param typesDefault, defines the default values for \code{types},
@@ -53,7 +52,7 @@ optionsModuleUI <- function(id, showType = FALSE, exportData = TRUE, doWellPanel
 #' @return no return value; some output objects are created
 #' @import shiny
 #' @export
-optionsModuleServer <- function(id, data, 
+optionsModuleServer <- function(id, 
   types = NULL, labelTypes = "Type", typesDefault = types, multipleTypes = FALSE) {
   
   
@@ -61,7 +60,7 @@ optionsModuleServer <- function(id, data,
     function(input, output, session) {
       
       ns <- session$ns
-      
+   
       
       output$type <- renderUI({
           
@@ -122,12 +121,12 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 
 #' Interactive plot or table (server-side)
 #' 
+#' @inheritParams welcomeSectionServer
 #' @inheritParams optionsModuleUI
 #' @inheritParams plotTriasServer
 #' @param plotFunction character, defines the plot function to be called
 #' @param data reactive data.frame, data for chosen species
-#' @inheritParams countIntroductionYear
-#' @inheritParams welcomeSectionServer
+#' @param period reactive numeric vector of length 2, selected period 
 #' 
 #' @return no return value; plot output object is created
 #' @author mvarewyck
@@ -136,7 +135,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @importFrom DT datatable formatRound renderDT
 #' @importFrom plotly ggplotly
 #' @export
-plotModuleServer <- function(id, plotFunction, data, 
+plotModuleServer <- function(id, plotFunction, data, period = NULL,
   triasFunction = NULL, triasArgs = NULL, outputType = NULL, uiText = NULL) {
   
   moduleServer(id,
@@ -145,8 +144,8 @@ plotModuleServer <- function(id, plotFunction, data,
       
       # Filter plot data
       subData <- reactive({
-          
-          data()
+         
+            data()
           
         })
       
@@ -157,14 +156,14 @@ plotModuleServer <- function(id, plotFunction, data,
           
           argList <- c(
             list(df = subData()),
-            if (!is.null(input$time))
-              list(jaartallen = input$time[1]:input$time[2]),
             if (!is.null(input$type))
               list(type = input$type),
             if (!is.null(triasFunction))
               list(triasFunction = triasFunction),
             if (!is.null(triasArgs))
               list(triasArgs = triasArgs()),
+            if (!is.null(period))
+              list(period = period()),
             if (!is.null(outputType))
               list(outputType = outputType),
             if (!is.null(uiText))

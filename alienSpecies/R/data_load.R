@@ -1,6 +1,34 @@
+#' Read shape data
+#' @param dataDir path to the shape files. Folder should contain .shp file but also
+#' helper files such as .dbf and .prj
+#' @return list with sf objects
+#' 
+#' @author mvarewyck
+#' @export
+readShapeData <- function(
+  dataDir = system.file("extdata", "grid", package = "alienSpecies")
+) {
+  
+  
+  shapeFiles <- list.files(dataDir, pattern = ".shp")
+  
+  toReturn <- lapply(shapeFiles, function(iFile) {
+      
+      sf::st_read(file.path(dataDir, iFile), layer = gsub(".shp", "", iFile))
+      
+    })
+  
+  names(toReturn) <- gsub(".shp", "", shapeFiles)
+  
+  toReturn
+  
+}
+
+
+
 #' Read exoten data
 #' 
-#' New data can be processed using code:
+#' New indicator/unionlist data can be processed using code:
 #'  https://trias-project.github.io/indicators/01_get_data_input_checklist_indicators.html
 #' 
 #' For indicator data:
@@ -19,14 +47,15 @@
 #' @export
 loadExotenData <- function(
   dataDir = system.file("extdata", package = "alienSpecies"),
-  type = c("indicators", "unionlist")) {
+  type = c("indicators", "unionlist", "occurrence")) {
   
   type <- match.arg(type)
   
   dataFiles <- file.path(dataDir, switch(type,
       indicators = "data_input_checklist_indicators.tsv",
 #      "indicators" = c("description.txt", "distribution.txt", "speciesprofile.txt", "taxon.txt"),
-      "unionlist" = "eu_concern_species.tsv"))
+      unionlist = "eu_concern_species.tsv",
+      occurrence = "be_alientaxa_cube.csv"))
   
   if (type == "indicators") {
     
@@ -144,8 +173,6 @@ loadExotenData <- function(
     warning(type, " data: Voor ", length(ind), " observaties is de 'specie' onbekend. 'canonicalName' wordt gebruikt in de plaats.")
     
     
-    
-    attr(rawData, "Date") <- file.mtime(dataFiles)
     attr(rawData, "habitats") <- currentHabitats
     
     
@@ -157,10 +184,19 @@ loadExotenData <- function(
     rawData <- rawData[, c("checklist_scientificName", "english_name", "checklist_kingdom")]
     names(rawData) <- c("scientificName", "englishName", "kingdom")
     
-    attr(rawData, "Date") <- file.mtime(dataFiles)
+  } else if (type == "occurrence") {
     
+    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
+    
+    # attach 10km cellcode
+    rawData$cell_code10 <- gsub(pattern = "1km", replacement = "10km", 
+      paste0(substr(rawData$eea_cell_code, start = 1, stop = 7),
+        substr(rawData$eea_cell_code, start = 9, stop = 12)))
+    colnames(rawData)[colnames(rawData) == "eea_cell_code"] <- "cell_code1"
     
   }
+  
+  attr(rawData, "Date") <- file.mtime(dataFiles)
   
   return(rawData)
   
@@ -170,6 +206,8 @@ loadExotenData <- function(
 
 #' Load labels for the UI
 #' @inheritParams loadExotenData 
+#' @param type character, which type of translations should be loaded;
+#' should be one of \code{c("species", "ui")}
 #' @param language character, which language data sheet should be loaded;
 #' should be one of \code{c("nl", "fr", "en")}
 #' @return data.frame
@@ -177,16 +215,35 @@ loadExotenData <- function(
 #' @author mvarewyck
 #' @importFrom utils read.csv
 #' @export
-loadTranslations <- function(
+loadTranslations <- function(type = c("ui", "species"),
   dataDir = system.file("extdata", package = "alienSpecies"), 
   language = c("nl", "fr", "en")) {
   
+  type <- match.arg(type)
   language <- match.arg(language)
-  uiText <- read.csv(file.path(dataDir, "translations.csv"))[, c("plotFunction", paste0(c("title_", "description_"), language))]
   
-  colnames(uiText) <- c("plotFunction", "title", "description")
+  allData <- read.csv(file.path(dataDir, switch(type, 
+    ui = "translations.csv",
+    species = "be_alientaxa_info.csv"
+  ))) 
   
-  return(uiText)
+  filterData <- switch(type, 
+    ui = {
+      
+      uiText <- allData[, c("plotFunction", paste0(c("title_", "description_"), language))]
+      colnames(uiText) <- c("plotFunction", "title", "description")
+      uiText
+      
+    },
+    species = {
+      
+      # clean scientific name
+      allData$scientificName <- sapply(strsplit(allData$scientificName, split = " "), function(x) paste(x[1:2], collapse = " "))
+      allData
+      
+    })
+  
+  return(filterData)
   
 }
 
@@ -252,6 +309,7 @@ getDutchNames <- function(x, type = c("regio")) {
 #' \item{name}{character, vernacular name (language); multiple names are pasted togeter}
 #' }
 #' @author mvarewyck
+#' @importFrom utils write.csv
 #' @export
 getVernacularNames <- function(dataDir = system.file("extdata", package = "alienSpecies"),
   taxonKeys) {

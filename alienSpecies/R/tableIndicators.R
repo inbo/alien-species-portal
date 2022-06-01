@@ -8,6 +8,7 @@
 #' 
 #' @author mvarewyck
 #' @importFrom DT datatable
+#' @importFrom stats aggregate
 #' @export
 tableIndicators <- function(exotenData, translations = NULL) {
   

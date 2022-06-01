@@ -46,3 +46,4 @@ alienSpecies/man/
 
 # Helper scripts
 /data/*.Rmd
+/data/

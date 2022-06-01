@@ -54,7 +54,6 @@ countIntroductionPathway <- function(df){
 #' @param time numeric vector, selected time span
 #' @param region NULL currently not implemented
 #' @param pathway character vector, selected pathways 
-#' @inheritParams countIntroductionYear
 #' @return no return value
 #' 
 #' @author mvarewyck

@@ -16,10 +16,15 @@ library(shiny)
 `%<>%` <- magrittr::`%<>%`
 
 
+if (!exists("doDebug"))
+  doDebug <- FALSE
+
+
 ### Data
 ### -----------
 
 dataDir <- system.file("extdata", package = "alienSpecies")
+
 
 exotenData <- loadExotenData(type = "indicators")
 unionlistData <- loadExotenData(type = "unionlist")
@@ -32,9 +37,10 @@ habitats <- attr(exotenData, "habitats")
 # Load occupancy data from createOccupancyData()
 load(file = file.path(dataDir, "occupancy.RData"))
 
+# Load occurrence data
+if (!doDebug | !exists("allShapes"))
+  allShapes <- readShapeData()
+taxData <- loadExotenData(type = "occurrence")
+dictionary <- loadTranslations(type = "species")
 
-### Debugging
-### -----------
 
-if (!exists("doDebug"))
-  doDebug <- FALSE

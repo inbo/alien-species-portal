@@ -30,6 +30,8 @@ createOccupancyData <- function(dataDir = "~/git/alien-species-portal/data",
   data_t0_all$source <- "t0"
   # table(data_t0_all)
   
+  # Keep accepted Y or New
+  data_t0_all <- data_t0_all[data_t0_all$accepted %in% c("Y", "New"), ]
   
   
   ## DATA T1 ##
@@ -40,17 +42,20 @@ createOccupancyData <- function(dataDir = "~/git/alien-species-portal/data",
   # sp::plot(data_t1)
   
   # Keep first two words only for matching with t0 data
-  data_t1$species <- sapply(str_split(data_t1$species, pattern = " |\\,"), function(x) paste(x[1:2], collapse = " "))
+  data_t1$species <- sapply(strsplit(data_t1$species, split = " |\\,"), function(x) paste(x[1:2], collapse = " "))
   
   data_t1$source <- "t1"
   data_t1 <- as.data.frame(data_t1)  # drop spatial info
+  data_t1$cellcode <- data_t1$CellCode
   
   
   ## COMBINE DATA ##
   ## ------------ ##
   
   
-  allData <- rbind(data_t0_all[, c("species", "source")], data_t1[, c("species", "source")])
+  allData <- rbind(data_t0_all[, c("species", "source", "cellcode")], data_t1[, c("species", "source", "cellcode")])
+  allData <- allData[!duplicated(allData), ]
+  allData$cellcode <- NULL
   occupancy <- reshape2::dcast(data = as.data.frame(table(allData)), species ~ source, value.var = "Freq")
   occupancy$total <- occupancy$t0 + occupancy$t1
   
@@ -66,17 +71,18 @@ createOccupancyData <- function(dataDir = "~/git/alien-species-portal/data",
 
 #' Create occupancy bar chart
 #' @param df data.frame as created by \code{\link{createOccupancyData}}
+#' @param nSquares integer, total number of squares for calculating percentages
 #' @return list with plotly object and data.frame
 #' 
 #' @author mvarewyck
 #' @import plotly
 #' @export
-countOccupancy <- function(df) {
+countOccupancy <- function(df, nSquares = 370) {
   
-  p <- plot_ly(data = df, x = ~t0, y = ~species, name = "baseline",
+  p <- plot_ly(data = df, x = ~t0/nSquares*100, y = ~species, name = "baseline",
       type = "bar", orientation = "h") %>%
-    add_trace(x = ~t1, name = "rapportage") %>%
-    layout(xaxis = list(title = 'Aantal bezette hokken (10km2) in Vlaanderen'),
+    add_trace(x = ~t1/nSquares*100, name = "rapportage") %>%
+    layout(xaxis = list(title = 'Percentage bezette hokken (10km2) in Vlaanderen'),
       yaxis = list(title = ""), barmode = 'group')
   
   
