@@ -3,9 +3,6 @@
 # Author: mvarewyck, eadriaensen
 ###############################################################################
 
-library(alienSpecies)
-library(trias)
-
 ##
 ## Load exoten data
 ##
@@ -14,12 +11,15 @@ exotenData <- loadExotenData(type = "indicators")
 expect_is(exotenData, "data.frame")
 unionlistData <- loadExotenData(type = "unionlist")
 expect_is(unionlistData, "data.frame")
-
+occurrenceData <- loadExotenData(type = "occurrence")
+expect_is(occurrenceData, "data.frame")
 
 ##
 ## Combine duplicated keys
 ##
-simpleData <- tableIndicators(exotenData = exotenData)
+simpleData <- tableIndicators(exotenData = exotenData, 
+  unionlistData = unionlistData,
+  occurrenceData = occurrenceData)
 
 ##
 ## Explore data

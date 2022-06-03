@@ -7,8 +7,9 @@
 # Species selection
 results$species_choices <- reactive({
     
-    choices <- unique(taxData$taxonKey)
-    names(choices) <- dictionary$scientificName[match(choices, dictionary$taxonKey)]
+    subData <- occurrenceData[!duplicated(taxonKey), ]
+    choices <- subData$taxonKey
+    names(choices) <- subData$scientificName
     
     choices[order(names(choices))]
     
@@ -34,7 +35,7 @@ output$species_choice <- renderUI({
 mapOccurrenceServer(id = "observations",
   uiText = results$translations,
   taxonKey = reactive(results$species_choices()[results$species_choices() == req(input$species_taxonKey)]),
-  taxData = taxData,
+  taxData = occurrenceData,
   shapeData = allShapes
 )
 

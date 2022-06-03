@@ -20,6 +20,8 @@ shinyUI(
       tags$link(rel = "stylesheet", href = "navbar.css")
     ),
     
+    # Load fontawesome library
+    tags$span(icon("tag"), style = "display: none;"),
     
     
     ## Body

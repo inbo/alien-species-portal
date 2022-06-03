@@ -7,7 +7,6 @@
 ## Load data
 allShapes <- readShapeData()
 taxData <- loadExotenData(type = "occurrence")
-dictionary <- loadTranslations(type = "species")[, c("taxonKey", "scientificName")]
 ## Settings
 # many versus few occurrences
 mySpecies <- c("Alopochen aegyptiaca", "Ruscus aculeatus")[2]
@@ -24,7 +23,7 @@ test_that("Occurrence grid shape", {
 
 test_that("Occurrence plots", {
     
-    myKey <- dictionary$taxonKey[dictionary$scientificName == mySpecies]
+    myKey <- unique(taxData$taxonKey[taxData$scientificName == mySpecies])
     expect_is(myKey, "integer")
     
     expect_is(taxData, "data.frame")

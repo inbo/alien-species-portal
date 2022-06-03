@@ -599,6 +599,8 @@ output$nrowsFinal <- renderText({
 output$exoten_table <- renderDT({
     
     tableIndicators(exotenData = results$exoten_data(),
+      unionlistData = unionlistData,
+      occurrenceData = occurrenceData,
       translations = results$translations)
     
   })

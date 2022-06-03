@@ -187,6 +187,9 @@ loadExotenData <- function(
   } else if (type == "occurrence") {
     
     rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
+    dictionary <- loadTranslations(type = "species")
+    rawData <- merge(rawData, dictionary[, c("taxonKey", "scientificName")], by = "taxonKey", 
+      all.x = TRUE)
     
     # attach 10km cellcode
     rawData$cell_code10 <- gsub(pattern = "1km", replacement = "10km", 
