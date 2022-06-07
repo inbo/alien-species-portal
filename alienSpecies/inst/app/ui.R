@@ -17,7 +17,8 @@ shinyUI(
         integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u",
         crossorigin="anonymous"),
       tags$link(rel = "stylesheet", href = "style.css"),
-      tags$link(rel = "stylesheet", href = "navbar.css")
+      tags$link(rel = "stylesheet", href = "navbar.css"),
+      includeScript("www/activateTableLink.js")
     ),
     
     # Load fontawesome library
@@ -44,9 +45,9 @@ shinyUI(
           position = "fixed-top",
           
           # Main content
-          tabPanel(title = "Global Indicators", id = "tab-indicators",
+          tabPanel(title = "Global Indicators",
             uiOutput("indicators_content")),
-          tabPanel(title = "Species Information", id = "tab-species",
+          tabPanel(title = "Species Information",
             uiOutput("species_content")),
           
           # Shape data source + contact e-mail

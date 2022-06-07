@@ -25,10 +25,12 @@ if (!exists("doDebug"))
 
 dataDir <- system.file("extdata", package = "alienSpecies")
 
-
-exotenData <- loadExotenData(type = "indicators")
-unionlistData <- loadExotenData(type = "unionlist")
-occurrenceData <- loadExotenData(type = "occurrence")
+if (!doDebug | !exists("exotenData"))
+  exotenData <- loadTabularData(type = "indicators")
+if (!doDebug | !exists("unionlistData"))
+  unionlistData <- loadTabularData(type = "unionlist")
+if (!doDebug | !exists("occurrenceData"))
+  occurrenceData <- loadTabularData(type = "occurrence")
 
 # Specify default year to show (and default max to show in time ranges)
 defaultYear <- max(exotenData$first_observed, na.rm = TRUE)
@@ -41,6 +43,6 @@ load(file = file.path(dataDir, "occupancy.RData"))
 # Load occurrence data
 if (!doDebug | !exists("allShapes"))
   allShapes <- readShapeData()
-dictionary <- loadTranslations(type = "species")
+dictionary <- loadMetaData(type = "keys")
 
 

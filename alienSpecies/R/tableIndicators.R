@@ -2,15 +2,15 @@
 
 #' Create table for display in the app
 #' 
-#' @inheritParams displayName
-#' @param exotenData data.frame
-#' @return datatable object
+#' @param exotenData data.frame, as read from \code{\link{loadTabularData}}
+#' @param unionlistData data.frame, as read from \code{\link{loadTabularData}}
+#' @param occurrenceData data.frame, as read from \code{\link{loadTabularData}}
+#' @return data.frame
 #' 
 #' @author mvarewyck
-#' @importFrom DT datatable
 #' @importFrom stats aggregate
 #' @export
-tableIndicators <- function(exotenData, unionlistData, occurrenceData, translations = NULL) {
+tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
   
   tableData <- exotenData[, c("key", "species", "gbifLink", "first_observed", "last_observed", "habitat",
       "pathway", "degree_of_establishment", "sourceLink", "locality")]
@@ -34,32 +34,112 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData, translati
   }
   
   # Add unionlist info
-  tableData$unionColor <- c(NA, "black")[tableData$species %in% unionlistData$scientificName + 1]
+  tableData$unionColor <- c(NA, "orange")[tableData$species %in% unionlistData$scientificName + 1]
   # Add occurrence info
-  tableData$occurColor <- c(NA, "black")[tableData$species %in% occurrenceData$scientificName + 1]
-  # More column
-  tableData$more <- paste0('
-        <div class="btn-group" role="group">
-        ',
-      # Button to remove record
-      ifelse(!is.na(tableData$unionColor), 
-          paste0('<button title="Union list" type="button" class="fa fa-star" id=union_', 
-            rownames(tableData), '></button>'), ""),
-      # Button to edit record
-    ifelse(!is.na(tableData$occurColor), 
-      paste0('<button title="Occurrence" type="button" class="fa fa-play" id=occur_', 
-        rownames(tableData), '></button>'), ""),
-    '</div>')
-    
-  columnNames <- displayName(colnames(tableData), translations = translations)
+  tableData$occurColor <- c(NA, "green")[tableData$species %in% occurrenceData$scientificName + 1]
   
+  tableData
   
-  DT::datatable(tableData, rownames = FALSE,
-    selection = "single",
-    colnames = columnNames,
-    escape = FALSE, # display HTML code
-    options = list(pageLength = 5,
-      columnDefs = list(list(visible = FALSE, targets = c(0, 9, 10))))
+}
+
+
+
+
+#' Shiny module for creating the table \code{\link{tableIndicators}} - server side
+#' @inheritParams welcomeSectionServer
+#' @inheritParams tableIndicators
+#' @param translations data.frame, as read from \code{\link{loadMetaData}}
+#' @return no return value
+#' 
+#' @author mvarewyck
+#' @import shiny
+#' @import leaflet
+#' @importFrom htmlwidgets saveWidget
+#' @importFrom webshot webshot
+#' @importFrom DT renderDT datatable
+#' @export
+tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
+  translations) {
+  
+  moduleServer(id,
+    function(input, output, session) {
+      
+      ns <- session$ns
+      selectedKey <- reactiveVal()
+      
+      output$table <- renderDT({
+          
+          tableData <- tableIndicators(exotenData = exotenData(),
+            unionlistData = unionlistData,
+            occurrenceData = occurrenceData)
+          
+          # More column
+          tableData$more <- paste0('
+              <div class="btn-group" role="group">
+              ',
+            # Button to remove record
+            ifelse(!is.na(tableData$unionColor), 
+              paste0('<button title="Union list" type="button" class="btn btn-default action-button" ',
+                'data-inputid=', ns("union"), ' data-id=', tableData$key, ' onclick="activateTableLink(this);"', 
+                '><i class="fa fa-star table-icon-', tableData$unionColor ,'"></i></button>'), ""),
+            # Button to edit record
+            ifelse(!is.na(tableData$occurColor), 
+              paste0('<button title="Occurrence" type="button" class="btn btn-default action-button" ',
+                'data-inputid=', ns("occur"), ' data-id=', tableData$key, ' onclick="activateTableLink(this);"', 
+                '><i class="fa fa-play table-icon-', tableData$occurColor ,'"></i></button>'), ""),
+            '</div>')
+          
+          # data-inputid='%s' data-id='%s' onclick='activateTableLink(this);
+          
+          columnNames <- displayName(colnames(tableData), translations = translations)
+          
+          
+          DT::datatable(tableData, rownames = FALSE,
+            selection = "single",
+            colnames = columnNames,
+            escape = FALSE, # display HTML code
+            options = list(pageLength = 5,
+              columnDefs = list(list(visible = FALSE, targets = c(0, 9, 10))))
+          )
+          
+        })
+      
+      
+      observeEvent(input$union, {
+          
+          selectedKey(input$union)
+          
+        })
+      
+      observeEvent(input$occur, {
+          
+          selectedKey(input$occur)
+          
+        })
+      
+      return(reactive(selectedKey()))
+      
+    })
+  
+} 
+
+
+
+#' Shiny module for creating the table \code{\link{tableIndicators}} - UI side
+#' @inheritParams welcomeSectionServer
+#' @return UI object
+#' 
+#' @author mvarewyck
+#' @import shiny
+#' @importFrom DT DTOutput
+#' @importFrom htmltools div
+#' @export
+tableIndicatorsUI <- function(id) {
+  
+  ns <- NS(id)
+  
+  div(style = "margin-top: 10px;",
+    DTOutput(ns("table"))
   )
-  
+
 }

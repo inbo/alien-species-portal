@@ -596,14 +596,36 @@ output$nrowsFinal <- renderText({
 ### Table
 ### -----------------
 
-output$exoten_table <- renderDT({
+tmpKey <- tableIndicatorsServer(
+  id = "checklist",
+  exotenData = results$exoten_data,
+  unionlistData = unionlistData,
+  occurrenceData = occurrenceData,
+  translations = results$translations
+)
+
+# Redirect to species page
+observeEvent(tmpKey(), {
     
-    tableIndicators(exotenData = results$exoten_data(),
-      unionlistData = unionlistData,
-      occurrenceData = occurrenceData,
-      translations = results$translations)
+    # Strip off the timestamp
+    gbifKey <- strsplit(tmpKey(), "_")[[1]][1]
+    
+    # Lookup key for occurrence data
+    taxonKey <- dictionary$taxonKey[match(gbifKey, dictionary$gbifKey)]
+    
+    updateNavbarPage(session = session, inputId = "tabs", selected = "Species Information")
+    results$species_choice <- taxonKey
     
   })
+
+## Copy reactive values -> not working directly!
+## https://stackoverflow.com/a/48883055/5840900
+#observe({
+#    results$plot_basic <- tmpBasic()
+#    
+#  }, priority = -1) # make sure that first everything else is up to date. Before evaluating this observe
+
+
 
 
 ### Plots

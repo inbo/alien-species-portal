@@ -8,7 +8,8 @@ tagList(
   
   tags$div(class = "container",
     
-    uiOutput("species_choice"),
+    selectInput(inputId = "species_taxonKey", label = NULL, 
+      choices = NULL, width = "100%"),    
     
     tabsetPanel(
       

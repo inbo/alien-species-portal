@@ -26,10 +26,37 @@ readShapeData <- function(
 
 
 
-#' Read exoten data
+#' Create dictionary for combining data keys from multiple data sources
+#' @inheritParams loadTabularData
+#' @return no return value, data is written to \code{file.path(dataDir, "keys.csv")}
 #' 
-#' New indicator/unionlist data can be processed using code:
-#'  https://trias-project.github.io/indicators/01_get_data_input_checklist_indicators.html
+#' @author mvarewyck
+#' @importFrom utils write.csv
+#' @importFrom data.table fread setnames
+#' @export
+createKeyData <- function(dataDir = system.file("extdata", package = "alienSpecies")) {
+  
+  # Occurrence cube
+  taxaData <- fread(file.path(dataDir, "be_alientaxa_info.csv"))
+  ## clean scientific name
+  taxaData$scientificName <- sapply(strsplit(taxaData$scientificName, split = " "), function(x) paste(x[1:2], collapse = " "))
+  
+  # Checklist
+  exotenData <- loadTabularData(dataDir = dataDir, type = "indicators")[, c('key', 'species')]
+  exotenData <- exotenData[!duplicated(exotenData), ]
+  dictionary <- merge(taxaData, exotenData,
+    by.x = "scientificName", by.y = "species", all = TRUE)
+  setnames(dictionary, "key", "gbifKey")
+    
+  
+  write.csv(dictionary, file = file.path(dataDir, "keys.csv"),
+    row.names = FALSE)  
+  
+}
+
+
+
+#' Load tabular data
 #' 
 #' For indicator data:
 #' by default data for which \code{first_observed < 1950} is excluded.
@@ -45,9 +72,13 @@ readShapeData <- function(
 #' and attribute 'Date', the date that this data file was created
 #' @importFrom data.table fread :=
 #' @export
-loadExotenData <- function(
+loadTabularData <- function(
   dataDir = system.file("extdata", package = "alienSpecies"),
   type = c("indicators", "unionlist", "occurrence")) {
+  
+  # For R CMD check
+  scientificName <- NULL
+  i.scientificName <- NULL
   
   type <- match.arg(type)
   
@@ -61,15 +92,11 @@ loadExotenData <- function(
     
     # recode missing values to NA
     rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
-#    rawData <- lapply(dataFiles, function(dataFile) {
-#        print(dataFile)
-#        fread(file = dataFile, stringsAsFactors = FALSE, na.strings = "")
-#  })
     
     # Warning if new habitat columns
     currentHabitats <- c("marine", "freshwater", "terrestrial")
     if (!all(unlist(strsplit(rawData$habitat, split = "|", fixed = TRUE)) %in% c(NA, currentHabitats)))    
-      stop("New habitats detected. Add relevant columns in loadExotenData()")
+      stop("New habitats detected. Add relevant columns in loadTabularData()")
     
     ## extract necessary columns
     rawData <- rawData[, c(
@@ -114,7 +141,7 @@ loadExotenData <- function(
     rawData$gbifLink <- paste0("<a href='", rawData$gbifLink, "' target = '_blank'>", 
       sapply(strsplit(rawData$gbifLink, split = "/"), function(x) tail(x, n = 1)), "</a>")
     # common name and source: https://www.gbif.org/species/157131005
-
+    
     ## recode `source` variable
     
     ## Remove everything up until (jjjj)<space(s)>.<space(s)>
@@ -140,7 +167,7 @@ loadExotenData <- function(
     # TODO add more links
     rawData$sourceLink <- ifelse(is.na(rawData$source), "", 
       paste0("<a href='", sapply(as.character(rawData$source), function(iSource) switch(iSource,
-          WRiMS = "https://www.marinespecies.org/")), "' target = '_blank'>", rawData$source, "</a>"))
+              WRiMS = "https://www.marinespecies.org/")), "' target = '_blank'>", rawData$source, "</a>"))
     
     ## regroup native_range variable into new native_continent variable
     ## from https://en.wikipedia.org/wiki/United_Nations_geoscheme
@@ -170,7 +197,7 @@ loadExotenData <- function(
     ind <- which(is.na(rawData$species) & !is.na(rawData$canonicalName))
     rawData$species[ind] <- rawData$canonicalName[ind]
     rawData$canonicalName <- NULL
-    warning(type, " data: Voor ", length(ind), " observaties is de 'specie' onbekend. 'canonicalName' wordt gebruikt in de plaats.")
+    warning(type, " data: Voor ", length(ind), " observaties is de 'species' onbekend. 'canonicalName' wordt gebruikt in de plaats.")
     
     
     attr(rawData, "habitats") <- currentHabitats
@@ -187,9 +214,15 @@ loadExotenData <- function(
   } else if (type == "occurrence") {
     
     rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
-    dictionary <- loadTranslations(type = "species")
-    rawData <- merge(rawData, dictionary[, c("taxonKey", "scientificName")], by = "taxonKey", 
-      all.x = TRUE)
+    
+    ## exclude data before 1950 - keeps values with NA for first_observed
+    toExclude <- (rawData$year < 1950 & !is.na(rawData$year))
+    warning(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten")
+    rawData <- rawData[!toExclude, ]
+    
+    # for linking scientific name
+    dictionary <- loadMetaData(type = "keys")
+    rawData <- rawData[dictionary, scientificName := i.scientificName, on = "taxonKey"]
     
     # attach 10km cellcode
     rawData$cell_code10 <- gsub(pattern = "1km", replacement = "10km", 
@@ -207,8 +240,8 @@ loadExotenData <- function(
 
 
 
-#' Load labels for the UI
-#' @inheritParams loadExotenData 
+#' Load meta data for the UI
+#' @inheritParams loadTabularData 
 #' @param type character, which type of translations should be loaded;
 #' should be one of \code{c("species", "ui")}
 #' @param language character, which language data sheet should be loaded;
@@ -218,7 +251,7 @@ loadExotenData <- function(
 #' @author mvarewyck
 #' @importFrom utils read.csv
 #' @export
-loadTranslations <- function(type = c("ui", "species"),
+loadMetaData <- function(type = c("ui", "keys"),
   dataDir = system.file("extdata", package = "alienSpecies"), 
   language = c("nl", "fr", "en")) {
   
@@ -226,9 +259,9 @@ loadTranslations <- function(type = c("ui", "species"),
   language <- match.arg(language)
   
   allData <- read.csv(file.path(dataDir, switch(type, 
-    ui = "translations.csv",
-    species = "be_alientaxa_info.csv"
-  ))) 
+        ui = "translations.csv",
+        keys = "keys.csv"
+      ))) 
   
   filterData <- switch(type, 
     ui = {
@@ -238,17 +271,14 @@ loadTranslations <- function(type = c("ui", "species"),
       uiText
       
     },
-    species = {
-      
-      # clean scientific name
-      allData$scientificName <- sapply(strsplit(allData$scientificName, split = " "), function(x) paste(x[1:2], collapse = " "))
-      allData
-      
-    })
+    keys = allData
+  )
   
   return(filterData)
   
 }
+
+
 
 
 
@@ -299,43 +329,54 @@ getDutchNames <- function(x, type = c("regio")) {
 
 
 
-#' Extract the vernacular names using API requests
-#' 
-#' WIP: Currently all missing for this dataset https://www.gbif.org/dataset/6d9e952f-948c-4483-9807-575348147c7e
-#' WARNING: Takes long time to process
-#' @inheritParams loadExotenData
-#' @param taxonKeys numeric vector, taxon keys for GBIF
-#' @return no return value, data file 'vernacular_names.csv' is written to \code{dataDir}
-#' data.frame with
-#' \itemize{
-#' \item{key}{\code{taxonKeys} entered as input}
-#' \item{name}{character, vernacular name (language); multiple names are pasted togeter}
-#' }
-#' @author mvarewyck
-#' @importFrom utils write.csv
-#' @export
-getVernacularNames <- function(dataDir = system.file("extdata", package = "alienSpecies"),
-  taxonKeys) {
-  
-  extractedNames <- sapply(taxonKeys, function(iKey) {
-      
-      # test: iKey <- 157131005
-      # https://api.gbif.org/v1/species/152543101/vernacularNames
-      myRequest <- httr::GET(paste0("https://api.gbif.org/v1/species/", iKey, "/vernacularNames"))
-      allNames <- httr::content(myRequest)$results
-      if (length(allNames) == 0)
-        return("") else
-        paste(sapply(allNames, function(x) paste0(x$vernacularName, " (", x$language, ")")), 
-          collapse = "</br>")
-      
-    })
-  
-  newData <- data.frame(
-    key = taxonKeys,
-    name = extractedNames)
-  
-  
-  write.csv(newData, file.path(dataDir, "vernacular_names.csv"))
-  
-  
-}
+##' Extract the vernacular names using API requests
+##' 
+##' WIP: Currently all missing for this dataset https://www.gbif.org/dataset/6d9e952f-948c-4483-9807-575348147c7e
+##' WARNING: Takes long time to process
+##' @inheritParams loadTabularData
+##' @param taxonKeys numeric vector, taxon keys for GBIF
+##' @return no return value, data file 'vernacular_names.csv' is written to \code{dataDir}
+##' data.frame with
+##' \itemize{
+##' \item{key}{\code{taxonKeys} entered as input}
+##' \item{name}{character, vernacular name (language); multiple names are pasted togeter}
+##' }
+##' @author mvarewyck
+##' @importFrom utils write.csv
+##' @importFrom httr GET content
+##' @export
+##' @examples
+##' fullData <- rgbif::name_lookup(
+##'  query = "Tricellaria",
+##'  datasetKey = "0a2eaf0c-5504-4f48-a47f-c94229029dc8",
+##'  limit = 10000)
+##'fullData$names
+##'fullData$data$key
+##'
+##'myRequest <- httr::GET("https://api.gbif.org/v1/species/157131005/vernacularNames")
+##'httr::content(myRequest)$results
+#getVernacularNames <- function(dataDir = system.file("extdata", package = "alienSpecies"),
+#  taxonKeys) {
+#  
+#  extractedNames <- sapply(taxonKeys, function(iKey) {
+#      
+#      # test: iKey <- 157131005
+#      # https://api.gbif.org/v1/species/152543101/vernacularNames
+#      myRequest <- httr::GET(paste0("https://api.gbif.org/v1/species/", iKey, "/vernacularNames"))
+#      allNames <- httr::content(myRequest)$results
+#      if (length(allNames) == 0)
+#        return("") else
+#        paste(sapply(allNames, function(x) paste0(x$vernacularName, " (", x$language, ")")), 
+#          collapse = "</br>")
+#      
+#    })
+#  
+#  newData <- data.frame(
+#    key = taxonKeys,
+#    name = extractedNames)
+#  
+#  
+#  write.csv(newData, file.path(dataDir, "vernacular_names.csv"))
+#  
+#  
+#}

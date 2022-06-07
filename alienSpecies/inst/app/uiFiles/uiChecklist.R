@@ -10,6 +10,7 @@ tagList(
     welcomeSectionUI(id = "checklist"),
     
     tags$h2("Keuze menu"),
+    # TODO filter formatting: https://shiny.rstudio.com/articles/selectize.html
     wellPanel(
       fixedRow(
         # Select time range
@@ -71,9 +72,25 @@ tagList(
     tabsetPanel(
       
       tabPanel("Taxa", 
+        
         tags$div(style = "margin-top: 10px;",
-          DT::DTOutput("exoten_table")
-        )
+          
+          actionLink(inputId = "exoten_legend", label = "Table Legend", icon = icon("angle-double-down")),
+          conditionalPanel("input.exoten_legend % 2 == 1",
+            wellPanel(
+              tags$b("Icons"),
+              p(icon("star"), "Species has at least 1 (historical) observation in Belgium"),
+              p(icon("play"), "Species is on the EU-list of interest"),
+              tags$b("Colors"),
+              p(drawBullet(color = "black"), "Only observations"),
+              p(drawBullet(color = "orange"), "Incomplete outputs"),
+              p(drawBullet(color = "green"), "All outputs")
+            )
+          )
+        ),
+        
+        tableIndicatorsUI("checklist")
+
       ),
       
 #        countIntroductionPathwayUI(id = "checklist"),

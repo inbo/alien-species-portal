@@ -9,7 +9,7 @@
 #' @importFrom sp spTransform CRS
 #' @importFrom sf st_read
 #' @importFrom reshape2 dcast
-createOccupancyData <- function(dataDir = "~/git/alien-species-portal/data",
+createOccupancyData <- function(dataDir = "~/git/alien-species-portal/data/trendOccupancy",
   packageDir = system.file("extdata", package = "alienSpecies")) {
   
   

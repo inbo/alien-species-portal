@@ -16,14 +16,17 @@ results$species_choices <- reactive({
   })
 
 
-output$species_choice <- renderUI({
+observe({
     
-    selectInput(inputId = "species_taxonKey", label = NULL, 
+    # Trigger update when object is created
+    input$tabs
+    
+    updateSelectizeInput(session = session, inputId = "species_taxonKey",
       choices = results$species_choices(),
-      selected = if (doDebug) c(2498252, 2769766)[1] else NULL)    
+      selected = as.character(results$species_choice),
+      server = TRUE)    
     
   })
-
 
 
 

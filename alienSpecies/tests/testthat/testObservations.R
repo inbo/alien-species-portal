@@ -6,7 +6,7 @@
 
 ## Load data
 allShapes <- readShapeData()
-taxData <- loadExotenData(type = "occurrence")
+taxData <- loadTabularData(type = "occurrence")
 ## Settings
 # many versus few occurrences
 mySpecies <- c("Alopochen aegyptiaca", "Ruscus aculeatus")[2]
@@ -47,5 +47,8 @@ test_that("Occurrence plots", {
     
     expect_is(myResult$plot, "plotly")
     expect_is(myResult$data, "data.frame")
+    
+    # Color bars when full range selected
+    myResult <- countOccurrence(df = occurrenceData, period = c(1950, 2021))$plot
     
   })

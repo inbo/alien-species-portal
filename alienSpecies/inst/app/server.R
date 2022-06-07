@@ -30,14 +30,15 @@ function(input, output, session) {
   
   results <- reactiveValues(
     # Default language is dutch
-    translations = loadTranslations(language = "nl")
+    translations = loadMetaData(language = "nl"),
+    species_choice = if (doDebug) c(2498252, 2769766)[2] else NULL
   )
   
   
   # Select language
-  observeEvent(input$translate_nl, results$translations <- loadTranslations(language = "nl"))
-  observeEvent(input$translate_fr, results$translations <- loadTranslations(language = "fr"))
-  observeEvent(input$translate_en, results$translations <- loadTranslations(language = "en"))
+  observeEvent(input$translate_nl, results$translations <- loadMetaData(language = "nl"))
+  observeEvent(input$translate_fr, results$translations <- loadMetaData(language = "fr"))
+  observeEvent(input$translate_en, results$translations <- loadMetaData(language = "en"))
   
   
   

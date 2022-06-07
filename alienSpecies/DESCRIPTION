@@ -11,6 +11,7 @@ License: MIT + file LICENSE
 Imports: 
     data.table,
     DT,
+    htmltools,
     htmlwidgets,
     INBOtheme,
     leaflet,

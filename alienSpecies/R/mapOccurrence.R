@@ -45,6 +45,7 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   # For R CMD check
   year <- NULL
   selected <- NULL
+  currentYear <- as.numeric(format(Sys.Date(), "%Y"))
   
   spatialLevel <- match.arg(spatialLevel)
   iCode <- switch(spatialLevel,
@@ -56,12 +57,11 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   # Filter data
   nOccurred <- nOccurred[year > minYear, ][, selected := year >= period[1] & year <= period[2]]
   
-  
   myPlot <- plot_ly(data = nOccurred, x = ~year, y = ~count, type = "bar",
-      color = ~selected, colors = c("grey", "blue"),
+      marker = list(color = ~c("grey", "blue")[selected + 1]),
       hoverinfo = "x+y") %>%
     layout(
-      xaxis = list(title = "Year", range = c(minYear, max(df$year, na.rm = TRUE) + 1)),
+      xaxis = list(title = "Year", range = c(minYear, currentYear)),
       yaxis = list(title = ""),
       showlegend = FALSE)
   
@@ -176,6 +176,7 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
       
       # For R CMD check
       year <- NULL
+      currentYear <- as.numeric(format(Sys.Date(), "%Y")) - 1
       
       ns <- session$ns
       
@@ -212,34 +213,17 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
             sliderInput(
               inputId = ns("period"), 
               label = NULL,
-              min = max(1950, periodChoice[1]),
-              max = periodChoice[2],
-              value = c(max(2000, periodChoice[1]), min(2018, periodChoice[2])),
-              sep = "", step = 10,
+              min = 1950,
+              max = currentYear,
+              value = periodChoice,
+              sep = "", 
               width = "100%"
             )
           )
           
         })
       
-      
-      # Data dependent input #
-      # -------------------- #
-      
-#      output$year <- renderUI({
-#          
-#          req(geoData())
-#          
-#          div(class = "sliderBlank", 
-#            sliderInput(inputId = ns("year"), 
-#              label = if (type == "wbe") "Geselecteerd Jaar" else "Geselecteerd Jaar (kaart)",
-#              min = results$minYear(),
-#              max = max(geoData()$afschotjaar),
-#              value = results$year_value,
-#              sep = "", step = 1))
-#          
-#        })
-      
+ 
       
       # Create data for map
       occurrenceShape <- reactive({

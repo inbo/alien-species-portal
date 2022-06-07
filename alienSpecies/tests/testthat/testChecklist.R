@@ -7,12 +7,13 @@
 ## Load exoten data
 ##
 
-exotenData <- loadExotenData(type = "indicators")
+exotenData <- loadTabularData(type = "indicators")
 expect_is(exotenData, "data.frame")
-unionlistData <- loadExotenData(type = "unionlist")
+unionlistData <- loadTabularData(type = "unionlist")
 expect_is(unionlistData, "data.frame")
-occurrenceData <- loadExotenData(type = "occurrence")
+occurrenceData <- loadTabularData(type = "occurrence")
 expect_is(occurrenceData, "data.frame")
+translations <- loadMetaData(type = "ui")
 
 ##
 ## Combine duplicated keys

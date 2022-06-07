@@ -106,3 +106,16 @@ yearToTitleString <- function(year, brackets = TRUE) {
   }
 }
 
+
+
+#' Helper function to draw bullet in specific color
+#' 
+#' @param color color in hexadecimal notation
+#' @importFrom htmltools div
+#' @export
+drawBullet <- function(color) {
+  
+  div(style = paste0("background-color: ", color, 
+      "; display: inline-block; vertical-align:top; width: 20px; height: 20px; border-radius: 10px"))
+  
+}
