@@ -45,6 +45,8 @@ shinyUI(
           position = "fixed-top",
           
           # Main content
+          tabPanel(title = "Start",
+            uiOutput("start_page")),
           tabPanel(title = "Global Indicators",
             uiOutput("indicators_content")),
           tabPanel(title = "Species Information",

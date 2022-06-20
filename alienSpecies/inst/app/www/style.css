@@ -53,7 +53,7 @@ footer {
       
 .radio-inline input:checked ~ span div {
   background-image: url("blue-white-pattern.jpg");
-  background-size: 260px 80px;
+  background-size: 360px 80px;
 }
 
 .radio-inline:hover {
@@ -69,15 +69,18 @@ a, a:visited, a:hover, a:active, a:focus {
   color: #c1c443;
 }
 
-#wild_linkTable1, #wild_linkPlot1, #wild_linkPlot2, #wild_linkPlot3, #wild_linkPlot4, #wild_linkPlot5, #wild_linkPlot6, #wild_linkPlot7, #wild_linkPlot8, #wild_linkPlot9, #wild_linkPlot10, #wild_linkPlot11, #wild_linkPlot12, #schade_linkPlot1, #schade_linkTable2, #schade_linkPlot2, #schade_linkTable1 {
- font-size: 22px;
- color: #356196;
-}
 
 #geodataBron, #contact {
   font-size: 14px;
   line-height: 20px;
   color: #595959
+}
+
+#exampleFoto {
+  width: 360px; 
+  height: 236px;
+  background-image: url("example.jpg");
+  background-size: 360px 236px;
 }
 
 .fotoTitel {
