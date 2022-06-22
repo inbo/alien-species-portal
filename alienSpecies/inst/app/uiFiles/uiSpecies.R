@@ -17,7 +17,14 @@ tagList(
         tags$div(style = "margin-top: 10px;",
           mapOccurrenceUI(id = "observations")
         )
+      ),
+      
+      tabPanel("Indicators", 
+        tags$div(style = "margin-top: 10px;",
+          plotTriasUI(id = "species_emergenceObservations"),
+        )
       )
+      
 
     )
   )

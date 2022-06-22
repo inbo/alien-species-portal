@@ -101,7 +101,10 @@ paletteMap <- function(units) {
 #' @return leaflet map
 #' 
 #' @author mvarewyck
-#' @importFrom leaflet leaflet addPolygons colorFactor addLegend addProviderTiles
+#' @import leaflet
+#' @importFrom sp proj4string CRS spTransform
+#' @importFrom rgdal readOGR
+#' @importFrom leaflet.extras setMapWidgetStyle
 #' @export
 mapOccurrence <- function(occurrenceShape, legend = "none", addGlobe = FALSE) {
   
@@ -109,7 +112,31 @@ mapOccurrence <- function(occurrenceShape, legend = "none", addGlobe = FALSE) {
   myColors <- paletteMap(units =  gsub("cell_code", "", names(occurrenceShape)))
   palette <- colorFactor(palette = myColors$colors, levels = myColors$levels)
   
+#  ## TODO extract basemap and use as input
+#  crs_wgs <- CRS("+proj=longlat +datum=WGS84 +no_defs ")
+#  crs_bel <- CRS("+proj=lcc +lat_1=51.16666723333333 +lat_2=49.8333339 +lat_0=90 +lon_0=4.367486666666666 +x_0=150000.013 +y_0=5400088.438 +ellps=intl +towgs84=-106.869,52.2978,-103.724,0.3366,-0.457,1.8422,-1.2747 +units=m +no_defs ")
+#  
+#  bioreg_bel_clip <- readOGR(system.file("extdata", "grid", "bioreg_bel_clip.geojson", package = "alienSpecies"), "bioreg_bel_clip", stringsAsFactors = FALSE)
+#  bel_borders <- readOGR(system.file("extdata", "grid", "Belgie.geojson", package = "alienSpecies"), "Belgie", stringsAsFactors = FALSE)
+#  
+#  proj4string(bel_borders) <- crs_bel
+#  
+#  bioreg_pal <- colorFactor(palette = c("darkgrey", "white"), domain = bioreg_bel_clip$BIOGEO, levels = c("Continental", "Atlantic"))
+#  
+#  basemap <- leaflet(bioreg_bel_clip) %>% 
+#    addPolygons(fillColor = ~bioreg_pal(BIOGEO),
+#      fillOpacity = 0.5,
+#      stroke = FALSE) %>% 
+#    addPolylines(data = spTransform(bel_borders, crs_wgs),
+#      color = "black",
+#      opacity = 1,
+#      weight = 2) %>% 
+#    addScaleBar(position = "bottomleft") %>% 
+#    setMapWidgetStyle(list(background= "white"))
+  
+  # TODO use basemap
   myMap <- leaflet()
+#  myMap <- basemap
   
   for (i in length(occurrenceShape):1)
     
@@ -119,6 +146,7 @@ mapOccurrence <- function(occurrenceShape, legend = "none", addGlobe = FALSE) {
         data = occurrenceShape[[i]],
         group = myColors$levels[i],
         opacity = 1,
+        fillOpacity = 0,
         weight = 1
       )
   
@@ -141,7 +169,7 @@ mapOccurrence <- function(occurrenceShape, legend = "none", addGlobe = FALSE) {
   # Add background map
   if (addGlobe) {
     
-    myMap <- addProviderTiles(myMap, "OpenStreetMap.HOT")
+    myMap <- addTiles(myMap)
     
   }
   
@@ -228,6 +256,7 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
       # Create data for map
       occurrenceShape <- reactive({
           
+          req(input$period)
           validate(need(subData(), "Geen data beschikbaar"))
           
           createOccurrenceData(
@@ -262,7 +291,7 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
               updateActionLink(session, inputId = "globe", 
                 label = "Verberg landkaart")
               
-              proxy %>% addProviderTiles("OpenStreetMap.HOT")
+              proxy %>% addTiles()
               
             } else {
               

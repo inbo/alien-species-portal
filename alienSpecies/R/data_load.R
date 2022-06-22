@@ -32,12 +32,25 @@ readShapeData <- function(
 #' 
 #' @author mvarewyck
 #' @importFrom utils write.csv
-#' @importFrom data.table fread setnames
+#' @importFrom data.table fread setnames as.data.table
 #' @export
 createKeyData <- function(dataDir = system.file("extdata", package = "alienSpecies")) {
   
+  # For R CMD check
+  classKey <- NULL
+  i.classKey <- NULL
+    
   # Occurrence cube
   taxaData <- fread(file.path(dataDir, "be_alientaxa_info.csv"))
+  classKeys <- as.data.table(do.call(rbind, lapply(unique(taxaData$taxonKey), function(k) {
+      tmpData <- rgbif::name_usage(key = k)$data
+      if (!"classKey" %in% colnames(tmpData))
+        tmpData$classKey <- NA
+      tmpData[, c("key", "classKey")]
+    })))
+  setnames(classKeys, "key", "taxonKey")
+  taxaData <- taxaData[classKeys, classKey := i.classKey, on = "taxonKey"]
+  
   ## clean scientific name
   taxaData$scientificName <- sapply(strsplit(taxaData$scientificName, split = " "), function(x) paste(x[1:2], collapse = " "))
   
@@ -74,7 +87,7 @@ createKeyData <- function(dataDir = system.file("extdata", package = "alienSpeci
 #' @export
 loadTabularData <- function(
   dataDir = system.file("extdata", package = "alienSpecies"),
-  type = c("indicators", "unionlist", "occurrence")) {
+  type = c("indicators", "unionlist", "occurrence", "protectedAreas")) {
   
   # For R CMD check
   scientificName <- NULL
@@ -86,7 +99,8 @@ loadTabularData <- function(
       indicators = "data_input_checklist_indicators.tsv",
 #      "indicators" = c("description.txt", "distribution.txt", "speciesprofile.txt", "taxon.txt"),
       unionlist = "eu_concern_species.tsv",
-      occurrence = "be_alientaxa_cube.csv"))
+      occurrence = "be_alientaxa_cube.csv",
+      protectedAreas = "intersect_EEA_ref_grid_protected_areas.tsv"))
   
   if (type == "indicators") {
     
@@ -100,8 +114,10 @@ loadTabularData <- function(
     
     ## extract necessary columns
     rawData <- rawData[, c(
-        # necessary to use trias function
+        # GBIF key - necessary to use trias function
         "key", 
+        # Taxon key
+        "nubKey",
         # full scientific name
         "scientificName",
         # Period - slider should use first_observed
@@ -213,22 +229,41 @@ loadTabularData <- function(
     
   } else if (type == "occurrence") {
     
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
+    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
+      drop = "min_coord_uncertainty")
     
     ## exclude data before 1950 - keeps values with NA for first_observed
     toExclude <- (rawData$year < 1950 & !is.na(rawData$year))
     warning(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten")
     rawData <- rawData[!toExclude, ]
     
-    # for linking scientific name
+    # for linking scientific name & classKey
     dictionary <- loadMetaData(type = "keys")
-    rawData <- rawData[dictionary, scientificName := i.scientificName, on = "taxonKey"]
+    rawData <- rawData[dictionary, c("scientificName", "classKey") := list(
+        i.scientificName,
+        i.classKey), on = "taxonKey"]
+        
+    # Class cube
+    classData <- fread(file.path(dataDir, "be_classes_cube.csv"), 
+      drop = c("min_coord_uncertainty", "eea_cell_code"))
+    setnames(classData, "n", "class_n")
+    classData <- unique(classData, by = c("year", "classKey"))
+    rawData <- rawData[classData, class_n := i.class_n, on = c("classKey", "year")]
     
     # attach 10km cellcode
     rawData$cell_code10 <- gsub(pattern = "1km", replacement = "10km", 
       paste0(substr(rawData$eea_cell_code, start = 1, stop = 7),
         substr(rawData$eea_cell_code, start = 9, stop = 12)))
     colnames(rawData)[colnames(rawData) == "eea_cell_code"] <- "cell_code1"
+    
+  } else if (type == "protectedAreas") {
+    
+    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
+    
+    ## extract necessary columns
+    rawData <- rawData[, c("CELLCODE", "EOFORIGIN", "NOFORIGIN", "natura2000")]
+    # rows of interest: https://trias-project.github.io/indicators/05_occurrence_indicators_preprocessing.html#1_setup
+    rawData <- rawData[rawData$natura2000, ]
     
   }
   

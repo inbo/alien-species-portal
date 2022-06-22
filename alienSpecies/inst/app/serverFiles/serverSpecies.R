@@ -42,3 +42,25 @@ mapOccurrenceServer(id = "observations",
   shapeData = allShapes
 )
 
+
+
+
+### Indicators
+### -----------------
+
+
+## Emergence status GAM - Observations
+plotTriasServer(id = "species_emergenceObservations",
+  data = results$exoten_data,
+  uiText = results$translations,
+  triasFunction = "indicator_introduction_year",
+  triasArgs = reactive({
+      list(
+        start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
+        x_lab = "Jaar",
+        y_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
+      )
+    })
+)
+
+
