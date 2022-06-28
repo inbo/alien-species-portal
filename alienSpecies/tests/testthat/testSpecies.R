@@ -7,6 +7,7 @@
 ## Load data
 allShapes <- readShapeData()
 taxData <- loadTabularData(type = "occurrence")
+baseMap <- createBaseMap()
 ## Settings
 # many versus few occurrences
 allSpecies <- c("Alopochen aegyptiaca", "Ruscus aculeatus")
@@ -39,8 +40,8 @@ test_that("Occurrence plots", {
     expect_lte(nrow(occurrenceShape[[1]]), length(unique(taxData$cell_code1[taxData$taxonKey == myKey])))
     expect_lte(nrow(occurrenceShape[[2]]), length(unique(taxData$cell_code10[taxData$taxonKey == myKey])))
     
-    myPlot <- mapCube(cubeShape = occurrenceShape, legend = "topright", 
-      addGlobe = TRUE, groupVariable = "cell_code")
+    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
+      legend = "topright", addGlobe = TRUE, groupVariable = "cell_code")
     expect_is(myPlot, "leaflet")
     
     # Barplot
@@ -110,12 +111,12 @@ test_that("Reporting t1", {
     
     reportingShape <- createCubeData(df = reportingData, shapeData = allShapes,
       groupVariable = "source")
-    expect_equal(length(reportingShape), 1)
+    expect_equal(length(reportingShape), 2)
     expect_is(reportingShape[[1]], "sf")
     expect_lte(nrow(reportingShape[[1]]), length(unique(reportingData$cell_code10)))
     
-    myPlot <- mapCube(cubeShape = reportingShape, legend = "topright", addGlobe = TRUE,
-      groupVariable = "source")
+    myPlot <- mapCube(cubeShape = reportingShape, baseMap = baseMap, 
+      legend = "topright", addGlobe = TRUE, groupVariable = "source")
     expect_is(myPlot, "leaflet")
     
   })  
@@ -134,8 +135,8 @@ test_that("Reporting t0 and t1", {
     expect_is(reportingShape[[1]], "sf")
     expect_lte(nrow(reportingShape[[length(reportingShape)]]), length(unique(reportingData$cell_code10)))
     
-    myPlot <- mapCube(cubeShape = reportingShape, legend = "topright", addGlobe = TRUE,
-      groupVariable = "source")
+    myPlot <- mapCube(cubeShape = reportingShape, baseMap = baseMap, 
+      legend = "topright", addGlobe = TRUE, groupVariable = "source")
     expect_is(myPlot, "leaflet")
     
   })  

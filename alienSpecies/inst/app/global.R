@@ -46,4 +46,8 @@ if (!doDebug | !exists("allShapes"))
   allShapes <- readShapeData()
 dictionary <- loadMetaData(type = "keys")
 
+# Load base map
+if (!doDebug | !exists("baseMap"))
+  baseMap <- createBaseMap()
+
 

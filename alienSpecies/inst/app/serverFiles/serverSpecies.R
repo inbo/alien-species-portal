@@ -46,9 +46,13 @@ taxonKey <- reactive({
 mapCubeServer(id = "observations",
   uiText = results$translations,
   species = reactive(names(taxonKey())),
-  df = reactive(occurrenceData[occurrenceData$taxonKey %in% taxonKey(), ]),
+  df = reactive({
+      req(taxonKey())
+      occurrenceData[occurrenceData$taxonKey %in% taxonKey(), ]
+    }),
   groupVariable = "cell_code",
   shapeData = allShapes,
+  baseMap = baseMap,
   showPeriod = TRUE
 )
 
@@ -83,7 +87,8 @@ mapCubeServer(id = "reporting_t1",
   species = reactive(input$species_choice),
   df = reactive(dfCube[dfCube$source == "t1" & species %in% input$species_choice, ]),
   groupVariable = "source",
-  shapeData = allShapes
+  shapeData = allShapes,
+  baseMap = baseMap
 )
 
 # t0 and t1
@@ -92,7 +97,8 @@ mapCubeServer(id = "reporting_t01",
   species = reactive(input$species_choice),
   df = reactive(dfCube[species %in% input$species_choice, ]),
   groupVariable = "source",
-  shapeData = allShapes
+  shapeData = allShapes,
+  baseMap = baseMap
 )
 
 

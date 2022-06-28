@@ -146,53 +146,64 @@ paletteMap <- function(groupNames, groupVariable) {
 }
 
 
-#' Create leaflet map for the occurrence data
-#' @param cubeShape list with sf data.frame as returned by
-#' \code{\link{createCubeData}}
-#' @param legend character, legend placement; default is "none", no legend
-#' @param addGlobe boolean, whether to add world map to background; default is FALSE 
-#' @inheritParams createCubeData
-#' 
-#' @return leaflet map
-#' 
+#' Create base map of Belgium
+#' @return leaflet object
 #' @author mvarewyck
 #' @import leaflet
 #' @importFrom sp proj4string CRS spTransform
-#' @importFrom rgdal readOGR
-#' @importFrom leaflet.extras setMapWidgetStyle
+#' @importFrom rgdal readOGR  
 #' @export
-mapCube <- function(cubeShape, legend = "none", addGlobe = FALSE,
+createBaseMap <- function() {
+  
+  crs_wgs <- CRS("+proj=longlat +datum=WGS84 +no_defs ")
+  crs_bel <- CRS("+proj=lcc +lat_1=51.16666723333333 +lat_2=49.8333339 +lat_0=90 +lon_0=4.367486666666666 +x_0=150000.013 +y_0=5400088.438 +ellps=intl +towgs84=-106.869,52.2978,-103.724,0.3366,-0.457,1.8422,-1.2747 +units=m +no_defs ")
+  
+  bioreg_bel_clip <- readOGR(system.file("extdata", "grid", "bioreg_bel_clip.geojson", package = "alienSpecies"), "bioreg_bel_clip", stringsAsFactors = FALSE)
+  bel_borders <- readOGR(system.file("extdata", "grid", "Belgie.geojson", package = "alienSpecies"), "Belgie", stringsAsFactors = FALSE)
+  
+  proj4string(bel_borders) <- crs_bel
+  
+  bioreg_phal <- colorFactor(palette = c("darkgrey", "white"), 
+    domain = bioreg_bel_clip$BIOGEO, levels = c("Continental", "Atlantic"))
+  
+  baseMap <- leaflet(bioreg_bel_clip) %>% 
+    addPolygons(fillColor = ~bioreg_pal(BIOGEO),
+      fillOpacity = 0.5,
+      stroke = FALSE) %>% 
+#    addPolylines(data = bel_borders, 
+    addPolylines(data = spTransform(bel_borders, crs_wgs),
+      color = "black",
+      opacity = 1,
+      weight = 2) %>% 
+    addScaleBar(position = "bottomleft") %>% 
+#    setMapWidgetStyle(list(background= "white"))
+  
+  baseMap
+  
+}
+
+
+#' Create leaflet map for the occurrence data
+#' @param cubeShape list with sf data.frame as returned by
+#' \code{\link{createCubeData}}
+#' @param baseMap leaflet object as created by \code{createBaseMap}
+#' @param legend character, legend placement; default is "none", no legend
+#' @param addGlobe boolean, whether to add world map to background; default is FALSE 
+#' @inheritParams createCubeData
+#' @return leaflet map
+#' @author mvarewyck
+#' @import leaflet
+#' @export
+mapCube <- function(cubeShape, baseMap = createBaseMap(), legend = "none", 
+  addGlobe = FALSE,
   groupVariable) {
   
   
   myColors <- paletteMap(groupNames = names(cubeShape), groupVariable = groupVariable)
   palette <- colorFactor(palette = myColors$colors, levels = myColors$levels)
   
-#  ## TODO extract basemap and use as input
-#  crs_wgs <- CRS("+proj=longlat +datum=WGS84 +no_defs ")
-#  crs_bel <- CRS("+proj=lcc +lat_1=51.16666723333333 +lat_2=49.8333339 +lat_0=90 +lon_0=4.367486666666666 +x_0=150000.013 +y_0=5400088.438 +ellps=intl +towgs84=-106.869,52.2978,-103.724,0.3366,-0.457,1.8422,-1.2747 +units=m +no_defs ")
-#  
-#  bioreg_bel_clip <- readOGR(system.file("extdata", "grid", "bioreg_bel_clip.geojson", package = "alienSpecies"), "bioreg_bel_clip", stringsAsFactors = FALSE)
-#  bel_borders <- readOGR(system.file("extdata", "grid", "Belgie.geojson", package = "alienSpecies"), "Belgie", stringsAsFactors = FALSE)
-#  
-#  proj4string(bel_borders) <- crs_bel
-#  
-#  bioreg_pal <- colorFactor(palette = c("darkgrey", "white"), domain = bioreg_bel_clip$BIOGEO, levels = c("Continental", "Atlantic"))
-#  
-#  basemap <- leaflet(bioreg_bel_clip) %>% 
-#    addPolygons(fillColor = ~bioreg_pal(BIOGEO),
-#      fillOpacity = 0.5,
-#      stroke = FALSE) %>% 
-#    addPolylines(data = spTransform(bel_borders, crs_wgs),
-#      color = "black",
-#      opacity = 1,
-#      weight = 2) %>% 
-#    addScaleBar(position = "bottomleft") %>% 
-#    setMapWidgetStyle(list(background= "white"))
-  
-  # TODO use basemap
-  myMap <- leaflet()
-#  myMap <- basemap
+#  myMap <- leaflet()
+  myMap <- baseMap
   
   for (i in length(cubeShape):1)
     
@@ -239,6 +250,7 @@ mapCube <- function(cubeShape, legend = "none", addGlobe = FALSE,
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
 #' @inheritParams welcomeSectionServer
 #' @inheritParams createCubeData
+#' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @param species reactive character, readable name of the selected species
 #' @param df reactive data.frame, data for \code{\link{countIntroductionPathway}}
@@ -252,7 +264,7 @@ mapCube <- function(cubeShape, legend = "none", addGlobe = FALSE,
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot webshot
 #' @export
-mapCubeServer <- function(id, uiText, species, df, shapeData,
+mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
   groupVariable, showPeriod = FALSE, showGlobeDefault = TRUE
 ) {
   
@@ -338,8 +350,8 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
           
           validate(need(cubeShape(), "Geen data beschikbaar"))
           
-          mapCube(cubeShape = cubeShape(), groupVariable = groupVariable,
-            addGlobe = TRUE, legend = "topright")          
+          mapCube(cubeShape = cubeShape(), baseMap = baseMap, 
+            groupVariable = groupVariable, addGlobe = TRUE, legend = "topright")          
           
         })
       
@@ -410,6 +422,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
           
           newMap <- mapCube(
             cubeShape = cubeShape(),
+            baseMap = baseMap,
             legend = input$legend,
             addGlobe = input$globe %% 2 == as.numeric(showGlobeDefault) - 1
           )
