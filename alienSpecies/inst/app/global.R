@@ -38,7 +38,8 @@ defaultYear <- max(exotenData$first_observed, na.rm = TRUE)
 habitats <- attr(exotenData, "habitats")
 
 # Load occupancy data from createOccupancyData()
-load(file = file.path(dataDir, "occupancy.RData"))
+load(file = file.path(dataDir, "dfCube.RData"))
+occupancy <- createOccupancyData(dfCube = dfCube)
 
 # Load occurrence data
 if (!doDebug | !exists("allShapes"))

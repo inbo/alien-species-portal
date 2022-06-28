@@ -1,18 +1,63 @@
-#' Create occurrence shape data for \code{\link{mapOccurrence}}
+#' Create occurrence shape data for \code{\link{mapCube}}
 #' 
-#' @param occurrenceData data.frame with occurrence data 
+#' @param df data.frame with occurrence or occupancy data
 #' @param shapeData list with sf data.frame for each region level to be plotted
-#' @return list with sf data.frame for each region level to be plotted,
-#' contains boolean column 'occurrence' whether the species was observed in the grid or not
+#' @param groupVariable character, defines for which groups to create cube data;
+#' \code{groupVariable} should match a column name in \code{df};
+#' exception if \code{cell_code} then groups are created per cellcode (spatial level)
+#' @return list with sf data.frame for each group/cube level to be plotted
+#' 
+#' When \code{groupVariable} is defined, return a list with data.frame of cellcodes
+#' per group level, the combined groups and the cellcodes which didn't have
+#' any occurrence.
+#' When no \code{groupVariable} is defined, return a list with data.frame of cellcodes
+#' per cube level
 #' 
 #' @author mvarewyck
 #' @importFrom sf st_as_sf st_transform
+#' @importFrom data.table data.table rbindlist copy
 #' @export
-createOccurrenceData <- function(occurrenceData, shapeData) {
+createCubeData <- function(df, shapeData, groupVariable) {
   
-  sapply(c("cell_code1", "cell_code10"), function(iCode) {
-      
-      isOccurred <- unique(occurrenceData[[iCode]])
+  cellCodes <- c("cell_code1", "cell_code10")
+  cellCodes <- cellCodes[cellCodes %in% colnames(df)]
+  
+  if (!is.null(groupVariable) && groupVariable != "cell_code") {
+    
+    if (length(cellCodes) != 1)
+      stop("Only suitable for single grid level")
+    
+    allGroups <- unique(df[[groupVariable]])
+    # t0 and t1
+    if (length(allGroups) > 1) {
+      combinedGroup <- paste(allGroups, collapse = " & ")
+      combinedData <- df[duplicated(df, by = cellCodes), ][, source := combinedGroup]
+      df <- rbind(df[!df[[cellCodes]] %in% combinedData[[cellCodes]], ], combinedData)
+    } else combinedGroup <- NULL
+    # neither
+    allCodes <- shapeData[[paste0("be_", gsub("cell_code", "", cellCodes), "km")]]$CELLCODE
+    notData <- data.table(
+      source = "negative", 
+      cell_code = allCodes[!allCodes %in% df[[cellCodes]]] 
+    )
+    setnames(notData, "cell_code", cellCodes)
+    df <- rbindlist(list(df, notData), fill = TRUE)
+    # refactor
+    df <- df[, source := factor(source, levels = c(allGroups, combinedGroup, "negative"),
+        labels = c(paste("only", allGroups), combinedGroup, "negative"))]
+    dfList <- split(df, list(df[[groupVariable]]))
+    
+  } else {
+    
+    dfList <- sapply(cellCodes, function(iCode)
+        copy(df)[, cellCodes[!cellCodes %in% iCode] := NULL],
+      simplify = FALSE)
+    
+  }
+  
+  sapply(dfList, function(iData) {
+      iCode <- cellCodes[cellCodes %in% colnames(iData)]
+      isOccurred <- unique(iData[[iCode]])
       iShape <- shapeData[[paste0("be_", gsub("cell_code", "", iCode), "km")]]
       tmp <- st_as_sf(iShape[iShape$CELLCODE %in% isOccurred, ], 
           coords = c("decimalLongitude", "decimalLatitude"),
@@ -72,18 +117,26 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
 
 
 
-#' Necessary info for the color palette of \code{\link{mapOccurrence}}
-#' @param units character vector, spatial levels in the data, e.g. \code{c(1, 10)}
+#' Necessary info for the color palette of \code{\link{mapCube}}
+#' @param groupNames character vector, labels to be shown in the color legend
+#' @param groupVariable character, variable for which the \code{groupNames} are defined
 #' @return list with colors, character vector and levels, character vector. 
 #' Each item has same length as \code{units}
 #' 
 #' @author mvarewyck
 #' @importFrom grDevices palette
 #' @export
-paletteMap <- function(units) {
+paletteMap <- function(groupNames, groupVariable) {
   
-  myColors <- rev(palette()[seq_along(units)])
-  valuesPalette <- factor(paste0("UTM ", units, "x", units, " km squares"))
+  # Actually only needed if groupVariable == "cell_codes"
+  groupNames <- gsub(groupVariable, "", groupNames)
+  
+  myPalette <- palette()
+  myColors <- rev(myPalette[seq_along(groupNames)]) 
+  
+  if (groupVariable == "cell_code")
+    valuesPalette <- factor(paste0("UTM ", groupNames, "x", groupNames, " km squares")) else
+    valuesPalette <- groupNames
   
   list(
     colors = myColors,
@@ -94,10 +147,12 @@ paletteMap <- function(units) {
 
 
 #' Create leaflet map for the occurrence data
-#' @param occurrenceShape list with sf data.frame as returned by
-#' \code{\link{createOccurrenceData}}
+#' @param cubeShape list with sf data.frame as returned by
+#' \code{\link{createCubeData}}
 #' @param legend character, legend placement; default is "none", no legend
 #' @param addGlobe boolean, whether to add world map to background; default is FALSE 
+#' @inheritParams createCubeData
+#' 
 #' @return leaflet map
 #' 
 #' @author mvarewyck
@@ -106,10 +161,11 @@ paletteMap <- function(units) {
 #' @importFrom rgdal readOGR
 #' @importFrom leaflet.extras setMapWidgetStyle
 #' @export
-mapOccurrence <- function(occurrenceShape, legend = "none", addGlobe = FALSE) {
+mapCube <- function(cubeShape, legend = "none", addGlobe = FALSE,
+  groupVariable) {
   
   
-  myColors <- paletteMap(units =  gsub("cell_code", "", names(occurrenceShape)))
+  myColors <- paletteMap(groupNames = names(cubeShape), groupVariable = groupVariable)
   palette <- colorFactor(palette = myColors$colors, levels = myColors$levels)
   
 #  ## TODO extract basemap and use as input
@@ -138,15 +194,15 @@ mapOccurrence <- function(occurrenceShape, legend = "none", addGlobe = FALSE) {
   myMap <- leaflet()
 #  myMap <- basemap
   
-  for (i in length(occurrenceShape):1)
+  for (i in length(cubeShape):1)
     
     myMap <- myMap %>%
       addPolygons(color = ~ palette(myColors$levels[i]),
         popup = ~CELLCODE,
-        data = occurrenceShape[[i]],
+        data = cubeShape[[i]],
         group = myColors$levels[i],
         opacity = 1,
-        fillOpacity = 0,
+        fillOpacity = if (groupVariable != "cell_code" && i != length(cubeShape)) 0.5 else 0,
         weight = 1
       )
   
@@ -180,11 +236,12 @@ mapOccurrence <- function(occurrenceShape, legend = "none", addGlobe = FALSE) {
 
 
 
-#' Shiny module for creating the plot \code{\link{mapOccurrence}} - server side
+#' Shiny module for creating the plot \code{\link{mapCube}} - server side
 #' @inheritParams welcomeSectionServer
-#' @inheritParams createOccurrenceData
-#' @param taxonKey reactive integer, selected species
-#' @param taxData data.frame as reactive object, data for \code{\link{countIntroductionPathway}}
+#' @inheritParams createCubeData
+#' @inheritParams mapCubeUI
+#' @param species reactive character, readable name of the selected species
+#' @param df reactive data.frame, data for \code{\link{countIntroductionPathway}}
 #' @param showGlobeDefault boolean, whether the globe is shown by default 
 #' when the map is first created; default value is TRUE
 #' @return no return value
@@ -195,8 +252,8 @@ mapOccurrence <- function(occurrenceShape, legend = "none", addGlobe = FALSE) {
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot webshot
 #' @export
-mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
-  showGlobeDefault = TRUE
+mapCubeServer <- function(id, uiText, species, df, shapeData,
+  groupVariable, showPeriod = FALSE, showGlobeDefault = TRUE
 ) {
   
   moduleServer(id,
@@ -209,33 +266,29 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
       ns <- session$ns
       
       subText <- reactive({
-          uiText[uiText$plotFunction == "mapOccurrence", ]
+          uiText[uiText$plotFunction == ns("mapOccurrence"), ]
         })
       
       output$titleMapOccurrence <- renderUI({
           
-          h3(HTML(paste(subText()$title, species(),
-                yearToTitleString(req(input$period))
-              )))
+          req(species())
           
-        })
-      
-      species <- reactive(names(taxonKey()))
-      
-      subData <- reactive({
+          myTitle <- if (showPeriod) {
+            req(input$period)
+            paste(subText()$title, species(), yearToTitleString(req(input$period))) 
+          } else {
+            paste(subText()$title, species())
+          }
           
-          req(taxData)
-          req(taxonKey())
-          
-          taxData[taxData$taxonKey %in% taxonKey(), ]
-          
+          h3(HTML(myTitle))
+        
         })
       
       output$period <- renderUI({
           
-          req(subData())
+          req(df())
           
-          periodChoice <- range(subData()$year, na.rm = TRUE)
+          periodChoice <- range(df()$year, na.rm = TRUE)
           
           div(class = "sliderBlank", style = "margin-left:50px; margin-right:10px;",
             sliderInput(
@@ -251,17 +304,29 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
           
         })
       
- 
+      subData <- reactive({
+          
+          if (showPeriod) {
+          
+            req(input$period)
+            df()[year >= input$period[1] & year <= input$period[2], ]
+            
+          } else df()
+          
+        })
+      
+      
       
       # Create data for map
-      occurrenceShape <- reactive({
+      cubeShape <- reactive({
           
-          req(input$period)
-          validate(need(subData(), "Geen data beschikbaar"))
+          validate(need(subData(), "Geen data beschikbaar"),
+            need(nrow(subData()) > 0, "Geen data beschikbaar"))
           
-          createOccurrenceData(
-            occurrenceData = subData()[year >= input$period[1] & year <= input$period[2], ],
-            shapeData = shapeData
+          createCubeData(
+            df = subData(),
+            shapeData = shapeData,
+            groupVariable = groupVariable
           )
           
         })
@@ -271,16 +336,17 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
           
           req(shapeData)
           
-          validate(need(occurrenceShape(), "Geen data beschikbaar"))
+          validate(need(cubeShape(), "Geen data beschikbaar"))
           
-          mapOccurrence(occurrenceShape = occurrenceShape())          
+          mapCube(cubeShape = cubeShape(), groupVariable = groupVariable,
+            addGlobe = TRUE, legend = "topright")          
           
         })
       
       # Add world map
       observe({
           
-          validate(need(occurrenceShape(), "Geen data beschikbaar"))
+          validate(need(cubeShape(), "Geen data beschikbaar"))
           
           proxy <- leafletProxy("spacePlot")
           
@@ -310,7 +376,7 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
       # Add legend
       observe({
           
-          validate(need(occurrenceShape(), "Geen data beschikbaar"))
+          validate(need(cubeShape(), "Geen data beschikbaar"))
           
           req(input$legend)
           
@@ -319,7 +385,8 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
           
           if (input$legend != "none") {
             
-            myColors <- paletteMap(units = gsub("cell_code", "", names(occurrenceShape())))
+            myColors <- paletteMap(groupNames = names(cubeShape()), 
+              groupVariable = groupVariable)
             palette <- colorFactor(palette = myColors$colors, levels = myColors$levels)
             
             proxy %>% addLegend(
@@ -339,10 +406,10 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
       # Create final map (for download)
       finalMap <- reactive({
           
-          validate(need(occurrenceShape(), "Geen data beschikbaar"))
+          validate(need(cubeShape(), "Geen data beschikbaar"))
           
-          newMap <- mapOccurrence(
-            occurrenceShape = occurrenceShape(),
+          newMap <- mapCube(
+            cubeShape = cubeShape(),
             legend = input$legend,
             addGlobe = input$globe %% 2 == as.numeric(showGlobeDefault) - 1
           )
@@ -387,7 +454,7 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
             content = "kaartData", fileExt = "csv"),
         content = function(file) {
           
-          myData <- as.data.frame(occurrenceShape())
+          myData <- as.data.frame(cubeShape())
           # TODO change variable names
 #          names(myData)[names(myData) == "freq"] <- results$unitText()
 #          names(myData)[names(myData) == "group"] <- "groep"
@@ -404,7 +471,7 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
       
       plotModuleServer(id = "countOccurrence",
         plotFunction = "countOccurrence", 
-        data = subData,
+        data = df,
         period = reactive(input$period)
       )
       
@@ -413,16 +480,17 @@ mapOccurrenceServer <- function(id, uiText, taxonKey, taxData, shapeData,
 
 
 
-#' Shiny module for creating the plot \code{\link{mapOccurrence}} - UI side
+#' Shiny module for creating the plot \code{\link{mapCube}} - UI side
 #' @inheritParams welcomeSectionServer
 #' @param sources character vector, sources to select from
+#' @param showPeriod boolean, whether to show time selector; default FALSE
 #' @return UI object
 #' 
 #' @author mvarewyck
 #' @import shiny
 #' @importFrom leaflet leafletOutput
 #' @export
-mapOccurrenceUI <- function(id, sources = c("All")) {
+mapCubeUI <- function(id, sources = c("All"), showPeriod = FALSE) {
   
   ns <- NS(id)
   
@@ -453,9 +521,17 @@ mapOccurrenceUI <- function(id, sources = c("All")) {
     ),
     withSpinner(leafletOutput(ns("spacePlot"))),
     
+    if (showPeriod) {
+      tagList(
+        plotModuleUI(id = ns("countOccurrence"), height = "400px"),
+        uiOutput(ns("period"))
+      )
+    },
     
-    plotModuleUI(id = ns("countOccurrence"), height = "400px"),
-    uiOutput(ns("period")),
+    tags$br(),
+    
+    downloadButton(ns("download"), label = "Download figuur", class = "downloadButton"),
+    downloadButton(ns("downloadData"), label = "Download data", class = "downloadButton"),
     
     tags$hr()
   

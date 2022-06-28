@@ -176,7 +176,9 @@ test_that("Grafiek: Cumulatief aantal geïntroduceerde uitheemse soorten per jaa
 
 test_that("Grafiek: Mate van verspreiding van de Unielijstsoorten", {
     
-    load(file = file.path(dataDir, "occupancy.RData"))
+    load(file = file.path(dataDir, "dfCube.RData"))
+    occupancy <- createOccupancyData(dfCube = dfCube)
+    
     tmpResult <- countOccupancy(df = occupancy)
     
     expect_is(tmpResult, "list")

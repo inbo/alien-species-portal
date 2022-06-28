@@ -7,21 +7,22 @@
 # Species selection
 results$species_choices <- reactive({
     
-    subData <- occurrenceData[!duplicated(taxonKey), ]
-    choices <- subData$taxonKey
-    names(choices) <- subData$scientificName
+    # Observations
+    taxChoices <- occurrenceData[!duplicated(taxonKey), scientificName]
+    # Reporting
+    reportChoices <- dfCube[!duplicated(species) & !species %in% taxChoices, species]
     
-    choices[order(names(choices))]
-    
+    sort(c(taxChoices, reportChoices))
+        
   })
 
 
 observe({
     
-    # Trigger update when object is created
+    # Trigger update when changing tab
     input$tabs
     
-    updateSelectizeInput(session = session, inputId = "species_taxonKey",
+    updateSelectizeInput(session = session, inputId = "species_choice",
       choices = results$species_choices(),
       selected = as.character(results$species_choice),
       server = TRUE)    
@@ -33,13 +34,22 @@ observe({
 ### Observations
 ### -----------------
 
+# Taxonkey of selected species
+taxonKey <- reactive({
+    
+    dictionary$taxonKey[match(req(input$species_choice), dictionary$scientificName)]
+    
+  })
+
 
 ## Map + barplot
-mapOccurrenceServer(id = "observations",
+mapCubeServer(id = "observations",
   uiText = results$translations,
-  taxonKey = reactive(results$species_choices()[results$species_choices() == req(input$species_taxonKey)]),
-  taxData = occurrenceData,
-  shapeData = allShapes
+  species = reactive(names(taxonKey())),
+  df = reactive(occurrenceData[occurrenceData$taxonKey %in% taxonKey(), ]),
+  groupVariable = "cell_code",
+  shapeData = allShapes,
+  showPeriod = TRUE
 )
 
 
@@ -62,5 +72,28 @@ plotTriasServer(id = "species_emergenceObservations",
       )
     })
 )
+
+
+### Reporting
+### -----------------
+
+# t1
+mapCubeServer(id = "reporting_t1",
+  uiText = results$translations,
+  species = reactive(input$species_choice),
+  df = reactive(dfCube[dfCube$source == "t1" & species %in% input$species_choice, ]),
+  groupVariable = "source",
+  shapeData = allShapes
+)
+
+# t0 and t1
+mapCubeServer(id = "reporting_t01",
+  uiText = results$translations,
+  species = reactive(input$species_choice),
+  df = reactive(dfCube[species %in% input$species_choice, ]),
+  groupVariable = "source",
+  shapeData = allShapes
+)
+
 
 

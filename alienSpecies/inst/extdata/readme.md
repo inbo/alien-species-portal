@@ -15,7 +15,7 @@ Data source + description: https://ec.europa.eu/environment/nature/invasivealien
 
 ## t0 and t1 data
 
-The raw data files are processed in `createOccupancyData()` which creates the file `occupancy.RData`
+The raw data files are processed in `createOccupancyCube()` which creates the file `dfCube.RData`
 
 ### t0 data
 

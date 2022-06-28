@@ -1,70 +1,21 @@
 
 #' Create data.frame with occupancy for t0 and t1 data
-#' @param dataDir path to folder where to find the raw t0 and t1 files
-#' @param packageDir path to folder where to save the created data.frame
-#' @return TRUE if creation succeeded
 #' 
+#' @param dfCube data.table, with species, source and cell code column
 #' @author mvarewyck
-#' @importFrom rgdal readOGR
-#' @importFrom sp spTransform CRS
-#' @importFrom sf st_read
 #' @importFrom reshape2 dcast
-createOccupancyData <- function(dataDir = "~/git/alien-species-portal/data/trendOccupancy",
-  packageDir = system.file("extdata", package = "alienSpecies")) {
+createOccupancyData <- function(dfCube) {
   
+  dfCube$cell_code10 <- NULL
+  dfCube$year <- NULL
+  dfTable <- reshape2::dcast(data = as.data.frame(table(dfCube)), 
+    species ~ source, value.var = "Freq")
+  dfTable$total <- dfTable$t0 + dfTable$t1
   
-  ## DATA T0 ##
-  ## ------- ##
+  dfTable <- dfTable[order(dfTable$total), ]
+  dfTable$species <- factor(dfTable$species, levels = unique(dfTable$species)) # sort by freq in barchart
   
-  # geojson: https://zenodo.org/record/3835756#.Yoc5oLxBw5m
-  data_t0 <- lapply(seq(2016, 2020, by = 2), function(iYear) {
-      dataYear <- rgdal::readOGR(dsn = file.path(dataDir, paste0("ias_belgium_t0_", iYear, ".geojson")), verbose = TRUE)
-      dataYear <- sp::spTransform(dataYear, sp::CRS("+proj=longlat +datum=WGS84"))
-      # inconsistent colnames over the years
-      colnames(dataYear@data) <- c("cellcode", "reference", "data_partn", "accepted", "species", "notes") 
-      dataYear
-    })
-  # sp::plot(data_t0[[1]])
-  
-  data_t0_all <- do.call(rbind, data_t0)@data
-  data_t0_all$source <- "t0"
-  # table(data_t0_all)
-  
-  # Keep accepted Y or New
-  data_t0_all <- data_t0_all[data_t0_all$accepted %in% c("Y", "New"), ]
-  
-  
-  ## DATA T1 ##
-  ## ------- ##
-  
-  # shp: https://zenodo.org/record/3060173
-  data_t1 <- sf::st_read(file.path(dataDir, "T1_Belgium_Union_List_Species.shp"))
-  # sp::plot(data_t1)
-  
-  # Keep first two words only for matching with t0 data
-  data_t1$species <- sapply(strsplit(data_t1$species, split = " |\\,"), function(x) paste(x[1:2], collapse = " "))
-  
-  data_t1$source <- "t1"
-  data_t1 <- as.data.frame(data_t1)  # drop spatial info
-  data_t1$cellcode <- data_t1$CellCode
-  
-  
-  ## COMBINE DATA ##
-  ## ------------ ##
-  
-  
-  allData <- rbind(data_t0_all[, c("species", "source", "cellcode")], data_t1[, c("species", "source", "cellcode")])
-  allData <- allData[!duplicated(allData), ]
-  allData$cellcode <- NULL
-  occupancy <- reshape2::dcast(data = as.data.frame(table(allData)), species ~ source, value.var = "Freq")
-  occupancy$total <- occupancy$t0 + occupancy$t1
-  
-  occupancy <- occupancy[order(occupancy$total), ]
-  occupancy$species <- factor(occupancy$species, levels = unique(occupancy$species)) # sort by freq in barchart
-  
-  save(occupancy, file = file.path(packageDir, "occupancy.RData"))
-  
-  return(TRUE)
+  dfTable
   
 }
 

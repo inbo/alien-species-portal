@@ -611,10 +611,10 @@ observeEvent(tmpKey(), {
     gbifKey <- strsplit(tmpKey(), "_")[[1]][1]
     
     # Lookup key for occurrence data
-    taxonKey <- dictionary$taxonKey[match(gbifKey, dictionary$gbifKey)]
+    newSpecies <- dictionary$scientificName[match(gbifKey, dictionary$gbifKey)]
     
     updateNavbarPage(session = session, inputId = "tabs", selected = "Species Information")
-    results$species_choice <- taxonKey
+    results$species_choice <- newSpecies
     
   })
 

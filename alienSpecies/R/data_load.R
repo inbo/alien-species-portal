@@ -33,6 +33,7 @@ readShapeData <- function(
 #' @author mvarewyck
 #' @importFrom utils write.csv
 #' @importFrom data.table fread setnames as.data.table
+#' @importFrom rgbif name_usage
 #' @export
 createKeyData <- function(dataDir = system.file("extdata", package = "alienSpecies")) {
   

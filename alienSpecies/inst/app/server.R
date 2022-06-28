@@ -31,7 +31,7 @@ function(input, output, session) {
   results <- reactiveValues(
     # Default language is dutch
     translations = loadMetaData(language = "nl"),
-    species_choice = if (doDebug) c(2498252, 2769766)[2] else NULL
+    species_choice = if (doDebug) c("Alopochen aegyptiaca", "Ruscus aculeatus")[2] else NULL
   )
   
   
