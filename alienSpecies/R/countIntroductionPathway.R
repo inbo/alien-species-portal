@@ -67,7 +67,7 @@ countIntroductionPathwayServer <- function(id, uiText, data, region, pathway, ti
       ns <- session$ns
       
       subText <- reactive({
-          uiText[uiText$plotFunction == "countIntroductionPathway", ]
+          uiText()[uiText()$plotFunction == "countIntroductionPathway", ]
         })
       
       output$titleIntroductionPathway <- renderUI({

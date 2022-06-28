@@ -114,7 +114,7 @@ countYearNativerangeServer <- function(id, uiText, data) {
       
       output$titleYearNativerange <- renderUI({
           
-          h3(HTML(uiText[uiText$plotFunction == "countYearNativerange", ]$title))
+          h3(HTML(uiText()[uiText()$plotFunction == "countYearNativerange", ]$title))
           
         })
       

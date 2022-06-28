@@ -4,6 +4,14 @@
 ###############################################################################
 
 
+
+output$species_title <- renderUI({
+    
+    results$translations$title[results$translations$plotFunction == tabChoices[3]]  
+    
+  })
+
+
 # Species selection
 results$species_choices <- reactive({
     
@@ -44,7 +52,7 @@ taxonKey <- reactive({
 
 ## Map + barplot
 mapCubeServer(id = "observations",
-  uiText = results$translations,
+  uiText = reactive(results$translations),
   species = reactive(names(taxonKey())),
   df = reactive({
       req(taxonKey())
@@ -66,7 +74,7 @@ mapCubeServer(id = "observations",
 ## Emergence status GAM - Observations
 plotTriasServer(id = "species_emergenceObservations",
   data = results$exoten_data,
-  uiText = results$translations,
+  uiText = reactive(results$translations),
   triasFunction = "indicator_introduction_year",
   triasArgs = reactive({
       list(
@@ -83,7 +91,7 @@ plotTriasServer(id = "species_emergenceObservations",
 
 # t1
 mapCubeServer(id = "reporting_t1",
-  uiText = results$translations,
+  uiText = reactive(results$translations),
   species = reactive(input$species_choice),
   df = reactive(dfCube[dfCube$source == "t1" & species %in% input$species_choice, ]),
   groupVariable = "source",
@@ -93,7 +101,7 @@ mapCubeServer(id = "reporting_t1",
 
 # t0 and t1
 mapCubeServer(id = "reporting_t01",
-  uiText = results$translations,
+  uiText = reactive(results$translations),
   species = reactive(input$species_choice),
   df = reactive(dfCube[species %in% input$species_choice, ]),
   groupVariable = "source",

@@ -278,7 +278,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       ns <- session$ns
       
       subText <- reactive({
-          uiText[uiText$plotFunction == ns("mapOccurrence"), ]
+          uiText()[uiText()$plotFunction == ns("mapOccurrence"), ]
         })
       
       output$titleMapOccurrence <- renderUI({

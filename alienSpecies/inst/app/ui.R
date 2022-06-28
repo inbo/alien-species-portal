@@ -45,11 +45,11 @@ shinyUI(
           position = "fixed-top",
           
           # Main content
-          tabPanel(title = "Start",
+          tabPanel(title = uiOutput("start_title"), value = "start",
             uiOutput("start_page")),
-          tabPanel(title = "Global Indicators",
+          tabPanel(title = uiOutput("checklist_title"), value = "global_indicators",
             uiOutput("indicators_content")),
-          tabPanel(title = "Species Information",
+          tabPanel(title = uiOutput("species_title"), value = "species_information",
             uiOutput("species_content")),
           
           # Shape data source + contact e-mail

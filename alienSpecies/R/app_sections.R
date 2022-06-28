@@ -8,7 +8,7 @@
 
 #' Shiny module for creating welcome section - server side
 #' @param id character, unique identifier
-#' @param uiText reactive value, data.frame contains title and explanation text to display
+#' @param uiText reactive object, data.frame contains title and explanation text to display
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -17,7 +17,7 @@ welcomeSectionServer <- function(id, uiText) {
   
   moduleServer(id, function(input, output, session) {
       
-      subText <- reactive({uiText[uiText$plotFunction == "welcomeSection", ]})
+      subText <- reactive({uiText()[uiText()$plotFunction == "welcomeSection", ]})
       
       output$welcomeTitle <- renderUI({
           h1(HTML(subText()$title))

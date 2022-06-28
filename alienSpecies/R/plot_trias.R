@@ -77,7 +77,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
       ns <- session$ns
       
       subText <- reactive({
-          uiText[uiText$plotFunction == triasFunction, ]
+          uiText()[uiText()$plotFunction == triasFunction, ]
         })
       
       output$titlePlotTrias <- renderUI({

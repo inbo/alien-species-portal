@@ -59,7 +59,7 @@ countOccupancyServer <- function(id, uiText, data) {
       
       output$titleOccupancy <- renderUI({
           
-          h3(HTML(uiText[uiText$plotFunction == "countOccupancy", ]$title))
+          h3(HTML(uiText()[uiText()$plotFunction == "countOccupancy", ]$title))
           
         })
       
