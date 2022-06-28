@@ -10,6 +10,13 @@ output$checklist_title <- renderUI({
     
   })
 
+lapply(c("taxa", "trend", "pathways", "origin"), function(iName)
+    titleModuleServer(
+      id = paste0("checklist_", iName),
+      uiText = reactive(results$translations),
+      plotFunction = iName
+    ))
+
 welcomeSectionServer(id = "checklist", uiText = reactive(results$translations))
 
 

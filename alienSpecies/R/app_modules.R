@@ -241,3 +241,42 @@ plotModuleServer <- function(id, plotFunction, data, period = NULL,
   
 }
 
+
+
+#' Translated title - server side
+#' @inheritParams plotModuleServer
+#' @inheritParams welcomeSectionServer
+#' @return no return value
+#' 
+#' @author mvarewyck
+#' @import shiny
+#' @export
+titleModuleServer <- function(id, plotFunction, uiText) {
+  
+  moduleServer(id,
+    function(input, output, session) {
+      
+      output$title <- renderUI({
+          
+          uiText()$title[uiText()$plotFunction == plotFunction] 
+          
+        })
+    })
+}
+
+
+#' Translated title - ui side
+#' @inheritParams welcomeSectionUI
+#' @return ui object
+#' 
+#' @author mvarewyck
+#' @import shiny
+#' @export
+titleModuleUI <- function(id) {
+  
+  ns <- NS(id)
+  
+  uiOutput(ns("title"))
+  
+}
+

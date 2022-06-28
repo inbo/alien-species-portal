@@ -310,6 +310,12 @@ loadMetaData <- function(type = c("ui", "keys"),
     keys = allData
   )
   
+  filterData <- filterData[filterData$plotFunction != "", ]
+  
+  if (any(duplicated(filterData$plotFunction)))
+    stop("Following translations occur multiple times, please clean the file: ",
+      paste(filterData$plotFunction[duplicated(filterData$plotFunction)], collapse = ", "))
+  
   return(filterData)
   
 }

@@ -24,7 +24,7 @@ if (!exists("doDebug"))
 ### -----------
 
 tabChoices <- c("start", "global_indicators", "species_information", 
-  "early_warning", "management")
+  "early_warning", "management")[1:3]
 dataDir <- system.file("extdata", package = "alienSpecies")
 
 if (!doDebug | !exists("exotenData"))

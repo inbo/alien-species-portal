@@ -11,6 +11,14 @@ output$species_title <- renderUI({
     
   })
 
+lapply(c("observations", "indicators", "reporting", "management", "more",
+    "habitats", "risk_maps", "links", "risk_assessment", "images"), function(iName)
+    titleModuleServer(
+      id = paste0("species_", iName),
+      uiText = reactive(results$translations),
+      plotFunction = iName
+    ))
+
 
 # Species selection
 results$species_choices <- reactive({

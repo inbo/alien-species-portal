@@ -71,7 +71,7 @@ tagList(
     
     tabsetPanel(
       
-      tabPanel("Taxa", 
+      tabPanel(titleModuleUI(id = "checklist_taxa"), 
         
         tags$div(style = "margin-top: 10px;",
           
@@ -95,13 +95,13 @@ tagList(
       
 #        countIntroductionPathwayUI(id = "checklist"),
       
-      tabPanel("Trend", 
+      tabPanel(titleModuleUI(id = "checklist_trend"), 
         plotTriasUI(id = "checklist-count"),
         plotTriasUI(id = "checklist-cum"),
         countOccupancyUI(id = "checklist")
       ),
       
-      tabPanel("Pathways", 
+      tabPanel(titleModuleUI(id = "checklist_pathways"), 
         
         plotTriasUI(id = "checklist_tablePathway", outputType = "table"),
         plotTriasUI(id = "checklist_pathway1"),
@@ -110,7 +110,7 @@ tagList(
       
       ),
       
-      tabPanel("Origin", 
+      tabPanel(titleModuleUI(id = "checklist_origin"),
         countYearNativerangeUI(id = "checklist")
       )
     )
