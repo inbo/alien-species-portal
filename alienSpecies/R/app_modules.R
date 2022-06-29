@@ -141,7 +141,6 @@ plotModuleServer <- function(id, plotFunction, data, period = NULL,
   moduleServer(id,
     function(input, output, session) {
       
-      
       # Filter plot data
       subData <- reactive({
          
@@ -167,7 +166,7 @@ plotModuleServer <- function(id, plotFunction, data, period = NULL,
             if (!is.null(outputType))
               list(outputType = outputType),
             if (!is.null(uiText))
-              list(uiText = uiText)
+              list(uiText = uiText())
           )
           
           argList

@@ -36,16 +36,28 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
   ## convert to plotly object
   if (outputType == "plot") {
     
-    p <- ggplotly(resultFct)
+    if (all(c("plot", "data_top_graph") %in% names(resultFct))) {
+      
+      list(
+        plot = ggplotly(resultFct$plot), 
+        data = resultFct$data_top_graph
+      ) 
+      
+    } else {
+
+      list(
+        plot = ggplotly(resultFct),
+        data = df
+      )
     
-    return(list(plot = p, data = df))
+    }
     
   } else {
     
-    return(list(
-        data = resultFct, 
-        columnNames = displayName(colnames(resultFct), translations = uiText)
-    ))
+    list(
+      data = resultFct, 
+      columnNames = displayName(colnames(resultFct), translations = uiText)
+    )
     
   }
   

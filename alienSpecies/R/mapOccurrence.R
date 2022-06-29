@@ -161,9 +161,9 @@ createBaseMap <- function() {
   bioreg_bel_clip <- readOGR(system.file("extdata", "grid", "bioreg_bel_clip.geojson", package = "alienSpecies"), "bioreg_bel_clip", stringsAsFactors = FALSE)
   bel_borders <- readOGR(system.file("extdata", "grid", "Belgie.geojson", package = "alienSpecies"), "Belgie", stringsAsFactors = FALSE)
   
-  proj4string(bel_borders) <- crs_bel
+  sp::proj4string(bel_borders) <- crs_bel
   
-  bioreg_phal <- colorFactor(palette = c("darkgrey", "white"), 
+  bioreg_pal <- colorFactor(palette = c("darkgrey", "white"), 
     domain = bioreg_bel_clip$BIOGEO, levels = c("Continental", "Atlantic"))
   
   baseMap <- leaflet(bioreg_bel_clip) %>% 
@@ -175,7 +175,7 @@ createBaseMap <- function() {
       color = "black",
       opacity = 1,
       weight = 2) %>% 
-    addScaleBar(position = "bottomleft") %>% 
+    addScaleBar(position = "bottomleft")
 #    setMapWidgetStyle(list(background= "white"))
   
   baseMap
@@ -254,6 +254,7 @@ mapCube <- function(cubeShape, baseMap = createBaseMap(), legend = "none",
 #' @inheritParams mapCubeUI
 #' @param species reactive character, readable name of the selected species
 #' @param df reactive data.frame, data for \code{\link{countIntroductionPathway}}
+#' @param baseMap leaflet object as returned by \code{\link{createBaseMap}}
 #' @param showGlobeDefault boolean, whether the globe is shown by default 
 #' when the map is first created; default value is TRUE
 #' @return no return value

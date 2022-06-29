@@ -231,7 +231,7 @@ test_that("Introduction pathways per category", {
 # PLOT: CBD Level 1/2 introduction pathways
 test_that("CBD Level 1/2 introduction pathways", {
     
-    tmpResult <- plotTrias(triasFunction = "visualalize_pathways_level1", df = exoten_data)
+    tmpResult <- plotTrias(triasFunction = "visualize_pathways_level1", df = exoten_data)
     expect_is(tmpResult, "list")
     
     expect_is(tmpResult$plot, "plotly")

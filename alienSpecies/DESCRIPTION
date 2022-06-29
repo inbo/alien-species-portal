@@ -15,7 +15,6 @@ Imports:
     htmlwidgets,
     INBOtheme,
     leaflet,
-    leaflet.extras,
     plotly,
     rgbif,
 	shiny,

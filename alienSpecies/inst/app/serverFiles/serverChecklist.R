@@ -702,9 +702,7 @@ plotTriasServer(id = "checklist_tablePathway",
   uiText = reactive(results$translations),
   data = results$exoten_data,
   triasFunction = "get_table_pathways",
-  triasArgs = reactive({
-      list(species_names = "species")
-    }),
+  triasArgs = reactive(list(species_names = "species")),
   outputType = "table"
 )
 

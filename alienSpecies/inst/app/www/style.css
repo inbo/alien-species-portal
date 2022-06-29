@@ -92,7 +92,7 @@ a, a:visited, a:hover, a:active, a:focus {
   padding-top: 25px;
 }
 
-.downloadButton {
+.shiny-download-link {
   display: inline-block;
   background-color: #356196;
   text-transform: uppercase;
@@ -108,7 +108,7 @@ a, a:visited, a:hover, a:active, a:focus {
   border-radius: 0;
 }
 
-.downloadButton:hover {
+.shiny-download-link:hover {
   background-color: #264870;
   color: #fff; 
 }
@@ -121,14 +121,3 @@ p, li, label {
  font-size: 16px
 }
 
-
-/* Table unionlist icon */
-.table-icon-black {
-  color: #000000;
-}
-.table-icon-orange {
-  color: #e67e22;
-}
-.table-icon-green {
-  color: #27ae60;
-}
