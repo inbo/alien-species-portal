@@ -10,7 +10,6 @@ tagList(
     welcomeSectionUI(id = "checklist"),
     
     tags$h2("Keuze menu"),
-    # TODO filter formatting: https://shiny.rstudio.com/articles/selectize.html
     
     wellPanel(
       
@@ -19,8 +18,7 @@ tagList(
       
       fixedRow(        
         # Select habitat
-        column(3, selectInput("exoten_habitat", label = NULL, 
-            choices = c("All habitats" = "", habitatChoices), multiple = TRUE)),
+        column(3, uiOutput("exoten_habitat")),
         
         # Select pathway 1
         column(3, comboTreeInput("exoten_pw", choices = pwChoices,

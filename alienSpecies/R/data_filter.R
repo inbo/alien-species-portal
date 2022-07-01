@@ -65,23 +65,22 @@ createDoubleChoices <- function(exotenData,
 #' @author mvarewyck
 #' @export
 filterCombo <- function(exotenData, inputValue, inputLevels) {
+ 
+  if (is.null(inputValue))
+    stop("Please select value")
   
-  if (!is.null(inputValue)) {
-    
-    mySelection <- do.call(rbind, lapply(inputValue, function(x) {
-          splitSelection <- strsplit(x, " > ")[[1]]
-          data.frame( 
-            level = inputLevels[length(splitSelection)],
-            value = tail(splitSelection, n = 1)
-          )
-        }))
-    toInclude <- rep(FALSE, nrow(exotenData))
-    
-    for (i in seq_len(nrow(mySelection)))
-      toInclude <- toInclude | exotenData[[mySelection$level[i]]] %in% mySelection$value[i]
-    
-    exotenData[toInclude, ]
-    
-  } else exotenData
-
+  mySelection <- do.call(rbind, lapply(inputValue, function(x) {
+        splitSelection <- strsplit(x, " > ")[[1]]
+        data.frame( 
+          level = inputLevels[length(splitSelection)],
+          value = tail(splitSelection, n = 1)
+        )
+      }))
+  toInclude <- rep(FALSE, nrow(exotenData))
+  
+  for (i in seq_len(nrow(mySelection)))
+    toInclude <- toInclude | exotenData[[mySelection$level[i]]] %in% mySelection$value[i]
+  
+  exotenData[toInclude, ]
+ 
 }

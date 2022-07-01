@@ -55,8 +55,8 @@ shinyUI(
           # Shape data source + contact e-mail
           header = tags$header(tags$div(align = "right",
               tags$p(
-#                tags$a(id = "geodataBron", href="http://www.geopunt.be/download?container=referentiebestand-gemeenten&title=Voorlopig%20referentiebestand%20gemeentegrenzen#", target="_blank", "Geodata bron"),
-#                "-", 
+                actionLink(inputId = "showShare", label = "Share Link"),
+                "-", 
                 tags$a(id = "contact", href="mailto:faunabeheer@inbo.be?SUBJECT=Alien species web applicatie", target="_blank", "Contact")
               ),
               tags$p(

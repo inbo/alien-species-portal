@@ -64,19 +64,36 @@ observeEvent(input$exoten_more, {
 ### Final Data set
 ### ---------------
 
+# habitat
+output$exoten_habitat <- renderUI({
+    
+    selectInput("exoten_habitat", label = NULL, 
+      choices = c("All habitats" = "", habitatChoices), 
+      selected = results$urlHabitat, multiple = TRUE)
+    
+})
+
+
 results$exoten_data <- reactive({
     
     subData <- exotenData
-    
+    searchId <- ""
+        
     # taxa
-    subData <- filterCombo(exotenData = subData, inputValue = input$exoten_taxa, 
+    if (!is.null(input$exoten_taxa)) {
+      searchId <- paste0(searchId, "&taxa=", paste(input$exoten_taxa, collapse = ", "))
+      subData <- filterCombo(exotenData = subData, inputValue = results$urlTaxa, 
         inputLevels = taxaLevels)
+    }
       
     # habitat
-    if (!is.null(input$exoten_habitat))
+    if (!is.null(input$exoten_habitat)) {
+      searchId <- paste0(searchId, "&habitat=", paste(input$exoten_habitat, collapse = ", "))
       subData <- subData[habitat %in% input$exoten_habitat, ]
+    }
     
     # pathways
+    if (!is.null(input$exoten_pw))
     subData <- filterCombo(exotenData = subData, inputValue = input$exoten_pw, 
       inputLevels = c("pathway_level1", "pathway_level2"))
     
@@ -85,8 +102,9 @@ results$exoten_data <- reactive({
       subData <- subData[degree_of_establishment %in% input$exoten_doe, ]
     
     # native
-    subData <- filterCombo(exotenData = subData, inputValue = input$exoten_native, 
-      inputLevels = c("native_continent", "native_range"))
+    if (!is.null(input$exoten_native))
+      subData <- filterCombo(exotenData = subData, inputValue = input$exoten_native, 
+        inputLevels = c("native_continent", "native_range"))
     
     # time
     if (!is.null(input$exoten_time))
@@ -101,6 +119,9 @@ results$exoten_data <- reactive({
     if (!is.null(input$exoten_source))
       subData <- subData[source %in% input$exoten_source, ]
       
+    
+    results$searchId <- searchId
+    
     subData
     
   })
