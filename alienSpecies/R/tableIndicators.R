@@ -12,16 +12,24 @@
 #' @export
 tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
   
+  if (nrow(exotenData) == 0)
+    return(NULL)
+  
   tableData <- exotenData[, c("key", "species", "gbifLink", "first_observed", "last_observed", "habitat",
       "pathway", "degree_of_establishment", "sourceLink", "locality")]
   
   # combine locality & first_observed
   tableData$first_observed <- paste0(tableData$locality, ": ", tableData$first_observed)
   tableData$locality <- NULL
+  
   # combine multiple rows
   combinedData <- sapply(c("first_observed", "degree_of_establishment", "pathway"), function(iName) {
-      newData <- aggregate(get(iName) ~ key, data = tableData, FUN = function(x)
-          paste(unique(x), collapse = "</br>"))
+      if (all(is.na(tableData[[iName]]))) {
+        newData <- data.frame(key = unique(tableData$key), iName = NA)
+      } else {
+        newData <- aggregate(get(iName) ~ key, data = tableData, FUN = function(x)
+            paste(unique(x), collapse = "</br>"))
+      }
       colnames(newData)[2] <- iName
       newData[!duplicated(newData$key), ]
     }, simplify = FALSE)
@@ -68,6 +76,8 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
       selectedKey <- reactiveVal()
       
       output$table <- renderDT({
+          
+          validate(need(nrow(exotenData()) > 0, "No data available"))
           
           tableData <- tableIndicators(exotenData = exotenData(),
             unionlistData = unionlistData,

@@ -37,7 +37,7 @@ if (!doDebug | !exists("occurrenceData"))
 # Specify default year to show (and default max to show in time ranges)
 defaultYear <- max(exotenData$first_observed, na.rm = TRUE)
 
-habitats <- attr(exotenData, "habitats")
+
 
 # Load occupancy data from createOccupancyData()
 load(file = file.path(dataDir, "dfCube.RData"))
@@ -52,4 +52,17 @@ dictionary <- loadMetaData(type = "keys")
 if (!doDebug | !exists("baseMap"))
   baseMap <- createBaseMap()
 
+
+# Initial exoten filter choices
+# e.g. search for Stylommatophora
+taxaLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
+taxaChoices <- createTaxaChoices(exotenData = exotenData)
+habitatChoices <- attr(exotenData, "habitats")
+pwChoices <- createDoubleChoices(exotenData = exotenData, 
+  columns = c("pathway_level1", "pathway_level2"))
+doeChoices <- sort(unique(exotenData$degree_of_establishment))
+nativeChoices <- createDoubleChoices(exotenData = exotenData,
+  columns = c("native_continent", "native_range"))
+regionChoices <- sort(unique(exotenData$locality))
+bronChoices <- sort(levels(exotenData$source))
 

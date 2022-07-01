@@ -13,52 +13,59 @@ tagList(
     # TODO filter formatting: https://shiny.rstudio.com/articles/selectize.html
     
     wellPanel(
-      fixedRow(
-        
-        # Select kingdom and other subsequent taxa choices
-        column(2, tagList(uiOutput("exoten_kingdomOptions"),
-            uiOutput("exoten_phylumOptions"),
-            uiOutput("exoten_classOptions"),
-            uiOutput("exoten_orderOptions"),
-            uiOutput("exoten_familyOptions")
-          )
-        ),
-        
+      
+      # https://stackoverflow.com/a/60315446
+      comboTreeInput("exoten_taxa", choices = taxaChoices),
+      
+      fixedRow(        
         # Select habitat
-        column(2, uiOutput("exoten_habitatOptions")),
+        column(3, selectInput("exoten_habitat", label = NULL, 
+            choices = c("All habitats" = "", habitatChoices), multiple = TRUE)),
         
         # Select pathway 1
-        column(2, tagList(uiOutput("exoten_pw1Options"),
-            uiOutput("exoten_pw2Options"))),
+        column(3, comboTreeInput("exoten_pw", choices = pwChoices,
+            placeholder = "All pathways")),
         
-        # Select subsequent pathway 2
-        column(2, uiOutput("exoten_unionlistOptions")),
+        # TODO unionlistOptions?
+#        column(3, uiOutput("exoten_unionlistOptions")),
         
         # Select degree of establishment
-        column(2, tagList(uiOutput("exoten_doeOptions"),
-#                                  selectModuleUI(id = "kingdom")
-          )),
+        column(3, selectInput("exoten_doe", label = NULL, 
+            choices = c("All degree of establishment" = "", doeChoices), 
+            multiple = TRUE)
+          ),
         
-        column(2, uiOutput("exoten_country")),
+        column(3, comboTreeInput("exoten_native", choices = nativeChoices,
+            placeholder = "All native regions"))
         
-        column(2, actionButton("exoten_more"))
-      
       ),
-      conditionalPanel("input.exoten_more % 2 == 1", 
         
         fixedRow(
+        
+          column(1, actionLink("exoten_more", label = "More", icon = icon("angle-double-right"))),
+      
+          conditionalPanel("input.exoten_more % 2 == 1", 
           # Select time range
-          column(4, uiOutput("exoten_timeOptions")),
+          column(5, sliderInput(inputId = "exoten_time", label = NULL, 
+              value = c(min(exotenData$first_observed, na.rm = TRUE), defaultYear),
+              min = min(exotenData$first_observed, na.rm = TRUE),
+              max = max(exotenData$first_observed, na.rm = TRUE),
+              step = 1,
+              sep = "")),
           
           # Select regio
-          column(2, uiOutput("exoten_regionOptions")),
+          column(3, selectInput(inputId = "exoten_region", label = NULL,
+              choices = c("All regions" = "", regionChoices),
+              multiple = TRUE)),
           
           # Select bron
-          column(2, uiOutput("exoten_bronOptions"))
+          column(3, selectInput("exoten_source", label = NULL, 
+              choices = c("All sources" = "", bronChoices),
+              multiple = TRUE))
         )
       
       ),
-      fixedRow(column(4, textOutput("nrowsFinal")))
+      textOutput("nrowsFinal")
     )
   
   ),
