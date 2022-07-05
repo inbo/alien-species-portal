@@ -181,10 +181,20 @@ loadTabularData <- function(
       "WRiMS" = "World Register of Introduced Marine Species (WRiMS)")
     
     ### source link
-    # TODO add more links
     rawData$sourceLink <- ifelse(is.na(rawData$source), "", 
       paste0("<a href='", sapply(as.character(rawData$source), function(iSource) switch(iSource,
-              WRiMS = "https://www.marinespecies.org/")), "' target = '_blank'>", rawData$source, "</a>"))
+              "Ad hoc alien species checklist" = "https://www.gbif.org/dataset/1f3505cd-5d98-4e23-bd3b-ffe59d05d7c2",
+              "Alien Bird Checklist" = "https://www.gbif.org/dataset/e1c3be64-2799-4342-8312-49d076993132",
+              "Alien Fish Flanders" = "https://www.gbif.org/dataset/98940a79-2bf1-46e6-afd6-ba2e85a26f9f",
+              "Alien Macroinverts" = "https://www.gbif.org/dataset/289244ee-e1c1-49aa-b2d7-d379391ce265",
+              "Alien Mollusc checklist" = "https://www.gbif.org/dataset/e082b10e-476f-43c1-aa61-f8d92f33029a",
+              "Belgian rust fungi" = "https://www.gbif.org/dataset/b043c480-dd36-4f4f-aa82-e188753ff09d",
+              "Manual of Alien Plants" = "https://www.gbif.org/dataset/9ff7d317-609b-4c08-bd86-3bc404b77c42",
+              "RINSE1" = "https://www.gbif.org/dataset/1738f272-6b5d-4f43-9a92-453a8c5ea50a",
+              "RINSE2" = "https://www.gbif.org/dataset/3f5e930b-52a5-461d-87ec-26ecd66f14a3",
+              "WRiMS" = "https://www.gbif.org/dataset/0a2eaf0c-5504-4f48-a47f-c94229029dc8")
+        ), 
+        "' target = '_blank'>", rawData$source, "</a>"))
     
     ## regroup native_range variable into new native_continent variable
     ## from https://en.wikipedia.org/wiki/United_Nations_geoscheme
