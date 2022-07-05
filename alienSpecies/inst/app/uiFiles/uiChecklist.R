@@ -9,57 +9,47 @@ tagList(
     
     welcomeSectionUI(id = "checklist"),
     
-    tags$h2("Keuze menu"),
-    
     wellPanel(
       
       # https://stackoverflow.com/a/60315446
-      comboTreeInput("exoten_taxa", choices = taxaChoices),
+      uiOutput("filter_taxa"),
       
       fixedRow(        
         # Select habitat
-        column(3, uiOutput("exoten_habitat")),
+        column(3, filterSelectUI(id = "habitat")),
         
         # Select pathway 1
-        column(3, comboTreeInput("exoten_pw", choices = pwChoices,
-            placeholder = "All pathways")),
-        
-        # TODO unionlistOptions?
-#        column(3, uiOutput("exoten_unionlistOptions")),
+        column(3, uiOutput("filter_pw")),
         
         # Select degree of establishment
-        column(3, selectInput("exoten_doe", label = NULL, 
-            choices = c("All degree of establishment" = "", doeChoices), 
-            multiple = TRUE)
-          ),
+        column(3, filterSelectUI(id = "doe")),
         
-        column(3, comboTreeInput("exoten_native", choices = nativeChoices,
-            placeholder = "All native regions"))
+        column(3, uiOutput("filter_native"))
         
       ),
-        
-        fixedRow(
-        
-          column(1, actionLink("exoten_more", label = "More", icon = icon("angle-double-right"))),
       
-          conditionalPanel("input.exoten_more % 2 == 1", 
+      actionLink("exoten_more", label = "More", icon = icon("angle-double-down")),
+      
+      conditionalPanel("input.exoten_more % 2 == 1", 
+        
+         fixedRow(
+      
           # Select time range
-          column(5, sliderInput(inputId = "exoten_time", label = NULL, 
-              value = c(min(exotenData$first_observed, na.rm = TRUE), defaultYear),
-              min = min(exotenData$first_observed, na.rm = TRUE),
-              max = max(exotenData$first_observed, na.rm = TRUE),
-              step = 1,
-              sep = "")),
+          column(3, 
+            tags$div(class = "selection-btn-wrapper",
+              actionButton("exoten_timeButton", label = "All years",
+                icon = icon("caret-down"), width = "100%"),
+              tags$span(id = "time-popup"))
+          ),
+          
+          # Select union list
+          column(3, filterSelectUI(id = "union")),
           
           # Select regio
-          column(3, selectInput(inputId = "exoten_region", label = NULL,
-              choices = c("All regions" = "", regionChoices),
-              multiple = TRUE)),
+          column(3, filterSelectUI(id = "region")),
           
           # Select bron
-          column(3, selectInput("exoten_source", label = NULL, 
-              choices = c("All sources" = "", bronChoices),
-              multiple = TRUE))
+          column(3, filterSelectUI(id = "source"))
         )
       
       ),

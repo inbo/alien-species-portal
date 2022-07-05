@@ -30,7 +30,7 @@ function(input, output, session) {
   
   results <- reactiveValues(
     # Default language is dutch
-    translations = loadMetaData(language = "nl"),
+    translations = loadMetaData(language = "en"),
     searchId = "",
     species_choice = if (doDebug) c("Alopochen aegyptiaca", "Ruscus aculeatus")[2] else NULL
   )
@@ -134,5 +134,14 @@ function(input, output, session) {
       source(file.path("uiFiles", "uiSpecies.R"), local = TRUE)$value
       
     })
+  
+  
+  # TODO
+# Link to early warning
+# https://alert.riparias.be/
+# https://github.com/trias-project/indicators/blob/master/data/input/eu_concern_species.tsv
+# Rosse stekelstaart
+# https://www.gbif.org/dataset/ea95fd9b-58dc-4e48-b51f-9380e9804607
+
   
 }

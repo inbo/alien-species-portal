@@ -34,9 +34,9 @@ observeEvent(input$exoten_more, {
     
   if (input$exoten_more %% 2 == 1)
     updateActionLink(session = session, inputId = "exoten_more", label = "Less",
-      icon = icon("angle-double-left")) else
+      icon = icon("angle-double-up")) else
     updateActionLink(session = session, inputId = "exoten_more", label = "More",
-      icon = icon("angle-double-right"))
+      icon = icon("angle-double-down"))
   
   })
 
@@ -61,17 +61,128 @@ observeEvent(input$exoten_more, {
 #  })
 
 
-### Final Data set
-### ---------------
+### Filters for Data
+### -----------------
+
+urlSearch <- reactive(parseQueryString(session$clientData$url_search))
+
+# taxa
+output$filter_taxa <- renderUI({
+    
+    comboTreeInput("exoten_taxa", choices = taxaChoices, 
+      placeholder = "All taxa", selected = urlSearch()$taxa)
+    
+  })
 
 # habitat
-output$exoten_habitat <- renderUI({
+filter_habitat <- filterSelectServer(
+  id = "habitat",
+  url = urlSearch,
+  placeholder = "All habitats",
+  initChoices = habitatChoices
+)
+
+# pathways
+output$filter_pw <- renderUI({
     
-    selectInput("exoten_habitat", label = NULL, 
-      choices = c("All habitats" = "", habitatChoices), 
-      selected = results$urlHabitat, multiple = TRUE)
+    comboTreeInput("exoten_pw", choices = pwChoices,
+      placeholder = "All pathways", selected = urlSearch()$pw)
     
-})
+  })
+
+# doe
+filter_doe <- filterSelectServer(
+  id = "doe",
+  url = urlSearch,
+  placeholder = "All degree of establishment",
+  initChoices = doeChoices
+)
+
+# native
+output$filter_native <- renderUI({
+    
+    comboTreeInput("exoten_native", choices = nativeChoices,
+      placeholder = "All native regions", selected = urlSearch()$native)
+    
+  })
+
+# time
+observeEvent(input$exoten_timeButton, {
+  
+        showNotification(id = "ref",
+          tagList(
+            tags$div(class = "variety-selector", 
+              uiOutput("exoten_timeNA"),
+              uiOutput("exoten_time")
+        )   
+          ),
+          duration = NULL
+        )
+        shinyjs::runjs('setTimeout(function(){$("#time-popup").append($("#shiny-notification-panel"))},0);')
+    
+  })
+
+observe({
+    
+    req(input$exoten_timeNA)
+    req(input$exoten_time)
+    
+    updateActionButton(session = session, inputId = "exoten_timeButton", 
+      label = paste(paste(input$exoten_time, collapse = "-"), if (input$exoten_timeNA) "and missing"))
+    
+  })
+
+output$exoten_timeNA <- renderUI({
+    
+    checkboxInput(inputId = "exoten_timeNA", label = "Include missing", 
+      value = if (is.null(urlSearch()$timeNA)) TRUE else urlSearch()$timeNA == "true")
+    
+  })
+outputOptions(output, "exoten_timeNA", suspendWhenHidden = FALSE)
+
+output$exoten_time <- renderUI({
+    
+    selected <- if (!is.null(urlSearch()$time))
+      as.numeric(strsplit(urlSearch()$time, split = "-")[[1]]) else
+      c(min(exotenData$first_observed, na.rm = TRUE), defaultYear)
+  
+  sliderInput(inputId = "exoten_time", label = NULL, 
+    value = selected,
+    min = min(exotenData$first_observed, na.rm = TRUE),
+    max = max(exotenData$first_observed, na.rm = TRUE),
+    step = 1,
+    sep = "")
+    
+  })
+outputOptions(output, "exoten_time", suspendWhenHidden = FALSE)
+
+# union
+filter_union <- filterSelectServer(
+  id = "union",
+  url = urlSearch,
+  placeholder = "Union and non-union list",
+  initChoices = c("Union list")
+)
+
+# regions
+filter_region <- filterSelectServer(
+  id = "region",
+  url = urlSearch,
+  placeholder = "All regions",
+  initChoices = regionChoices
+)
+
+# bron
+filter_source <- filterSelectServer(
+  id = "source",
+  url = urlSearch,
+  placeholder = "All sources",
+  initChoices = bronChoices
+)
+
+
+### Final Data set
+### ---------------
 
 
 results$exoten_data <- reactive({
@@ -82,43 +193,63 @@ results$exoten_data <- reactive({
     # taxa
     if (!is.null(input$exoten_taxa)) {
       searchId <- paste0(searchId, "&taxa=", paste(input$exoten_taxa, collapse = ", "))
-      subData <- filterCombo(exotenData = subData, inputValue = results$urlTaxa, 
+      subData <- filterCombo(exotenData = subData, inputValue = input$exoten_taxa, 
         inputLevels = taxaLevels)
     }
       
     # habitat
-    if (!is.null(input$exoten_habitat)) {
-      searchId <- paste0(searchId, "&habitat=", paste(input$exoten_habitat, collapse = ", "))
-      subData <- subData[habitat %in% input$exoten_habitat, ]
+    if (!is.null(filter_habitat())) {
+      searchId <- paste0(searchId, "&habitat=", paste(filter_habitat(), collapse = ", "))
+      subData <- subData[habitat %in% filter_habitat(), ]
     }
     
     # pathways
-    if (!is.null(input$exoten_pw))
-    subData <- filterCombo(exotenData = subData, inputValue = input$exoten_pw, 
-      inputLevels = c("pathway_level1", "pathway_level2"))
+    if (!is.null(input$exoten_pw)) {
+      searchId <- paste0(searchId, "&pw=", paste(input$exoten_pw, collapse = ", "))
+      subData <- filterCombo(exotenData = subData, inputValue = input$exoten_pw, 
+        inputLevels = c("pathway_level1", "pathway_level2"))
+    }
     
     # degree of establishment
-    if (!is.null(input$exoten_doe))
-      subData <- subData[degree_of_establishment %in% input$exoten_doe, ]
+    if (!is.null(filter_doe())) {
+      searchId <- paste0(searchId, "&doe=", paste(filter_doe(), collapse = ", "))
+      subData <- subData[degree_of_establishment %in% filter_doe(), ]
+    }
     
     # native
-    if (!is.null(input$exoten_native))
+    if (!is.null(input$exoten_native)) {
+      searchId <- paste0(searchId, "&native=", paste(input$exoten_native, collapse = ", "))
       subData <- filterCombo(exotenData = subData, inputValue = input$exoten_native, 
         inputLevels = c("native_continent", "native_range"))
+    }
     
     # time
-    if (!is.null(input$exoten_time))
-      subData <- subData[first_observed >= input$exoten_time[1] & 
-          first_observed <= input$exoten_time[2], ]
+    if (!is.null(input$exoten_timeNA) && !input$exoten_timeNA)
+      searchId <- paste0(searchId, "&timeNA=false")
+    if (!is.null(input$exoten_time)) {
+      searchId <- paste0(searchId, "&time=", paste(input$exoten_time, collapse = "-"))
+      subData <- subData[first_observed %in% 
+          c(if (input$exoten_timeNA) NA, input$exoten_time[1]:input$exoten_time[2]), ]
+    }
+    
+    # unionlist - always save
+    if (!is.null(filter_union())) {
+      searchId <- paste0(searchId, "&union=", filter_union())
+      if (filter_union() == "Union list")
+        subData <- subData[species %in% unionlistData$scientificName, ]
+  }
     
     # region
-    if (!is.null(input$exoten_region))
-      subData <- subData[locality %in% input$exoten_region, ]
+    if (!is.null(filter_region())) {
+      searchId <- paste0(searchId, "&region=", paste(filter_region(), collapse = ", "))
+      subData <- subData[locality %in% filter_region(), ]
+    }
     
     # source
-    if (!is.null(input$exoten_source))
-      subData <- subData[source %in% input$exoten_source, ]
-      
+    if (!is.null(filter_source())) {
+      searchId <- paste0(searchId, "&source=", paste(filter_source(), collapse = ", "))
+      subData <- subData[source %in% filter_source(), ]
+    }
     
     results$searchId <- searchId
     
@@ -129,7 +260,7 @@ results$exoten_data <- reactive({
 output$nrowsFinal <- renderText({
     
     validate(need(nrow(results$exoten_data()) > 0, "No data available"))
-    paste("Total number:", nrow(results$exoten_data()))
+    paste("Total number of species:", length(unique(results$exoten_data()$key)))
 
   })
 
@@ -154,7 +285,7 @@ observeEvent(tmpKey(), {
     # Lookup key for occurrence data
     newSpecies <- dictionary$scientificName[match(gbifKey, dictionary$gbifKey)]
     
-    updateNavbarPage(session = session, inputId = "tabs", selected = "Species Information")
+    updateNavbarPage(session = session, inputId = "tabs", selected = "species_information")
     results$species_choice <- newSpecies
     
   })
@@ -252,7 +383,7 @@ plotTriasServer(id = "checklist_pathway2",
   data = results$exoten_data,
   triasFunction = "visualize_pathways_level2",
   triasArgs = reactive({
-      validate(need(length(input$exoten_pw1) == 1, "Please select single pathway level 1 for this plot"))
-      list(chosen_pathway_level1 = input$exoten_pw1)
+      validate(need(length(unique(results$exoten_data()$pathway_level1)) == 1, "Please select single pathway level 1 for this plot"))
+      list(chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1))
     })
 )

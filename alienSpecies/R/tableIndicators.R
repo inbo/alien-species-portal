@@ -87,12 +87,12 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
           tableData$more <- paste0('
               <div class="btn-group" role="group">
               ',
-            # Button to remove record
+            # Button to union
             ifelse(!is.na(tableData$unionColor), 
               paste0('<button title="Union list" type="button" class="btn btn-default action-button" ',
                 'data-inputid=', ns("union"), ' data-id=', tableData$key, ' onclick="activateTableLink(this);"', 
                 '><i class="fa fa-star table-icon-', tableData$unionColor ,'"></i></button>'), ""),
-            # Button to edit record
+            # Button to occurrence
             ifelse(!is.na(tableData$occurColor), 
               paste0('<button title="Occurrence" type="button" class="btn btn-default action-button" ',
                 'data-inputid=', ns("occur"), ' data-id=', tableData$key, ' onclick="activateTableLink(this);"', 

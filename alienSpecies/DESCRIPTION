@@ -27,5 +27,6 @@ Imports:
 	trias,
 	webshot
 Suggests:
-	testthat
+	testthat,
+	shinyjs
 RoxygenNote: 7.2.0
