@@ -26,6 +26,8 @@ output$start_tiles <- renderUI({
 
 observeEvent(input$start_navigate, {
     
+    if (input$start_navigate == "early_warning")
+      browseURL(url = "https://alert.riparias.be") else
       updateNavbarPage(session = session, inputId = "tabs", selected = input$start_navigate)
       
   })

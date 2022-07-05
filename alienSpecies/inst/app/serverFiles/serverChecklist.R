@@ -25,11 +25,6 @@ welcomeSectionServer(id = "checklist", uiText = reactive(results$translations))
 ### ---------------
 
 
-#output$exoten_unionlistOptions <- renderUI({
-#    selectInput("exoten_unionlist", "Union list", choices = currentChoices$unionlist, selected = currentSelected$unionlist, multiple = FALSE)
-#  })
-
-
 observeEvent(input$exoten_more, {
     
   if (input$exoten_more %% 2 == 1)
@@ -40,25 +35,6 @@ observeEvent(input$exoten_more, {
   
   })
 
-
-#results$exoten_filterFamily <- reactive({
-#    
-#    if (is.null(input$exoten_family) |
-#      is.null(input$exoten_order) |
-#      is.null(input$exoten_class) |
-#      is.null(input$exoten_phylum) |
-#      is.null(input$exoten_kingdom)) {
-#      
-#      subData <- subset(results$subExotenData(), kingdom %in% results$exoten_filterKingdom() &
-#          phylum %in% results$exoten_filterPhylum() &
-#          class %in% results$exoten_filterClass() &
-#          order %in% results$exoten_filterOrder() )
-#      
-#      c(NA, unique(sort(subData$family))) 
-#    } else
-#      input$exoten_family
-#    
-#  })
 
 
 ### Filters for Data
@@ -278,6 +254,8 @@ output$nrowsFinal <- renderText({
 ### Table
 ### -----------------
 
+## Copy reactive values -> not working directly!
+## https://stackoverflow.com/a/48883055/5840900
 tmpKey <- tableIndicatorsServer(
   id = "checklist",
   exotenData = results$exoten_data,
@@ -299,14 +277,6 @@ observeEvent(tmpKey(), {
     results$species_choice <- newSpecies
     
   })
-
-## Copy reactive values -> not working directly!
-## https://stackoverflow.com/a/48883055/5840900
-#observe({
-#    results$plot_basic <- tmpBasic()
-#    
-#  }, priority = -1) # make sure that first everything else is up to date. Before evaluating this observe
-
 
 
 

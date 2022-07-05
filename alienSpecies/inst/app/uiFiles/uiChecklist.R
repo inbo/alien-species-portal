@@ -72,7 +72,7 @@ tagList(
             wellPanel(
               tags$b("Icons"),
               p(icon("star"), "Species has at least 1 (historical) observation in Belgium"),
-              p(icon("play"), "Species is on the EU-list of interest"),
+              p(icon("play"), "Species is on the list of Union concern"),
               tags$b("Colors"),
               p(drawBullet(color = "black"), "Only observations"),
               p(drawBullet(color = "orange"), "Incomplete outputs"),
@@ -84,8 +84,6 @@ tagList(
         tableIndicatorsUI("checklist")
       
       ),
-      
-#        countIntroductionPathwayUI(id = "checklist"),
       
       tabPanel(titleModuleUI(id = "checklist_trend"), 
         plotTriasUI(id = "checklist-count"),
