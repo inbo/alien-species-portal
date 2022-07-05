@@ -32,6 +32,8 @@ function(input, output, session) {
     # Default language is dutch
     translations = loadMetaData(language = "en"),
     searchId = "",
+    exoten_timeNA = defaultTimeNA,
+    exoten_time = defaultTime,
     species_choice = if (doDebug) c("Alopochen aegyptiaca", "Ruscus aculeatus")[2] else NULL
   )
   

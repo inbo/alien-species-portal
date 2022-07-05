@@ -107,6 +107,7 @@ output$filter_native <- renderUI({
   })
 
 # time
+## tricky code to make the input values apply even if the popup is not yet clicked
 observeEvent(input$exoten_timeButton, {
   
         showNotification(id = "ref",
@@ -122,39 +123,48 @@ observeEvent(input$exoten_timeButton, {
     
   })
 
-observe({
+observeEvent(urlSearch(), {
     
-    req(input$exoten_timeNA)
-    req(input$exoten_time)
-    
-    updateActionButton(session = session, inputId = "exoten_timeButton", 
-      label = paste(paste(input$exoten_time, collapse = "-"), if (input$exoten_timeNA) "and missing"))
+    if (!is.null(urlSearch()$timeNA))
+      results$exoten_timeNA <- urlSearch()$timeNA == "true"
+    if (!is.null(urlSearch()$time))
+      results$exoten_time <- as.numeric(strsplit(urlSearch()$time, split = "-")[[1]])
     
   })
+
+observe({
+    
+    # Trigger update
+    invalidateLater(1000)
+    
+    myLabel <- if (all(defaultTime == results$exoten_time) & defaultTimeNA == results$exoten_timeNA)
+      "All years" else
+      paste(paste(results$exoten_time, collapse = "-"), if (results$exoten_timeNA) "and missing")
+  
+    updateActionButton(session = session, inputId = "exoten_timeButton", label = myLabel)
+    
+  })
+
+observeEvent(input$exoten_timeNA, results$exoten_timeNA <- input$exoten_timeNA)
+observeEvent(input$exoten_time, results$exoten_time <- input$exoten_time)
 
 output$exoten_timeNA <- renderUI({
     
     checkboxInput(inputId = "exoten_timeNA", label = "Include missing", 
-      value = if (is.null(urlSearch()$timeNA)) TRUE else urlSearch()$timeNA == "true")
+      value = results$exoten_timeNA)
     
   })
-outputOptions(output, "exoten_timeNA", suspendWhenHidden = FALSE)
 
 output$exoten_time <- renderUI({
     
-    selected <- if (!is.null(urlSearch()$time))
-      as.numeric(strsplit(urlSearch()$time, split = "-")[[1]]) else
-      c(min(exotenData$first_observed, na.rm = TRUE), defaultYear)
-  
-  sliderInput(inputId = "exoten_time", label = NULL, 
-    value = selected,
-    min = min(exotenData$first_observed, na.rm = TRUE),
-    max = max(exotenData$first_observed, na.rm = TRUE),
-    step = 1,
-    sep = "")
+    sliderInput(inputId = "exoten_time", label = NULL, 
+      value = results$exoten_time,
+      min = min(exotenData$first_observed, na.rm = TRUE),
+      max = max(exotenData$first_observed, na.rm = TRUE),
+      step = 1,
+      sep = "")
     
   })
-outputOptions(output, "exoten_time", suspendWhenHidden = FALSE)
 
 # union
 filter_union <- filterSelectServer(
@@ -224,12 +234,12 @@ results$exoten_data <- reactive({
     }
     
     # time
-    if (!is.null(input$exoten_timeNA) && !input$exoten_timeNA)
+    if (!results$exoten_timeNA)
       searchId <- paste0(searchId, "&timeNA=false")
-    if (!is.null(input$exoten_time)) {
-      searchId <- paste0(searchId, "&time=", paste(input$exoten_time, collapse = "-"))
+    if (!all(results$exoten_time == defaultTime)) {
+      searchId <- paste0(searchId, "&time=", paste(results$exoten_time, collapse = "-"))
       subData <- subData[first_observed %in% 
-          c(if (input$exoten_timeNA) NA, input$exoten_time[1]:input$exoten_time[2]), ]
+          c(if (results$exoten_timeNA) NA, results$exoten_time[1]:results$exoten_time[2]), ]
     }
     
     # unionlist - always save

@@ -36,7 +36,8 @@ if (!doDebug | !exists("occurrenceData"))
 
 # Specify default year to show (and default max to show in time ranges)
 defaultYear <- max(exotenData$first_observed, na.rm = TRUE)
-
+defaultTimeNA <- TRUE
+defaultTime <- c(min(exotenData$first_observed, na.rm = TRUE), defaultYear)
 
 
 # Load occupancy data from createOccupancyData()
