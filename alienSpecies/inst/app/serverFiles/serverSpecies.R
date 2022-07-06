@@ -64,7 +64,7 @@ mapCubeServer(id = "observations",
   species = reactive(input$species_choice),
   df = reactive({
       req(taxonKey())
-      occurrenceData[occurrenceData$taxonKey %in% taxonKey(), ]
+      occurrenceData[taxonKey %in% taxonKey(), ]
     }),
   groupVariable = "cell_code",
   shapeData = allShapes,
@@ -80,15 +80,18 @@ mapCubeServer(id = "observations",
 
 
 ## Emergence status GAM - Observations
-plotTriasServer(id = "species_emergenceObservations",
-  data = results$exoten_data,
+plotTriasServer(id = "species_gam",
   uiText = reactive(results$translations),
-  triasFunction = "indicator_introduction_year",
+  data = reactive({
+      req(taxonKey())
+      timeseries[taxonKey %in% taxonKey(), ]
+    }),
+  triasFunction = "apply_gam",
   triasArgs = reactive({
       list(
-        start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
-        x_lab = "Jaar",
-        y_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
+        y_var = "obs", 
+        taxon_key = taxonKey(), 
+        name = input$species_choice
       )
     })
 )

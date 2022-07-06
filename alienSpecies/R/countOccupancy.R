@@ -1,23 +1,4 @@
 
-#' Create data.frame with occupancy for t0 and t1 data
-#' 
-#' @param dfCube data.table, with species, source and cell code column
-#' @author mvarewyck
-#' @importFrom reshape2 dcast
-createOccupancyData <- function(dfCube) {
-  
-  dfCube$cell_code10 <- NULL
-  dfCube$year <- NULL
-  dfTable <- reshape2::dcast(data = as.data.frame(table(dfCube)), 
-    species ~ source, value.var = "Freq")
-  dfTable$total <- dfTable$t0 + dfTable$t1
-  
-  dfTable <- dfTable[order(dfTable$total), ]
-  dfTable$species <- factor(dfTable$species, levels = unique(dfTable$species)) # sort by freq in barchart
-  
-  dfTable
-  
-}
 
 
 #' Create occupancy bar chart

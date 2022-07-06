@@ -183,8 +183,7 @@ plotModuleServer <- function(id, plotFunction, data, period = NULL,
           
           validate(need(!is.null(toReturn), "Niet beschikbaar"))
           
-          return(toReturn)
-          
+          return(toReturn)          
           
         })
       

@@ -7,6 +7,12 @@
 #' @export
 createTaxaChoices <- function(exotenData) {
   
+  # For R CMD check
+  kingdom <- NULL
+  phylum <- NULL
+  family <- NULL
+  species <- NULL
+  
   subData <- exotenData[, .(kingdom, phylum, class, order, family, species)]
   subData <- subData[!duplicated(subData), ]
   
@@ -30,6 +36,8 @@ createTaxaChoices <- function(exotenData) {
 
 #' Create pathway choices based on available exotenData
 #' @inheritParams createTaxaChoices
+#' @param columns character vector, column names in \code{exotenData} for which 
+#' to create choices list
 #' @return nested list with all choices to be shown
 #' 
 #' @author mvarewyck

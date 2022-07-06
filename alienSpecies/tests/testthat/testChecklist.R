@@ -204,7 +204,7 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per pathway", {
 ## PLOT 4
 test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio van oorsprong", {
     
-    tmpResult <- countYearNativerange(data = exoten_data, type = "native_continent", jaartallen = 2014)
+    tmpResult <- countYearNativerange(df = exoten_data, type = "native_continent", jaartallen = 2014)
     expect_is(tmpResult, "list")
     
     expect_is(tmpResult$plot, "plotly")

@@ -21,7 +21,7 @@ tagList(
       
       tabPanel(titleModuleUI(id = "species_indicators"), 
         tags$div(style = "margin-top: 10px;",
-          plotTriasUI(id = "species_emergenceObservations"),
+          plotTriasUI(id = "species_gam", filters = c("bias", "protected")),
         )
       ),
       

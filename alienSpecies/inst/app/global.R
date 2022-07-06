@@ -27,12 +27,21 @@ tabChoices <- c("start", "global_indicators", "species_information",
   "early_warning", "management")[1:4]
 dataDir <- system.file("extdata", package = "alienSpecies")
 
+
+# Create summary data
+if (!file.exists(file.path(dataDir, "sum_timeseries.csv")))
+  createTimeseries()
+if (!file.exists(file.path(dataDir, "dfCube.RData")))
+  createOccupancyCube()
+
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")
 if (!doDebug | !exists("unionlistData"))
   unionlistData <- loadTabularData(type = "unionlist")
 if (!doDebug | !exists("occurrenceData"))
   occurrenceData <- loadTabularData(type = "occurrence")
+if (!doDebug | !exists("timeseries"))
+  timeseries <- loadTabularData(type = "timeseries")
 
 # Specify default year to show (and default max to show in time ranges)
 defaultYear <- max(exotenData$first_observed, na.rm = TRUE)
@@ -40,7 +49,7 @@ defaultTimeNA <- TRUE
 defaultTime <- c(min(exotenData$first_observed, na.rm = TRUE), defaultYear)
 
 
-# Load occupancy data from createOccupancyData()
+# Load occupancy data from createOccupancyCube()
 load(file = file.path(dataDir, "dfCube.RData"))
 occupancy <- createOccupancyData(dfCube = dfCube)
 

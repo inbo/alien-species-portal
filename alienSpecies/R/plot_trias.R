@@ -15,6 +15,7 @@
 #' 
 #' @author mvarewyck
 #' @importFrom plotly ggplotly
+#' @importFrom ggplot2 annotate
 #' @export
 plotTrias <- function(triasFunction, df, triasArgs = NULL,
   outputType = c("plot", "table"), uiText) {
@@ -22,12 +23,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
   
   outputType <- match.arg(outputType)
   
-  plotArgs <- list(
-    df = df
-#    start_year_plot = min(df$first_observed, na.rm = TRUE) - 1,
-#    x_lab = "Jaar",
-#    y_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
-  )
+  plotArgs <- list(df = df)
+  
   if (!is.null(triasArgs))
     plotArgs <- c(plotArgs, triasArgs)
   
@@ -42,6 +39,32 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
         plot = ggplotly(resultFct$plot), 
         data = resultFct$data_top_graph
       ) 
+      
+    } else if (all(c("plot", "output") %in% names(resultFct))) {
+      # For trias::apply_gam()
+      
+      if (is.null(resultFct$plot)) {
+        # TODO hacky solution https://github.com/trias-project/trias/issues/91
+        df <- resultFct$output
+        df$lcl <- 10^11
+        # gam failed
+        myPlot <- trias:::plot_ribbon_em(df_plot = df, ptitle = "", y_label = "Observations") +
+          annotate("text", y = max(df$obs), x = max(df$year) - 2, hjust = 1, vjust = 1,
+            label = "The emergence status \ncannot be assessed.", colour = "red")
+        
+        list(
+          plot = ggplotly(myPlot),
+          data = resultFct$output
+        )
+        
+      } else {
+      
+      list(
+        plot = ggplotly(resultFct$plot), 
+        data = resultFct$output
+      )
+      
+    }
       
     } else {
 
@@ -98,11 +121,29 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
           
         })
       
+      plotData <- reactive({
+          
+          if (!is.null(input$protected))
+            data()[protected == input$protected, ] else
+            data()
+          
+        })
+      
       plotModuleServer(id = "plotTrias",
         plotFunction = "plotTrias",
         triasFunction = triasFunction, 
-        data = data,
-        triasArgs = if (!is.null(triasArgs)) triasArgs else NULL,
+        data = plotData,
+        triasArgs = reactive({
+            if (!is.null(triasArgs)) {
+              initArgs <- triasArgs()
+              if (!is.null(input$bias)) {
+                initArgs$eval_years <- min(plotData()$year):max(plotData()$year)
+                if (input$bias)
+                  initArgs$baseline_var <- "cobs"
+              }
+              initArgs
+            } else NULL
+          }),
         outputType = outputType,
         uiText = uiText
       )
@@ -117,8 +158,9 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
 #' @template moduleUI
 #' @inheritParams plotTrias
 #' @author mvarewyck
+#' @import shiny
 #' @export
-plotTriasUI <- function(id, outputType = c("plot", "table")) {
+plotTriasUI <- function(id, outputType = c("plot", "table"), filters = NULL) {
   
   ns <- NS(id)
   outputType <- match.arg(outputType)
@@ -128,6 +170,14 @@ plotTriasUI <- function(id, outputType = c("plot", "table")) {
     actionLink(inputId = ns("linkPlotTrias"), 
       label = uiOutput(ns("titlePlotTrias"))),
     conditionalPanel("input.linkPlotTrias % 2 == 1", ns = ns,
+      
+      if (!is.null(filters)) 
+        lapply(filters, function(iFilter) {
+            checkboxInput(inputId = ns(iFilter), label = switch(iFilter,
+                bias = "Corrected for observer bias",
+                protected = "Protected areas")
+            )
+          }),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else

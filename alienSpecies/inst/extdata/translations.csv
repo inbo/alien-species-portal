@@ -1,5 +1,5 @@
 plotFunction,title_nl,description_nl,title_fr,description_fr,title_en,description_en
-welcomeSection,Welkom op de exoten pagina,Op deze pagina kan je ...,Bienvenue sur la page des exotiques,,Welcome to the alien species page,On this page you can …
+apply_gam,Verschijning status GAM – Observaties,,,,Emergence status GAM – Observations,
 indicator_introduction_year,Aantal geïntroduceerde uitheemse soorten per jaar,,,,Number of new introductions of alien species per year,
 indicator_total_year,Cumulatief aantal geïntroduceerde uitheemse soorten,,,,Cumulative number of alien species,
 countIntroductionPathway,Aantal geïntroduceerde uitheemse soorten per pathway in,,,,,
@@ -12,7 +12,7 @@ reporting_t01-mapOccurrence,Rapportering van ,,,,,
 visualize_pathways_level1,CBD Level 1 geïntroduceerde uitheemse soorten per pathway,,,,CBD Level 1 introduction pathways,
 visualize_pathways_year_level1,CBD Level 1 geïntroduceerde uitheemse soorten per pathway – trend,,,,CBD Level 1 introduction pathways - trends,
 visualize_pathways_level2,CBD Level 2 geïntroduceerde uitheemse soorten per pathway,,,,CBD Level 2 introduction pathways,
-,,,,,,
+welcomeSection,Welkom op de exoten pagina,Op deze pagina kan je ...,Bienvenue sur la page des exotiques,,Welcome to the alien species page,On this page you can …
 ,,,,,,
 ,,,,,,
 ,,,,,,

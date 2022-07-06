@@ -13,6 +13,17 @@ baseMap <- createBaseMap()
 allSpecies <- c("Alopochen aegyptiaca", "Muntiacus reevesi")
 period <- c(2000, 2018)
 
+
+
+test_that("Create summary data", {
+    
+    if (!file.exists(file.path(dataDir, "sum_timeseries.csv")))
+      createTimeseries()
+    if (!file.exists(file.path(dataDir, "dfCube.RData")))
+      createOccupancyCube()
+    
+  })
+
 test_that("Occurrence grid shape", {
     
     expect_equal(length(allShapes), 2)
@@ -65,51 +76,36 @@ test_that("Occurrence plots", {
 
 
 test_that("Emergence status GAM - Observations", {
-    
-    # Taxa without occurrences
-    indicatorData <- loadTabularData(type = "indicators")
-    data_without_occs <- indicatorData[!indicatorData$nubKey %in% taxData$taxonKey, ]
-    head(data_without_occs[order(data_without_occs$nubKey), ])
-    
-    # Protected areas
-    areasData <- loadTabularData(type = "protectedAreas")
+
+    timeseries <- loadTabularData(type = "timeseries")
     
     myKey <- unique(taxData$taxonKey[taxData$scientificName == allSpecies[2]])
-        
-    # Filter on year and taxonKey
-    occurrenceData <- taxData[taxonKey %in% myKey, ]
-    # Sum over cell_code
-    data.table::setkey(occurrenceData, year)
-    occurrenceData <- unique(occurrenceData[, total := .(sum(n)), by = year], by = 'year')
     
-    trias::apply_gam(df = occurrenceData, y_var = "total", 
-      eval_years = 2018,
-      taxon_key = myKey, name = allSpecies[2], verbose = TRUE)
+    correctBias <- c(TRUE, FALSE)[1]
+    isProtected <- c(TRUE, FALSE)[2]
     
-    # observer bias: attach n per class when loading data
-    trias::apply_gam(df = occurrenceData, y_var = "total", 
-      baseline_var = "class_n",
-      eval_years = 2018,
-      taxon_key = myKey, name = allSpecies[2], verbose = TRUE)
+    subData <- timeseries[taxonKey %in% myKey, ]
+    subData <- subData[protected == isProtected, ]
     
-    # protected areas
-    # https://trias-project.github.io/indicators/05_occurrence_indicators_preprocessing.html#34_add_information_about_presence_in_protected_areas
-#    df_prot_areas <- read_tsv(
-#      here::here(
-#        "data",
-#        "interim",
-#        "intersect_EEA_ref_grid_protected_areas.tsv"
-#      ),
-#      na = ""
-#    )
-    
+    tmpResult <- plotTrias(triasFunction = "apply_gam", 
+      df = subData,
+      triasArgs = list(
+        y_var = "obs",
+        eval_years = min(subData$year):max(subData$year),
+        taxon_key = myKey, name = allSpecies[2],
+        baseline_var = if (correctBias) "cobs",
+        verbose = TRUE)
+    )
+ 
+    expect_is(tmpResult, "list")
+    expect_is(tmpResult$plot, "plotly")
+    expect_is(tmpResult$data, "data.frame")
     
   })
 
 
 test_that("Reporting t1", {
     
-    createOccupancyCube()
     load(file = file.path(dataDir, "dfCube.RData"))
     
     # Filter on taxonKey and source
@@ -156,4 +152,3 @@ test_that("Reporting t0 and t1", {
     expect_is(myData, "data.frame")
     
   })  
-

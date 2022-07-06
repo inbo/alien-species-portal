@@ -40,11 +40,11 @@ The file `be_alientaxa_info.csv` is enriched with gbifKey information.
 The file `be_classes_cube.csv` contains occurrence data grouped at class level, which will be used for correcting the research bias effort. 
 Data source + description (Zenodo): https://zenodo.org/record/3635510#.YrBnE7xBxhE
 
-## Protected Areas
+## Timeseries
 
-The file `intersect_EEA_ref_grid_protected_areas.tsv` contains grid cells with Belgian protected areas.
-Data source + description (TrIAS indicators): https://trias-project.github.io/indicators/05_occurrence_indicators_preprocessing.html#1_setup
-
+The file `df_timeseries.tsv` contains occurrence data for 1km x 1km grid cells on species and class level with indicator for protected areas.
+Data source: created by script https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
+Dependency data source + description (Zenodo): https://zenodo.org/record/4299976#.YsV4QtJBxhF
 
 # Spatial Data
 
