@@ -10,7 +10,7 @@ taxData <- loadTabularData(type = "occurrence")
 baseMap <- createBaseMap()
 ## Settings
 # many versus few occurrences
-allSpecies <- c("Alopochen aegyptiaca", "Ruscus aculeatus")
+allSpecies <- c("Alopochen aegyptiaca", "Muntiacus reevesi")
 period <- c(2000, 2018)
 
 test_that("Occurrence grid shape", {
@@ -32,14 +32,20 @@ test_that("Occurrence plots", {
     # Filter on year and taxonKey
     occurrenceData <- taxData[taxonKey %in% myKey & year >= period[1] & year <= period[2], ]
     
-    # Leaflet plot
+    # Leaflet data
     occurrenceShape <- createCubeData(df = occurrenceData, shapeData = allShapes,
       groupVariable = "cell_code")
     expect_equal(length(occurrenceShape), 2)
     expect_is(occurrenceShape[[1]], "sf")
     expect_lte(nrow(occurrenceShape[[1]]), length(unique(taxData$cell_code1[taxData$taxonKey == myKey])))
     expect_lte(nrow(occurrenceShape[[2]]), length(unique(taxData$cell_code10[taxData$taxonKey == myKey])))
+    # Data download
+    myData <- do.call(rbind, reportingShape)
+    myData$source <- attr(reportingShape, "splitFactor")
+    myData$geometry <- NULL
+    expect_is(myData, "data.frame")
     
+    # Leaflet plot
     myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
       legend = "topright", addGlobe = TRUE, groupVariable = "cell_code")
     expect_is(myPlot, "leaflet")
@@ -119,6 +125,11 @@ test_that("Reporting t1", {
       legend = "topright", addGlobe = TRUE, groupVariable = "source")
     expect_is(myPlot, "leaflet")
     
+    # For data download in the app
+    myData <- do.call(rbind, reportingShape)
+    myData$source <- attr(reportingShape, "splitFactor")
+    expect_is(myData, "data.frame")
+    
   })  
 
   
@@ -138,6 +149,11 @@ test_that("Reporting t0 and t1", {
     myPlot <- mapCube(cubeShape = reportingShape, baseMap = baseMap, 
       legend = "topright", addGlobe = TRUE, groupVariable = "source")
     expect_is(myPlot, "leaflet")
+    
+    # For data download in the app
+    myData <- unsplit(reportingShape, attr(reportingShape, "splitFactor"))
+    myData$source <- attr(reportingShape, "splitFactor")
+    expect_is(myData, "data.frame")
     
   })  
 

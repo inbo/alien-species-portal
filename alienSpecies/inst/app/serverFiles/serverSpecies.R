@@ -61,7 +61,7 @@ taxonKey <- reactive({
 ## Map + barplot
 mapCubeServer(id = "observations",
   uiText = reactive(results$translations),
-  species = reactive(names(taxonKey())),
+  species = reactive(input$species_choice),
   df = reactive({
       req(taxonKey())
       occurrenceData[occurrenceData$taxonKey %in% taxonKey(), ]

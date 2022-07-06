@@ -18,9 +18,9 @@ nameFile <- function(species = NULL, period = NULL, content, fileExt) {
   
   paste0(
     if (!is.null(species))
-      paste(species, collapse = "-"),
+      paste0(paste(species, collapse = "-"), "_"),
     if (!is.null(period))
-      paste(period, collapse = "-"),
+      paste0(paste(period, collapse = "-"), "_"),
     
     content, ".", fileExt
   )

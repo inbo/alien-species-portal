@@ -21,7 +21,7 @@ createCubeData <- function(df, shapeData, groupVariable) {
   
   cellCodes <- c("cell_code1", "cell_code10")
   cellCodes <- cellCodes[cellCodes %in% colnames(df)]
-  
+    
   if (!is.null(groupVariable) && groupVariable != "cell_code") {
     
     if (length(cellCodes) != 1)
@@ -55,17 +55,29 @@ createCubeData <- function(df, shapeData, groupVariable) {
     
   }
   
-  sapply(dfList, function(iData) {
+  # Add spatial info
+  toReturn <- sapply(dfList, function(iData) {
+      
       iCode <- cellCodes[cellCodes %in% colnames(iData)]
       isOccurred <- unique(iData[[iCode]])
       iShape <- shapeData[[paste0("be_", gsub("cell_code", "", iCode), "km")]]
-      tmp <- st_as_sf(iShape[iShape$CELLCODE %in% isOccurred, ], 
+      st_as_sf(iShape[iShape$CELLCODE %in% isOccurred, ], 
           coords = c("decimalLongitude", "decimalLatitude"),
           crs = 4326) %>%
         st_transform(crs = 4326)
-      
+            
     }, simplify = FALSE)
   
+  # For unsplit - download data in the app
+  tmpFactor <- sapply(toReturn, nrow)
+    splitFactor <- unlist(sapply(seq_along(tmpFactor), function(i) {
+          rep(names(tmpFactor)[i], each = tmpFactor[i])
+        }))
+  attr(toReturn, "splitFactor") <- splitFactor
+  
+  
+  toReturn
+
 }
 
 
@@ -423,6 +435,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           
           newMap <- mapCube(
             cubeShape = cubeShape(),
+            groupVariable = groupVariable,
             baseMap = baseMap,
             legend = input$legend,
             addGlobe = input$globe %% 2 == as.numeric(showGlobeDefault) - 1
@@ -451,7 +464,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
         filename = function()
           nameFile(species = species(),
             period = input$period, 
-            content = "kaart", fileExt = "png"),
+            content = id, fileExt = "png"),
         content = function(file) {
           
           # convert temp .html file into .png for download
@@ -465,14 +478,11 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
         filename = function()
           nameFile(species = species(),
             period = input$period, 
-            content = "kaartData", fileExt = "csv"),
+            content = paste0(id, "_data"), fileExt = "csv"),
         content = function(file) {
-          
-          myData <- as.data.frame(cubeShape())
-          # TODO change variable names
-#          names(myData)[names(myData) == "freq"] <- results$unitText()
-#          names(myData)[names(myData) == "group"] <- "groep"
-          
+          myData <- do.call(rbind, cubeShape())
+          myData$source <- attr(cubeShape(), "splitFactor")
+          myData$geometry <- NULL          
           ## write data to exported file
           write.table(x = myData, file = file, quote = FALSE, row.names = FALSE,
             sep = ";", dec = ",")
@@ -544,7 +554,7 @@ mapCubeUI <- function(id, sources = c("All"), showPeriod = FALSE) {
     
     tags$br(),
     
-    downloadButton(ns("download"), label = "Download figuur", class = "downloadButton"),
+    downloadButton(ns("download"), label = "Download kaart", class = "downloadButton"),
     downloadButton(ns("downloadData"), label = "Download data", class = "downloadButton"),
     
     tags$hr()

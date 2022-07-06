@@ -34,7 +34,7 @@ function(input, output, session) {
     searchId = "",
     exoten_timeNA = defaultTimeNA,
     exoten_time = defaultTime,
-    species_choice = if (doDebug) c("Alopochen aegyptiaca", "Ruscus aculeatus")[2] else NULL
+    species_choice = if (doDebug) c("Alopochen aegyptiaca", "Muntiacus reevesi")[2] else NULL
   )
   
   
