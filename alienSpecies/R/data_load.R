@@ -234,8 +234,8 @@ loadTabularData <- function(
               "Alien Mollusc checklist" = "https://www.gbif.org/dataset/e082b10e-476f-43c1-aa61-f8d92f33029a",
               "Belgian rust fungi" = "https://www.gbif.org/dataset/b043c480-dd36-4f4f-aa82-e188753ff09d",
               "Manual of Alien Plants" = "https://www.gbif.org/dataset/9ff7d317-609b-4c08-bd86-3bc404b77c42",
-              "RINSE1" = "https://www.gbif.org/dataset/1738f272-6b5d-4f43-9a92-453a8c5ea50a",
-              "RINSE2" = "https://www.gbif.org/dataset/3f5e930b-52a5-461d-87ec-26ecd66f14a3",
+              "RINSE1" = "https://www.gbif.org/dataset/3f5e930b-52a5-461d-87ec-26ecd66f14a3",
+              "RINSE2" = "https://www.gbif.org/dataset/1738f272-6b5d-4f43-9a92-453a8c5ea50a",
               "WRiMS" = "https://www.gbif.org/dataset/0a2eaf0c-5504-4f48-a47f-c94229029dc8")
         ), 
         "' target = '_blank'>", rawData$source, "</a>"))
