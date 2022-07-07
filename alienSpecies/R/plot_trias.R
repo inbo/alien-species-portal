@@ -103,6 +103,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
   outputType = c("plot", "table")) {
   
+  # For R CMD check
+  protected <- NULL
   
   outputType <- match.arg(outputType)
   
@@ -157,6 +159,8 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
 #' Shiny module for creating the plot \code{\link{plotTrias}} - UI side
 #' @template moduleUI
 #' @inheritParams plotTrias
+#' @param filters character vector, additional filters for the TRIAS plot to 
+#' be dipslayed
 #' @author mvarewyck
 #' @import shiny
 #' @export

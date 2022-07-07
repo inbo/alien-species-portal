@@ -26,6 +26,7 @@ if (!exists("doDebug"))
 tabChoices <- c("start", "global_indicators", "species_information", 
   "early_warning", "management")[1:4]
 dataDir <- system.file("extdata", package = "alienSpecies")
+managementDir <- system.file("extdata", "management", package = "alienSpecies")
 
 
 # Create summary data

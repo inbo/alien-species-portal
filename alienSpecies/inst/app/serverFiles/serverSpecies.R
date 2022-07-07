@@ -120,5 +120,23 @@ mapCubeServer(id = "reporting_t01",
   baseMap = baseMap
 )
 
+### Management
+### ----------------
+
+## Map + barplot
+mapCubeServer(id = "management",
+  uiText = reactive(results$translations),
+  species = reactive(input$species_choice),
+  df = reactive({
+      req(input$species_choice)
+      dataFile <- paste0(strsplit(input$species_choice, split = " ")[[1]][1], ".csv")
+      validate(need(file.exists(file.path(managementDir, dataFile)), "No data available"))
+      loadGbif(dataFile = dataFile)
+    }),
+  groupVariable = NULL,
+  shapeData = NULL,
+  baseMap = baseMap,
+  showPeriod = TRUE
+)
 
 

@@ -32,7 +32,11 @@ tagList(
         )
       ),
       
-      tabPanel(titleModuleUI(id = "species_management")),
+      tabPanel(titleModuleUI(id = "species_management"),
+        tags$div(style = "margin-top: 10px;",
+          mapCubeUI(id = "management", showPeriod = TRUE, showLegend = FALSE)
+        )
+      ),
       
       tabPanel(titleModuleUI(id = "species_more"), 
         tabsetPanel(
