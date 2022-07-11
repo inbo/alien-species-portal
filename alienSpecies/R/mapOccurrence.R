@@ -130,7 +130,8 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
     layout(
       xaxis = list(title = "Year", range = c(minYear, currentYear)),
       yaxis = list(title = ""),
-      showlegend = FALSE)
+      showlegend = FALSE
+  )
   
   
   list(plot = myPlot, data = nOccurred)
@@ -277,12 +278,25 @@ mapCube <- function(cubeShape, baseMap = createBaseMap(), legend = "none",
 #' @return leaflet map
 #' 
 #' @author mvarewyck
-#' @importFrom leaflet addMarkers addTiles `%>%`
+#' @importFrom leaflet addMarkers addTiles `%>%` markerClusterOptions
+#' @import data.table
 #' @export
 mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
   addGlobe = FALSE) {
   
+  ## Sum counts over ID
+  occurrenceData <- occurrenceData[, .(count = sum(count)),
+    by = .(decimalLongitude, decimalLatitude)] 
+  
+  
   myMap <- baseMap
+  
+  # Add background map - needed for clusters to be shown and before addMarkers()
+  if (addGlobe) {
+    
+    myMap <- addTiles(myMap)
+    
+  } else warning("Clusters will not be displayed.")
   
   myMap <- myMap %>%
     addMarkers(
@@ -290,15 +304,11 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
       lng = ~decimalLongitude,
       lat = ~decimalLatitude,
       popup = ~as.character(count),
-      label = ~as.character(count)
+      label = ~as.character(count),
+      clusterOptions = if (addGlobe) markerClusterOptions()
     )
   
-  # Add background map
-  if (addGlobe) {
-    
-    myMap <- addTiles(myMap)
-    
-  }
+ 
   
   
   myMap
@@ -309,6 +319,10 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
 
 
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
+#' 
+#' @param filter list with filters to be shown in the app;
+#' names should match a plotFunction in \code{uiText}; 
+#' values define the choices in \code{selectInput}
 #' @inheritParams welcomeSectionServer
 #' @inheritParams createCubeData
 #' @inheritParams mapCubeServer
@@ -327,6 +341,7 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
 #' @importFrom webshot webshot
 #' @export
 mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
+  filter = list(source = c("All")), 
   groupVariable, showPeriod = FALSE, showGlobeDefault = TRUE
 ) {
   
@@ -358,6 +373,19 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
         
         })
       
+      output$filters <- renderUI({
+          
+          lapply(names(filter), function(filterName) {
+              column(6, 
+                selectInput(inputId = ns(filterName), 
+                  label = uiText()$title[uiText()$plotFunction == filterName],
+                  choices = filter[[filterName]],
+                  multiple = TRUE, selected = filter[[filterName]])
+              )
+            })
+          
+        })
+      
       output$period <- renderUI({
           
           req(df())
@@ -378,14 +406,32 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           
         })
       
+      
+      # Subset on filters
+      filterData <- reactive({
+          
+          filterData <- df()
+          
+          # Other filters
+          for (iFilter in names(filter)) {
+            if (iFilter != "source")
+              filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
+          }
+          
+          filterData
+          
+        })
+      
+      # Subset on period
       subData <- reactive({
           
+          # Filter on time
           if (showPeriod) {
-          
-            req(input$period)
-            df()[year >= input$period[1] & year <= input$period[2], ]
-            
-          } else df()
+              
+              req(input$period)
+              filterData()[year >= input$period[1] & year <= input$period[2], ]
+              
+            } else filterData()
           
         })
       
@@ -394,8 +440,8 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       # Create data for map
       cubeShape <- reactive({
           
-          validate(need(subData(), "Geen data beschikbaar"),
-            need(nrow(subData()) > 0, "Geen data beschikbaar"))
+          validate(need(subData(), uiText()$title[uiText()$plotFunction == "noData"]),
+            need(nrow(subData()) > 0, uiText()$title[uiText()$plotFunction == "noData"]))
           
           createCubeData(
             df = subData(),
@@ -410,12 +456,14 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           
           if (is.null(shapeData)) {
             
+            validate(need(nrow(subData()) > 0, uiText()$title[uiText()$plotFunction == "noData"]))
+            
             mapOccurrence(occurrenceData = subData(), baseMap = baseMap,
               addGlobe = TRUE)
             
           } else {
             
-            validate(need(cubeShape(), "Geen data beschikbaar"))
+            validate(need(cubeShape(), uiText()$title[uiText()$plotFunction == "noData"]))
             
             mapCube(cubeShape = cubeShape(), baseMap = baseMap, 
               groupVariable = groupVariable, addGlobe = TRUE, legend = "topright")
@@ -427,7 +475,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       # Add world map
       observe({
           
-          validate(need(cubeShape(), "Geen data beschikbaar"))
+          validate(need(cubeShape(), uiText()$title[uiText()$plotFunction == "noData"]))
           
           proxy <- leafletProxy("spacePlot")
           
@@ -457,7 +505,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       # Add legend
       observe({
           
-          validate(need(cubeShape(), "Geen data beschikbaar"))
+          validate(need(cubeShape(), uiText()$title[uiText()$plotFunction == "noData"]))
           
           req(input$legend)
           
@@ -487,15 +535,25 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       # Create final map (for download)
       finalMap <- reactive({
           
-          validate(need(cubeShape(), "Geen data beschikbaar"))
-          
-          newMap <- mapCube(
-            cubeShape = cubeShape(),
-            groupVariable = groupVariable,
-            baseMap = baseMap,
-            legend = input$legend,
-            addGlobe = input$globe %% 2 == as.numeric(showGlobeDefault) - 1
-          )
+          if (is.null(shapeData)) {
+            
+            newMap <- mapOccurrence(
+              occurrenceData = subData(), 
+              baseMap = baseMap,
+              addGlobe = input$globe %% 2 == as.numeric(showGlobeDefault) - 1
+            )
+            
+          } else {
+            
+            newMap <- mapCube(
+              cubeShape = cubeShape(),
+              groupVariable = groupVariable,
+              baseMap = baseMap,
+              legend = input$legend,
+              addGlobe = input$globe %% 2 == as.numeric(showGlobeDefault) - 1
+            )
+            
+          }
           
           # save the zoom level and centering to the map object
           newMap <- newMap %>% setView(
@@ -549,9 +607,11 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       ## Barplot for Occurrence ##
       ## ---------------------- ##
       
+    
+      
       plotModuleServer(id = "countOccurrence",
         plotFunction = "countOccurrence", 
-        data = df,
+        data = filterData,
         period = reactive(input$period)
       )
       
@@ -562,8 +622,8 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
 
 #' Shiny module for creating the plot \code{\link{mapCube}} - UI side
 #' @inheritParams welcomeSectionServer
-#' @param sources character vector, sources to select from
-#' @param showLegend boolena, whether to show legend for the map; default TRUE
+#' @param showLegend boolean, whether to show selector for map legend; default TRUE
+#' @param showGlobe boolean, whether to show selector for background globe; default TRUE
 #' @param showPeriod boolean, whether to show time selector; default FALSE
 #' @return UI object
 #' 
@@ -571,7 +631,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
 #' @import shiny
 #' @importFrom leaflet leafletOutput
 #' @export
-mapCubeUI <- function(id, sources = c("All"), showLegend = TRUE, showPeriod = FALSE) {
+mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALSE) {
   
   ns <- NS(id)
   
@@ -582,22 +642,21 @@ mapCubeUI <- function(id, sources = c("All"), showLegend = TRUE, showPeriod = FA
     uiOutput(ns("titleMapOccurrence")),
     
     wellPanel(
-      fixedRow(
+      fixedRow(uiOutput(ns("filters")),
+        if (showLegend)
+          column(6, 
+            selectInput(inputId = ns("legend"), label = "Legend",
+              choices = c(
+                "Bovenaan rechts" = "topright",
+                "Onderaan rechts" = "bottomright",
+                "Bovenaan links" = "topleft",
+                "Onderaan links" = "bottomleft",
+                "<geen>" = "none"))
+          ),
+        if (showGlobe)
         column(6, 
-          selectInput(inputId = ns("source"), label = "Source",
-            choices = sources),
           actionLink(inputId = ns("globe"), label = "Voeg landkaart toe",
             icon = icon("globe"))
-        ),
-        if (showLegend)
-        column(6, 
-          selectInput(inputId = ns("legend"), label = "Legend",
-            choices = c(
-              "Bovenaan rechts" = "topright",
-              "Onderaan rechts" = "bottomright",
-              "Bovenaan links" = "topleft",
-              "Onderaan links" = "bottomleft",
-              "<geen>" = "none"))
         )
       )
     ),

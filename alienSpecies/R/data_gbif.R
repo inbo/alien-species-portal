@@ -1,10 +1,4 @@
 
-#datasetKey <- "7522721f-4d97-4984-8231-c9e061ef46df"
-#user <- "mvarewyck"
-#pwd <- "6P.G6DrErq.mmUy"
-
-
-
 #' Download GBIF occurrence data 
 #' 
 #' @param datasetKey character, key of the dataset to be downloaded from GBIF
@@ -16,8 +10,9 @@
 #' @param email character, email where to send email for finishing download at GBIF
 #' @return TRUE if the download succeeded
 #' 
-#' @importFrom rgbif occ_download occ_download_wait occ_download_get occ_download_import
+#' @importFrom rgbif occ_download pred occ_download_wait occ_download_get occ_download_import
 #' @importFrom utils write.csv
+#' @importFrom reshape2 melt
 #' 
 #' @author mvarewyck
 #' @export
@@ -33,20 +28,22 @@ getGbifOccurrence <- function(datasetKey,
   # Execute download request
   gbif_download <- occ_download_get(gbif_downloadKey, path = tempdir())
   
-  ## Extract occurrence data -> clean but lacks some columns
+  ## Extract occurrence data -> clean but lacks gender info if count > 1
   cleanData <- occ_download_import(x = gbif_download)
+  # Remove casual observations
+  cleanData <- cleanData[cleanData$samplingProtocol != "casual observation", ]
   
   if (is.null(outFile)) {
-    if (length(unique(cleanData$genus)) > 1)
-      stop("More than 1 genus in the occurrence data. Please specify 'outFile'.")
-    outFile <- paste0(cleanData$genus[1], ".csv")
+    if (length(unique(cleanData$species)) > 1)
+      stop("More than 1 species in the occurrence data. Please specify 'outFile'.")
+    outFile <- paste0(cleanData$species[1], ".csv")
   }
   # Clean columns
   cleanData <- cleanData[, c("gbifID", "kingdom", "phylum", "class", "order", "family", "species",
       "scientificName", "year", "individualCount", "samplingProtocol",
       "decimalLatitude", "decimalLongitude")]
   colnames(cleanData)[colnames(cleanData) == "individualCount"] <- "count"
-  
+  cleanData$gbifID <- as.character(cleanData$gbifID)
   
   ## Extract verbatim data -- needed for gender
   extractDir <- file.path(tempdir(), "gbifdownload", datasetKey)
@@ -69,11 +66,24 @@ getGbifOccurrence <- function(datasetKey,
   verbatimData$sex <- NULL
   
   # Combine clean and verbatim data
-# TODO why merge not working on gbifID?
-#  df <- merge(cleanData, verbatimData)
-  df <- cbind(cleanData, verbatimData)
+  df <- merge(cleanData, verbatimData)
+  # Split per gender
+  df$missing <- df$count - apply(df[, c("male", "female")], 1, function(x) 
+      sum(as.numeric(x), na.rm = TRUE))
+  df$missing <- ifelse(df$missing == 0, NA, df$missing)
+  nTotal <- sum(df$count, na.rm = TRUE)
+  df$count <- NULL
+  # wide to long
+  allCols <- colnames(df)
+  df <- melt(df, id.vars = allCols[!allCols %in% c("male", "female", "missing")], 
+    measure.vars = c("male", "female", "missing"), 
+    variable.name = "gender", value.name = "count", na.rm = TRUE)
+  
+  if (nTotal != sum(df$count))
+    stop("Total counts is not retained during data manipulation.")
   
   write.csv(df, file.path(dataDir, outFile), row.names = FALSE)
+  
   
   return(TRUE)
   
