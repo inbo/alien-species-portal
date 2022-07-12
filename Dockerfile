@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libxml2-dev \
     libproj-dev \
     libgdal-dev \
-    imagemagick \
     libicu-dev \
+    imagemagick \
     libudunits2-dev \
     libcurl4-openssl-dev \
     libpng-dev \
@@ -38,10 +38,10 @@ RUN R -e "remotes::install_version('DBI', version = '1.1.3', upgrade = FALSE)" &
     R -e "remotes::install_version('digest', version = '0.6.29', upgrade = FALSE)" && \
     R -e "remotes::install_version('evaluate', version = '0.15', upgrade = FALSE)" && \
     R -e "remotes::install_version('fansi', version = '1.0.3', upgrade = FALSE)" && \
-    R -e "remotes::install_version('farver', version = '2.1.0', upgrade = FALSE)" && \
+    R -e "remotes::install_version('farver', version = '2.1.1', upgrade = FALSE)" && \
     R -e "remotes::install_version('fastmap', version = '1.1.0', upgrade = FALSE)" && \
     R -e "remotes::install_version('fs', version = '1.5.2', upgrade = FALSE)" && \
-    R -e "remotes::install_version('generics', version = '0.1.2', upgrade = FALSE)" && \
+    R -e "remotes::install_version('generics', version = '0.1.3', upgrade = FALSE)" && \
     R -e "remotes::install_version('glue', version = '1.6.2', upgrade = FALSE)" && \
     R -e "remotes::install_version('gtable', version = '0.3.0', upgrade = FALSE)"
 RUN R -e "remotes::install_version('httpcode', version = '0.3.0', upgrade = FALSE)" && \
@@ -63,11 +63,11 @@ RUN R -e "remotes::install_version('mime', version = '0.12', upgrade = FALSE)" &
     R -e "remotes::install_version('R6', version = '2.5.1', upgrade = FALSE)" && \
     R -e "remotes::install_version('rappdirs', version = '0.3.3', upgrade = FALSE)" && \
     R -e "remotes::install_version('RColorBrewer', version = '1.1-3', upgrade = FALSE)" && \
-    R -e "remotes::install_version('Rcpp', version = '1.0.8.3', upgrade = FALSE)"
+    R -e "remotes::install_version('Rcpp', version = '1.0.9', upgrade = FALSE)"
 RUN R -e "remotes::install_version('rlang', version = '1.0.3', upgrade = FALSE)" && \
     R -e "remotes::install_version('rprojroot', version = '2.0.3', upgrade = FALSE)" && \
     R -e "remotes::install_version('sourcetools', version = '0.1.7', upgrade = FALSE)" && \
-    R -e "remotes::install_version('stringi', version = '1.7.6', upgrade = FALSE)" && \
+    R -e "remotes::install_version('stringi', version = '1.7.8', upgrade = FALSE)" && \
     R -e "remotes::install_version('sys', version = '3.4', upgrade = FALSE)" && \
     R -e "remotes::install_version('utf8', version = '1.2.2', upgrade = FALSE)" && \
     R -e "remotes::install_version('uuid', version = '1.1-0', upgrade = FALSE)" && \
@@ -96,7 +96,7 @@ RUN R -e "remotes::install_version('diffobj', version = '0.3.5', upgrade = FALSE
     R -e "remotes::install_version('munsell', version = '0.5.0', upgrade = FALSE)"
 RUN R -e "remotes::install_version('nlme', version = '3.1-158', upgrade = FALSE)" && \
     R -e "remotes::install_version('plyr', version = '1.8.7', upgrade = FALSE)" && \
-    R -e "remotes::install_version('processx', version = '3.6.1', upgrade = FALSE)" && \
+    R -e "remotes::install_version('processx', version = '3.7.0', upgrade = FALSE)" && \
     R -e "remotes::install_version('purrr', version = '0.3.4', upgrade = FALSE)" && \
     R -e "remotes::install_version('rex', version = '1.2.1', upgrade = FALSE)" && \
     R -e "remotes::install_version('s2', version = '1.0.7', upgrade = FALSE)" && \
@@ -143,16 +143,26 @@ RUN R -e "remotes::install_version('roxygen2', version = '7.2.0', upgrade = FALS
     R -e "remotes::install_version('oai', version = '0.3.2', upgrade = FALSE)" && \
     R -e "remotes::install_version('rematch2', version = '2.1.2', upgrade = FALSE)" && \
     R -e "remotes::install_version('shinycssloaders', version = '1.0.0', upgrade = FALSE)" && \
-    R -e "remotes::install_version('rgbif', version = '3.7.2', upgrade = FALSE)"
-RUN R -e "remotes::install_version('tidyr', version = '1.2.0', upgrade = FALSE)" && \
+    R -e "remotes::install_version('shinyjs', version = '2.1.0', upgrade = FALSE)"
+RUN R -e "remotes::install_version('rgbif', version = '3.7.2', upgrade = FALSE)" && \
+    R -e "remotes::install_version('tidyr', version = '1.2.0', upgrade = FALSE)" && \
     R -e "remotes::install_version('viridis', version = '0.6.2', upgrade = FALSE)" && \
     R -e "remotes::install_version('waldo', version = '0.4.0', upgrade = FALSE)" && \
     R -e "remotes::install_version('leaflet', version = '2.1.1', upgrade = FALSE)" && \
-    R -e "remotes::install_version('plotly', version = '4.9.2.1', upgrade = FALSE)" && \
-    R -e "remotes::install_version('testthat', version = '3.1.4', upgrade = FALSE)" && \
-    R -e "remotes::install_version('leaflet.extras', version = '1.0.0', upgrade = FALSE)"
+    R -e "remotes::install_version('plotly', version = '4.10.0', upgrade = FALSE)" && \
+    R -e "remotes::install_version('testthat', version = '3.1.4', upgrade = FALSE)"
+
+RUN R -e "remotes::install_github('trias-project/trias')"
+RUN R -e "remotes::install_github('inbo/INBOtheme')"
 
 
+
+ARG ARCHIVE
+COPY $ARCHIVE /tmp/$ARCHIVE
+RUN R -e "install.packages('/tmp/$ARCHIVE', repos = NULL, dependencies = FALSE)"
+RUN rm /tmp/$ARCHIVE
+
+#addShiny(dockerFilePath = "Dockerfile", shinyFunction = "alienSpecies::runShiny()")
 RUN R -e "cat(\"local(options(shiny.port = 3838, shiny.host = '0.0.0.0'))\n\", file = R.home('etc/Rprofile.site'), append = TRUE)"
 
 EXPOSE 3838

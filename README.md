@@ -13,3 +13,30 @@ Enkele relevante URLS:
 - [VespaR](https://github.com/inbo/vespaR) => Code voor het maken van kaartjes en grafieken ivm vespa velutina beheer & de bijhorende shiny app
 - [T1](https://zenodo.org/record/3060173#.YaEEmdBKiUm) => shapes, zips & geojsons van de verspreiding van soorten van union concern gedurende de eerste rapportage cyclus.
 - [T0](https://zenodo.org/record/3835756#.YaEE4NBKiUm) => shapes, zips & geojsons van de verspreiding van soorten van union concern voor de baseline (van 01-01-2000 tot datum van opname op de lijst).
+
+
+# Build/Run docker image
+
+The dockerfile is generated automatically by packamon: do not edit by hand.
+First, build the latest alienSpecies_*.tar.gz file. 
+The dockerfile can then be updated wrt this latest tar.gz file by running code chunk below in R.
+The argument `skipMissingDependencies` is used to skip an error when trying to install github R packages.
+
+```
+library(packamon)
+writeDockerfile(sourceDir = ".", overwrite = TRUE, skipMissingDependencies = TRUE)
+addShiny(dockerFilePath = "Dockerfile", shinyFunction = "alienSpecies::runShiny()")
+```
+
+Then, to build the docker image with the latest dockerfile, run in bash
+
+```
+cd git/alien-species-portal
+docker build --build-arg ARCHIVE=alienSpecies_0.0.1.tar.gz -t inbo/alienspecies .
+```
+
+Run the new docker image from bash
+
+```
+docker run -it -p 3000:3838 inbo/alienspecies
+```
