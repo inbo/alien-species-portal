@@ -8,14 +8,18 @@
 
 #include packamon.r-dependencies
 
-RUN R -e "remotes::install_github('trias-project/trias')"
-RUN R -e "remotes::install_github('inbo/INBOtheme')"
+
+# To prevent errors 
+## when opening ggplot via linux docker
+## when installing phantomjs via webshot
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    libxt-dev \
+    wget
+    
+# To download leaflet maps from within the app
+## Attention: do not install phantomjs directly, will not work then!
+RUN R -e "webshot::install_phantomjs()"
 
 #include packamon.local-r-dependencies
 
 #include packamon.runtime-settings
-
-ARG ARCHIVE
-COPY $ARCHIVE /tmp/$ARCHIVE
-RUN R -e "install.packages('/tmp/$ARCHIVE', repos = NULL, dependencies = FALSE)"
-RUN rm /tmp/$ARCHIVE

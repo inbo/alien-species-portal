@@ -21,11 +21,12 @@ The dockerfile is generated automatically by packamon: do not edit by hand.
 First, build the latest alienSpecies_*.tar.gz file. 
 The dockerfile can then be updated wrt this latest tar.gz file by running code chunk below in R.
 The argument `skipMissingDependencies` is used to skip an error when trying to install github R packages.
+TODO: Add link to packamon - currently using develop branch
 
 ```
 library(packamon)
-writeDockerfile(sourceDir = ".", overwrite = TRUE, skipMissingDependencies = TRUE)
-addShiny(dockerFilePath = "Dockerfile", shinyFunction = "alienSpecies::runShiny()")
+writeDockerfile(sourceDir = ".", installSource = TRUE,
+overwrite = TRUE, shinyFunction = "alienSpecies::runShiny()")
 ```
 
 Then, to build the docker image with the latest dockerfile, run in bash
