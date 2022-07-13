@@ -4,6 +4,10 @@ function(input, output, session) {
   # -------------
   
   observe({
+      
+      if (doDebug)
+        shinyjs::showLog()
+      
       req(!is.null(input$debug_console))
       if (input$debug_console > 0)
         browser()

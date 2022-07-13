@@ -8,6 +8,9 @@ In this folder, the required data is collected to create the Rshiny application.
 The file `data_input_checklist_indicators.tsv` contains all alien species in Belgium.
 Data source + description (GBIF): https://www.gbif.org/dataset/6d9e952f-948c-4483-9807-575348147c7e
 
+Latest version retrieved from https://github.com/trias-project/indicators/blob/master/data/interim/data_input_checklist_indicators.tsv
+This includes keys for higher ranks that can be included in the search query for the indicators table.
+
 ## Union list data
 
 The file `eu_concern_species.tsv` contains all alien species of interest from the EU.

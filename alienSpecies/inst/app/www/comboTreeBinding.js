@@ -26,6 +26,7 @@ $.extend(comboTreeBinding, {
       source: $el.data("choices"),
       isMultiple: $el.data("multiple"),
       cascadeSelect: $el.data("cascaded"),
+      selected: $el.data("selected"),
       collapse: true
     });
   }

@@ -170,6 +170,8 @@ loadTabularData <- function(
         "first_observed", "last_observed", 
         # Taxonomy
         "kingdom", "phylum", "class", "order", "family",
+        # Taxonomy keys - for search queries
+        "kingdomKey", "phylumKey", "classKey", "orderKey", "familyKey",
         # Locality
         "locality", "locationId", "native_range",
         # Degree establishment

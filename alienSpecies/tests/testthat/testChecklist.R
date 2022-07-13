@@ -55,6 +55,10 @@ test_that("Define user choices and filter data", {
     
     # choices
     taxaChoices <- createTaxaChoices(exotenData = exotenData)
+    tmpChoices <- unlist(taxaChoices)
+    matchTaxum <- match("185465684", tmpChoices)[1]
+    tmpChoices[matchTaxum + 1]
+    
     habitatChoices <- attr(exotenData, "habitats")
     pwChoices <- createDoubleChoices(exotenData = exotenData, 
       columns = c("pathway_level1", "pathway_level2"))

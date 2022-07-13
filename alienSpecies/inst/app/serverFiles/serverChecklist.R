@@ -47,7 +47,8 @@ urlSearch <- reactive(parseQueryString(session$clientData$url_search))
 output$filter_taxa <- renderUI({
     
     comboTreeInput("exoten_taxa", choices = taxaChoices, 
-      placeholder = "All taxa", selected = urlSearch()$taxa)
+      placeholder = "All taxa", selected = urlSearch()$taxa,
+      isNumeric = TRUE)
     
   })
 
@@ -179,33 +180,37 @@ results$exoten_data <- reactive({
         
     # taxa
     if (!is.null(input$exoten_taxa)) {
-      searchId <- paste0(searchId, "&taxa=", paste(input$exoten_taxa, collapse = ", "))
+      searchId <- paste0(searchId, "&taxa=", 
+        matchCombo(selected = input$exoten_taxa, longChoices = longTaxaChoices))
       subData <- filterCombo(exotenData = subData, inputValue = input$exoten_taxa, 
         inputLevels = taxaLevels)
     }
       
     # habitat
     if (!is.null(filter_habitat())) {
-      searchId <- paste0(searchId, "&habitat=", paste(filter_habitat(), collapse = ", "))
+      searchId <- paste0(searchId, "&habitat=", paste(filter_habitat(), collapse = ","))
       subData <- subData[habitat %in% filter_habitat(), ]
     }
     
     # pathways
     if (!is.null(input$exoten_pw)) {
-      searchId <- paste0(searchId, "&pw=", paste(input$exoten_pw, collapse = ", "))
+      print(input$exoten_pw)
+      searchId <- paste0(searchId, "&pw=", 
+        matchCombo(selected = input$exoten_pw, longChoices = longPwChoices))
       subData <- filterCombo(exotenData = subData, inputValue = input$exoten_pw, 
         inputLevels = c("pathway_level1", "pathway_level2"))
     }
     
     # degree of establishment
     if (!is.null(filter_doe())) {
-      searchId <- paste0(searchId, "&doe=", paste(filter_doe(), collapse = ", "))
+      searchId <- paste0(searchId, "&doe=", paste(filter_doe(), collapse = ","))
       subData <- subData[degree_of_establishment %in% filter_doe(), ]
     }
     
     # native
     if (!is.null(input$exoten_native)) {
-      searchId <- paste0(searchId, "&native=", paste(input$exoten_native, collapse = ", "))
+      searchId <- paste0(searchId, "&native=", 
+        matchCombo(selected = input$exoten_native, longChoices = longNativeChoices))
       subData <- filterCombo(exotenData = subData, inputValue = input$exoten_native, 
         inputLevels = c("native_continent", "native_range"))
     }
@@ -228,13 +233,13 @@ results$exoten_data <- reactive({
     
     # region
     if (!is.null(filter_region())) {
-      searchId <- paste0(searchId, "&region=", paste(filter_region(), collapse = ", "))
+      searchId <- paste0(searchId, "&region=", paste(filter_region(), collapse = ","))
       subData <- subData[locality %in% filter_region(), ]
     }
     
     # source
     if (!is.null(filter_source())) {
-      searchId <- paste0(searchId, "&source=", paste(filter_source(), collapse = ", "))
+      searchId <- paste0(searchId, "&source=", paste(filter_source(), collapse = ","))
       subData <- subData[source %in% filter_source(), ]
     }
     

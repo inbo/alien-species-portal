@@ -7,14 +7,17 @@
 
 #' Hierarchical selection input
 #' 
-#' Source: https://stackoverflow.com/a/60315446
+#' Sources: 
+#' https://stackoverflow.com/a/60315446
 #' https://stackoverflow.com/a/53546262
+#' https://shiny.rstudio.com/articles/js-custom-input.html
 #' @param inputId character, unique identifier for the input object
 #' @param choices list, choices to select from 
 #' @param multiple boolean, whether user can select multiple options
 #' @param cascaded boolean, whether to have cascaded view
 #' @param selected character vector, selected values initially
 #' @param placeholder character, text to be displayed if none are selected
+#' @param isNumeric boolean, whether the selected ids are numeric
 #' @return div object
 #' 
 #' @author mvarewyck
@@ -23,7 +26,7 @@
 #' @importFrom jsonlite toJSON
 #' @export
 comboTreeInput <- function(inputId, choices, multiple = TRUE, cascaded = FALSE,
-  selected = NULL, placeholder = ""){
+  selected = NULL, placeholder = "", isNumeric = FALSE){
   
   tags$div(style = "width: 100%; height: 50px;",
     shiny::singleton(shiny::tags$link(href = "comboTree.css", rel = "stylesheet")),
@@ -34,7 +37,10 @@ comboTreeInput <- function(inputId, choices, multiple = TRUE, cascaded = FALSE,
       `data-choices` = as.character(toJSON(choices, auto_unbox = TRUE)),
       `data-multiple` = ifelse(multiple, "true", "false"), 
       `data-cascaded` = ifelse(cascaded, "true", "false"),
-      `data-selected` = if (!is.null(selected)) as.character(toJSON(selected))
+      `data-selected` = if (!is.null(selected)) if (isNumeric)
+          paste0("[", selected, "]") else
+          as.character(toJSON(strsplit(selected, split = ",")[[1]]))
+    
     )
   )
 }
@@ -65,7 +71,8 @@ filterSelectServer <- function(id, url, placeholder, initChoices) {
           
           selectInput(inputId = ns("filter"), label = NULL, 
             choices = initChoices, 
-            selected = url()[[id]], multiple = TRUE)
+            selected = if (!is.null(url()[[id]])) strsplit(url()[[id]], split = ",")[[1]],
+            multiple = TRUE)
         })
       
       outputOptions(output, "filter", suspendWhenHidden = FALSE)

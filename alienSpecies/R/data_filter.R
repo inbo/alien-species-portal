@@ -8,26 +8,27 @@
 createTaxaChoices <- function(exotenData) {
   
   # For R CMD check
-  kingdom <- NULL
-  phylum <- NULL
-  family <- NULL
-  species <- NULL
+  kingdom <- kingdomKey <- NULL
+  phylum <- phylumKey <- NULL
+  family <- familyKey <- NULL
+  species <- key <- NULL
   
-  subData <- exotenData[, .(kingdom, phylum, class, order, family, species)]
+  subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
+      kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
   subData <- subData[!duplicated(subData), ]
   
   lapply(unname(split(subData, subData$kingdom, drop = TRUE)), function(kingdom)
-      list(id = kingdom[1, kingdom], title = kingdom[1, kingdom], 
+      list(id = kingdom[1, kingdomKey], title = kingdom[1, kingdom], 
         subs = lapply(unname(split(kingdom, kingdom$phylum, drop = TRUE)), function(phylum)
-            list(id = phylum[1, phylum], title = paste(phylum[1, .(kingdom, phylum)], collapse = " > "),
+            list(id = phylum[1, phylumKey], title = paste(phylum[1, .(kingdom, phylum)], collapse = " > "),
           subs = lapply(unname(split(phylum, phylum$class, drop = TRUE)), function(class)
-              list(id = class[1, class], title = paste(class[1, .(kingdom, phylum, class)], collapse = " > "), 
+              list(id = class[1, classKey], title = paste(class[1, .(kingdom, phylum, class)], collapse = " > "), 
               subs = lapply(unname(split(class, class$order, drop = TRUE)), function(order)
-                  list(id = order[1, order], title = paste(order[1, .(kingdom, phylum, class, order)], collapse = " > "), 
+                  list(id = order[1, orderKey], title = paste(order[1, .(kingdom, phylum, class, order)], collapse = " > "), 
                   subs = lapply(unname(split(order, order$family, drop = TRUE)), function(family)
-                      list(id = family[1, family], title = paste(family[1, .(kingdom, phylum, class, order, family)], collapse = " > "),
+                      list(id = family[1, familyKey], title = paste(family[1, .(kingdom, phylum, class, order, family)], collapse = " > "),
                       subs = lapply(unname(split(family, family$species, drop = TRUE)), function(species) 
-                          list(id = species[1, species], title = paste(species, collapse = " > ")))))
+                          list(id = species[1, key], title = paste(species, collapse = " > ")))))
               ))))))))
 
 }
@@ -56,8 +57,26 @@ createDoubleChoices <- function(exotenData,
   lapply(unname(split(subData, subData[, columns[1], with = FALSE], drop = TRUE)), function(subData1)
         list(id = subData1[[columns[1]]][1], title = subData1[[columns[1]]][1],
           subs = lapply(unname(split(subData1, subData1[, columns[2], with = FALSE], drop = TRUE)), function(subData2)
-              list(id = subData2[[columns[2]]][1], title = paste(subData2[1, ], collapse = " > ")))
+              list(id = paste(subData2[1, ], collapse = ">"), title = paste(subData2[1, ], collapse = " > ")))
         ))
+  
+}
+
+
+#' Match the selected titles with IDs for search query
+#' @param selected character vector, selected titles
+#' @param longChoices character vector, all choices with first ID then title
+#' @return character, that can be directly pasted in the search query
+#' 
+#' @author mvarewyck
+#' @export
+matchCombo <- function(selected, longChoices) {
+  
+  matchPosition <- sapply(selected, function(iChoice)
+      match(iChoice, longChoices[c(FALSE, TRUE)])[1])  # id and title alternate
+  matchIds <- longChoices[c(TRUE, FALSE)][matchPosition]
+  
+  paste(matchIds, collapse = ",")
   
 }
 

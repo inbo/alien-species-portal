@@ -18,7 +18,6 @@ shinyUI(
       tags$link(rel = "stylesheet", href = "style.css"),
       tags$link(rel = "stylesheet", href = "navbar.css"),
       tags$link(rel = "stylesheet", href = "buttonPopup.css"),
-      tags$link(rel = "stylesheet", href = "dayProfile.css"),
       includeScript("www/activateTableLink.js")
     ),
     
