@@ -10,6 +10,8 @@ createTaxaChoices <- function(exotenData) {
   # For R CMD check
   kingdom <- kingdomKey <- NULL
   phylum <- phylumKey <- NULL
+  classKey <- NULL
+  orderKey <- NULL
   family <- familyKey <- NULL
   species <- key <- NULL
   
