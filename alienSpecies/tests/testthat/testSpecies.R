@@ -28,17 +28,17 @@ test_that("Occurrence grid shape", {
     
     expect_equal(length(allShapes), 2)
     
-    expect_is(allShapes, "list")
-    expect_is(allShapes$be_10km, "data.frame")
+    expect_type(allShapes, "list")
+    expect_equal(names(allShapes), c("be_10km", "be_1km"))
     
   })
 
 test_that("Occurrence plots", {
     
     myKey <- unique(taxData$taxonKey[taxData$scientificName == allSpecies[2]])
-    expect_is(myKey, "integer")
+    expect_type(myKey, "integer")
     
-    expect_is(taxData, "data.frame")
+    expect_equal(dim(taxData), c(1085453, 7))
     
     # Filter on year and taxonKey
     occurrenceData <- taxData[taxonKey %in% myKey & year >= period[1] & year <= period[2], ]
@@ -47,26 +47,26 @@ test_that("Occurrence plots", {
     occurrenceShape <- createCubeData(df = occurrenceData, shapeData = allShapes,
       groupVariable = "cell_code")
     expect_equal(length(occurrenceShape), 2)
-    expect_is(occurrenceShape[[1]], "sf")
+    expect_s3_class(occurrenceShape[[1]], "sf")
     expect_lte(nrow(occurrenceShape[[1]]), length(unique(taxData$cell_code1[taxData$taxonKey == myKey])))
     expect_lte(nrow(occurrenceShape[[2]]), length(unique(taxData$cell_code10[taxData$taxonKey == myKey])))
     # Data download
-    myData <- do.call(rbind, reportingShape)
-    myData$source <- attr(reportingShape, "splitFactor")
+    myData <- do.call(rbind, occurrenceShape)
+    myData$source <- attr(occurrenceShape, "splitFactor")
     myData$geometry <- NULL
-    expect_is(myData, "data.frame")
+    expect_s3_class(myData, "data.frame")
     
     # Leaflet plot
     myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
       legend = "topright", addGlobe = TRUE, groupVariable = "cell_code")
-    expect_is(myPlot, "leaflet")
+    expect_s3_class(myPlot, "leaflet")
     
     # Barplot
     occurrenceData <- taxData[taxData$taxonKey %in% myKey, ]
     myResult <- countOccurrence(df = occurrenceData, period = c(2012, 2018))
     
-    expect_is(myResult$plot, "plotly")
-    expect_is(myResult$data, "data.frame")
+    expect_s3_class(myResult$plot, "plotly")
+    expect_s3_class(myResult$data, "data.frame")
     
     # Color bars when full range selected
     myResult <- countOccurrence(df = occurrenceData, period = c(1950, 2021))$plot
@@ -97,9 +97,9 @@ test_that("Emergence status GAM - Observations", {
         verbose = TRUE)
     )
  
-    expect_is(tmpResult, "list")
-    expect_is(tmpResult$plot, "plotly")
-    expect_is(tmpResult$data, "data.frame")
+    expect_type(tmpResult, "list")
+    expect_s3_class(tmpResult$plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
     
   })
 
@@ -111,20 +111,20 @@ test_that("Reporting t1", {
     # Filter on taxonKey and source
     reportingData <- dfCube[species %in% allSpecies[1] & source == "t1", ]
     
-    reportingShape <- createCubeData(df = reportingData, shapeData = allShapes,
+    occurrenceShape <- createCubeData(df = reportingData, shapeData = allShapes,
       groupVariable = "source")
-    expect_equal(length(reportingShape), 2)
-    expect_is(reportingShape[[1]], "sf")
-    expect_lte(nrow(reportingShape[[1]]), length(unique(reportingData$cell_code10)))
+    expect_equal(length(occurrenceShape), 2)
+    expect_s3_class(occurrenceShape[[1]], "sf")
+    expect_lte(nrow(occurrenceShape[[1]]), length(unique(reportingData$cell_code10)))
     
-    myPlot <- mapCube(cubeShape = reportingShape, baseMap = baseMap, 
+    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
       legend = "topright", addGlobe = TRUE, groupVariable = "source")
-    expect_is(myPlot, "leaflet")
+    expect_s3_class(myPlot, "leaflet")
     
     # For data download in the app
-    myData <- do.call(rbind, reportingShape)
-    myData$source <- attr(reportingShape, "splitFactor")
-    expect_is(myData, "data.frame")
+    myData <- do.call(rbind, occurrenceShape)
+    myData$source <- attr(occurrenceShape, "splitFactor")
+    expect_s3_class(myData, "data.frame")
     
   })  
 
@@ -136,19 +136,19 @@ test_that("Reporting t0 and t1", {
     # Filter on taxonKey and source
     reportingData <- dfCube[species %in% allSpecies[1], ]
     
-    reportingShape <- createCubeData(df = reportingData, shapeData = allShapes,
+    occurrenceShape <- createCubeData(df = reportingData, shapeData = allShapes,
       groupVariable = "source")
-    expect_equal(length(reportingShape), 4)
-    expect_is(reportingShape[[1]], "sf")
-    expect_lte(nrow(reportingShape[[length(reportingShape)]]), length(unique(reportingData$cell_code10)))
+    expect_equal(length(occurrenceShape), 4)
+    expect_s3_class(occurrenceShape[[1]], "sf")
+    expect_lte(nrow(occurrenceShape[[length(occurrenceShape)]]), length(unique(reportingData$cell_code10)))
     
-    myPlot <- mapCube(cubeShape = reportingShape, baseMap = baseMap, 
+    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
       legend = "topright", addGlobe = TRUE, groupVariable = "source")
-    expect_is(myPlot, "leaflet")
+    expect_s3_class(myPlot, "leaflet")
     
     # For data download in the app
-    myData <- unsplit(reportingShape, attr(reportingShape, "splitFactor"))
-    myData$source <- attr(reportingShape, "splitFactor")
-    expect_is(myData, "data.frame")
+    myData <- do.call(rbind, occurrenceShape)
+    myData$source <- attr(occurrenceShape, "splitFactor")
+    expect_s3_class(myData, "data.frame")
     
   })  

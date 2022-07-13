@@ -127,7 +127,7 @@ mapCubeServer(id = "reporting_t01",
 results$species_managementData <- reactive({
     
     req(input$species_choice)
-    dataFile <- paste0(input$species_choice, ".csv")
+    dataFile <- gsub(" ", "_", paste0(input$species_choice, ".csv"))
     validate(need(file.exists(file.path(managementDir, dataFile)), "No data available"))
     loadGbif(dataFile = dataFile)
     

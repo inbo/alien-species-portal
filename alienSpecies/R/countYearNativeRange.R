@@ -21,7 +21,7 @@
 #' }
 #' }
 #' @import plotly
-#' @importFrom reshape2 melt
+#' @importFrom data.table melt
 #' @importFrom INBOtheme inbo.2015.colours
 #' @importFrom utils tail
 #' @export
@@ -99,7 +99,7 @@ countYearNativerange <- function(df, jaartallen = NULL,
 
 #' Shiny module for creating the plot \code{\link{countYearNativerange}} - server side
 #' @param data reactive object, data for \code{\link{countYearNativerange}}
-#' @inheritParams countIntroductionPathwayServer
+#' @inheritParams countOccupancyServer
 #' @return no return value
 #' 
 #' @author mvarewyck

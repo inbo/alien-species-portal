@@ -1,4 +1,4 @@
-# Test plots and summaries for Exoten
+# Test plots and summaries for union checklist - global indicators
 # 
 # Author: mvarewyck, eadriaensen
 ###############################################################################
@@ -8,11 +8,8 @@
 ##
 
 exotenData <- loadTabularData(type = "indicators")
-expect_is(exotenData, "data.frame")
 unionlistData <- loadTabularData(type = "unionlist")
-expect_is(unionlistData, "data.frame")
 occurrenceData <- loadTabularData(type = "occurrence")
-expect_is(occurrenceData, "data.frame")
 translations <- loadMetaData(type = "ui")
 
 ##
@@ -45,19 +42,27 @@ sapply(exotenData, function(x) sum(is.na(x)))
 #        native_continent 
 #                     603 
 
-
-test_that("Define user choices", {
+test_that("Trigger errors data filtering" , {
     
+    expect_error(createDoubleChoices(exotenData = exotenData,
+        columns = letters[1:3]))
+
+    expect_error(filterCombo(exotenData = exotenData, inputValue = NULL, 
+        inputLevels = NULL))
+  })
+
+test_that("Define user choices and filter data", {
+    
+    # choices
     taxaChoices <- createTaxaChoices(exotenData = exotenData)
     habitatChoices <- attr(exotenData, "habitats")
     pwChoices <- createDoubleChoices(exotenData = exotenData, 
       columns = c("pathway_level1", "pathway_level2"))
+
     nativeChoices <- createDoubleChoices(exotenData = exotenData,
       columns = c("native_continent", "native_range"))
+    expect_type(nativeChoices, "list")
     
-  })
-
-test_that("Filter data", {
     
     # taxa
     taxaLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
@@ -73,7 +78,7 @@ test_that("Filter data", {
         inputLevels = c("pathway_level1", "pathway_level2"))
     
     # degree of establishment
-    subData <- exoten[degree_of_establishment %in% "captive", ]
+    subData <- exotenData[degree_of_establishment %in% "captive", ]
     
     # native
     subData <- filterCombo(exotenData = exotenData, inputValue = nativeChoices[[1]]$title, 
@@ -91,6 +96,8 @@ test_that("Filter data", {
     # source
     subData <- subData[source %in% "WRiMS", ]
     
+    expect_s3_class(subData, "data.table")
+    
   })
 
 
@@ -99,11 +106,11 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar", {
     
     tmpResult <- plotTrias(triasFunction = "indicator_introduction_year",
       df = exotenData,
-      triasArgs = list(start_year_plot = min(exotenData$first_observed)))
-    expect_is(tmpResult, "list")
+      triasArgs = list(start_year_plot = min(exotenData$first_observed, na.rm = TRUE)))
+    expect_type(tmpResult, "list")
     
-    expect_is(tmpResult$plot, "plotly")
-    expect_is(tmpResult$data, "data.frame")
+    expect_s3_class(tmpResult$plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
     
   })
 
@@ -114,10 +121,10 @@ test_that("Grafiek: Cumulatief aantal geïntroduceerde uitheemse soorten per jaa
     
     tmpResult <- plotTrias(triasFunction = "indicator_total_year",
       df = exotenData)
-    expect_is(tmpResult, "list")
+    expect_type(tmpResult, "list")
     
-    expect_is(tmpResult$plot, "plotly")
-    expect_is(tmpResult$data, "data.frame")
+    expect_s3_class(tmpResult$plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
     
   })
 
@@ -128,22 +135,10 @@ test_that("Grafiek: Mate van verspreiding van de Unielijstsoorten", {
     
     tmpResult <- countOccupancy(df = occupancy)
     
-    expect_is(tmpResult, "list")
+    expect_type(tmpResult, "list")
     
-    expect_is(tmpResult$plot, "plotly")
-    expect_is(tmpResult$data, "data.frame")
-    
-  })
-
-
-## PLOT 3
-test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per pathway", {
-    
-    tmpResult <- countIntroductionPathway(data = exotenData)
-    expect_is(tmpResult, "list")
-    
-    expect_is(tmpResult$plot, "plotly")
-    expect_is(tmpResult$data, "data.frame")
+    expect_s3_class(tmpResult$plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
     
   })
 
@@ -152,10 +147,10 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per pathway", {
 test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio van oorsprong", {
     
     tmpResult <- countYearNativerange(df = exotenData, type = "native_continent", jaartallen = 2014)
-    expect_is(tmpResult, "list")
+    expect_type(tmpResult, "list")
     
-    expect_is(tmpResult$plot, "plotly")
-    expect_is(tmpResult$data, "data.frame")
+    expect_s3_class(tmpResult$plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
     
     trias::indicator_native_range_year(data = exotenData)
     
@@ -168,9 +163,9 @@ test_that("Introduction pathways per category", {
     tmpResult <- plotTrias(triasFunction = "get_table_pathways", df = exotenData,
       triasArgs = list(species_names = "species"),
       outputType = "table", uiText = NULL)
-    expect_is(tmpResult, "list")
+    expect_type(tmpResult, "list")
     
-    expect_is(tmpResult$data, "data.frame")
+    expect_s3_class(tmpResult$data, "data.frame")
     
   })
 
@@ -179,24 +174,26 @@ test_that("Introduction pathways per category", {
 test_that("CBD Level 1/2 introduction pathways", {
     
     tmpResult <- plotTrias(triasFunction = "visualize_pathways_level1", df = exotenData)
-    expect_is(tmpResult, "list")
+    expect_type(tmpResult, "list")
     
-    expect_is(tmpResult$plot, "plotly")
-    expect_is(tmpResult$data, "data.frame")
+    expect_s3_class(tmpResult$plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
     
     visualize_pathways_year_level1(df = exotenData)
     tmpResult <- plotTrias(triasFunction = "visualize_pathways_year_level1", df = exotenData)
-    expect_is(tmpResult, "list")
+    expect_type(tmpResult, "list")
     
-    expect_is(tmpResult$plot, "plotly")
-    expect_is(tmpResult$data, "data.frame")
+    expect_s3_class(tmpResult$plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
     
+    levelOneChoice <- createDoubleChoices(exotenData = exotenData, 
+      columns = c("pathway_level1", "pathway_level2"))[[1]]$id
     
     tmpResult <- plotTrias(triasFunction = "visualize_pathways_level2", df = exotenData,
-      triasArgs = list("chosen_pathway_level1" = exoten_pwLevelOne[1]))
-    expect_is(tmpResult, "list")
+      triasArgs = list("chosen_pathway_level1" = levelOneChoice))
+    expect_type(tmpResult, "list")
     
-    expect_is(tmpResult$plot, "plotly")
-    expect_is(tmpResult$data, "data.frame")
+    expect_s3_class(tmpResult$plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
     
   })

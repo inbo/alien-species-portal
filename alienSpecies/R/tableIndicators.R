@@ -56,7 +56,6 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
 #' Shiny module for creating the table \code{\link{tableIndicators}} - server side
 #' @inheritParams welcomeSectionServer
 #' @inheritParams tableIndicators
-#' @param translations data.frame, as read from \code{\link{loadMetaData}}
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -67,7 +66,7 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
 #' @importFrom DT renderDT datatable
 #' @export
 tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
-  translations) {
+  uiText) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -101,7 +100,7 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
           
           # data-inputid='%s' data-id='%s' onclick='activateTableLink(this);
           
-          columnNames <- displayName(colnames(tableData), translations = translations)
+          columnNames <- displayName(colnames(tableData), translations = uiText())
           
           
           DT::datatable(tableData, rownames = FALSE,

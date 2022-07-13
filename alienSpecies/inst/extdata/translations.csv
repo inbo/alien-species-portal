@@ -2,7 +2,6 @@ plotFunction,title_nl,description_nl,title_fr,description_fr,title_en,descriptio
 apply_gam,Verschijning status GAM – Observaties,,,,Emergence status GAM – Observations,
 indicator_introduction_year,Aantal geïntroduceerde uitheemse soorten per jaar,,,,Number of new introductions of alien species per year,
 indicator_total_year,Cumulatief aantal geïntroduceerde uitheemse soorten,,,,Cumulative number of alien species,
-countIntroductionPathway,Aantal geïntroduceerde uitheemse soorten per pathway in,,,,,
 countYearNativerange,Aantal geïntroduceerde uitheemse soorten per jaar en per continent van oorsprong,,,,Number of introduced species per year and per native continent,
 countOccupancy,Mate van verspreiding van de Unielijstsoorten,,,,Trend occupancy union-list species,
 get_table_pathways,Aantal geïntroduceerde uitheemse soorten per pathway,,,,Introduction pathways per category,

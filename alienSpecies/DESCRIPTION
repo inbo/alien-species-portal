@@ -21,13 +21,16 @@ Imports:
     rgbif,
 	shiny,
 	shinycssloaders,
-	reshape2,
 	rgdal,
 	sf,
 	sp,
 	trias,
 	webshot
 Suggests:
-	testthat,
-	shinyjs
+    testthat (>= 3.0.0),
+    shinyjs
 RoxygenNote: 7.2.0
+Remotes: 
+    trias-project/trias, 
+    inbo/INBOtheme
+Config/testthat/edition: 3

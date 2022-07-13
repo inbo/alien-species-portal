@@ -10,6 +10,7 @@ output$checklist_title <- renderUI({
     
   })
 
+# Create titles
 lapply(c("taxa", "trend", "pathways", "origin"), function(iName)
     titleModuleServer(
       id = paste0("checklist_", iName),
@@ -261,7 +262,7 @@ tmpKey <- tableIndicatorsServer(
   exotenData = results$exoten_data,
   unionlistData = unionlistData,
   occurrenceData = occurrenceData,
-  translations = results$translations
+  uiText = reactive(results$translations)
 )
 
 # Redirect to species page
@@ -317,16 +318,6 @@ plotTriasServer(id = "checklist-cum",
 countOccupancyServer(id = "checklist",
   data = reactive(occupancy),
   uiText = reactive(results$translations)
-)
-
-
-## Plot number of species per pathway
-countIntroductionPathwayServer(id = "checklist", 
-  data = results$exoten_data,
-  uiText = reactive(results$translations),
-  region = results$exoten_filterLocality,
-  pathway = reactive(input$exoten_pw1),
-  time = reactive(input$exoten_time)
 )
 
 

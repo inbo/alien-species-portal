@@ -72,16 +72,17 @@ createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trend
 
 
 
-#' Create data.frame with occupancy for t0 and t1 data
+#' Create data with occupancy for t0 and t1 data
 #' 
 #' @param dfCube data.table, with species, source and cell code column
 #' @author mvarewyck
-#' @importFrom reshape2 dcast
+#' @importFrom data.table dcast
+#' @export
 createOccupancyData <- function(dfCube) {
   
   dfCube$cell_code10 <- NULL
   dfCube$year <- NULL
-  dfTable <- reshape2::dcast(data = as.data.frame(table(dfCube)), 
+  dfTable <- dcast(data = as.data.frame(table(dfCube)), 
     species ~ source, value.var = "Freq")
   dfTable$total <- dfTable$t0 + dfTable$t1
   

@@ -101,6 +101,7 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   
   
   # For R CMD check
+  count <- NULL
   year <- NULL
   selected <- NULL
   currentYear <- as.numeric(format(Sys.Date(), "%Y"))
@@ -284,6 +285,9 @@ mapCube <- function(cubeShape, baseMap = createBaseMap(), legend = "none",
 mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
   addGlobe = FALSE) {
   
+  # For R CMD check
+  count <- decimalLongitude <- decimalLatitude <- NULL
+  
   ## Sum counts over ID
   occurrenceData <- occurrenceData[, .(count = sum(count)),
     by = .(decimalLongitude, decimalLatitude)] 
@@ -328,7 +332,7 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
 #' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @param species reactive character, readable name of the selected species
-#' @param df reactive data.frame, data for \code{\link{countIntroductionPathway}}
+#' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param baseMap leaflet object as returned by \code{\link{createBaseMap}}
 #' @param showGlobeDefault boolean, whether the globe is shown by default 
 #' when the map is first created; default value is TRUE

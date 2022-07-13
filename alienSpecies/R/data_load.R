@@ -75,13 +75,14 @@ createKeyData <- function(dataDir = system.file("extdata", package = "alienSpeci
 #' 
 #' @author mvarewyck
 #' @importFrom utils write.csv
-#' @importFrom data.table fread
+#' @importFrom data.table fread rbindlist
 #' @export
 createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
   packageDir = system.file("extdata", package = "alienSpecies")) {
   
   # For R CMD check
   obs <- cobs <- pa_obs <- pa_cobs <- classKey <- taxonKey <- year <- protected <- NULL
+  natura2000 <- NULL
   
   # created from https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
   ## Data at 1km x 1km grid level
@@ -103,7 +104,7 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
   protectedData <- rawData[(natura2000), .(obs = sum(obs), cobs = sum(cobs), 
       ncells = sum(pa_obs), c_ncells = sum(pa_cobs), classsKey = unique(classKey)), by = .(taxonKey, year)][, protected := TRUE]
   
-  combinedData <- do.call(rbind, list(list(nonProtectedData, protectedData), fill = TRUE))
+  combinedData <- do.call(rbindlist, list(list(nonProtectedData, protectedData), fill = TRUE))
   
   write.csv(combinedData, file = file.path(packageDir, "sum_timeseries.csv"), 
     row.names = FALSE)

@@ -11,8 +11,8 @@
 #' @return TRUE if the download succeeded
 #' 
 #' @importFrom rgbif occ_download pred occ_download_wait occ_download_get occ_download_import
-#' @importFrom utils write.csv
-#' @importFrom reshape2 melt
+#' @importFrom utils write.csv read.table
+#' @importFrom data.table melt
 #' 
 #' @author mvarewyck
 #' @export
@@ -33,11 +33,6 @@ getGbifOccurrence <- function(datasetKey,
   # Remove casual observations
   cleanData <- cleanData[cleanData$samplingProtocol != "casual observation", ]
   
-  if (is.null(outFile)) {
-    if (length(unique(cleanData$species)) > 1)
-      stop("More than 1 species in the occurrence data. Please specify 'outFile'.")
-    outFile <- paste0(cleanData$species[1], ".csv")
-  }
   # Clean columns
   cleanData <- cleanData[, c("gbifID", "kingdom", "phylum", "class", "order", "family", "species",
       "scientificName", "year", "individualCount", "samplingProtocol",
@@ -78,6 +73,14 @@ getGbifOccurrence <- function(datasetKey,
   df <- melt(df, id.vars = allCols[!allCols %in% c("male", "female", "missing")], 
     measure.vars = c("male", "female", "missing"), 
     variable.name = "gender", value.name = "count", na.rm = TRUE)
+  
+  # File to save
+  if (is.null(outFile)) {
+    if (length(unique(cleanData$species)) > 1)
+      stop("More than 1 species in the occurrence data. Please specify 'outFile'.")
+    outFile <- paste0(cleanData$species[1], ".csv")
+  }
+  outFile <- gsub(" ", "_", outFile)
   
   if (nTotal != sum(df$count))
     stop("Total counts is not retained during data manipulation.")
