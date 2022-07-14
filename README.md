@@ -33,7 +33,7 @@ Then, to build the docker image with the latest dockerfile, run in bash
 
 ```
 cd git/alien-species-portal
-docker build --build-arg ARCHIVE=alienSpecies_0.0.1.tar.gz -t inbo/alienspecies .
+docker build -t inbo/alienspecies .
 ```
 
 Run the new docker image from bash

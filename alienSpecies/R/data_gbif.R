@@ -2,7 +2,7 @@
 #' Download GBIF occurrence data 
 #' 
 #' @param datasetKey character, key of the dataset to be downloaded from GBIF
-#' @param dataDir path, where to save the occurrence data
+#' @param saveDir path, where to save the occurrence data
 #' @param outFile character, name of the file to save occurrence data. If NULL
 #' dataset title is used
 #' @param user character, username to access GBIF
@@ -17,7 +17,7 @@
 #' @author mvarewyck
 #' @export
 getGbifOccurrence <- function(datasetKey, 
-  dataDir = system.file("extdata", "management", package = "alienSpecies"), 
+  saveDir = system.file("extdata", "management", package = "alienSpecies"), 
   outFile = NULL,
   user, pwd, email = "machteld.varewyck@openanalytics.eu") {
   
@@ -45,9 +45,11 @@ getGbifOccurrence <- function(datasetKey,
   utils::unzip(gbif_download[[1]], exdir = extractDir, overwrite = TRUE)
   verbatimFile <- list.files(extractDir, pattern = "verbatim", full.names = TRUE)
   verbatimData <- read.table(file = verbatimFile, sep = "\t", header = TRUE)[,
-    c("gbifID", "sex")]
-  # Convert json format for sex
-  verbatimData <- cbind(verbatimData, do.call(rbind, lapply(verbatimData$sex, function(x) { 
+    c("gbifID", "sex", "lifeStage")]
+  # Convert json format for sex & lifeStage
+  verbatimData <- cbind(verbatimData,
+    # sex
+    do.call(rbind, lapply(verbatimData$sex, function(x) { 
           if (x != "") {
             miniData <- as.data.frame(jsonlite::fromJSON(x))
             if (is.null(miniData$male))
@@ -57,21 +59,50 @@ getGbifOccurrence <- function(datasetKey,
             miniData
           } else
             data.frame(male = NA, female = NA) 
-        })))
+        })),
+    # lifeStage
+    do.call(rbind, lapply(verbatimData$lifeStage, function(x) { 
+          if (x != "") {
+            miniData <- jsonlite::fromJSON(x)
+            secondAdult <- which(duplicated(names(miniData)))
+            if (length(secondAdult) > 0) {
+              if (names(miniData[secondAdult]) != "adult")
+                stop("Please update code for this case ", x)
+              miniData$adult <- miniData$adult + miniData[[secondAdult]]
+              miniData[[secondAdult]] <- NULL
+            }
+            miniData <- as.data.frame(miniData)
+            if (is.null(miniData$adult))
+              miniData$adult <- NA
+            if (is.null(miniData$juvenile))
+              miniData$juvenile <- NA
+            if (is.null(miniData$pulli))
+              miniData$pulli <- NA
+            miniData 
+          } else
+            data.frame(adult = NA, juvenile = NA, pulli = NA) 
+        }))
+  )
   verbatimData$sex <- NULL
+  verbatimData$lifeStage <- NULL
   
   # Combine clean and verbatim data
   df <- merge(cleanData, verbatimData)
-  # Split per gender
-  df$missing <- df$count - apply(df[, c("male", "female")], 1, function(x) 
-      sum(as.numeric(x), na.rm = TRUE))
+  # Check if all adults are male or female
+  if (!all(apply(df[, c("male", "female")], 1, sum, na.rm = TRUE) == df$adult, na.rm = TRUE))
+    stop("Some adults are not identified as male or female. Update the code to handle this case.")
+  # Split per gender & lifeStage
+  df$missing <- as.integer(df$count - 
+      apply(df[, c("adult", "juvenile", "pulli")], 1, function(x) 
+      sum(as.numeric(x), na.rm = TRUE)))
   df$missing <- ifelse(df$missing == 0, NA, df$missing)
   nTotal <- sum(df$count, na.rm = TRUE)
   df$count <- NULL
   # wide to long
   allCols <- colnames(df)
-  df <- melt(df, id.vars = allCols[!allCols %in% c("male", "female", "missing")], 
-    measure.vars = c("male", "female", "missing"), 
+  categories <- c("male", "female", "juvenile", "pulli", "missing")
+  df <- melt(as.data.table(df), id.vars = allCols[!allCols %in% categories], 
+    measure.vars = categories, 
     variable.name = "gender", value.name = "count", na.rm = TRUE)
   
   # File to save
@@ -85,7 +116,7 @@ getGbifOccurrence <- function(datasetKey,
   if (nTotal != sum(df$count))
     stop("Total counts is not retained during data manipulation.")
   
-  write.csv(df, file.path(dataDir, outFile), row.names = FALSE)
+  write.csv(df, file.path(saveDir, outFile), row.names = FALSE)
   
   
   return(TRUE)
