@@ -141,13 +141,4 @@ function(input, output, session) {
       
     })
   
-  
-  # TODO
-# Link to early warning
-# https://alert.riparias.be/
-# https://github.com/trias-project/indicators/blob/master/data/input/eu_concern_species.tsv
-# Rosse stekelstaart
-# https://www.gbif.org/dataset/ea95fd9b-58dc-4e48-b51f-9380e9804607
-
-  
 }
