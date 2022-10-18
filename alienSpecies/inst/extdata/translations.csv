@@ -1,70 +1,70 @@
-plotFunction,title_nl,description_nl,title_fr,description_fr,title_en,description_en
-apply_gam,Emerging status GAM – Observaties,,,,Emergence status GAM – Observations,
-indicator_introduction_year,Aantal geïntroduceerde uitheemse soorten per jaar,,,,Number of new introductions of alien species per year,
-indicator_total_year,Cumulatief aantal geïntroduceerde uitheemse soorten,,,,Cumulative number of alien species,
-countYearNativerange,Aantal geïntroduceerde uitheemse soorten per jaar en per continent van oorsprong,,,,Number of introduced species per year and per native continent,
-countOccupancy,Mate van verspreiding van de Unielijstsoorten,,,,Trend occupancy union-list species,
-get_table_pathways,Aantal geïntroduceerde uitheemse soorten per pathway,,,,Introduction pathways per category,
-observations-mapOccurrence,Observaties van,,,,Observations of,
-reporting_t1-mapOccurrence,Rapportering van ,,Rapportage de ,,,
-reporting_t01-mapOccurrence,Rapportering van ,,Rapportage de,,,
-visualize_pathways_level1,CBD Level 1 geïntroduceerde uitheemse soorten per pathway,,,,CBD Level 1 introduction pathways,
-visualize_pathways_year_level1,CBD Level 1 geïntroduceerde uitheemse soorten per pathway – trend,,,,CBD Level 1 introduction pathways - trends,
-visualize_pathways_level2,CBD Level 2 geïntroduceerde uitheemse soorten per pathway,,,,CBD Level 2 introduction pathways,
-welcomeSection,Welkom op de exoten pagina,Op deze pagina kan je ...,Bienvenue sur la page des espèces exotiques envahissantes,,Welcome to the alien species dashboard,On this page you can …
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-,,,,,,
-key,,,,,,
-first_observed,eerste jaar van observatie,,première année d'observation,,year of first observation,
-last_observed,laatste jaar van observatie,,dernière année d'observation,,last year of observation,
-kingdom,rijk,,règne ,,kingdom,
-phylum,stam,,embranchement,,phylum,
-class,klasse,,classe,,class,
-order,orde,,ordre,,order,
-family,familie,,famille,,family,
-locality,locatie,,localité,,locality,
-locationId,locatieId,,localitéId,,locationId,
-native_range,natuurlijk verspreidingsgebied,,aire d'origine,,native_range,
-degree_of_establishment,mate van vestiging,,,,Degree of establishment,
-pathway,CBD Pathways,,,,,
-pathway_level1,Level 1,,,,,
-pathway_level2,Level 2,,,,,
-habitat,Habitat,,,,,
-marine,marien,,marine,,marine,
-freshwater,zoetwater,,,,,
-terrestrial,terrestrisch,,,,terrestrial,
-source,Bron,,Source,,Source,
-species,Soort,,Espèce,,Species,
-native_continent,,,,,,
-more,Meer,,Plus,,More,
-gbifLink,Gbif taxonkey,,Gbif taxonkey,,Gbif taxonkey,
-sourceLink,Bron,,Source,,Source,
-examples,voorbeelden,,exemples,,examples,
-,,,,,,
-start,Start,,,,Start,
-global_indicators,Globale Indicatoren,,,,Global Indicators,
-species_information,Soort Informatie,,,,Species Information,
-early_warning,Early Warning,,,,Early Warning,
-management,Management,,,,Management,
-taxa,Taxa,,,,Taxa,
-trend,Trend,,,,Trend,
-pathways,Paden,,,,Pathways,
-origin,Oorsprong,,Origine,,Origin,
-observations,Observaties,Observations,,Observations,
-indicators,Indicatoren,,Indicateurs,,Indicators,
-reporting,Rapportering,,Rapportage,,Reporting,
-habitats,Habitats,,Habitats,,Habitats,
-risk_maps,Risico-kaarten,,Cartographie des risques,,Risk maps,
-links,Links,,Liens,,Links,
-risk_assessment,Risico-analyse,,Analyse des risques,,Risk assessment,
-images,Beelden,,Images,,Images,
-,,,,,,
-gender,Geslacht,,Sexe,,Gender,
-samplingProtocol,Steekproef protocol,,Protocole d'échantillonnage,,Sampling Protocol,
-noData,Geen data beschikbaar,,Aucune donnée disponible,,No data available,
+plotFunction;title_nl;description_nl;title_fr;description_fr;title_en;description_en
+apply_gam;Status van toename GAM - Waarnemingen;;;;Emergence status GAM - Observations;
+indicator_introduction_year;Aantal nieuw ge�ntroduceerde soorten per jaar;;;;Number of newly introduced species per year;
+indicator_total_year;Cumulatief aantal ge�ntroduceerde soorten;;;;Cumulative number of introduced species;
+countYearNativerange;Aantal ge�ntroduceerde soorten per jaar en per continent van oorsprong;;;;Number of introduced species per year and per native continent;
+countOccupancy;Mate van verspreiding van de Unielijstsoorten;;;;Trend occupancy union-list species;
+get_table_pathways;Aantal ge�ntroduceerde soorten per introductieroute;;;;Number of introduced species per introduction pathways;
+observations-mapOccurrence;Waarnemingen van;;;;Observations of;
+reporting_t1-mapOccurrence;Rapportering van;;Rapportage de;;Reporting of;
+reporting_t01-mapOccurrence;Rapportering van;;Rapportage de;;Reporting of;
+visualize_pathways_level1;Ge�ntroduceerde soorten per introductieroute (CBD, niveau 1);;;;Introduced species per pathway (CBD, level 1);
+visualize_pathways_year_level1;Ge�ntroduceerde soorten per introductieroute (CBD, niveau 1) - trends;;;;Introduced species per pathway (CBD, level 1) - trends;
+visualize_pathways_level2;Ge�ntroduceerde soorten per introductieroute (CBD, niveau 2);;;;Introduced species per pathway (CBD, level 2);
+welcomeSection;Welkom op het exotenportaal;Op deze pagina vind je alle cijfers en trends over uitheemse soorten in Belgi�.;Bienvenue sur la page des esp�ces exotiques envahissantes;;Welcome to the alien species dashboard;On this page you will find all figures and trends about alien species in Belgium.
+;;;;;;
+;;;;;;
+;;;;;;
+;;;;;;
+;;;;;;
+;;;;;;
+;;;;;;
+;;;;;;
+key;;;;;;
+first_observed;eerste jaar van observatie;;première année d'observation;;year of first observation;
+last_observed;laatste jaar van observatie;;dernière année d'observation;;last year of observation;
+kingdom;rijk;;règne;;kingdom;
+phylum;stam;;embranchement;;phylum;
+class;klasse;;classe;;class;
+order;orde;;ordre;;order;
+family;familie;;famille;;family;
+locality;locatie;;localité;;locality;
+locationId;locatieId;;localitéId;;locationId;
+native_range;natuurlijk verspreidingsgebied;;aire d'origine;;native_range;
+degree_of_establishment;mate van vestiging;;;;Degree of establishment;
+pathway;CBD Pathways;;;;;
+pathway_level1;Level 1;;;;;
+pathway_level2;Level 2;;;;;
+habitat;Habitat;;;;;
+marine;marien;;marine;;marine;
+freshwater;zoetwater;;;;;
+terrestrial;terrestrisch;;;;terrestrial;
+source;Bron;;Source;;Source;
+species;Soort;;Espèce;;Species;
+native_continent;;;;;;
+more;Meer;;Plus;;More;
+gbifLink;Gbif taxonkey;;Gbif taxonkey;;Gbif taxonkey;
+sourceLink;Bron;;Source;;Source;
+examples;voorbeelden;;exemples;;examples;
+;;;;;;
+start;Start;;;;Start;
+global_indicators;Globale Indicatoren;;;;Global Indicators;
+species_information;Soort Informatie;;;;Species Information;
+early_warning;Early Warning;;;;Early Warning;
+management;Management;;;;Management;
+taxa;Taxa;;;;Taxa;
+trend;Trend;;;;Trend;
+pathways;Paden;;;;Pathways;
+origin;Oorsprong;;Origine;;Origin;
+observations;Observaties;Observations;;Observations;;
+indicators;Indicatoren;;Indicateurs;;Indicators;
+reporting;Rapportering;;Rapportage;;Reporting;
+habitats;Habitats;;Habitats;;Habitats;
+risk_maps;Risico-kaarten;;Cartographie des risques;;Risk maps;
+links;Links;;Liens;;Links;
+risk_assessment;Risico-analyse;;Analyse des risques;;Risk assessment;
+images;Beelden;;Images;;Images;
+;;;;;;
+gender;Geslacht;;Sexe;;Gender;
+samplingProtocol;Steekproef protocol;;Protocole d'échantillonnage;;Sampling Protocol;
+noData;Geen data beschikbaar;;Aucune donnée disponible;;No data available;
