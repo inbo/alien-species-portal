@@ -28,7 +28,7 @@ readShapeData <- function(
 
 #' Create dictionary for combining data keys from multiple data sources
 #' @inheritParams loadTabularData
-#' @return no return value, data is written to \code{file.path(dataDir, "keys.csv")}
+#' @return TRUE if creation succeeded, data is written to \code{file.path(dataDir, "keys.csv")}
 #' 
 #' @author mvarewyck
 #' @importFrom utils write.csv
@@ -65,6 +65,8 @@ createKeyData <- function(dataDir = system.file("extdata", package = "alienSpeci
   
   write.csv(dictionary, file = file.path(dataDir, "keys.csv"),
     row.names = FALSE)  
+  
+  return(TRUE)
   
 }
 
@@ -341,7 +343,8 @@ loadMetaData <- function(type = c("ui", "keys"),
   allData <- read.csv(file.path(dataDir, switch(type, 
         ui = "translations.csv",
         keys = "keys.csv"
-      ))) 
+      )), sep = if (type == "ui") ";" else ",", 
+    encoding = "UTF-8") 
   
   filterData <- switch(type, 
     ui = {

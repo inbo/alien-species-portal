@@ -30,7 +30,7 @@ createTaxaChoices <- function(exotenData) {
                   subs = lapply(unname(split(order, order$family, drop = TRUE)), function(family)
                       list(id = family[1, familyKey], title = paste(family[1, .(kingdom, phylum, class, order, family)], collapse = " > "),
                       subs = lapply(unname(split(family, family$species, drop = TRUE)), function(species) 
-                          list(id = species[1, key], title = paste(species, collapse = " > ")))))
+                          list(id = species[1, key], title = paste(species[1, .(kingdom, phylum, class, order, family, species)], collapse = " > ")))))
               ))))))))
 
 }

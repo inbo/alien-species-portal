@@ -149,7 +149,7 @@ filter_union <- filterSelectServer(
   id = "union",
   url = urlSearch,
   placeholder = "Union and non-union list",
-  initChoices = c("Union list")
+  initChoices = c("Union list", "Non-union list")
 )
 
 # regions
@@ -194,7 +194,6 @@ results$exoten_data <- reactive({
     
     # pathways
     if (!is.null(input$exoten_pw)) {
-      print(input$exoten_pw)
       searchId <- paste0(searchId, "&pw=", 
         matchCombo(selected = input$exoten_pw, longChoices = longPwChoices))
       subData <- filterCombo(exotenData = subData, inputValue = input$exoten_pw, 
@@ -227,8 +226,11 @@ results$exoten_data <- reactive({
     # unionlist - always save
     if (!is.null(filter_union())) {
       searchId <- paste0(searchId, "&union=", filter_union())
-      if (filter_union() == "Union list")
-        subData <- subData[species %in% unionlistData$scientificName, ]
+      if (length(filter_union()) == 1) {
+        if (filter_union() == "Union list")
+          subData <- subData[species %in% unionlistData$scientificName, ] else if (filter_union() == "Non-union list")
+          subData <- subData[!species %in% unionlistData$scientificName, ]
+      }
   }
     
     # region

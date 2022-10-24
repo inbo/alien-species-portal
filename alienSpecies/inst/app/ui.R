@@ -53,7 +53,7 @@ shinyUI(
             uiOutput("species_content")),
           
           # Shape data source + contact e-mail
-          header = tags$header(tags$div(align = "right",
+          header = tags$header(tags$div(align = "right", style = "margin-top: 60px;",
               tags$p(
                 actionLink(inputId = "showShare", label = "Share Link"),
                 "-", 
