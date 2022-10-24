@@ -193,6 +193,7 @@ plotModuleServer <- function(id, plotFunction, data, period = NULL,
           resultFct()$plot
           
         })
+      outputOptions(output, "plot", suspendWhenHidden = FALSE)
       
       
       output$dataDownload <- downloadHandler(
