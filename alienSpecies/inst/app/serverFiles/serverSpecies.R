@@ -1,5 +1,10 @@
 # Species page
 # 
+# Example species
+# observations: Saponaria officinalis
+# reporting: Orconectes limosus
+# management: Oxyura jamaicensis
+# 
 # Author: mvarewyck
 ###############################################################################
 
@@ -57,6 +62,21 @@ taxonKey <- reactive({
     
   })
 
+# Disable tab if no info
+observe({
+    
+    # https://stackoverflow.com/a/64324799
+    shinyjs::toggleState(
+      selector = '#species_tabs a[data-value="species_observations"', 
+      condition = !is.na(taxonKey())
+    )
+    
+    if (is.na(taxonKey()) & input$species_tabs == "species_observations")
+      updateTabsetPanel(session = session, inputId = "species_tabs", 
+        selected = "species_reporting")
+    
+  })
+
 
 ## Map + barplot
 mapCubeServer(id = "observations",
@@ -77,6 +97,22 @@ mapCubeServer(id = "observations",
 
 ### Indicators
 ### -----------------
+
+
+# Disable tab if no info
+observe({
+    
+    # https://stackoverflow.com/a/64324799
+    shinyjs::toggleState(
+      selector = '#species_tabs a[data-value="species_indicators"', 
+      condition = !is.na(taxonKey())
+    )
+    
+    if (is.na(taxonKey()) & input$species_tabs == "species_indicators")
+      updateTabsetPanel(session = session, inputId = "species_tabs", 
+        selected = "species_reporting")
+    
+  })
 
 
 ## Emergence status GAM - Observations
@@ -100,6 +136,25 @@ plotTriasServer(id = "species_gam",
 ### Reporting
 ### -----------------
 
+
+# Disable tab if no info
+observe({
+    
+    req(input$species_choice)
+    
+    # https://stackoverflow.com/a/64324799
+    shinyjs::toggleState(
+      selector = '#species_tabs a[data-value="species_reporting"', 
+      condition = input$species_choice %in% dfCube$species
+    )
+    
+    if (!(input$species_choice %in% dfCube$species) & input$species_tabs == "species_reporting")
+      updateTabsetPanel(session = session, inputId = "species_tabs", 
+        selected = "species_observations")
+    
+  })
+
+
 # t1
 mapCubeServer(id = "reporting_t1",
   uiText = reactive(results$translations),
@@ -120,20 +175,46 @@ mapCubeServer(id = "reporting_t01",
   baseMap = baseMap
 )
 
+
+
 ### Management
 ### ----------------
 
-## Map + barplot
-results$species_managementData <- reactive({
+results$species_managementFile <- reactive({
     
     req(input$species_choice)
     dataFile <- gsub(" ", "_", paste0(input$species_choice, ".csv"))
-    validate(need(file.exists(file.path(managementDir, dataFile)), "No data available"))
-    loadGbif(dataFile = dataFile)
+    if (file.exists(file.path(managementDir, dataFile)))
+      dataFile else
+      NULL
     
   })
 
+# Disable tab if no info
+observe({
+    
+    req(input$species_choice)
+    
+    # https://stackoverflow.com/a/64324799
+    shinyjs::toggleState(
+      selector = '#species_tabs a[data-value="species_management"', 
+      condition = !is.null(results$species_managementFile())
+    )
+    
+    if (is.null(results$species_managementFile()) & input$species_tabs == "species_management")
+      updateTabsetPanel(session = session, inputId = "species_tabs", 
+        selected = "species_observations")
+    
+  })
 
+results$species_managementData <- reactive({
+    
+    validate(need(results$species_managementFile(), "No data available"))
+    loadGbif(dataFile = results$species_managementFile())
+    
+  })
+
+## Map + barplot
 mapCubeServer(id = "management",
   uiText = reactive(results$translations),
   species = reactive(input$species_choice),
@@ -148,4 +229,20 @@ mapCubeServer(id = "management",
   showPeriod = TRUE
 )
 
+
+### More
+### ----------------
+
+# Disable tab if no info
+observe({
+    
+    req(input$species_choice)
+    
+    # https://stackoverflow.com/a/64324799
+    shinyjs::toggleState(
+      selector = '#species_tabs a[data-value="species_more"', 
+      condition = FALSE
+    )
+    
+  })
 
