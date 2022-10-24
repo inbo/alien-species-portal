@@ -74,6 +74,13 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
       ns <- session$ns
       selectedKey <- reactiveVal()
       
+      
+      output$disclaimerTableIndicators <- renderUI({
+          
+          tags$em(HTML(uiText()[uiText()$plotFunction == "tableIndicators", ]$description))
+          
+        })
+      
       output$table <- renderDT({
           
           validate(need(nrow(exotenData()) > 0, "No data available"))
@@ -147,8 +154,9 @@ tableIndicatorsUI <- function(id) {
   
   ns <- NS(id)
   
-  div(style = "margin-top: 10px;",
-    DTOutput(ns("table"))
+  div(style = "margin-top: 20px;",
+    uiOutput(ns("disclaimerTableIndicators")),
+    div(style = "margin-top: 20px;", DTOutput(ns("table")))
   )
 
 }
