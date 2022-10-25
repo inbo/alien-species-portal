@@ -44,13 +44,32 @@ observeEvent(input$exoten_more, {
 urlSearch <- reactive(parseQueryString(session$clientData$url_search))
 
 # taxa
-output$filter_taxa <- renderUI({
+#output$filter_taxa <- renderUI({
+#    
+#    comboTreeInput("exoten_taxa", choices = taxaChoices, 
+#      placeholder = "All taxa", selected = urlSearch()$taxa,
+#      isNumeric = TRUE)
+#    
+#  })
+
+observeEvent(input$tabs, {
     
-    comboTreeInput("exoten_taxa", choices = taxaChoices, 
-      placeholder = "All taxa", selected = urlSearch()$taxa,
-      isNumeric = TRUE)
-    
+    if (input$tabs == "global_indicators")
+      updateSelectizeInput(session, inputId = "exoten_taxa", choices = taxaChoices,
+        selected = urlSearch()$taxa,
+        server = TRUE,
+        options = list(
+          placeholder = "All taxa",
+          render = I(
+            '{
+              option: function(item, escape) {
+              return "<div>" + item.html + "</div>"; }
+              }'
+          ))
+      )
+
   })
+
 
 # habitat
 filter_habitat <- filterSelectServer(
@@ -181,8 +200,13 @@ results$exoten_data <- reactive({
     # taxa
     if (!is.null(input$exoten_taxa)) {
       searchId <- paste0(searchId, "&taxa=", 
-        matchCombo(selected = input$exoten_taxa, longChoices = longTaxaChoices))
-      subData <- filterCombo(exotenData = subData, inputValue = input$exoten_taxa, 
+        paste(input$exoten_taxa, collapse = ","))
+#        matchCombo(selected = input$exoten_taxa, longChoices = longTaxaChoices))
+#      subData <- filterCombo(exotenData = subData, inputValue = input$exoten_taxa, 
+#        inputLevels = taxaLevels)
+      matchRow <- sapply(input$exoten_taxa, function(iChoice)
+          match(iChoice, taxaChoices$value))
+      subData <- filterCombo(exotenData = subData, inputValue = taxaChoices$long[matchRow],
         inputLevels = taxaLevels)
     }
       

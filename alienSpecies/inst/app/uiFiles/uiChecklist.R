@@ -12,7 +12,8 @@ tagList(
     wellPanel(
       
       # https://stackoverflow.com/a/60315446
-      uiOutput("filter_taxa"),
+#      uiOutput("filter_taxa"),
+      selectizeInput(inputId = "exoten_taxa", label = NULL, choices = NULL, multiple = TRUE),
       
       fixedRow(        
         # Select habitat

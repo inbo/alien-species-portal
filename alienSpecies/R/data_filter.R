@@ -1,7 +1,7 @@
 
 #' Create taxa choices based on available exotenData
 #' @param exotenData data.frame, as read from \code{\link{loadTabularData}}
-#' @return nested list with all choices to be shown
+#' @return nested list with all choices to be shown - for comboTreeInput()
 #' 
 #' @author mvarewyck
 #' @export
@@ -36,6 +36,44 @@ createTaxaChoices <- function(exotenData) {
 }
 
 
+
+#' Create taxa choices based on available exotenData
+#' @param exotenData data.frame, as read from \code{\link{loadTabularData}}
+#' @return data.frame all choices to be shown - for selectizeInput()
+#' 
+#' @author mvarewyck
+#' @export
+createTaxaChoices2 <- function(exotenData) {
+  
+  subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
+      kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
+  subData <- subData[!duplicated(subData), ]
+  subData$speciesKey <- subData$key
+  
+  speciesLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
+  
+  choices <- do.call(rbind, lapply(seq_along(speciesLevels), function(i) {
+        
+        iLevel <- speciesLevels[i]
+        keyVar <- paste0(iLevel, "Key")
+        do.call(rbind, lapply(split(subData, subData[[keyVar]]), function(iData) {
+              iData <- iData[!duplicated(iData[[keyVar]]), ]
+              longName <- paste(iData[, speciesLevels[1:i], with = FALSE], collapse = " > ")
+              data.frame(
+                value = iData[[keyVar]], 
+                label = iData[[iLevel]],
+                long = longName,
+                html = paste0("<b>", iData[[iLevel]], "</b>", if (i != 1) paste0("</br>", longName))
+              ) 
+            }))
+        
+      }))
+  
+  choices <- choices[order(choices$label), ]
+  
+  choices
+  
+}
 
 #' Create pathway choices based on available exotenData
 #' @inheritParams createTaxaChoices

@@ -67,8 +67,9 @@ if (!doDebug | !exists("baseMap"))
 # Initial exoten filter choices
 # e.g. search for Stylommatophora
 taxaLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
-taxaChoices <- createTaxaChoices(exotenData = exotenData)
-longTaxaChoices <- unlist(taxaChoices)  # for matching id and title in search query
+#taxaChoices <- createTaxaChoices(exotenData = exotenData)
+#longTaxaChoices <- unlist(taxaChoices)  # for matching id and title in search query
+taxaChoices <- createTaxaChoices2(exotenData = exotenData)
 
 habitatChoices <- attr(exotenData, "habitats")
 pwChoices <- createDoubleChoices(exotenData = exotenData, 
