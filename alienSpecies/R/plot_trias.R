@@ -28,13 +28,16 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
   if (!is.null(triasArgs))
     plotArgs <- c(plotArgs, triasArgs)
   
-  resultFct <- do.call(triasFunction, plotArgs)
+  sink(tempfile(fileext = "txt"))
+  resultFct <- suppressWarnings(do.call(triasFunction, plotArgs))
+  sink()
   
   ## convert to plotly object
   if (outputType == "plot") {
     
     if (all(c("plot", "data_top_graph") %in% names(resultFct))) {
       
+      print(TRUE)
       list(
         plot = ggplotly(resultFct$plot), 
         data = resultFct$data_top_graph
