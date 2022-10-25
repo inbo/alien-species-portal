@@ -41,30 +41,11 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
       ) 
       
     } else if (all(c("plot", "output") %in% names(resultFct))) {
-      # For trias::apply_gam()
-      
-      if (is.null(resultFct$plot)) {
-        # TODO hacky solution https://github.com/trias-project/trias/issues/91
-        df <- resultFct$output
-        df$lcl <- 10^11
-        # gam failed
-        myPlot <- trias:::plot_ribbon_em(df_plot = df, ptitle = "", y_label = "Observations") +
-          annotate("text", y = max(df$obs), x = max(df$year) - 2, hjust = 1, vjust = 1,
-            label = "The emergence status \ncannot be assessed.", colour = "red")
-        
-        list(
-          plot = ggplotly(myPlot),
-          data = resultFct$output
-        )
-        
-      } else {
       
       list(
         plot = ggplotly(resultFct$plot), 
         data = resultFct$output
       )
-      
-    }
       
     } else {
 
