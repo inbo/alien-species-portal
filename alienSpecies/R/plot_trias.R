@@ -28,9 +28,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
   if (!is.null(triasArgs))
     plotArgs <- c(plotArgs, triasArgs)
   
-  sink(tempfile(fileext = "txt"))
   resultFct <- suppressWarnings(do.call(triasFunction, plotArgs))
-  sink()
   
   ## convert to plotly object
   if (outputType == "plot") {
