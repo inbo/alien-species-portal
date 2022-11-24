@@ -324,8 +324,8 @@ plotTriasServer(id = "checklist-count",
   triasArgs = reactive({
       list(
         start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
-        x_lab = "Jaar",
-        y_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
+        x_lab = translations$title[translations$plotFunction == "year"],
+        y_lab = translations$title[translations$plotFunction == "indicator_introduction_year"]
       )
     })
 )

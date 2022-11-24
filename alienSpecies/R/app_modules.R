@@ -39,42 +39,6 @@ optionsModuleUI <- function(id, showType = FALSE, exportData = TRUE, doWellPanel
 
 
 
-
-#' User input for controlling specific plot (server-side)
-#'
-#' @inheritParams optionsModuleUI
-#' @param types, defines the species types that can be selected
-#' @param labelTypes character, the displayed label for selecting options field
-#' @param typesDefault, defines the default values for \code{types},
-#' same as \code{types} by defualt
-#' @param multipleTypes boolean, whether multiple types can be selected or not
-#' 
-#' @return no return value; some output objects are created
-#' @import shiny
-#' @export
-optionsModuleServer <- function(id, 
-  types = NULL, labelTypes = "Type", typesDefault = types, multipleTypes = FALSE) {
-  
-  
-  moduleServer(id,
-    function(input, output, session) {
-      
-      ns <- session$ns
-   
-      
-      output$type <- renderUI({
-          
-          selectInput(inputId = ns("type"), label = labelTypes,
-            choices = types(), 
-            selected = typesDefault(), multiple = multipleTypes)
-          
-        })
-      
-    })
-  
-}
-
-
 #' Interactive plot (ui-side)
 #' 
 #' @inheritParams optionsModuleUI
@@ -193,7 +157,9 @@ plotModuleServer <- function(id, plotFunction, data, period = NULL,
           resultFct()$plot
           
         })
-      outputOptions(output, "plot", suspendWhenHidden = FALSE)
+
+      if (plotFunction != "countOccupancy")
+        outputOptions(output, "plot", suspendWhenHidden = FALSE)
       
       
       output$dataDownload <- downloadHandler(
