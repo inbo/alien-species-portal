@@ -35,7 +35,6 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
     
     if (all(c("plot", "data_top_graph") %in% names(resultFct))) {
       
-      print(TRUE)
       list(
         plot = ggplotly(resultFct$plot), 
         data = resultFct$data_top_graph
