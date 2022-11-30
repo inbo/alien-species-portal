@@ -46,7 +46,7 @@ displayName <- function(text, translations = NULL) {
   
   newNames <- sapply(text, function(x) {
       
-      toReturn <- translations$title[match(x, translations$plotFunction)]
+      toReturn <- translate(translations, x)
       if (is.na(toReturn))
         x else
         toReturn

@@ -4,17 +4,19 @@
 #' Create occupancy bar chart
 #' @param df data.frame as created by \code{\link{createOccupancyData}}
 #' @param nSquares integer, total number of squares for calculating percentages
+#' @inheritParams countYearNativerange
 #' @return list with plotly object and data.frame
 #' 
 #' @author mvarewyck
 #' @import plotly
 #' @export
-countOccupancy <- function(df, nSquares = 370) {
+countOccupancy <- function(df, nSquares = 370, uiText = NULL) {
   
-  p <- plot_ly(data = df, x = ~t0/nSquares*100, y = ~species, name = "baseline",
+  p <- plot_ly(data = df, x = ~t0/nSquares*100, y = ~species, 
+      name = translate(uiText, "baseline"),
       type = "bar", orientation = "h") %>%
-    add_trace(x = ~t1/nSquares*100, name = "rapportage") %>%
-    layout(xaxis = list(title = 'Percentage bezette hokken (10km2) in Vlaanderen'),
+    add_trace(x = ~t1/nSquares*100, name = translate(uiText, "reporting")) %>%
+    layout(xaxis = list(title = translate(uiText, 'percentCages')),
       yaxis = list(title = ""), barmode = 'group')
   
   
@@ -38,15 +40,22 @@ countOccupancyServer <- function(id, uiText, data) {
       
       ns <- session$ns
       
+      output$disclaimerOccupancy <- renderText({
+          
+          translate(uiText(), "countOccupancyDisclaimer")
+          
+        })
+      
       output$titleOccupancy <- renderUI({
           
-          h3(HTML(uiText()[uiText()$plotFunction == "countOccupancy", ]$title))
+          h3(HTML(translate(uiText(), "countOccupancy")))
           
         })
       
       plotModuleServer(id = "occupancy",
         plotFunction = "countOccupancy", 
-        data = data
+        data = data,
+        uiText = uiText
       )
       
     })
@@ -71,10 +80,10 @@ countOccupancyUI <- function(id) {
       label = uiOutput(ns("titleOccupancy"))),
     conditionalPanel("input.linkOccupancy % 2 == 1", ns = ns,
       
-      helpText("NOTE: Plot independent of the selected filters above"),
+      helpText(uiOutput(ns("disclaimerOccupancy"))),
       
       plotModuleUI(id = ns("occupancy"), height = "800px"),
-      optionsModuleUI(id = ns("plotTrias"), doWellPanel = FALSE),
+      optionsModuleUI(id = ns("occupancy"), doWellPanel = FALSE),
       tags$hr()
     
     )

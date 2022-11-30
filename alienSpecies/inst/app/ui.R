@@ -55,16 +55,9 @@ shinyUI(
           # Shape data source + contact e-mail
           header = tags$header(tags$div(align = "right", style = "margin-top: 60px;",
               tags$p(
-                actionLink(inputId = "showShare", label = "Share Link"),
+                tags$div(uiOutput("shareLink"), style = "display: inline-block;"),
                 "-", 
                 tags$a(id = "contact", href="mailto:faunabeheer@inbo.be?SUBJECT=Alien species web applicatie", target="_blank", "Contact")
-              ),
-              tags$p(
-                actionLink(inputId = "translate_en", label = "EN"),
-                "-",
-                actionLink(inputId = "translate_fr", label = "FR"),
-                "-", 
-                actionLink(inputId = "translate_nl", label = "NL")
               )
             )
           )

@@ -349,19 +349,22 @@ loadMetaData <- function(type = c("ui", "keys"),
   filterData <- switch(type, 
     ui = {
       
-      uiText <- allData[, c("plotFunction", paste0(c("title_", "description_"), language))]
-      colnames(uiText) <- c("plotFunction", "title", "description")
-      uiText <- uiText[uiText$plotFunction != "", ]
+      uiText <- allData[, c("title_id", paste0("title_", language))]
+      colnames(uiText) <- c("id", "title")
+      uiText <- uiText[uiText$id != "", ]
       
-      if (any(duplicated(uiText$plotFunction)))
+      if (any(duplicated(uiText$id)))
         stop("Following translations occur multiple times, please clean the file: ",
-          paste(uiText$plotFunction[duplicated(uiText$plotFunction)], collapse = ", "))
+          paste(uiText$id[duplicated(uiText$id)], collapse = ", "))
       
       uiText
       
     },
     keys = allData
   )
+  
+  if (type == "ui")
+    attr(filterData, "language") <- language
   
   
   return(filterData)
@@ -414,6 +417,25 @@ getDutchNames <- function(x, type = c("regio")) {
   }
   
   result
+  
+}
+
+
+#' Translate text given id
+#' @param data data.frame with columns title and id
+#' @param id character, row identifier for the \code{data}
+#' 
+#' @return character 
+#' 
+#' @author mvarewyck
+#' @export
+translate <- function(data, id) {
+  
+  toReturn <- data$title[match(id, data$id)]  
+
+  if (is.na(toReturn) || toReturn == "")
+    id else
+    toReturn
   
 }
 

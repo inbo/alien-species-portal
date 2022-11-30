@@ -2,17 +2,10 @@ library(alienSpecies)
 library(shiny)
 
 
+
 ### General
 ### ------------
 
-`%then%` <- function(x, y) {
-  
-  if (is.null(x) || isTRUE(is.na(x)))
-    y
-  else
-    x
-  
-}
 `%<>%` <- magrittr::`%<>%`
 
 

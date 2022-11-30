@@ -77,7 +77,7 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
       
       output$disclaimerTableIndicators <- renderUI({
           
-          tags$em(HTML(uiText()[uiText()$plotFunction == "tableIndicators", ]$description))
+          tags$em(HTML(translate(uiText(), "tableIndicatorsDisclaimer")))
           
         })
       

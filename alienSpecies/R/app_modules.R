@@ -223,7 +223,7 @@ titleModuleServer <- function(id, plotFunction, uiText) {
       
       output$title <- renderUI({
           
-          uiText()$title[uiText()$plotFunction == plotFunction] 
+          translate(uiText(), plotFunction) 
           
         })
     })

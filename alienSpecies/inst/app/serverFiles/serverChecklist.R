@@ -6,7 +6,7 @@
 
 output$checklist_title <- renderUI({
     
-    results$translations$title[results$translations$plotFunction == tabChoices[2]]  
+    translate(results$translations, id = tabChoices[2])  
     
   })
 
@@ -25,13 +25,21 @@ welcomeSectionServer(id = "checklist", uiText = reactive(results$translations))
 ### Filter Data
 ### ---------------
 
+exoten_triggerMore <- reactive({
+   
+    req(!is.null(input$exoten_more))
+    input$exoten_more + results$switchTranslation()
+    
+  })
 
-observeEvent(input$exoten_more, {
+observeEvent(exoten_triggerMore(), {
     
   if (input$exoten_more %% 2 == 1)
-    updateActionLink(session = session, inputId = "exoten_more", label = "Less",
+    updateActionLink(session = session, inputId = "exoten_more", 
+      label = translate(results$translations, "less"),
       icon = icon("angle-double-up")) else
-    updateActionLink(session = session, inputId = "exoten_more", label = "More",
+    updateActionLink(session = session, inputId = "exoten_more", 
+      label = translate(results$translations, "more"),
       icon = icon("angle-double-down"))
   
   })
@@ -43,15 +51,6 @@ observeEvent(input$exoten_more, {
 
 urlSearch <- reactive(parseQueryString(session$clientData$url_search))
 
-# taxa
-#output$filter_taxa <- renderUI({
-#    
-#    comboTreeInput("exoten_taxa", choices = taxaChoices, 
-#      placeholder = "All taxa", selected = urlSearch()$taxa,
-#      isNumeric = TRUE)
-#    
-#  })
-
 observeEvent(input$tabs, {
     
     if (input$tabs == "global_indicators")
@@ -59,7 +58,7 @@ observeEvent(input$tabs, {
         selected = urlSearch()$taxa,
         server = TRUE,
         options = list(
-          placeholder = "All taxa",
+          placeholder = translate(results$translations, "allTaxa"),
           render = I(
             '{
               option: function(item, escape) {
@@ -75,7 +74,7 @@ observeEvent(input$tabs, {
 filter_habitat <- filterSelectServer(
   id = "habitat",
   url = urlSearch,
-  placeholder = "All habitats",
+  placeholder = reactive(translate(results$translations, "allHabitats")),
   initChoices = habitatChoices
 )
 
@@ -83,7 +82,8 @@ filter_habitat <- filterSelectServer(
 output$filter_pw <- renderUI({
     
     comboTreeInput("exoten_pw", choices = pwChoices,
-      placeholder = "All pathways", selected = urlSearch()$pw)
+      placeholder = translate(results$translations, "allPathways"), 
+      selected = urlSearch()$pw)
     
   })
 
@@ -91,7 +91,7 @@ output$filter_pw <- renderUI({
 filter_doe <- filterSelectServer(
   id = "doe",
   url = urlSearch,
-  placeholder = "All degree of establishment",
+  placeholder = reactive(translate(results$translations, "allDoe")),
   initChoices = doeChoices
 )
 
@@ -99,7 +99,8 @@ filter_doe <- filterSelectServer(
 output$filter_native <- renderUI({
     
     comboTreeInput("exoten_native", choices = nativeChoices,
-      placeholder = "All native regions", selected = urlSearch()$native)
+      placeholder = translate(results$translations, "allNative"), 
+      selected = urlSearch()$native)
     
   })
 
@@ -135,8 +136,9 @@ observe({
     invalidateLater(1000)
     
     myLabel <- if (all(defaultTime == results$exoten_time) & defaultTimeNA == results$exoten_timeNA)
-      "All years" else
-      paste(paste(results$exoten_time, collapse = "-"), if (results$exoten_timeNA) "and missing")
+      translate(results$translations, "allYears") else
+      paste(paste(results$exoten_time, collapse = "-"), if (results$exoten_timeNA) 
+          translate(results$translations, "andMissing"))
   
     updateActionButton(session = session, inputId = "exoten_timeButton", label = myLabel)
     
@@ -147,7 +149,7 @@ observeEvent(input$exoten_time, results$exoten_time <- input$exoten_time)
 
 output$exoten_timeNA <- renderUI({
     
-    checkboxInput(inputId = "exoten_timeNA", label = "Include missing", 
+    checkboxInput(inputId = "exoten_timeNA", label = translate(results$translations, "includeMissing"), 
       value = results$exoten_timeNA)
     
   })
@@ -167,7 +169,7 @@ output$exoten_time <- renderUI({
 filter_union <- filterSelectServer(
   id = "union",
   url = urlSearch,
-  placeholder = "Union and non-union list",
+  placeholder = reactive(translate(results$translations, "allUnion")),
   initChoices = c("Union list", "Non-union list")
 )
 
@@ -175,7 +177,7 @@ filter_union <- filterSelectServer(
 filter_region <- filterSelectServer(
   id = "region",
   url = urlSearch,
-  placeholder = "All regions",
+  placeholder = reactive(translate(results$translations, "allRegions")),
   initChoices = regionChoices
 )
 
@@ -183,7 +185,7 @@ filter_region <- filterSelectServer(
 filter_source <- filterSelectServer(
   id = "source",
   url = urlSearch,
-  placeholder = "All sources",
+  placeholder = reactive(translate(results$translations, "allSources")),
   initChoices = bronChoices
 )
 
@@ -278,13 +280,42 @@ results$exoten_data <- reactive({
 output$nrowsFinal <- renderText({
     
     validate(need(nrow(results$exoten_data()) > 0, "No data available"))
-    paste("Total number of species:", length(unique(results$exoten_data()$key)))
+    paste0(translate(results$translations, "totalSpecies"), ": ", 
+      length(unique(results$exoten_data()$key)))
 
   })
 
 
+### Legend
+### -----------------
+
+output$exoten_legendLink <- renderUI({
+    
+    actionLink(inputId = "exoten_legend", 
+      label = translate(results$translations, "tableLegend"), 
+      icon = icon("angle-double-down"))
+    
+  })
+
+output$exoten_legendText <- renderUI({
+    
+    tagList(
+    tags$b(translate(results$translations, "icons")),
+    p(icon("star"), translate(results$translations, "min_1_obs")),
+    p(icon("play"), translate(results$translations, "is_union")),
+    tags$b(translate(results$translations, "colors")),
+    p(drawBullet(color = "black"), translate(results$translations, "only_obs")),
+    p(drawBullet(color = "orange"), translate(results$translations, "incomplete_out")),
+    p(drawBullet(color = "green"), translate(results$translations, "all_out"))
+  )
+  
+  })
+
+
+
 ### Table
 ### -----------------
+
 
 ## Copy reactive values -> not working directly!
 ## https://stackoverflow.com/a/48883055/5840900
@@ -324,8 +355,8 @@ plotTriasServer(id = "checklist-count",
   triasArgs = reactive({
       list(
         start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
-        x_lab = translations$title[translations$plotFunction == "year"],
-        y_lab = translations$title[translations$plotFunction == "indicator_introduction_year"]
+        x_lab = translate(results$translations, "year"),
+        y_lab = translate(results$translations, "indicator_introduction_year")
       )
     })
 )
@@ -339,8 +370,8 @@ plotTriasServer(id = "checklist-cum",
   triasArgs = reactive({
       list(
         start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
-        x_lab = "Jaar",
-        y_lab = "Aantal ge\u00EFntroduceerde uitheemse soorten"
+        x_lab = translate(results$translations, "year"),
+        y_lab = translate(results$translations, "indicator_total_year")
       )
     })
 )
@@ -371,13 +402,25 @@ plotTriasServer(id = "checklist_tablePathway",
 plotTriasServer(id = "checklist_pathway1",
   uiText = reactive(results$translations),
   data = results$exoten_data,
-  triasFunction = "visualize_pathways_level1"
+  triasFunction = "visualize_pathways_level1",
+  triasArgs = reactive({
+      list(
+        x_lab = translate(results$translations, "numberTaxa"),
+        y_lab = translate(results$translations, "pathways")
+      )
+    })
 )
 
 plotTriasServer(id = "checklist_pathway1Trend",
   uiText = reactive(results$translations),
   data = results$exoten_data,
-  triasFunction = "visualize_pathways_year_level1"
+  triasFunction = "visualize_pathways_year_level1",
+  triasArgs = reactive({
+      list(
+        x_lab = translate(results$translations, "period"),
+        y_lab = translate(results$translations, "numberTaxa")
+      )
+    })
 )
 
 plotTriasServer(id = "checklist_pathway2",
@@ -385,7 +428,12 @@ plotTriasServer(id = "checklist_pathway2",
   data = results$exoten_data,
   triasFunction = "visualize_pathways_level2",
   triasArgs = reactive({
-      validate(need(length(unique(results$exoten_data()$pathway_level1)) == 1, "Please select single pathway level 1 for this plot"))
-      list(chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1))
+      validate(need(length(unique(results$exoten_data()$pathway_level1)) == 1, 
+          translate(results$translations, "singlePathway")))
+      list(
+        chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1),
+        x_lab = translate(results$translations, "numberTaxa"),
+        y_lab = translate(results$translations, "pathways")
+      )
     })
 )

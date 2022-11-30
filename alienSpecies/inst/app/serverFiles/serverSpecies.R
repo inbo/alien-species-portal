@@ -12,7 +12,7 @@
 
 output$species_title <- renderUI({
     
-    results$translations$title[results$translations$plotFunction == tabChoices[3]]  
+    translate(data = results$translations, id = tabChoices[3])  
     
   })
 
@@ -127,9 +127,12 @@ plotTriasServer(id = "species_gam",
       list(
         y_var = "obs", 
         taxon_key = taxonKey(), 
-        name = input$species_choice
+        name = input$species_choice,
+        x_label = translate(results$translations, "year"),
+        y_label = translate(results$translations, "observations")
       )
-    })
+    }),
+  filters = c("bias", "protected")
 )
 
 
@@ -209,7 +212,7 @@ observe({
 
 results$species_managementData <- reactive({
     
-    validate(need(results$species_managementFile(), "No data available"))
+    validate(need(results$species_managementFile(), translate(results$translations, "noData")))
     loadGbif(dataFile = results$species_managementFile())
     
   })

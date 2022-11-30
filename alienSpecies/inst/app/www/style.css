@@ -70,7 +70,7 @@ a, a:visited, a:hover, a:active, a:focus {
 }
 
 
-#shareLink, #contact {
+#showShare, #contact, #translate_en, #translate_fr, #translate_nl {
   font-size: 14px;
   line-height: 20px;
   color: #595959

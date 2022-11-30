@@ -75,6 +75,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @param data reactive object, data for \code{\link{plotTrias}}
 #' @param triasArgs reactive object, extra plot arguments to be passed to the 
 #' trias package
+#' @param filters character vector, additional filters for the TRIAS plot to 
+#' be dipslayed
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -82,7 +84,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @import trias
 #' @export
 plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
-  outputType = c("plot", "table")) {
+  filters = NULL, outputType = c("plot", "table")) {
   
   # For R CMD check
   protected <- NULL
@@ -94,14 +96,21 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
       
       ns <- session$ns
       
-      subText <- reactive({
-          uiText()[uiText()$plotFunction == triasFunction, ]
-        })
-      
       output$titlePlotTrias <- renderUI({
           
-          h3(HTML(subText()$title))
+          h3(HTML(translate(uiText(), triasFunction)))
           
+        })
+      
+      output$filters <- renderUI({
+          
+          if (!is.null(filters)) 
+            lapply(filters, function(iFilter) {
+                checkboxInput(inputId = ns(iFilter), label = switch(iFilter,
+                    bias = translate(uiText(), "correctBias"),
+                    protected = translate(uiText(), "protectAreas"))
+                )
+              })
         })
       
       plotData <- reactive({
@@ -140,12 +149,10 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
 #' Shiny module for creating the plot \code{\link{plotTrias}} - UI side
 #' @template moduleUI
 #' @inheritParams plotTrias
-#' @param filters character vector, additional filters for the TRIAS plot to 
-#' be dipslayed
 #' @author mvarewyck
 #' @import shiny
 #' @export
-plotTriasUI <- function(id, outputType = c("plot", "table"), filters = NULL) {
+plotTriasUI <- function(id, outputType = c("plot", "table")) {
   
   ns <- NS(id)
   outputType <- match.arg(outputType)
@@ -156,13 +163,7 @@ plotTriasUI <- function(id, outputType = c("plot", "table"), filters = NULL) {
       label = uiOutput(ns("titlePlotTrias"))),
     conditionalPanel("input.linkPlotTrias % 2 == 1", ns = ns,
       
-      if (!is.null(filters)) 
-        lapply(filters, function(iFilter) {
-            checkboxInput(inputId = ns(iFilter), label = switch(iFilter,
-                bias = "Corrected for observer bias",
-                protected = "Protected areas")
-            )
-          }),
+      uiOutput(ns("filters")),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else

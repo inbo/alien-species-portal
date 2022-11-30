@@ -67,7 +67,7 @@ filterSelectServer <- function(id, url, placeholder, initChoices) {
           
           names(initChoices) <- initChoices
           initChoices <- c("", initChoices)
-          names(initChoices)[1] <- placeholder
+          names(initChoices)[1] <- placeholder()
           
           selectInput(inputId = ns("filter"), label = NULL, 
             choices = initChoices, 

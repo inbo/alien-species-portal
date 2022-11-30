@@ -27,6 +27,7 @@
 #' @export
 countYearNativerange <- function(df, jaartallen = NULL, 
     type = c("native_continent", "native_range"),
+    uiText = NULL,
     width = NULL, height = NULL) {
   
     
@@ -58,11 +59,11 @@ countYearNativerange <- function(df, jaartallen = NULL,
   # Summarize data per year
   totalCount <- table(plotData$first_observed)
   
-  
   # For optimal displaying in the plot
   summaryData$locatie <- as.factor(summaryData$locatie)
   summaryData$locatie <- factor(summaryData$locatie, levels = rev(levels(summaryData$locatie)))
-  summaryData$first_observed <- as.factor(summaryData$first_observed)
+  summaryData$first_observed <- as.integer(summaryData$first_observed)
+  allYears <- sort(unique(summaryData$first_observed))
   
   colors <- rev(inbo.2015.colours(n = nlevels(summaryData$locatie)))
   title <- yearToTitleString(year = c(jaartallen[1], tail(jaartallen, 1)), brackets = FALSE)
@@ -71,13 +72,13 @@ countYearNativerange <- function(df, jaartallen = NULL,
   pl <- plot_ly(data = summaryData, x = ~first_observed, y = ~value, color = ~locatie,
           colors = colors, type = "bar",  width = width, height = height) %>%
       layout(title = title,
-          xaxis = list(title = "Jaar"), 
-          yaxis = list(title = "Aantal", tickformat = ",d"),
+          xaxis = list(title = translate(uiText, "year")), 
+          yaxis = list(title = translate(uiText, "number"), tickformat = ",d"),
           margin = list(b = 80, t = 100), 
-          barmode = ifelse(nlevels(summaryData$first_observed) == 1, "group", "stack"),
-          annotations = list(x = levels(summaryData$first_observed), 
+          barmode = ifelse(length(allYears) == 1, "group", "stack"),
+          annotations = list(x = allYears, 
               y = totalCount, 
-              text = paste(ifelse(nlevels(summaryData$first_observed) == 1, "totaal:", ""), ifelse(totalCount > 0, totalCount, "")),
+              text = paste(ifelse(length(allYears) == 1, "totaal:", ""), ifelse(totalCount > 0, totalCount, "")),
               xanchor = 'center', yanchor = 'bottom',
               showarrow = FALSE),
           showlegend = TRUE)  
@@ -86,9 +87,9 @@ countYearNativerange <- function(df, jaartallen = NULL,
   pl$elementId <- NULL
   
   # Change variable name
-  names(summaryData)[names(summaryData) == "value"] <- "aantal"
-  names(summaryData)[names(summaryData) == "first_observed"] <- "jaar"
-  names(summaryData)[names(summaryData) == "locatie"] <- "regio van oorsprong"
+  names(summaryData)[names(summaryData) == "value"] <- "number"
+  names(summaryData)[names(summaryData) == "first_observed"] <- "year"
+  names(summaryData)[names(summaryData) == "locatie"] <- "native region"
     
   return(list(plot = pl, data = summaryData))
   
@@ -114,14 +115,21 @@ countYearNativerangeServer <- function(id, uiText, data) {
       
       output$titleYearNativerange <- renderUI({
           
-          h3(HTML(uiText()[uiText()$plotFunction == "countYearNativerange", ]$title))
+          h3(HTML(translate(uiText(), "countYearNativerange")))
           
         })
-      
-      plotModuleServer(id = "yearNativerange",
-        plotFunction = "countYearNativerange", 
-        data = data
-      )
+     
+      observe({
+          
+          input$linkYearNativeRange
+          
+          plotModuleServer(id = "yearNativerange",
+            plotFunction = "countYearNativerange", 
+            data = data,
+            uiText = uiText
+          )
+          
+        })
       
     })
   

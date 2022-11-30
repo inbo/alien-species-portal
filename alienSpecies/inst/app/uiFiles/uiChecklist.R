@@ -68,16 +68,10 @@ tagList(
         
         tags$div(style = "margin-top: 10px;",
           
-          actionLink(inputId = "exoten_legend", label = "Table Legend", icon = icon("angle-double-down")),
+          uiOutput("exoten_legendLink"),
           conditionalPanel("input.exoten_legend % 2 == 1",
             wellPanel(
-              tags$b("Icons"),
-              p(icon("star"), "Species has at least 1 (historical) observation in Belgium"),
-              p(icon("play"), "Species is on the list of Union concern"),
-              tags$b("Colors"),
-              p(drawBullet(color = "black"), "Only observations"),
-              p(drawBullet(color = "orange"), "Incomplete outputs"),
-              p(drawBullet(color = "green"), "All outputs")
+              uiOutput("exoten_legendText")              
             )
           )
         ),

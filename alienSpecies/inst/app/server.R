@@ -47,20 +47,26 @@ function(input, output, session) {
   observeEvent(input$translate_fr, results$translations <- loadMetaData(language = "fr"))
   observeEvent(input$translate_en, results$translations <- loadMetaData(language = "en"))
   
+  results$switchTranslation <- reactive(
+    input$translate_nl + input$translate_fr + input$translate_en
+  )
+  
+  
   # URL Query
   # ----------
   
   observeEvent(input$showShare, {
       
       searchId <- if (input$tabs %in% c("global_indicators"))
-        results$searchId else 
-        ""
+          results$searchId else 
+          ""
+      languageId <- paste0("?language=", attr(results$translations, "language"))
       
       showModal(
         modalDialog(title = "Application link",
           tags$textarea(class = "form-control", rows = "1", style = "resize:none;",
             readonly = "readonly",
-            paste0("http://alienspecies.inbo.be/?page=", input$tabs, searchId)
+            paste0("http://alienspecies.inbo.be/?page=", input$tabs, languageId, searchId)
           ),
           tagList(
             br(),
@@ -94,6 +100,7 @@ function(input, output, session) {
       
     })
     
+    # Update page
     observe({
         
         # The url will be sth like: http://awsabiirl1118.jnj.com/?step=qc&id=16608
@@ -112,10 +119,28 @@ function(input, output, session) {
         
       })
     
+    # Update language
+    observe({
+        
+        url <- parseQueryString(session$clientData$url_search)
+        results$urlLanguage <- url$language
+        
+      })
+    
+    observeEvent(results$urlLanguage, {
+        
+        results$translations <- loadMetaData(language = results$urlLanguage)
+        
+      })
+    
   
   # Tabpages
   # ----------
   
+  output$shareLink <- renderUI(
+    actionLink(inputId = "showShare", label = translate(results$translations, "shareLink"))
+  )
+
   # Load code for all tabpages
   for (serverFile in list.files("serverFiles", full.names = TRUE))
     source(serverFile, local = TRUE)
