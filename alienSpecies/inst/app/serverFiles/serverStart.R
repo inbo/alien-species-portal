@@ -16,7 +16,7 @@ output$start_tiles <- renderUI({
             "" else 
           HTML(paste0("<div class='fotoTitel'>", 
               translate(data = results$translations, id = x), 
-            "</div><div id='exampleFoto'></div>"))
+            "</div><div id='", x, "Foto'></div>"))
       )
     )
   

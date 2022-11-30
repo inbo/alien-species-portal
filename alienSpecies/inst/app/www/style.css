@@ -76,10 +76,32 @@ a, a:visited, a:hover, a:active, a:focus {
   color: #595959
 }
 
-#exampleFoto {
+
+#global_indicatorsFoto {
   width: 360px; 
   height: 236px;
-  background-image: url("example.jpg");
+  background-image: url("global_indicators.png");
+  background-size: 360px 236px;
+}
+
+#species_informationFoto {
+  width: 360px; 
+  height: 236px;
+  background-image: url("species_information.jpg");
+  background-size: 360px 236px;
+}
+
+#early_warningFoto {
+  width: 360px; 
+  height: 236px;
+  background-image: url("early_warning.jpg");
+  background-size: 360px 236px;
+}
+
+#managementFoto {
+  width: 360px; 
+  height: 236px;
+  background-image: url("management.jpg");
   background-size: 360px 236px;
 }
 
