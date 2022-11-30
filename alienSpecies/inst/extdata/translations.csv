@@ -117,3 +117,66 @@ pulli;pulli;;pulli
 missing;ontbrekend;;missing
 culling - shooting;ruimen - schieten;;culling – shooting
 Capture;vangst;;capture
+;;;
+;;;
+;;;
+;;;
+;;;
+;;;
+;;;
+;;;
+;;;
+;;;
+;;;
+;;;
+;;;
+release;UITZETTEN IN DE NATUUR;;RELEASE IN NATURE
+escape;ONTSNAPPING;;ESCAPE from confinement
+contaminant;TRANSPORTBESMETTING;;TRANSPORT â€“ CONTAMINANT
+stowaway;TRANSPORT VERSTEKELING;;TRANSPORT - STOWAWAY
+corridor;CORRIDOR;;CORRIDOR
+unaided;AUTONOME UITBREIDING;;UNAIDED
+release_biological_control;Biologische bestrijding;;Biological control
+release_erosion_control;Erosiebestrijding;;Erosion control/ dune stabilization (windbreaks, hedges, â€¦)
+release_fishery;Uitzetten t.b.v. Visserij;;Fishery in the wild (including game fishing)
+release_hunting;Jacht;;Hunting
+release_landscape_improvement;Landschaps verbetering;;Landscape/flora/fauna improvement in the wild
+release_conservation;Natuurbescherming;;Introduction for conservation purposes or wildlife management
+release_use;Ander gebruik;;Release in nature for use (other than above, e.g., fur, transport, medical use)
+release_other;Andere;;Other intentional release
+escape_agriculture;Landbouw;;Agriculture (including Biofuel feedstocks)
+escape_aquaculture;Aquacultuur;;Aquaculture / mariculture
+escape_zoo;Plantentuinen;;Botanical garden/zoo/aquaria (excluding domestic aquaria)
+escape_pet;Huisdieren;;Pet/aquarium/terrarium species (including live food for such species )
+escape_farm;Kweekdieren;;Farmed animals (including animals left under limited control)
+escape_forestry;Bosbouw ;;Forestry (including afforestation or reforestation)
+escape_fur_farm;Bontfokkerijen;;Fur farms
+escape_horticulture;Horticultuur;;Horticulture
+escape_ornamental;Andere sierdoeleinden;;Ornamental purpose other than horticulture
+escape_research;ex-situ kweek;;Research and ex-situ breeding (in facilities)
+escape_food_bait;Levend aas;;Live food and live bait
+escape_other;Andere;;Other escape from confinement
+contaminant_nursery;Kweekmateriaal;;Contaminant nursery material
+contaminant_bait;Aas;;Contaminated bait
+contaminant_food;Voedsel;;Food contaminant (including of live food)
+contaminant_on_animals;Op dieren;;Contaminant on animals (except parasites, species transported by host/vector)
+contaminant_animal_parasite;Dierparasieten;;Parasites on animals (including species transported by host and vector)
+contaminant_on_plants;Op planten;;Contaminant on plants (except parasites, species transported by host/vector)
+contaminant_plant_parasite;Plantparasieten;;Parasites on plants (including species transported by host and vector)
+contaminant_seed;Zaden;;Seed contaminant
+contaminant_timber;Houthandel;;Timber trade
+contaminant_habitat_material;Habitat materiaal;;Transportation of habitat material (soil, vegetation,â€¦)
+stowaway_fishing_equipment;Vis- en hengelmateriaal;;Angling/fishing equipment
+stowaway_container;Container;;Container/bulk
+stowaway_airplane;Vliegtuig;;Hitchhikers in or on airplane
+stowaway_ship;Scheepvaart;;Hitchhikers on ship/boat (excluding ballast water and hull fouling)
+stowaway_machinery;Machines en uitrusting;;Machinery/equipment
+stowaway_people_luggage;Mensen en hun bagage;;People and their luggage/equipment (in particular tourism)
+stowaway_organic_packing;Organisch verpakkingsmateriaal;;Organic packing material, in particular wood packaging
+stowaway_ballast_water;Ballastwater;;Ship/boat ballast water
+stowaway_hull_fouling;Fouling aan de romp;;Ship/boat hull fouling
+stowaway_vehicles;Voertuigen;;Vehicles (car, train, â€¦)
+stowaway_other;Andere;;Other means of transport
+corridor_water;Verbonden water;;Interconnected waterways/basins/seas
+corridor_land;Tunnels en landbruggen;;Tunnels and land bridges
+natural_dispersal;Natuurlijke verspreiding;;Natural dispersal across borders of invasive alien species that have been introduced through pathways 1 to 5
