@@ -130,7 +130,7 @@ getGbifOccurrence <- function(datasetKey,
 #' @param dataDir path, where to find the \code{dataFile}
 #' @return data.table
 #' 
-#' @importFrom data.table fread
+#' @importFrom data.table fread setnames
 #' 
 #' @author mvarewyck
 #' @export
@@ -138,6 +138,11 @@ loadGbif <- function(dataFile,
   dataDir = system.file("extdata", "management", package = "alienSpecies")) {
   
   rawData <- fread(file.path(dataDir, dataFile), stringsAsFactors = FALSE, na.strings = "")
+  
+  # Rename
+  if ("individualCount" %in% colnames(rawData) & !"count" %in% colnames(rawData))
+    data.table::setnames(rawData, "individualCount", "count")
+  
   attr(rawData, "Date") <- file.mtime(dataFile)
   
   return(rawData)

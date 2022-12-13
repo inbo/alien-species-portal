@@ -324,7 +324,7 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
 
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
 #' 
-#' @param filter list with filters to be shown in the app;
+#' @param filter reactive list with filters to be shown in the app;
 #' names should match a plotFunction in \code{uiText}; 
 #' values define the choices in \code{selectInput}
 #' @inheritParams welcomeSectionServer
@@ -345,7 +345,7 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
 #' @importFrom webshot webshot
 #' @export
 mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
-  filter = list(source = c("all")), 
+  filter = reactive(list(source = c("all"))), 
   groupVariable, showPeriod = FALSE, showGlobeDefault = TRUE
 ) {
   
@@ -377,16 +377,16 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       
       output$filters <- renderUI({
           
-          lapply(names(filter), function(filterName) {
+          lapply(names(filter()), function(filterName) {
               
-              choices <- filter[[filterName]]
+              choices <- filter()[[filterName]]
               names(choices) <- translate(uiText(), choices)
               
               column(6, 
                 selectInput(inputId = ns(filterName), 
                   label = translate(uiText(), filterName),
                   choices = choices,
-                  multiple = TRUE, selected = filter[[filterName]])
+                  multiple = TRUE, selected = filter()[[filterName]])
               )
             })
           
@@ -430,7 +430,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           filterData <- df()
           
           # Other filters
-          for (iFilter in names(filter)) {
+          for (iFilter in names(filter())) {
             if (iFilter != "source")
               filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
           }

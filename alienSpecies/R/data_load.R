@@ -1,24 +1,44 @@
 #' Read shape data
+#' @param extension character, path extension for files to be picked up
 #' @param dataDir path to the shape files. Folder should contain .shp file but also
 #' helper files such as .dbf and .prj
 #' @return list with sf objects
 #' 
 #' @author mvarewyck
+#' @importFrom rgdal readOGR
+#' @importFrom sp spTransform
+#' @importFrom sf st_read
 #' @export
-readShapeData <- function(
+readShapeData <- function(extension = c(".shp", ".geojson"),
   dataDir = system.file("extdata", "grid", package = "alienSpecies")
 ) {
   
+  extension <- match.arg(extension)
   
-  shapeFiles <- list.files(dataDir, pattern = ".shp")
+  shapeFiles <- list.files(dataDir, pattern = extension)
   
-  toReturn <- lapply(shapeFiles, function(iFile) {
-      
-      sf::st_read(file.path(dataDir, iFile), layer = gsub(".shp", "", iFile))
-      
-    })
+  if (extension == ".shp") {
+    
+    toReturn <- lapply(shapeFiles, function(iFile) {
+        
+        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile))
+        
+      })
+    
+  } else {
+    
+    toReturn <- lapply(shapeFiles, function(iFile) {
+        
+        spatialData <- readOGR(dsn = file.path(dataDir, iFile), verbose = TRUE)
+        sp::spTransform(spatialData, CRS("+proj=longlat +datum=WGS84"))
+        
+      })
   
-  names(toReturn) <- gsub(".shp", "", shapeFiles)
+  }
+  
+  
+  
+  names(toReturn) <- gsub(extension, "", shapeFiles)
   
   toReturn
   
@@ -430,6 +450,9 @@ getDutchNames <- function(x, type = c("regio")) {
 #' @author mvarewyck
 #' @export
 translate <- function(data, id) {
+  
+  if (is.null(data))
+    return(id)
   
   toReturn <- data$title[match(id, data$id)]  
 

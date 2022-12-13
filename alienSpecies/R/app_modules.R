@@ -10,25 +10,29 @@
 
 #' User input for controlling specific plot (ui-side)
 #' @param id character, module id, unique name per plot
-#' @param showType, boolean, whether to select a select input field with type
+#' @param showGroup boolean, whether to show a select input field for group variable
+#' @param showSummary boolean, whether to show a select input field for summary choice
 #' @param exportData boolean, whether a download button for the data is shown
 #' @param doWellPanel boolean, whether to display the options within a 
 #' \code{shiny::wellPanel()}
 #' @return ui object (tagList)
 #' @import shiny
 #' @export
-optionsModuleUI <- function(id, showType = FALSE, exportData = TRUE, doWellPanel = TRUE) {
+optionsModuleUI <- function(id, showGroup = FALSE, showSummary = FALSE, 
+  exportData = TRUE, doWellPanel = TRUE) {
   
   ns <- NS(id)
   
   
   toReturn <- tagList(
-    
-    if (showType)
-      uiOutput(ns("type")),
+    fixedRow(
+      if (showGroup)
+        column(6, uiOutput(ns("group"))),
+      if (showSummary)
+        column(6, uiOutput(ns("summarizeBy")))
+    ),
     if (exportData)
       downloadButton(ns("dataDownload"), "Download data")
-  
   )
   
   if (doWellPanel)
@@ -99,11 +103,36 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @importFrom DT datatable formatRound renderDT
 #' @importFrom plotly ggplotly
 #' @export
-plotModuleServer <- function(id, plotFunction, data, period = NULL,
-  triasFunction = NULL, triasArgs = NULL, outputType = NULL, uiText = NULL) {
+plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
+  outputType = NULL, triasFunction = NULL, triasArgs = NULL, 
+  period = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
+      
+      ns <- session$ns
+      
+      
+      output$group <- renderUI({
+          
+          choices <- c("", "lifeStage")
+          names(choices) <- translate(uiText(), choices)
+          
+          selectInput(inputId = ns("group"), label = translate(uiText(), "group"), 
+            choices = choices)
+          
+        })
+      
+      output$summarizeBy <- renderUI({
+          
+          choices <- c("sum", "cumsum")
+          names(choices) <- translate(uiText(), choices)
+          
+          selectInput(inputId = ns("summarizeBy"), 
+            label = translate(uiText(), "summary"), choices = choices)
+          
+        })
+      
       
       # Filter plot data
       subData <- reactive({
@@ -119,18 +148,20 @@ plotModuleServer <- function(id, plotFunction, data, period = NULL,
           
           argList <- c(
             list(df = subData()),
-            if (!is.null(input$type))
-              list(type = input$type),
+            if (!is.null(outputType))
+              list(outputType = outputType),
+            if (!is.null(uiText))
+              list(uiText = uiText()),
             if (!is.null(triasFunction))
               list(triasFunction = triasFunction),
             if (!is.null(triasArgs))
               list(triasArgs = triasArgs()),
             if (!is.null(period))
               list(period = period()),
-            if (!is.null(outputType))
-              list(outputType = outputType),
-            if (!is.null(uiText))
-              list(uiText = uiText())
+            if (!is.null(input$group))
+              list(groupVar = input$group),
+            if (!is.null(input$summarizeBy))
+              list(summarizeBy = input$summarizeBy)
           )
           
           argList

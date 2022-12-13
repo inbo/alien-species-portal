@@ -51,5 +51,41 @@ test_that("Barplot for Ruddy Duck", {
     filterValue <- unique(managementData$samplingProtocol)[2]
     countOccurrence(df = managementData[managementData$samplingProtocol == filterValue, ])
     
+  })
+
+
+outFile <- "Lithobates_catesbeianus.csv"
+
+managementData <- loadGbif(dataFile = outFile)
+
+test_that("Barplot for Bullfrogs", {
+   
+    countYearGroup(df = managementData)$plot
+    countYearGroup(df = managementData, groupVar = "lifeStage")$plot
+    
+    countYearGroup(df = managementData, summarizeBy = "cumsum")
+    countYearGroup(df = managementData, summarizeBy = "cumsum", groupVar = "lifeStage")
+    
+  })
+
+test_that("Map for Bullfrogs", {
+    
+    allShapes <- c(
+      # Grid data
+      readShapeData(),
+      # gemeentes & provinces
+      readShapeData(dataDir = system.file("extdata", package = "alienSpecies"),
+        extension = ".geojson")
+    )
+    
+    occurrenceData <- loadTabularData(type = "occurrence")
+    # Filter on taxonKey and year
+    occurrenceData <- occurrenceData[occurrenceData$scientificName == gsub("_", " ", gsub(".csv", "", outFile)) & year == 2018, ]
+    
+    summaryData <- createSummaryRegions(data = managementData, regionLevel = "communes", year = 2018, unit = "absolute")
+    
+    myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
+      shapeData = allShapes, regionLevel = "communes")
+    expect_s3_class(myPlot, "leaflet")
     
   })

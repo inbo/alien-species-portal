@@ -47,9 +47,15 @@ defaultTime <- c(min(exotenData$first_observed, na.rm = TRUE), defaultYear)
 load(file = file.path(dataDir, "dfCube.RData"))
 occupancy <- createOccupancyData(dfCube = dfCube)
 
-# Load occurrence data
+# Load cube data
 if (!doDebug | !exists("allShapes"))
-  allShapes <- readShapeData()
+  allShapes <- c(
+    # Grid data
+    readShapeData(),
+    # gemeentes & provinces
+    readShapeData(dataDir = system.file("extdata", package = "alienSpecies"),
+      extension = ".geojson")
+  )
 dictionary <- loadMetaData(type = "keys")
 
 # Load base map

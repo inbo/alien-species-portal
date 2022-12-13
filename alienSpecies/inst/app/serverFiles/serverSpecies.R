@@ -183,6 +183,11 @@ mapCubeServer(id = "reporting_t01",
 ### Management
 ### ----------------
 
+# Species for which to show mapCube output
+# Other species will have mapRegions output
+cubeSpecies <- c("Oxyura jamaicensis")
+
+
 results$species_managementFile <- reactive({
     
     req(input$species_choice)
@@ -217,21 +222,66 @@ results$species_managementData <- reactive({
     
   })
 
-## Map + barplot
-mapCubeServer(id = "management",
-  uiText = reactive(results$translations),
-  species = reactive(input$species_choice),
-  df = results$species_managementData,
-  filter = list(
-    gender = unique(results$species_managementData()$gender), 
-    samplingProtocol = unique(results$species_managementData()$samplingProtocol)
-  ),
-  groupVariable = NULL,
-  shapeData = NULL,
-  baseMap = baseMap,
-  showPeriod = TRUE
-)
 
+## Map + barplot
+observe({
+    
+    req(results$species_managementData())
+    
+    if (input$species_choice %in% cubeSpecies) {
+      
+      mapCubeServer(id = "management",
+        uiText = reactive(results$translations),
+        species = reactive(input$species_choice),
+        df = results$species_managementData,
+        filter = reactive({
+            filterCandidates <- c("gender", "samplingProtocol", "lifeStage")
+            filters <- filterCandidates[filterCandidates %in% colnames(results$species_managementData())]
+            sapply(filters, function(iFilter)
+                sort(unique(results$species_managementData()[[iFilter]])),
+              simplify = FALSE)
+          }),
+        groupVariable = NULL,
+        shapeData = NULL,
+        baseMap = baseMap,
+        showPeriod = TRUE
+      )
+      
+    } else {
+      
+      mapRegionsServer(
+        id = "management",
+        uiText = reactive(results$translations),
+        species = reactive(input$species_choice),
+        df = results$species_managementData,
+        occurrenceData = occurrenceData,
+        shapeData = allShapes
+        )
+      countYearGroupServer(
+        id = "management", 
+        uiText = reactive(results$translations), 
+        data = results$species_managementData
+      )
+    } 
+    
+  })
+
+observeEvent(input$species_choice, shinyjs::reset("species_managementContent"))
+  
+output$species_managementContent <- renderUI({
+    
+    req(results$species_managementData())
+    
+    if (input$species_choice %in% cubeSpecies) {
+      mapCubeUI(id = "management", showPeriod = TRUE, showLegend = FALSE)
+    } else {
+      tagList(
+        mapRegionsUI(id = "management"),
+        countYearGroupUI(id = "management")
+      )
+    }
+    
+  })
 
 ### More
 ### ----------------
