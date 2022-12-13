@@ -18,7 +18,11 @@ shinyUI(
       tags$link(rel = "stylesheet", href = "style.css"),
       tags$link(rel = "stylesheet", href = "navbar.css"),
       tags$link(rel = "stylesheet", href = "buttonPopup.css"),
-      includeScript("www/activateTableLink.js")
+      includeScript("www/activateTableLink.js"),
+      # Combo tree input
+      shiny::singleton(shiny::tags$link(href = "comboTree.css", rel = "stylesheet")),
+      shiny::singleton(shiny::tags$script(src = "comboTreeBinding.js")),
+      shiny::singleton(shiny::tags$script(src = "comboTreePlugin.js"))
     ),
     
     # Load fontawesome library

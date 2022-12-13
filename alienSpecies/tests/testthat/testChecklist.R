@@ -164,6 +164,10 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio
 # TABLE: tableIntroductionPathway
 test_that("Introduction pathways per category", {
     
+    uiText <- loadMetaData(language = "nl")
+    exotenData$pathway_level1 <- translate(uiText, exotenData$pathway_level1)
+    exotenData$pathway_level2 <- translate(uiText, exotenData$pathway_level2)
+    
     tmpResult <- plotTrias(triasFunction = "get_table_pathways", df = exotenData,
       triasArgs = list(species_names = "species"),
       outputType = "table", uiText = NULL)
@@ -177,7 +181,8 @@ test_that("Introduction pathways per category", {
 # PLOT: CBD Level 1/2 introduction pathways
 test_that("CBD Level 1/2 introduction pathways", {
     
-    tmpResult <- plotTrias(triasFunction = "visualize_pathways_level1", df = exotenData)
+    tmpResult <- plotTrias(triasFunction = "visualize_pathways_level1", df = exotenData,
+      triasArgs = list(cbd_standard = FALSE))
     expect_type(tmpResult, "list")
     
     expect_s3_class(tmpResult$plot, "plotly")

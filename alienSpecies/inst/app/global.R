@@ -71,15 +71,7 @@ taxaLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
 taxaChoices <- createTaxaChoices2(exotenData = exotenData)
 
 habitatChoices <- attr(exotenData, "habitats")
-pwChoices <- createDoubleChoices(exotenData = exotenData, 
-  columns = c("pathway_level1", "pathway_level2"))
-longPwChoices <- unlist(pwChoices)
-
 doeChoices <- sort(unique(exotenData$degree_of_establishment))
-nativeChoices <- createDoubleChoices(exotenData = exotenData,
-  columns = c("native_continent", "native_range"))
-longNativeChoices <- unlist(nativeChoices)
-
 regionChoices <- sort(unique(exotenData$locality))
 bronChoices <- sort(levels(exotenData$source))
 

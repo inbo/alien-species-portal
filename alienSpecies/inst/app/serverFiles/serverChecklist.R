@@ -20,6 +20,22 @@ lapply(c("taxa", "trend", "pathways", "origin"), function(iName)
 
 welcomeSectionServer(id = "checklist", uiText = reactive(results$translations))
 
+# Translate necessary columns
+results$filter_exotenDataTranslated <- reactive({
+    
+    exotenData[, pathway_level2_translate := translate(results$translations, do.call(paste, c(.SD, sep = "_"))),
+      .SDcols = c("pathway_level1", "pathway_level2")]
+    exotenData$habitat_translate <- sapply(exotenData$habitat, function(x) 
+        paste(translate(results$translations, strsplit(x, split = "\\|")[[1]]), collapse = "|"))
+    exotenData[, ':=' (
+        pathway_level1_translate = translate(results$translations, pathway_level1),
+        native_continent_translate = translate(results$translations, native_continent),
+        native_range_translate = translate(results$translations, native_range),
+        degree_of_establishment_translate = translate(results$translations, degree_of_establishment)
+    )]
+  
+  
+  })
 
 
 ### Filter Data
@@ -74,14 +90,22 @@ observeEvent(input$tabs, {
 filter_habitat <- filterSelectServer(
   id = "habitat",
   url = urlSearch,
-  placeholder = reactive(translate(results$translations, "allHabitats")),
-  initChoices = habitatChoices
+  initChoices = c("allHabitats", habitatChoices),
+  translations = reactive(results$translations)
 )
 
 # pathways
+results$filter_pwChoices <- reactive({
+    
+    createDoubleChoices(
+      exotenData = results$filter_exotenDataTranslated(), 
+      columns = c("pathway_level1", "pathway_level2"))
+    
+  })
+
 output$filter_pw <- renderUI({
     
-    comboTreeInput("exoten_pw", choices = pwChoices,
+    comboTreeInput("exoten_pw", choices = results$filter_pwChoices(),
       placeholder = translate(results$translations, "allPathways"), 
       selected = urlSearch()$pw)
     
@@ -91,14 +115,22 @@ output$filter_pw <- renderUI({
 filter_doe <- filterSelectServer(
   id = "doe",
   url = urlSearch,
-  placeholder = reactive(translate(results$translations, "allDoe")),
-  initChoices = doeChoices
+  initChoices = c("allDoe", doeChoices),
+  translations = reactive(results$translations)
 )
 
 # native
+results$filter_nativeChoices <- reactive({
+    
+    createDoubleChoices(
+      exotenData = results$filter_exotenDataTranslated(),
+      columns = c("native_continent", "native_range"))
+    
+  })
+
 output$filter_native <- renderUI({
     
-    comboTreeInput("exoten_native", choices = nativeChoices,
+    comboTreeInput("exoten_native", choices = results$filter_nativeChoices(),
       placeholder = translate(results$translations, "allNative"), 
       selected = urlSearch()$native)
     
@@ -169,24 +201,24 @@ output$exoten_time <- renderUI({
 filter_union <- filterSelectServer(
   id = "union",
   url = urlSearch,
-  placeholder = reactive(translate(results$translations, "allUnion")),
-  initChoices = c("Union list", "Non-union list")
+  initChoices = c("allUnion", "Union list", "Non-union list"),
+  translations = reactive(results$translations)
 )
 
 # regions
 filter_region <- filterSelectServer(
   id = "region",
   url = urlSearch,
-  placeholder = reactive(translate(results$translations, "allRegions")),
-  initChoices = regionChoices
+  initChoices = c("allRegions", regionChoices),
+  translations = reactive(results$translations)
 )
 
 # bron
 filter_source <- filterSelectServer(
   id = "source",
   url = urlSearch,
-  placeholder = reactive(translate(results$translations, "allSources")),
-  initChoices = bronChoices
+  initChoices = c("allSources", bronChoices),
+  translations = reactive(results$translations)
 )
 
 
@@ -196,7 +228,7 @@ filter_source <- filterSelectServer(
 
 results$exoten_data <- reactive({
     
-    subData <- exotenData
+    subData <- copy(results$filter_exotenDataTranslated())
     searchId <- ""
         
     # taxa
@@ -215,14 +247,14 @@ results$exoten_data <- reactive({
     # habitat
     if (!is.null(filter_habitat())) {
       searchId <- paste0(searchId, "&habitat=", paste(filter_habitat(), collapse = ","))
-      subData <- subData[habitat %in% filter_habitat(), ]
+      subData <- subData[grepl(paste(filter_habitat(), collapse = "|"), subData$habitat), ]
     }
     
     # pathways
     if (!is.null(input$exoten_pw)) {
-      searchId <- paste0(searchId, "&pw=", 
-        matchCombo(selected = input$exoten_pw, longChoices = longPwChoices))
-      subData <- filterCombo(exotenData = subData, inputValue = input$exoten_pw, 
+      matchPw <- matchCombo(selected = input$exoten_pw, longChoices = unlist(results$filter_pwChoices()))
+      searchId <- paste0(searchId, "&pw=", matchPw)
+      subData <- filterCombo(exotenData = subData, inputValue = matchPw, 
         inputLevels = c("pathway_level1", "pathway_level2"))
     }
     
@@ -234,9 +266,9 @@ results$exoten_data <- reactive({
     
     # native
     if (!is.null(input$exoten_native)) {
-      searchId <- paste0(searchId, "&native=", 
-        matchCombo(selected = input$exoten_native, longChoices = longNativeChoices))
-      subData <- filterCombo(exotenData = subData, inputValue = input$exoten_native, 
+      matchNative <- matchCombo(selected = input$exoten_native, longChoices = longNativeChoices) 
+      searchId <- paste0(searchId, "&native=", matchNative)
+      subData <- filterCombo(exotenData = subData, inputValue = matchNative, 
         inputLevels = c("native_continent", "native_range"))
     }
     
@@ -257,7 +289,7 @@ results$exoten_data <- reactive({
           subData <- subData[species %in% unionlistData$scientificName, ] else if (filter_union() == "Non-union list")
           subData <- subData[!species %in% unionlistData$scientificName, ]
       }
-  }
+    }
     
     # region
     if (!is.null(filter_region())) {
@@ -270,6 +302,11 @@ results$exoten_data <- reactive({
       searchId <- paste0(searchId, "&source=", paste(filter_source(), collapse = ","))
       subData <- subData[source %in% filter_source(), ]
     }
+    
+    # use translations after subsetting
+    data.table::setnames(subData[, c("pathway_level1", "pathway_level2", "habitat", "degree_of_establishment") := NULL], 
+      old = c("pathway_level1_translate", "pathway_level2_translate", "habitat_translate", "degree_of_establishment_translate"), 
+      new = c("pathway_level1", "pathway_level2", "habitat", "degree_of_establishment"))
     
     results$searchId <- searchId
     
@@ -406,7 +443,8 @@ plotTriasServer(id = "checklist_pathway1",
   triasArgs = reactive({
       list(
         x_lab = translate(results$translations, "numberTaxa"),
-        y_lab = translate(results$translations, "pathways")
+        y_lab = translate(results$translations, "pathways"),
+        cbd_standard = FALSE
       )
     })
 )
@@ -418,7 +456,8 @@ plotTriasServer(id = "checklist_pathway1Trend",
   triasArgs = reactive({
       list(
         x_lab = translate(results$translations, "period"),
-        y_lab = translate(results$translations, "numberTaxa")
+        y_lab = translate(results$translations, "numberTaxa"),
+        cbd_standard = FALSE
       )
     })
 )
@@ -433,7 +472,8 @@ plotTriasServer(id = "checklist_pathway2",
       list(
         chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1),
         x_lab = translate(results$translations, "numberTaxa"),
-        y_lab = translate(results$translations, "pathways")
+        y_lab = translate(results$translations, "pathways"),
+        cbd_standard = FALSE
       )
     })
 )

@@ -60,7 +60,7 @@ function(input, output, session) {
       searchId <- if (input$tabs %in% c("global_indicators"))
           results$searchId else 
           ""
-      languageId <- paste0("?language=", attr(results$translations, "language"))
+      languageId <- paste0("&language=", attr(results$translations, "language"))
       
       showModal(
         modalDialog(title = "Application link",

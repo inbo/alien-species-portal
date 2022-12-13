@@ -16,11 +16,16 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
     return(NULL)
   
   tableData <- exotenData[, c("key", "species", "gbifLink", "first_observed", "last_observed", "habitat",
-      "pathway", "degree_of_establishment", "sourceLink", "locality")]
+      "pathway_level1", "pathway_level2", "degree_of_establishment", "sourceLink", "locality")]
+  
+  ## combine pathways
+  tableData[, pathway := do.call(paste, c(.SD, sep = ": ")), .SDcols = c("pathway_level1", "pathway_level2")]
   
   # combine locality & first_observed
-  tableData$first_observed <- paste0(tableData$locality, ": ", tableData$first_observed)
-  tableData$locality <- NULL
+  tableData[, first_observed := do.call(paste, c(.SD, sep = ": ")), .SDcols = c("locality", "first_observed")]
+  
+  # remove redundant variables
+  tableData[, c("locality", "pathway_level1", "pathway_level2") := NULL]
   
   # combine multiple rows
   combinedData <- sapply(c("first_observed", "degree_of_establishment", "pathway"), function(iName) {

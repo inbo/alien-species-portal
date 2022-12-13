@@ -29,9 +29,6 @@ comboTreeInput <- function(inputId, choices, multiple = TRUE, cascaded = FALSE,
   selected = NULL, placeholder = "", isNumeric = FALSE){
   
   tags$div(style = "width: 100%; height: 50px;",
-    shiny::singleton(shiny::tags$link(href = "comboTree.css", rel = "stylesheet")),
-    shiny::singleton(shiny::tags$script(src = "comboTreeBinding.js")),
-    shiny::singleton(shiny::tags$script(src = "comboTreePlugin.js")),
     tags$input(id = inputId, class = "comboTree", type = "text", 
       placeholder = placeholder,
       `data-choices` = as.character(toJSON(choices, auto_unbox = TRUE)),
@@ -51,12 +48,13 @@ comboTreeInput <- function(inputId, choices, multiple = TRUE, cascaded = FALSE,
 #' @param url reactive character, url search query
 #' @param placeholder character, placeholder if none is selected
 #' @param initChoices character vector, choices for the \code{selectInput}
+#' @param translations reactive data.frame with translations
 #' @return reactive, selected filter value
 #' 
 #' @author mvarewyck
 #' @import shiny
 #' @export
-filterSelectServer <- function(id, url, placeholder, initChoices) {
+filterSelectServer <- function(id, url, initChoices, translations) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -65,9 +63,8 @@ filterSelectServer <- function(id, url, placeholder, initChoices) {
 
       output$filter <- renderUI({
           
-          names(initChoices) <- initChoices
-          initChoices <- c("", initChoices)
-          names(initChoices)[1] <- placeholder()
+          names(initChoices) <- translate(translations(), initChoices)
+          initChoices[1] <- ""
           
           selectInput(inputId = ns("filter"), label = NULL, 
             choices = initChoices, 

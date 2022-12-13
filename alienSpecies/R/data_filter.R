@@ -90,14 +90,16 @@ createDoubleChoices <- function(exotenData,
   if (length(columns) != 2)
     stop("Exactly 2 columns should be defined")
   
-  subData <- exotenData[ , ..columns]
+  columnsTranslate <- c(columns, paste0(columns, "_translate"))
+  
+  subData <- exotenData[ , ..columnsTranslate]
   subData <- subData[!duplicated(subData), ]
   setkeyv(subData, columns)
   
   lapply(unname(split(subData, subData[, columns[1], with = FALSE], drop = TRUE)), function(subData1)
-        list(id = subData1[[columns[1]]][1], title = subData1[[columns[1]]][1],
+        list(id = subData1[[columns[1]]][1], title = subData1[[columnsTranslate[3]]][1],
           subs = lapply(unname(split(subData1, subData1[, columns[2], with = FALSE], drop = TRUE)), function(subData2)
-              list(id = paste(subData2[1, ], collapse = ">"), title = paste(subData2[1, ], collapse = " > ")))
+              list(id = paste(subData2[1, columns, with = FALSE], collapse = ">"), title = paste(subData2[1, columnsTranslate[3:4], with = FALSE], collapse = " > ")))
         ))
   
 }

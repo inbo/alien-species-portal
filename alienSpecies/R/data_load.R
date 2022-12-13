@@ -217,9 +217,6 @@ loadTabularData <- function(
     ## convert english to dutch names for region
     rawData$locality <- getDutchNames(rawData$locality, type = "regio")
     
-    ## combine pathways
-    rawData$pathway <- paste0(rawData$pathway_level1, ": ", rawData$pathway_level2)
-    
     ## Extract hyperlinks 
     
     ### Extract gbif link
