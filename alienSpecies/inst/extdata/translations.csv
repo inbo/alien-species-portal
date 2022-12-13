@@ -130,53 +130,53 @@ Capture;vangst;capture;capture
 ;;;
 ;;;
 ;;;
-release;UITZETTEN IN DE NATUUR;LIBÉRATION DANS LA NATURE;RELEASE IN NATURE
-escape;ONTSNAPPING;FUITE d'une zone de confinement;ESCAPE from confinement
-contaminant;TRANSPORTBESMETTING;TRANSPORT - CONTAMINANT;TRANSPORT - CONTAMINANT
-stowaway;TRANSPORT VERSTEKELING;TRANSPORT - CLANDESTIN;TRANSPORT - STOWAWAY
+release;UITZETTING IN DE NATUUR;LIBÉRATION DANS LA NATURE;RELEASE IN NATURE
+escape;ONTSNAPPING uit gehouden omgeving;FUITE d'une zone de confinement;ESCAPE from confinement
+contaminant;TRANSPORT - BESMETTING;TRANSPORT - CONTAMINANT;TRANSPORT - CONTAMINANT
+stowaway;TRANSPORT - VERSTEKELING;TRANSPORT - CLANDESTIN;TRANSPORT - STOWAWAY
 corridor;CORRIDOR;COULOIR;CORRIDOR
-unaided;AUTONOME UITBREIDING;SANS AIDE;UNAIDED
+unaided;ZONDER HULP;SANS AIDE;UNAIDED
 release_biological_control;Biologische bestrijding;Lutte biologique;Biological control
-release_erosion_control;Erosiebestrijding;Lutte contre l’érosion/stabilisation de dunes (brise-vent, haies, etc.);Erosion control/ dune stabilization (windbreaks, hedges, ...)
-release_fishery;Uitzetten t.b.v. Visserij;Pêche dans le milieu naturel (y compris la pêche sportive);Fishery in the wild (including game fishing)
+release_erosion_control;Erosiebestrijding / duinversteviging (windbrekers, heggen, ...);Lutte contre l’érosion / stabilisation de dunes (brise-vent, haies, etc.);Erosion control / dune stabilization (windbreaks, hedges, ...)
+release_fishery;Visvangst in het wild (incl. hengelsport);Pêche dans le milieu naturel (y compris la pêche sportive);Fishery in the wild (including game fishing)
 release_hunting;Jacht;Chasse dans le milieu naturel;Hunting
-release_landscape_improvement;Landschaps verbetering;« Amélioration » du paysage, de la flore et de la faune dans le milieu naturel;Landscape/flora/fauna improvement in the wild
-release_conservation;Natuurbescherming;Introduction à des fins de conservation;Introduction for conservation purposes or wildlife management
-release_use;Ander gebruik;Libération dans la nature pour utilisation (à des fins autres que celles stipulées ci-dessus, par exemple production de fourrure, transport, médecine);Release in nature for use (other than above, e.g., fur, transport, medical use)
-release_other;Andere;Autre libération intentionnelle;Other intentional release
-escape_agriculture;Landbouw;Agriculture (y compris les cultures énergétiques);Agriculture (including Biofuel feedstocks)
-escape_aquaculture;Aquacultuur;Aquaculture/mariculture;Aquaculture / mariculture
-escape_zoo;Plantentuinen;Jardins botaniques/zoologiques/aquariums (hors aquariums privés);Botanical garden/zoo/aquaria (excluding domestic aquaria)
-escape_pet;Huisdieren;Animaux de compagnie/espèces d’aquarium/terrarium (y compris les aliments vivants issus de ces espèces);Pet/aquarium/terrarium species (including live food for such species )
-escape_farm;Kweekdieren;Animaux d’élevage (y compris les animaux soumis à un contrôle limité);Farmed animals (including animals left under limited control)
-escape_forestry;Bosbouw ;Sylviculture (y compris le reboisement);Forestry (including afforestation or reforestation)
-escape_fur_farm;Bontfokkerijen;Exploitations de production de fourrure;Fur farms
-escape_horticulture;Horticultuur;Horticulture;Horticulture
-escape_ornamental;Andere sierdoeleinden;Fins ornementales hors horticulture;Ornamental purpose other than horticulture
-escape_research;ex-situ kweek;Recherche et reproduction d’animaux ex-situ (dans des installations);Research and ex-situ breeding (in facilities)
-escape_food_bait;Levend aas;Aliments et appâts vivants;Live food and live bait
-escape_other;Andere;Autres fuites de zones de confinement;Other escape from confinement
-contaminant_nursery;Kweekmateriaal;Contaminant de matériel de pépinière;Contaminant nursery material
-contaminant_bait;Aas;Appâts contaminés;Contaminated bait
-contaminant_food;Voedsel;Contaminant alimentaire (y compris d’aliments vivants);Food contaminant (including of live food)
-contaminant_on_animals;Op dieren;Contaminants des animaux (hormis les parasites, espèces transportées par un hôte/vecteur);Contaminant on animals (except parasites, species transported by host/vector)
-contaminant_animal_parasite;Dierparasieten;Parasites des animaux (y compris les espèces transportées par un hôte/vecteur);Parasites on animals (including species transported by host and vector)
-contaminant_on_plants;Op planten;Contaminants des végétaux (hormis les parasites, espèces transportées par un hôte/vecteur);Contaminant on plants (except parasites, species transported by host/vector)
-contaminant_plant_parasite;Plantparasieten;Parasites des végétaux (y compris les espèces transportées par un hôte/vecteur);Parasites on plants (including species transported by host and vector)
-contaminant_seed;Zaden;Contaminants des graines;Seed contaminant
+release_landscape_improvement;Landschaps-/flora-/faunaverbetering;« Amélioration » du paysage, de la flore et de la faune dans le milieu naturel;Landscape / flora / fauna improvement in the wild
+release_conservation;Introductie voor het natuurbehoud of faunabeheer;Introduction à des fins de conservation;Introduction for conservation purposes or wildlife management
+release_use;Uitzetting in de natuur voor gebruik (verschillend van bovenstaande, b.v., pelsdieren, transport, medisch gebruik);Libération dans la nature pour utilisation (à des fins autres que celles stipulées ci-dessus, par exemple production de fourrure, transport, médecine);Release in nature for use (other than above, e.g., fur, transport, medical use)
+release_other;Andere opzettelijke uitzetting;Autre libération intentionnelle;Other intentional release
+escape_agriculture;Landbouw (incl. biobrandstoffen);Agriculture (y compris les cultures énergétiques);Agriculture (including Biofuel feedstocks)
+escape_aquaculture;Aquacultuur / maricultuur;Aquaculture/mariculture;Aquaculture / mariculture
+escape_zoo;Planten-/dierentuinen of aquaria (excl. particuliere aquaria);Jardins botaniques/zoologiques/aquariums (hors aquariums privés);Botanical garden/zoo/aquaria (excluding domestic aquaria)
+escape_pet;Huis-/aquarium-/terrariumdieren (incl. hun levend voeder);Animaux de compagnie/espèces d’aquarium/terrarium (y compris les aliments vivants issus de ces espèces);Pet/aquarium/terrarium species (including live food for such species )
+escape_farm;Gekweekte dieren (incl. dieren onder beperkt toezicht);Animaux d’élevage (y compris les animaux soumis à un contrôle limité);Farmed animals (including animals left under limited control)
+escape_forestry;Bosbouw (incl. bebossing of herbebossing);Sylviculture (y compris le reboisement);Forestry (including afforestation or reforestation)
+escape_fur_farm;Pelsdierkwekerijen;Exploitations de production de fourrure;Fur farms
+escape_horticulture;Tuinbouw;Horticulture;Horticulture
+escape_ornamental;Andere sierdoeleinden dan tuinbouw;Fins ornementales hors horticulture;Ornamental purpose other than horticulture
+escape_research;Onderzoek en ex-situ kweek (binnen faciliteiten);Recherche et reproduction d’animaux ex-situ (dans des installations);Research and ex-situ breeding (in facilities)
+escape_food_bait;Levend voeder en aas;Aliments et appâts vivants;Live food and live bait
+escape_other;Andere ontsnapping uit gehouden omgeving;Autres fuites de zones de confinement;Other escape from confinement
+contaminant_nursery;Besmetting van plantgoed;Contaminant de matériel de pépinière;Contaminant nursery material
+contaminant_bait;Besmetting van aas;Appâts contaminés;Contaminated bait
+contaminant_food;Besmetting van voedsel (incl. van levend voedsel);Contaminant alimentaire (y compris d’aliments vivants);Food contaminant (including of live food)
+contaminant_on_animals;Besemetting op dieren (excl. parasieten, soorten vervoerd door gastheer/vector);Contaminants des animaux (hormis les parasites, espèces transportées par un hôte/vecteur);Contaminant on animals (except parasites, species transported by host/vector)
+contaminant_animal_parasite;Parasieten van dieren (incl. soorten vervoerd door gastheer/vector);Parasites des animaux (y compris les espèces transportées par un hôte/vecteur);Parasites on animals (including species transported by host and vector)
+contaminant_on_plants;Besemetting op planten (excl. parasieten, soorten vervoerd door gastheer/vector);Contaminants des végétaux (hormis les parasites, espèces transportées par un hôte/vecteur);Contaminant on plants (except parasites, species transported by host/vector)
+contaminant_plant_parasite;Parasieten van planten (incl. soorten vervoerd door gastheer/vector);Parasites des végétaux (y compris les espèces transportées par un hôte/vecteur);Parasites on plants (including species transported by host and vector)
+contaminant_seed;Besmetting van zaadgoed;Contaminants des graines;Seed contaminant
 contaminant_timber;Houthandel;Commerce du bois;Timber trade
-contaminant_habitat_material;Habitat materiaal;Transport de matériel constituant un habitat (sol, végétation, etc.);Transportation of habitat material (soil, vegetation, ...)
-stowaway_fishing_equipment;Vis- en hengelmateriaal;Matériel de pêche;Angling/fishing equipment
-stowaway_container;Container;Conteneur/vrac;Container/bulk
-stowaway_airplane;Vliegtuig;Organismes clandestins dans ou sur les avions;Hitchhikers in or on airplane
-stowaway_ship;Scheepvaart;Organismes clandestins dans les navires/bateaux (hormis les eaux de ballast et la salissure des coques);Hitchhikers on ship/boat (excluding ballast water and hull fouling)
-stowaway_machinery;Machines en uitrusting;Machines/équipement;Machinery/equipment
-stowaway_people_luggage;Mensen en hun bagage;Personnes et leurs bagages/matériel (tourisme en particulier);People and their luggage/equipment (in particular tourism)
-stowaway_organic_packing;Organisch verpakkingsmateriaal;Matériaux d’emballage organiques, en particulier à base de bois;Organic packing material, in particular wood packaging
-stowaway_ballast_water;Ballastwater;Eaux de ballast des navires/bateaux;Ship/boat ballast water
-stowaway_hull_fouling;Fouling aan de romp;Salissure des coques de navires/bateaux;Ship/boat hull fouling
-stowaway_vehicles;Voertuigen;Véhicules (voitures, trains, etc.);Vehicles (car, train, ...)
-stowaway_other;Andere;Autres moyens de transport;Other means of transport
-corridor_water;Verbonden water;Cours d’eau/bassins/mers reliés entre eux;Interconnected waterways/basins/seas
+contaminant_habitat_material;Vervoer van habitatmateriaal (bodem, vegetatie, ...);Transport de matériel constituant un habitat (sol, végétation, etc.);Transportation of habitat material (soil, vegetation, ...)
+stowaway_fishing_equipment;Visseij- en hengelmateriaal;Matériel de pêche;Angling / fishing equipment
+stowaway_container;Container / vracht;Conteneur / vrac;Container / bulk
+stowaway_airplane;Verstekeling in of op vliegtuigen;Organismes clandestins dans ou sur les avions;Hitchhikers in or on airplane
+stowaway_ship;Verstekeling van schepen/boten (excl. ballastwater of rompvervuiling);Organismes clandestins dans les navires/bateaux (hormis les eaux de ballast et la salissure des coques);Hitchhikers on ship/boat (excluding ballast water and hull fouling)
+stowaway_machinery;Machines / uitrusting;Machines/équipement;Machinery / equipment
+stowaway_people_luggage;Mensen en hun bagage/materiaal (in bijzonder toerisme);Personnes et leurs bagages/matériel (tourisme en particulier);People and their luggage/equipment (in particular tourism)
+stowaway_organic_packing;Organisch verpakkingsmateriaal, in bijzonder houten verpakkingen;Matériaux d’emballage organiques, en particulier à base de bois;Organic packing material, in particular wood packaging
+stowaway_ballast_water;Ballastwater van schepen / boten;Eaux de ballast des navires / bateaux;Ship / boat ballast water
+stowaway_hull_fouling;Scheeps-/bootrompvervuiling ;Salissure des coques de navires / bateaux;Ship / boat hull fouling
+stowaway_vehicles;Voertuigen (auto's, treinen, ...);Véhicules (voitures, trains, etc.);Vehicles (car, train, ...)
+stowaway_other;Andere vervoerswijzen;Autres moyens de transport;Other means of transport
+corridor_water;Verbonden waterwegen / -bekkens / zeeën;Cours d’eau / bassins / mers reliés entre eux;Interconnected waterways / basins / seas
 corridor_land;Tunnels en landbruggen;Tunnels et ponts;Tunnels and land bridges
 natural_dispersal;Natuurlijke verspreiding;Dispersion naturelle à travers les frontières d’espèces exotiques envahissantes introduites par les voies 1 à 5;Natural dispersal across borders of invasive alien species that have been introduced through pathways 1 to 5
