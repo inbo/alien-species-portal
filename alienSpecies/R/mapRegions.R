@@ -17,38 +17,40 @@ createSummaryRegions <- function(data, regionLevel = c("communes", "provinces"),
   
   unit <- match.arg(unit)
   
-  data <- copy(data)
+  data <- as.data.frame(data)
+  myYear <- year  # for tidyverse filtering
   
   regionVar <- switch(regionLevel,
     communes = "NISCODE",
     provinces = "provincie"
   )
   
-  data.table::setnames(data, regionVar, "region")
+  colnames(data)[colnames(data) == regionVar] <- "region"
   
   if (unit == "cpue") {
     
     summaryData <- data %>% 
+      filter(year == myYear, !is.na(region), region != "NA") %>% 
       group_by(eventID, region) %>% 
       summarise(effort = max(n_fuiken, na.rm = TRUE),
         n = sum(count, na.rm = TRUE)/effort) %>% 
       group_by(region) %>% 
       summarise(effort = sum(effort, na.rm = TRUE),
-        n = sum(n, na.rm = TRUE)/effort) %>% 
-      filter(year == year, !is.na(region), region != "NA")
+        n = sum(n, na.rm = TRUE))
     
-    summaryData$group <- cut(x = summaryData$n, 
+    summaryData$group <- cut(x = summaryData$effort, 
       breaks = c(-Inf, 10, 100, 200, 300, 400, Inf),
       labels = c("0-10", "11-100", "101-200", "201-300", "300-400", paste0("401-", max(500, max(summaryData$n))))
     )
     
   } else {
     
-    summaryData <- data %>% 
+    summaryData <- data %>%
+      filter(year == myYear, !is.na(region), region != "NA") %>% 
       group_by(region) %>% 
-      summarise(n = sum(count, na.rm = TRUE)) %>% 
-      filter(year == year, !is.na(region), region != "NA")
-    
+      summarise(n = sum(count, na.rm = TRUE)) 
+      
+      
     summaryData$group <- cut(x = summaryData$n, 
       breaks = c(-Inf, 1000, 5000, 10000, Inf),
       labels = c("0-1000", "1001-5000", "5001-10000", paste0("10001-", max(50000, max(summaryData$n))))
@@ -84,7 +86,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
   )
   spatialData <- shapeData[[regionLevel]]
   
-  palette <- colorFactor(palette = "RdYlGn", levels = levels(managementData$group), 
+  palette <- colorFactor(palette = "YlOrBr", levels = levels(managementData$group), 
     reverse = TRUE, na.color = "transparent")
   valuesPalette <- managementData$group[match(spatialData@data[, regionVar], managementData$region)]
   
@@ -104,7 +106,11 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
       color = "red",
       weight = 1) %>% 
     addPolygons(
+      weight = 1,
       color = ~ palette(valuesPalette),
+      fillColor = ~ palette(valuesPalette),
+      fillOpacity = 0.8,
+      layerId = spatialData@data[, regionVar],
       group = "region"
     )
   
@@ -276,6 +282,64 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
           
         })
       
+      
+      # Define text to be shown in the pop-ups
+      textPopup <- reactive({
+          
+          validate(need(nrow(summaryData()) > 0, translate(uiText(), "noData")))
+          
+          if (input$regionLevel == "communes") {
+            regionNames <- spatialData()$NAAM[match(summaryData()$region, spatialData()$regionName)]
+          } else
+            regionNames <- summaryData()$region
+          
+          textPopup <- paste0("<h4>", regionNames, "</h4>",
+            "<strong>", translate(uiText(), "year"), "</strong>: ", input$year,
+            "<br><strong>", translate(uiText(), input$unit), "</strong>: ", 
+            if (input$unit == "cpue") 
+                round(summaryData()$effort, 2) else
+                round(summaryData()$n, 2)
+          )
+          
+          
+          return(textPopup)
+          
+        })
+      
+      # Add popups
+      observe({
+          
+          validate(need(textPopup(), translate(uiText(), "noData")))
+          
+          currentMap <- leafletProxy("regionsPlot") 
+          currentMap %>% clearPopups()
+          
+          event <- input$regionsPlot_shape_click
+          
+          if (!is.null(event)) {
+            
+            if (!is.null(event$id)) {
+              
+              if (event$id %in% summaryData()$region) {
+                
+                textSelected <- textPopup()[
+                  summaryData()$region == event$id]
+                
+                isolate({
+                    
+                    currentMap %>% 
+                      addPopups(event$lng, event$lat, popup = textSelected)
+                    
+                  }) 
+                
+              }
+              
+            }
+            
+          }
+          
+        })
+      
       # Add world map
       observe({
           
@@ -330,7 +394,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
           
           if (input$legend != "none") {
             
-            palette <- colorFactor(palette = "RdYlGn", levels = levels(summaryData()$group), 
+            palette <- colorFactor(palette = "YlOrBr", levels = levels(summaryData()$group), 
               reverse = TRUE, na.color = "transparent")
             valuesPalette <- summaryData()$group[match(spatialData()$regionName, summaryData()$region)]
             

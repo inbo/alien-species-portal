@@ -117,14 +117,18 @@ pulli;pulli;pulli;pulli
 missing;ontbrekend;manquant;missing
 culling - shooting;afschot;abbatage;culling - shooting
 Capture;vangst;capture;capture
-;;;
-;;;
-;;;
-;;;
-;;;
-;;;
-;;;
-;;;
+region;;;
+unit;;;
+communes;gemeentes;communes;municipalities
+provinces;provincies;provinces;provinces
+cpue;vangst per eenheid inspanning;;catch per unit effort
+absolute;absoluut;;absolute
+group;groep;;group
+summary;samenvatting;;summary
+sum;aantal;;number
+cumsum;cumulatief aantal;;cumulative number
+count;aantal;;count
+lifeStage;;;life stage
 ;;;
 ;;;
 ;;;
