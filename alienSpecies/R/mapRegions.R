@@ -87,7 +87,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
   spatialData <- shapeData[[regionLevel]]
   
   palette <- colorFactor(palette = "YlOrBr", levels = levels(managementData$group), 
-    reverse = TRUE, na.color = "transparent")
+    na.color = "transparent")
   valuesPalette <- managementData$group[match(spatialData@data[, regionVar], managementData$region)]
   
   spread <- createCubeData(df = occurrenceData, shapeData = shapeData,
@@ -395,7 +395,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
           if (input$legend != "none") {
             
             palette <- colorFactor(palette = "YlOrBr", levels = levels(summaryData()$group), 
-              reverse = TRUE, na.color = "transparent")
+              na.color = "transparent")
             valuesPalette <- summaryData()$group[match(spatialData()$regionName, summaryData()$region)]
             
             
