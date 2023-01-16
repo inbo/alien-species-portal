@@ -228,7 +228,7 @@ filter_source <- filterSelectServer(
 
 results$exoten_data <- reactive({
     
-    subData <- copy(results$filter_exotenDataTranslated())
+    subData <- data.table::copy(results$filter_exotenDataTranslated())
     searchId <- ""
         
     # taxa

@@ -1,7 +1,7 @@
 Package: alienSpecies
 Type: Package
 Title: Portal for alien and invasive species indicators
-Version: 0.0.1
+Version: 0.0.2
 Date: 2021-11-24
 Author: Machteld Varewyck
 Maintainer: Machteld Varewyck <machteld.varewyck@openanalytics.eu>
@@ -24,12 +24,13 @@ Imports:
 	rgdal,
 	sf,
 	sp,
+	tidyverse,
 	trias (>= 2.0.3),
 	webshot
 Suggests:
     testthat (>= 3.0.0),
     shinyjs
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.2
 Remotes: 
     trias-project/trias, 
     inbo/INBOtheme

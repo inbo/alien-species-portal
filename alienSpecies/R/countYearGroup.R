@@ -8,7 +8,7 @@
 #' @return list with plotly object and data.frame#' 
 #' 
 #' @import plotly
-#' @importFrom data.table setnames
+#' @importFrom data.table setnames copy
 #' @importFrom INBOtheme inbo_palette
 #' @export
 countYearGroup <- function(df, groupVar = NULL, uiText = NULL,

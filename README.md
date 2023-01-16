@@ -17,10 +17,9 @@ Enkele relevante URLS:
 
 # Build/Run docker image
 
-The dockerfile is generated automatically by packamon: do not edit by hand.
-First, build the latest alienSpecies_*.tar.gz file. 
-The dockerfile can then be updated wrt this latest tar.gz file by running code chunk below in R.
-The argument `skipMissingDependencies` is used to skip an error when trying to install github R packages.
+The dockerfile needs to be updated only when some of the **dependencies** for `alienSpecies` changed.
+This file is generated automatically by packamon: please do not edit by hand. 
+The following commands are run to update this dockerfile.
 TODO: Add link to packamon - currently using develop branch
 
 ```
