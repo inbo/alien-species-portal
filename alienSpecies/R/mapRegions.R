@@ -133,7 +133,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
       pal = palette, 
       values = valuesPalette,
       opacity = 0.8,
-      title = translate(uiText, "legend"),
+      title = translate(uiText, "legend")$title,
       layerId = "legend"
     )
     
@@ -141,7 +141,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
       map = myMap,
       position = legend,
       colors = "red",
-      labels = translate(uiText, "occurrence"),
+      labels = translate(uiText, "occurrence")$title,
       opacity = 1,
       layerId = "legend2"
       )
@@ -194,9 +194,12 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
       
       ns <- session$ns
       
+      noData <- reactive(translate(uiText(), "noData"))
+      tmpTranslation <- reactive(translate(uiText(), "management-mapOccurrence"))
+      
       output$titleMapRegions <- renderUI({
           
-          h3(HTML(paste(translate(uiText(), "management-mapOccurrence"), req(species()), yearToTitleString(req(input$year)))))
+          h3(HTML(paste(tmpTranslation()$title, req(species()), yearToTitleString(req(input$year)))))
           
         })
 
@@ -225,9 +228,9 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
       output$unit <- renderUI({
           
           choices <- c("cpue", "absolute")
-          names(choices) <- translate(uiText(), choices)
+          names(choices) <- translate(uiText(), choices)$title
           
-          selectInput(inputId = ns("unit"), label = translate(uiText(), "unit"), 
+          selectInput(inputId = ns("unit"), label = translate(uiText(), "unit")$title, 
             choices = choices)
           
         })
@@ -235,9 +238,9 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
       output$regionLevel <- renderUI({
           
           choices <- c("communes", "provinces")
-          names(choices) <- translate(uiText(), choices)
+          names(choices) <- translate(uiText(), choices)$title
           
-          selectInput(inputId = ns("regionLevel"), label = translate(uiText(), "region"),
+          selectInput(inputId = ns("regionLevel"), label = translate(uiText(), "region")$title,
             choices = choices)
           
         })
@@ -246,10 +249,10 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
       output$legend <- renderUI({
           
           legendChoices <- c("topright", "bottomright", "topleft", "bottomleft", "none")
-          names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x))
+          names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x)$title)
           
           selectInput(inputId = ns("legend"), 
-            label = translate(uiText(), "legend"),
+            label = translate(uiText(), "legend")$title,
             choices = legendChoices)
           
         })
@@ -275,7 +278,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
       # Send map to the UI
       output$regionsPlot <- renderLeaflet({
           
-          validate(need(nrow(summaryData()) > 0, translate(uiText(), "noData")))
+          validate(need(nrow(summaryData()) > 0, noData()))
           
           mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
             shapeData = allShapes, uiText = uiText(), regionLevel = input$regionLevel)
@@ -286,7 +289,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
       # Define text to be shown in the pop-ups
       textPopup <- reactive({
           
-          validate(need(nrow(summaryData()) > 0, translate(uiText(), "noData")))
+          validate(need(nrow(summaryData()) > 0, noData()))
           
           if (input$regionLevel == "communes") {
             regionNames <- spatialData()$NAAM[match(summaryData()$region, spatialData()$regionName)]
@@ -294,8 +297,8 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
             regionNames <- summaryData()$region
           
           textPopup <- paste0("<h4>", regionNames, "</h4>",
-            "<strong>", translate(uiText(), "year"), "</strong>: ", input$year,
-            "<br><strong>", translate(uiText(), input$unit), "</strong>: ", 
+            "<strong>", translate(uiText(), "year")$title, "</strong>: ", input$year,
+            "<br><strong>", translate(uiText(), input$unit)$title, "</strong>: ", 
             if (input$unit == "cpue") 
                 round(summaryData()$effort, 2) else
                 round(summaryData()$n, 2)
@@ -309,7 +312,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
       # Add popups
       observe({
           
-          validate(need(textPopup(), translate(uiText(), "noData")))
+          validate(need(textPopup(), noData()))
           
           currentMap <- leafletProxy("regionsPlot") 
           currentMap %>% clearPopups()
@@ -350,14 +353,14 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
             if (input$globe %% 2 == 0){
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "hideGlobe"))
+                label = translate(uiText(), "hideGlobe")$title)
               
               proxy %>% addTiles()
               
             } else {
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "showGlobe"))
+                label = translate(uiText(), "showGlobe")$title)
               
               proxy %>% clearTiles()
               
@@ -404,13 +407,13 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
               pal = palette, 
               values = valuesPalette,
               opacity = 0.8,
-              title = translate(uiText(), "legend"),
+              title = translate(uiText(), "legend")$title,
               layerId = "legend"
             ) %>%  
             addLegend(
               position = input$legend,
               colors = "red",
-              labels = translate(uiText(), "occurrence"),
+              labels = translate(uiText(), "occurrence")$title,
               opacity = 1,
               layerId = "legend2"
             )
@@ -449,7 +452,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
       # Download the map
       output$downloadMapButton <- renderUI({
           downloadButton(ns("download"), 
-            label = translate(uiText(), "downloadMap"), 
+            label = translate(uiText(), "downloadMap")$title, 
             class = "downloadButton")
         })
       

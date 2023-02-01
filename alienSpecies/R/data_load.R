@@ -366,8 +366,8 @@ loadMetaData <- function(type = c("ui", "keys"),
   filterData <- switch(type, 
     ui = {
       
-      uiText <- allData[, c("title_id", paste0("title_", language))]
-      colnames(uiText) <- c("id", "title")
+      uiText <- allData[, c("title_id", paste0(c("title_", "description_"), language))]
+      colnames(uiText) <- c("id", "title", "description")
       uiText <- uiText[uiText$id != "", ]
       
       if (any(duplicated(uiText$id)))
@@ -451,10 +451,10 @@ translate <- function(data, id) {
   if (is.null(data))
     return(id)
   
-  toReturn <- data$title[match(id, data$id)]  
+  toReturn <- data[match(id, data$id), c("title", "description")]  
 
-  if (is.na(toReturn) || toReturn == "")
-    id else
+  if (all(is.na(toReturn) | toReturn == ""))
+    data.frame(title = id, description = "") else
     toReturn
   
 }

@@ -2,7 +2,7 @@
 
 output$start_title <- renderUI({
     
-    translate(results$translations, id = tabChoices[1])    
+    translate(results$translations, id = tabChoices[1])$title    
     
   })
 
@@ -15,7 +15,7 @@ output$start_tiles <- renderUI({
           if (x == "start")
             "" else 
           HTML(paste0("<div class='fotoTitel'>", 
-              translate(data = results$translations, id = x), 
+              translate(data = results$translations, id = x)$title, 
             "</div><div id='", x, "Foto'></div>"))
       )
     )

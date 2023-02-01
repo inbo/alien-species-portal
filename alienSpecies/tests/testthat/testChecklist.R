@@ -165,8 +165,8 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio
 test_that("Introduction pathways per category", {
     
     uiText <- loadMetaData(language = "nl")
-    exotenData$pathway_level1 <- translate(uiText, exotenData$pathway_level1)
-    exotenData$pathway_level2 <- translate(uiText, exotenData$pathway_level2)
+    exotenData$pathway_level1 <- translate(uiText, exotenData$pathway_level1)$title
+    exotenData$pathway_level2 <- translate(uiText, exotenData$pathway_level2)$title
     
     tmpResult <- plotTrias(triasFunction = "get_table_pathways", df = exotenData,
       triasArgs = list(species_names = "species"),

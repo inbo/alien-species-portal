@@ -17,16 +17,11 @@ welcomeSectionServer <- function(id, uiText) {
   
   moduleServer(id, function(input, output, session) {
       
-      output$welcomeTitle <- renderUI({
-          h1(HTML(translate(uiText(), "welcomeTitle")))
-          
-        })
+      tmpTranslation <- reactive(translate(uiText(), "welcomeTitle"))
       
-      output$welcomeMain <- renderUI({
-          
-          HTML(translate(uiText(), "welcomeSection"))
-          
-        })
+      output$welcomeTitle <- renderUI(h1(HTML(tmpTranslation()$title)))
+      
+      output$welcomeMain <- renderUI(HTML(tmpTranslation()$description))
       
     })
 }

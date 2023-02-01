@@ -358,11 +358,16 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       
       ns <- session$ns
       
+      noData <- reactive(translate(uiText(), "noData")$title)
+      tmpTranslation <- reactive(translate(uiText(), ns("mapOccurrence")))
+      
+      output$descriptionMapOccurrence <- renderUI(tmpTranslation()$description)
+      
       output$titleMapOccurrence <- renderUI({
           
           req(species())
           
-          tmpTitle <- translate(uiText(), ns("mapOccurrence"))
+          tmpTitle <- tmpTranslation()$title
           
           myTitle <- if (showPeriod) {
             req(input$period)
@@ -380,11 +385,11 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           lapply(names(filter()), function(filterName) {
               
               choices <- filter()[[filterName]]
-              names(choices) <- translate(uiText(), choices)
+              names(choices) <- translate(uiText(), choices)$title
               
               column(6, 
                 selectInput(inputId = ns(filterName), 
-                  label = translate(uiText(), filterName),
+                  label = translate(uiText(), filterName)$title,
                   choices = choices,
                   multiple = TRUE, selected = filter()[[filterName]])
               )
@@ -415,10 +420,10 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       output$legend <- renderUI({
           
           legendChoices <- c("topright", "bottomright", "topleft", "bottomleft", "none")
-          names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x))
+          names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x)$title)
           
           selectInput(inputId = ns("legend"), 
-            label = translate(uiText(), "legend"),
+            label = translate(uiText(), "legend")$title,
             choices = legendChoices)
           
         })
@@ -457,8 +462,8 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       # Create data for map
       cubeShape <- reactive({
           
-          validate(need(subData(), translate(uiText(), "noData")),
-            need(nrow(subData()) > 0, translate(uiText(), "noData")))
+          validate(need(subData(), noData()),
+            need(nrow(subData()) > 0, noData()))
           
           createCubeData(
             df = subData(),
@@ -473,14 +478,14 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           
           if (is.null(shapeData)) {
             
-            validate(need(nrow(subData()) > 0, translate(uiText(), "noData")))
+            validate(need(nrow(subData()) > 0, noData()))
             
             mapOccurrence(occurrenceData = subData(), baseMap = baseMap,
               addGlobe = TRUE)
             
           } else {
             
-            validate(need(cubeShape(), translate(uiText(), "noData")))
+            validate(need(cubeShape(), noData()))
             
             mapCube(cubeShape = cubeShape(), baseMap = baseMap, 
               groupVariable = groupVariable, addGlobe = TRUE, legend = "topright")
@@ -492,7 +497,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       # Add world map
       observe({
           
-          validate(need(cubeShape(), translate(uiText(), "noData")))
+          validate(need(cubeShape(), noData()))
           
           proxy <- leafletProxy("spacePlot")
           
@@ -501,14 +506,14 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
             if (input$globe %% 2 == as.numeric(showGlobeDefault) - 1){
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "hideGlobe"))
+                label = translate(uiText(), "hideGlobe")$title)
               
               proxy %>% addTiles()
               
             } else {
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "showGlobe"))
+                label = translate(uiText(), "showGlobe")$title)
               
               proxy %>% clearTiles()
               
@@ -522,7 +527,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       # Add legend
       observe({
           
-          validate(need(cubeShape(), translate(uiText(), "noData")))
+          validate(need(cubeShape(), noData()))
           
           req(input$legend)
           
@@ -540,7 +545,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
               pal = palette, 
               values = myColors$levels,
               opacity = 0.8,
-              title = translate(uiText(), "legend"),
+              title = translate(uiText(), "legend")$title,
               layerId = "legend"
             )                      
             
@@ -593,7 +598,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       # Download the map
       output$downloadMapButton <- renderUI({
           downloadButton(ns("download"), 
-            label = translate(uiText(), "downloadMap"), 
+            label = translate(uiText(), "downloadMap")$title, 
             class = "downloadButton")
         })
       
@@ -663,6 +668,7 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
   tags$div(class = "container",
     
     uiOutput(ns("titleMapOccurrence")),
+    uiOutput(ns("descriptionMapOccurrence")),
     
     wellPanel(
       fixedRow(uiOutput(ns("filters")),

@@ -116,9 +116,9 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       output$group <- renderUI({
           
           choices <- c("", "lifeStage")
-          names(choices) <- translate(uiText(), choices)
+          names(choices) <- translate(uiText(), choices)$title
           
-          selectInput(inputId = ns("group"), label = translate(uiText(), "group"), 
+          selectInput(inputId = ns("group"), label = translate(uiText(), "group")$title, 
             choices = choices)
           
         })
@@ -126,10 +126,10 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       output$summarizeBy <- renderUI({
           
           choices <- c("sum", "cumsum")
-          names(choices) <- translate(uiText(), choices)
+          names(choices) <- translate(uiText(), choices)$title
           
           selectInput(inputId = ns("summarizeBy"), 
-            label = translate(uiText(), "summary"), choices = choices)
+            label = translate(uiText(), "summary")$title, choices = choices)
           
         })
       
@@ -254,7 +254,7 @@ titleModuleServer <- function(id, plotFunction, uiText) {
       
       output$title <- renderUI({
           
-          translate(uiText(), plotFunction) 
+          translate(uiText(), plotFunction)$title 
           
         })
     })

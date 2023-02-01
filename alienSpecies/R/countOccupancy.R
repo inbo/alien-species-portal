@@ -13,10 +13,10 @@
 countOccupancy <- function(df, nSquares = 370, uiText = NULL) {
   
   p <- plot_ly(data = df, x = ~t0/nSquares*100, y = ~species, 
-      name = translate(uiText, "baseline"),
+      name = translate(uiText, "baseline")$title,
       type = "bar", orientation = "h") %>%
-    add_trace(x = ~t1/nSquares*100, name = translate(uiText, "reporting")) %>%
-    layout(xaxis = list(title = translate(uiText, 'percentCages')),
+    add_trace(x = ~t1/nSquares*100, name = translate(uiText, "reporting")$title) %>%
+    layout(xaxis = list(title = translate(uiText, 'percentCages')$title),
       yaxis = list(title = ""), barmode = 'group')
   
   
@@ -40,17 +40,12 @@ countOccupancyServer <- function(id, uiText, data) {
       
       ns <- session$ns
       
-      output$disclaimerOccupancy <- renderText({
-          
-          translate(uiText(), "countOccupancyDisclaimer")
-          
-        })
+      tmpTranslation <- reactive(translate(uiText(), "countOccupancy"))
       
-      output$titleOccupancy <- renderUI({
+      output$descriptionOccupancy <- renderUI(helpText(HTML(tmpTranslation()$description)))
+      
+      output$titleOccupancy <- renderUI(h3(HTML(tmpTranslation()$title)))
           
-          h3(HTML(translate(uiText(), "countOccupancy")))
-          
-        })
       
       plotModuleServer(id = "occupancy",
         plotFunction = "countOccupancy", 
@@ -80,7 +75,7 @@ countOccupancyUI <- function(id) {
       label = uiOutput(ns("titleOccupancy"))),
     conditionalPanel("input.linkOccupancy % 2 == 1", ns = ns,
       
-      helpText(uiOutput(ns("disclaimerOccupancy"))),
+      uiOutput(ns("descriptionOccupancy")),
       
       plotModuleUI(id = ns("occupancy"), height = "800px"),
       optionsModuleUI(id = ns("occupancy"), doWellPanel = FALSE),

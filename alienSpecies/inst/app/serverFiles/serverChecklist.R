@@ -6,7 +6,7 @@
 
 output$checklist_title <- renderUI({
     
-    translate(results$translations, id = tabChoices[2])  
+    translate(results$translations, id = tabChoices[2])$title  
     
   })
 
@@ -23,15 +23,15 @@ welcomeSectionServer(id = "checklist", uiText = reactive(results$translations))
 # Translate necessary columns
 results$filter_exotenDataTranslated <- reactive({
     
-    exotenData[, pathway_level2_translate := translate(results$translations, do.call(paste, c(.SD, sep = "_"))),
+    exotenData[, pathway_level2_translate := translate(results$translations, do.call(paste, c(.SD, sep = "_")))$title,
       .SDcols = c("pathway_level1", "pathway_level2")]
     exotenData$habitat_translate <- sapply(exotenData$habitat, function(x) 
-        paste(translate(results$translations, strsplit(x, split = "\\|")[[1]]), collapse = "|"))
+        paste(translate(results$translations, strsplit(x, split = "\\|")[[1]])$title, collapse = "|"))
     exotenData[, ':=' (
-        pathway_level1_translate = translate(results$translations, pathway_level1),
-        native_continent_translate = translate(results$translations, native_continent),
-        native_range_translate = translate(results$translations, native_range),
-        degree_of_establishment_translate = translate(results$translations, degree_of_establishment)
+        pathway_level1_translate = translate(results$translations, pathway_level1)$title,
+        native_continent_translate = translate(results$translations, native_continent)$title,
+        native_range_translate = translate(results$translations, native_range)$title,
+        degree_of_establishment_translate = translate(results$translations, degree_of_establishment)$title
     )]
   
   
@@ -52,10 +52,10 @@ observeEvent(exoten_triggerMore(), {
     
   if (input$exoten_more %% 2 == 1)
     updateActionLink(session = session, inputId = "exoten_more", 
-      label = translate(results$translations, "less"),
+      label = translate(results$translations, "less")$title,
       icon = icon("angle-double-up")) else
     updateActionLink(session = session, inputId = "exoten_more", 
-      label = translate(results$translations, "more"),
+      label = translate(results$translations, "more")$title,
       icon = icon("angle-double-down"))
   
   })
@@ -74,7 +74,7 @@ observeEvent(input$tabs, {
         selected = urlSearch()$taxa,
         server = TRUE,
         options = list(
-          placeholder = translate(results$translations, "allTaxa"),
+          placeholder = translate(results$translations, "allTaxa")$title,
           render = I(
             '{
               option: function(item, escape) {
@@ -106,7 +106,7 @@ results$filter_pwChoices <- reactive({
 output$filter_pw <- renderUI({
     
     comboTreeInput("exoten_pw", choices = results$filter_pwChoices(),
-      placeholder = translate(results$translations, "allPathways"), 
+      placeholder = translate(results$translations, "allPathways")$title, 
       selected = urlSearch()$pw)
     
   })
@@ -131,7 +131,7 @@ results$filter_nativeChoices <- reactive({
 output$filter_native <- renderUI({
     
     comboTreeInput("exoten_native", choices = results$filter_nativeChoices(),
-      placeholder = translate(results$translations, "allNative"), 
+      placeholder = translate(results$translations, "allNative")$title, 
       selected = urlSearch()$native)
     
   })
@@ -168,9 +168,9 @@ observe({
     invalidateLater(1000)
     
     myLabel <- if (all(defaultTime == results$exoten_time) & defaultTimeNA == results$exoten_timeNA)
-      translate(results$translations, "allYears") else
+      translate(results$translations, "allYears")$title else
       paste(paste(results$exoten_time, collapse = "-"), if (results$exoten_timeNA) 
-          translate(results$translations, "andMissing"))
+          translate(results$translations, "andMissing")$title)
   
     updateActionButton(session = session, inputId = "exoten_timeButton", label = myLabel)
     
@@ -181,7 +181,7 @@ observeEvent(input$exoten_time, results$exoten_time <- input$exoten_time)
 
 output$exoten_timeNA <- renderUI({
     
-    checkboxInput(inputId = "exoten_timeNA", label = translate(results$translations, "includeMissing"), 
+    checkboxInput(inputId = "exoten_timeNA", label = translate(results$translations, "includeMissing")$title, 
       value = results$exoten_timeNA)
     
   })
@@ -329,7 +329,7 @@ output$nrowsFinal <- renderText({
 output$exoten_legendLink <- renderUI({
     
     actionLink(inputId = "exoten_legend", 
-      label = translate(results$translations, "tableLegend"), 
+      label = translate(results$translations, "tableLegend")$title, 
       icon = icon("angle-double-down"))
     
   })
@@ -337,13 +337,13 @@ output$exoten_legendLink <- renderUI({
 output$exoten_legendText <- renderUI({
     
     tagList(
-    tags$b(translate(results$translations, "icons")),
-    p(icon("star"), translate(results$translations, "min_1_obs")),
-    p(icon("play"), translate(results$translations, "is_union")),
-    tags$b(translate(results$translations, "colors")),
-    p(drawBullet(color = "black"), translate(results$translations, "only_obs")),
-    p(drawBullet(color = "orange"), translate(results$translations, "incomplete_out")),
-    p(drawBullet(color = "green"), translate(results$translations, "all_out"))
+    tags$b(translate(results$translations, "icons")$title),
+    p(icon("star"), translate(results$translations, "min_1_obs")$title),
+    p(icon("play"), translate(results$translations, "is_union")$title),
+    tags$b(translate(results$translations, "colors")$title),
+    p(drawBullet(color = "black"), translate(results$translations, "only_obs")$title),
+    p(drawBullet(color = "orange"), translate(results$translations, "incomplete_out")$title),
+    p(drawBullet(color = "green"), translate(results$translations, "all_out")$title)
   )
   
   })
@@ -392,8 +392,8 @@ plotTriasServer(id = "checklist-count",
   triasArgs = reactive({
       list(
         start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
-        x_lab = translate(results$translations, "year"),
-        y_lab = translate(results$translations, "indicator_introduction_year")
+        x_lab = translate(results$translations, "year")$title,
+        y_lab = translate(results$translations, "indicator_introduction_year")$title
       )
     })
 )
@@ -407,8 +407,8 @@ plotTriasServer(id = "checklist-cum",
   triasArgs = reactive({
       list(
         start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
-        x_lab = translate(results$translations, "year"),
-        y_lab = translate(results$translations, "indicator_total_year")
+        x_lab = translate(results$translations, "year")$title,
+        y_lab = translate(results$translations, "indicator_total_year")$title
       )
     })
 )
@@ -442,8 +442,8 @@ plotTriasServer(id = "checklist_pathway1",
   triasFunction = "visualize_pathways_level1",
   triasArgs = reactive({
       list(
-        x_lab = translate(results$translations, "numberTaxa"),
-        y_lab = translate(results$translations, "pathways"),
+        x_lab = translate(results$translations, "numberTaxa")$title,
+        y_lab = translate(results$translations, "pathways")$title,
         cbd_standard = FALSE
       )
     })
@@ -455,8 +455,8 @@ plotTriasServer(id = "checklist_pathway1Trend",
   triasFunction = "visualize_pathways_year_level1",
   triasArgs = reactive({
       list(
-        x_lab = translate(results$translations, "period"),
-        y_lab = translate(results$translations, "numberTaxa"),
+        x_lab = translate(results$translations, "period")$title,
+        y_lab = translate(results$translations, "numberTaxa")$title,
         cbd_standard = FALSE
       )
     })
@@ -468,11 +468,11 @@ plotTriasServer(id = "checklist_pathway2",
   triasFunction = "visualize_pathways_level2",
   triasArgs = reactive({
       validate(need(length(unique(results$exoten_data()$pathway_level1)) == 1, 
-          translate(results$translations, "singlePathway")))
+          translate(results$translations, "singlePathway")$title))
       list(
         chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1),
-        x_lab = translate(results$translations, "numberTaxa"),
-        y_lab = translate(results$translations, "pathways"),
+        x_lab = translate(results$translations, "numberTaxa")$title,
+        y_lab = translate(results$translations, "pathways")$title,
         cbd_standard = FALSE
       )
     })

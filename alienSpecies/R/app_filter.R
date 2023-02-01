@@ -63,7 +63,7 @@ filterSelectServer <- function(id, url, initChoices, translations) {
 
       output$filter <- renderUI({
           
-          names(initChoices) <- translate(translations(), initChoices)
+          names(initChoices) <- translate(translations(), initChoices)$title
           initChoices[1] <- ""
           
           selectInput(inputId = ns("filter"), label = NULL, 

@@ -72,8 +72,8 @@ countYearNativerange <- function(df, jaartallen = NULL,
   pl <- plot_ly(data = summaryData, x = ~first_observed, y = ~value, color = ~locatie,
           colors = colors, type = "bar",  width = width, height = height) %>%
       layout(title = title,
-          xaxis = list(title = translate(uiText, "year")), 
-          yaxis = list(title = translate(uiText, "number"), tickformat = ",d"),
+          xaxis = list(title = translate(uiText, "year")$title), 
+          yaxis = list(title = translate(uiText, "number")$title, tickformat = ",d"),
           margin = list(b = 80, t = 100), 
           barmode = ifelse(length(allYears) == 1, "group", "stack"),
           annotations = list(x = allYears, 
@@ -113,12 +113,13 @@ countYearNativerangeServer <- function(id, uiText, data) {
       
       ns <- session$ns
       
-      output$titleYearNativerange <- renderUI({
+      tmpTranslation <- reactive(translate(uiText(), "countYearNativerange"))
+      
+      output$descriptionYearNativerange <- renderUI(HTML(tmpTranslation()$description))
+      
+      output$titleYearNativerange <- renderUI(h3(HTML(tmpTranslation()$title)))
           
-          h3(HTML(translate(uiText(), "countYearNativerange")))
-          
-        })
-     
+      
       observe({
           
           input$linkYearNativeRange
@@ -152,6 +153,7 @@ countYearNativerangeUI <- function(id) {
       label = uiOutput(ns("titleYearNativerange"))),
     conditionalPanel("input.linkYearNativerange % 2 == 1", ns = ns,
       
+      uiOutput(ns("descriptionYearNativerange")),
       plotModuleUI(id = ns("yearNativerange")),
       optionsModuleUI(id = ns("yearNativerange"), doWellPanel = FALSE),
       tags$hr()
