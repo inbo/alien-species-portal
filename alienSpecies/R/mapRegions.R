@@ -202,6 +202,9 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
           h3(HTML(paste(tmpTranslation()$title, req(species()), yearToTitleString(req(input$year)))))
           
         })
+      
+      output$descriptionMapRegions <- renderUI(HTML(tmpTranslation()$description))
+      
 
       # Filters
       output$year <- renderUI({
@@ -505,6 +508,8 @@ mapRegionsUI <- function(id) {
   tags$div(class = "container",
     
     uiOutput(ns("titleMapRegions")),
+    
+    uiOutput(ns("descriptionMapRegions")),
     
     wellPanel(
       fixedRow(

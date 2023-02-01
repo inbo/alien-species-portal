@@ -42,7 +42,7 @@ countOccupancyServer <- function(id, uiText, data) {
       
       tmpTranslation <- reactive(translate(uiText(), "countOccupancy"))
       
-      output$descriptionOccupancy <- renderUI(helpText(HTML(tmpTranslation()$description)))
+      output$descriptionOccupancy <- renderUI(HTML(tmpTranslation()$description))
       
       output$titleOccupancy <- renderUI(h3(HTML(tmpTranslation()$title)))
           
