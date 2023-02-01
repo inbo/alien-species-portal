@@ -12,7 +12,7 @@
 #' 
 #' @importFrom rgbif occ_download pred occ_download_wait occ_download_get occ_download_import
 #' @importFrom utils write.csv read.table
-#' @importFrom data.table melt
+#' @importFrom data.table melt as.data.table
 #' 
 #' @author mvarewyck
 #' @export
@@ -101,7 +101,7 @@ getGbifOccurrence <- function(datasetKey,
   # wide to long
   allCols <- colnames(df)
   categories <- c("male", "female", "juvenile", "pulli", "missing")
-  df <- melt(as.data.table(df), id.vars = allCols[!allCols %in% categories], 
+  df <- data.table::melt(as.data.table(df), id.vars = allCols[!allCols %in% categories], 
     measure.vars = categories, 
     variable.name = "gender", value.name = "count", na.rm = TRUE)
   

@@ -12,13 +12,14 @@
 #' @param id character, module id, unique name per plot
 #' @param showGroup boolean, whether to show a select input field for group variable
 #' @param showSummary boolean, whether to show a select input field for summary choice
+#' @param showPeriod boolean, whether to show a slider input field for period (first_observed)
 #' @param exportData boolean, whether a download button for the data is shown
 #' @param doWellPanel boolean, whether to display the options within a 
 #' \code{shiny::wellPanel()}
 #' @return ui object (tagList)
 #' @import shiny
 #' @export
-optionsModuleUI <- function(id, showGroup = FALSE, showSummary = FALSE, 
+optionsModuleUI <- function(id, showGroup = FALSE, showSummary = FALSE, showPeriod = FALSE,
   exportData = TRUE, doWellPanel = TRUE) {
   
   ns <- NS(id)
@@ -29,7 +30,9 @@ optionsModuleUI <- function(id, showGroup = FALSE, showSummary = FALSE,
       if (showGroup)
         column(6, uiOutput(ns("group"))),
       if (showSummary)
-        column(6, uiOutput(ns("summarizeBy")))
+        column(6, uiOutput(ns("summarizeBy"))),
+      if (showPeriod)
+        column(12, uiOutput(ns("period")))
     ),
     if (exportData)
       downloadButton(ns("dataDownload"), "Download data")
@@ -133,11 +136,26 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           
         })
       
+      output$period <- renderUI({
+          
+          timeRange <- range(data()$first_observed, na.rm = TRUE) 
+          
+          div(class = "sliderBlank", 
+            sliderInput(inputId = ns("period"), 
+              label = translate(uiText(), "period")$title,
+              min = timeRange[1], max = timeRange[2], value = timeRange,
+              step = 1, sep = "", width = "100%")
+          )
+        
+        })
+      
       
       # Filter plot data
       subData <- reactive({
          
-            data()
+          if (is.null(input$period))
+            data() else
+            data()[data()$first_observed %in% input$period[1]:input$period[2], ]
           
         })
       

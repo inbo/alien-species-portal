@@ -161,6 +161,8 @@ loadTabularData <- function(
   scientificName <- NULL
   i.scientificName <- NULL
   
+  warningMessage <- NULL
+  
   type <- match.arg(type)
   
   dataFiles <- file.path(dataDir, switch(type,
@@ -211,7 +213,8 @@ loadTabularData <- function(
     
     ## exclude data before 1950 - keeps values with NA for first_observed
     toExclude <- (rawData$first_observed < 1950 & !is.na(rawData$first_observed))
-    warning(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten")
+    warningMessage <- c(warningMessage, 
+      paste0(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten"))
     rawData <- rawData[!toExclude, ]
     
     ## convert english to dutch names for region
@@ -290,7 +293,8 @@ loadTabularData <- function(
     ind <- which(is.na(rawData$species) & !is.na(rawData$canonicalName))
     rawData$species[ind] <- rawData$canonicalName[ind]
     rawData$canonicalName <- NULL
-    warning(type, " data: Voor ", length(ind), " observaties is de 'species' onbekend. 'canonicalName' wordt gebruikt in de plaats.")
+    warningMessage <- c(warningMessage,
+      paste0(type, " data: Voor ", length(ind), " observaties is de 'species' onbekend. 'canonicalName' wordt gebruikt in de plaats."))
     
     
     attr(rawData, "habitats") <- currentHabitats
@@ -310,7 +314,9 @@ loadTabularData <- function(
     
     ## exclude data before 1950 - keeps values with NA for first_observed
     toExclude <- (rawData$year < 1950 & !is.na(rawData$year))
-    warning(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten")
+    warningMessage <- c(warningMessage,
+      paste0(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten"))
+    
     rawData <- rawData[!toExclude, ]
     
     # for linking scientific name & classKey
@@ -332,7 +338,8 @@ loadTabularData <- function(
   }
   
   attr(rawData, "Date") <- file.mtime(dataFiles)
-  
+  attr(rawData, "warning") <- warningMessage 
+    
   return(rawData)
   
 }

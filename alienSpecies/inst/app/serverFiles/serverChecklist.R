@@ -37,6 +37,8 @@ results$filter_exotenDataTranslated <- reactive({
   
   })
 
+unknownValue <- reactive(translate(results$translations, "unknown")$title)
+
 
 ### Filter Data
 ### ---------------
@@ -436,6 +438,15 @@ plotTriasServer(id = "checklist_tablePathway",
 )
 
 
+results$checklist_levelsP1 <- reactive({
+    
+    levelsP1 <- sort(unique(results$exoten_data()$pathway_level1))
+    c(grep(unknownValue(), levelsP1, value = TRUE, invert = TRUE), 
+      grep(unknownValue(), levelsP1, value = TRUE)
+    ) 
+    
+  })
+
 plotTriasServer(id = "checklist_pathway1",
   uiText = reactive(results$translations),
   data = results$exoten_data,
@@ -444,7 +455,8 @@ plotTriasServer(id = "checklist_pathway1",
       list(
         x_lab = translate(results$translations, "numberTaxa")$title,
         y_lab = translate(results$translations, "pathways")$title,
-        cbd_standard = FALSE
+        cbd_standard = FALSE,
+        pathways = results$checklist_levelsP1()
       )
     })
 )
@@ -457,7 +469,8 @@ plotTriasServer(id = "checklist_pathway1Trend",
       list(
         x_lab = translate(results$translations, "period")$title,
         y_lab = translate(results$translations, "numberTaxa")$title,
-        cbd_standard = FALSE
+        cbd_standard = FALSE,
+        pathways = results$checklist_levelsP1()
       )
     })
 )
@@ -473,7 +486,13 @@ plotTriasServer(id = "checklist_pathway2",
         chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1),
         x_lab = translate(results$translations, "numberTaxa")$title,
         y_lab = translate(results$translations, "pathways")$title,
-        cbd_standard = FALSE
+        cbd_standard = FALSE,
+        pathways = {
+          levelsP2 <- sort(unique(results$exoten_data()$pathway_level2))
+          c(grep(unknownValue(), levelsP2, value = TRUE, invert = TRUE), 
+            grep(unknownValue(), levelsP2, value = TRUE)
+          )          
+        }
       )
     })
 )

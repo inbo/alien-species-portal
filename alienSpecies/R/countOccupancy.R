@@ -10,10 +10,11 @@
 #' @author mvarewyck
 #' @import plotly
 #' @importFrom INBOtheme inbo_palette
+#' @importFrom data.table melt
 #' @export
 countOccupancy <- function(df, nSquares = 370, uiText = NULL) {
   
-  plotData <- melt(df[, c("species", "t0", "t1")], id.vars = "species")
+  plotData <- data.table::melt(df[, c("species", "t0", "t1")], id.vars = "species")
   levels(plotData$variable) <- c(
     translate(uiText, "baseline")$title, 
     translate(uiText, "reporting")$title)

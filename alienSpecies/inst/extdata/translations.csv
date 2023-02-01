@@ -183,6 +183,13 @@ corridor_water;Verbonden waterwegen / -bekkens / zeeën;;Cours d’eau / bassins
 corridor_land;Tunnels en landbruggen;;Tunnels et ponts;;Tunnels and land bridges;
 natural_dispersal;Natuurlijke verspreiding;;Dispersion naturelle à travers les frontières d’espèces exotiques envahissantes introduites par les voies 1 à 5;;Natural dispersal across borders of invasive alien species that have been introduced through pathways 1 to 5;
 unknown;Onbekend;;Inconnu;;Unknown;
+release_unknown;Onbekend;;Inconnu;;Unknown;
+escape_unknown;Onbekend;;Inconnu;;Unknown;
+contaminant_unknown;Onbekend;;Inconnu;;Unknown;
+stowaway_unknown;Onbekend;;Inconnu;;Unknown;
+corridor_unknown;Onbekend;;Inconnu;;Unknown;
+unaided_unknown;Onbekend;;Inconnu;;Unknown;
+;;;;;;
 ;;;;;;
 Africa;;;;;;
 Americas;;;;;;

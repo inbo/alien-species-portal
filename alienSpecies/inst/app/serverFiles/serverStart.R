@@ -23,6 +23,22 @@ output$start_tiles <- renderUI({
   })
 
 
+output$start_disclaimer <- renderUI({
+    
+    if (doDebug)
+      tagList(
+        tags$b("Disclaimer"),
+        tags$ul(
+          lapply(c(attr(exotenData, "warning"), attr(occurrenceData, "warning")), function(iText)
+              tags$li(iText)
+          )
+        ),
+        helpText("Only shown in debug mode")
+      )
+  
+  })
+
+
 observeEvent(input$start_navigate, {
     
     if (input$start_navigate == "early_warning")

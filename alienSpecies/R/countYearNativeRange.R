@@ -21,7 +21,7 @@
 #' }
 #' }
 #' @import plotly
-#' @importFrom data.table melt
+#' @importFrom data.table as.data.table
 #' @importFrom INBOtheme inbo_palette
 #' @importFrom utils tail
 #' @export
@@ -54,7 +54,7 @@ countYearNativerange <- function(df, jaartallen = NULL,
   plotData$first_observed <- with(plotData, factor(first_observed, levels = 
               min(jaartallen):max(jaartallen)))
   
-  summaryData <- melt(table(plotData), id.vars = "first_observed")
+  summaryData <- as.data.table(table(plotData))
   
   # Summarize data per year
   totalCount <- table(plotData$first_observed)
@@ -69,7 +69,7 @@ countYearNativerange <- function(df, jaartallen = NULL,
   title <- yearToTitleString(year = c(jaartallen[1], tail(jaartallen, 1)), brackets = FALSE)
   
   # Create plot
-  pl <- plot_ly(data = summaryData, x = ~first_observed, y = ~value, color = ~locatie,
+  pl <- plot_ly(data = summaryData, x = ~first_observed, y = ~N, color = ~locatie,
           colors = colors, type = "bar",  width = width, height = height) %>%
       layout(title = title,
           xaxis = list(title = translate(uiText, "year")$title), 
@@ -87,7 +87,7 @@ countYearNativerange <- function(df, jaartallen = NULL,
   pl$elementId <- NULL
   
   # Change variable name
-  names(summaryData)[names(summaryData) == "value"] <- "number"
+  names(summaryData)[names(summaryData) == "N"] <- "number"
   names(summaryData)[names(summaryData) == "first_observed"] <- "year"
   names(summaryData)[names(summaryData) == "locatie"] <- "native region"
     
@@ -154,8 +154,8 @@ countYearNativerangeUI <- function(id) {
     conditionalPanel("input.linkYearNativerange % 2 == 1", ns = ns,
       
       uiOutput(ns("descriptionYearNativerange")),
+      optionsModuleUI(id = ns("yearNativerange"), showPeriod = TRUE, doWellPanel = TRUE),
       plotModuleUI(id = ns("yearNativerange")),
-      optionsModuleUI(id = ns("yearNativerange"), doWellPanel = FALSE),
       tags$hr()
       
     )
