@@ -86,7 +86,7 @@ createSummaryRegions <- function(data, regionLevel = c("communes", "provinces"),
 #' @export
 mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL, 
   regionLevel = c("communes", "provinces"),
-  legend = "topright", addGlobe = TRUE) {
+  legend = "topright", addGlobe = FALSE) {
   
   regionVar <- switch(regionLevel,
     communes = "NISCODE",
