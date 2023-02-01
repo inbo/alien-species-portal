@@ -9,13 +9,20 @@
 #' 
 #' @author mvarewyck
 #' @import plotly
+#' @importFrom INBOtheme inbo_palette
 #' @export
 countOccupancy <- function(df, nSquares = 370, uiText = NULL) {
   
-  p <- plot_ly(data = df, x = ~t0/nSquares*100, y = ~species, 
-      name = translate(uiText, "baseline")$title,
-      type = "bar", orientation = "h") %>%
-    add_trace(x = ~t1/nSquares*100, name = translate(uiText, "reporting")$title) %>%
+  plotData <- melt(df[, c("species", "t0", "t1")], id.vars = "species")
+  levels(plotData$variable) <- c(
+    translate(uiText, "baseline")$title, 
+    translate(uiText, "reporting")$title)
+  
+  colors <- inbo_palette(3)[-1]
+  names(colors) <- unique(plotData$variable)
+  
+  p <- plot_ly(data = plotData, x = ~value/nSquares*100, y = ~species,
+      color = ~variable, colors = colors, type = "bar", orientation = "h") %>%
     layout(xaxis = list(title = translate(uiText, 'percentCages')$title),
       yaxis = list(title = ""), barmode = 'group')
   

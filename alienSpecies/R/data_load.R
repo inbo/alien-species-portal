@@ -448,14 +448,13 @@ getDutchNames <- function(x, type = c("regio")) {
 #' @export
 translate <- function(data, id) {
   
-  if (is.null(data))
-    return(id)
+  data <- rbind(
+    data,
+    # empty if no match
+    data.frame(id = id, title = id, description = "")
+  )
   
-  toReturn <- data[match(id, data$id), c("title", "description")]  
-
-  if (all(is.na(toReturn) | toReturn == ""))
-    data.frame(title = id, description = "") else
-    toReturn
+  data[match(id, data$id), c("title", "description")]
   
 }
 

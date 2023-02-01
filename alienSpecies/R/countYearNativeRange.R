@@ -22,7 +22,7 @@
 #' }
 #' @import plotly
 #' @importFrom data.table melt
-#' @importFrom INBOtheme inbo.2015.colours
+#' @importFrom INBOtheme inbo_palette
 #' @importFrom utils tail
 #' @export
 countYearNativerange <- function(df, jaartallen = NULL, 
@@ -65,7 +65,7 @@ countYearNativerange <- function(df, jaartallen = NULL,
   summaryData$first_observed <- as.integer(summaryData$first_observed)
   allYears <- sort(unique(summaryData$first_observed))
   
-  colors <- rev(inbo.2015.colours(n = nlevels(summaryData$locatie)))
+  colors <- rev(inbo_palette(n = nlevels(summaryData$locatie)))
   title <- yearToTitleString(year = c(jaartallen[1], tail(jaartallen, 1)), brackets = FALSE)
   
   # Create plot

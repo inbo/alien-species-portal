@@ -11,7 +11,7 @@
 #' @importFrom data.table setnames copy
 #' @importFrom INBOtheme inbo_palette
 #' @export
-countYearGroup <- function(df, groupVar = NULL, uiText = NULL,
+countYearGroup <- function(df, groupVar = "", uiText = NULL,
   summarizeBy = c("sum", "cumsum")) {
   
   
@@ -35,7 +35,10 @@ countYearGroup <- function(df, groupVar = NULL, uiText = NULL,
   if (is.null(groupVar)) {
     
     summaryData <- totalCount
+    
+    summaryData$group <- "all"
     colors <- inbo_palette(3)[1]
+    names(colors) <- "all"
         
   } else {
     
@@ -58,7 +61,7 @@ countYearGroup <- function(df, groupVar = NULL, uiText = NULL,
   
   # Create plot
   toPlot <- plot_ly(data = summaryData, x = ~year, 
-        y = ~count, color = if (!is.null(groupVar)) ~group, hoverinfo = "text+name",
+        y = ~count, color = ~group, hoverinfo = "text+name",
         colors = colors, type = "bar") %>%
       layout(title = title,
         xaxis = list(title = translate(uiText, "year")$title), 

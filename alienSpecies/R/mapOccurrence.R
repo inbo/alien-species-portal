@@ -95,6 +95,7 @@ createCubeData <- function(df, shapeData, groupVariable) {
 #' 
 #' @author mvarewyck
 #' @import plotly
+#' @importFrom INBOtheme inbo_lichtgrijs inbo_steun_blauw
 #' @export
 countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   period = c(2000, 2018)) {
@@ -125,8 +126,10 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   # Filter data
   nOccurred <- nOccurred[year > minYear, ][, selected := year >= period[1] & year <= period[2]]
   
+  myColors <- c(inbo_lichtgrijs, inbo_steun_blauw)
+  
   myPlot <- plot_ly(data = nOccurred, x = ~year, y = ~count, type = "bar",
-      marker = list(color = ~c("grey", "blue")[selected + 1]),
+      marker = list(color = ~myColors[selected + 1]),
       hoverinfo = "x+y") %>%
     layout(
       xaxis = list(title = "Year", range = c(minYear, currentYear)),
@@ -148,14 +151,14 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
 #' Each item has same length as \code{units}
 #' 
 #' @author mvarewyck
-#' @importFrom grDevices palette
+#' @importFrom INBOtheme inbo_palette
 #' @export
 paletteMap <- function(groupNames, groupVariable) {
   
   # Actually only needed if groupVariable == "cell_codes"
   groupNames <- gsub(groupVariable, "", groupNames)
   
-  myPalette <- palette()
+  myPalette <- c("black", inbo_palette())
   myColors <- rev(myPalette[seq_along(groupNames)]) 
   
   if (groupVariable == "cell_code")

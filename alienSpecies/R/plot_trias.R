@@ -15,7 +15,7 @@
 #' 
 #' @author mvarewyck
 #' @importFrom plotly ggplotly
-#' @importFrom ggplot2 annotate
+#' @importFrom INBOtheme theme_inbo
 #' @export
 plotTrias <- function(triasFunction, df, triasArgs = NULL,
   outputType = c("plot", "table"), uiText) {
@@ -36,21 +36,21 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
     if (all(c("plot", "data_top_graph") %in% names(resultFct))) {
       
       list(
-        plot = ggplotly(resultFct$plot), 
+        plot = ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE)), 
         data = resultFct$data_top_graph
       ) 
       
     } else if (all(c("plot", "output") %in% names(resultFct))) {
       
       list(
-        plot = ggplotly(resultFct$plot), 
+        plot = ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE)), 
         data = resultFct$output
       )
       
     } else {
 
       list(
-        plot = ggplotly(resultFct),
+        plot = ggplotly(resultFct + INBOtheme::theme_inbo(transparent = TRUE)),
         data = df
       )
     

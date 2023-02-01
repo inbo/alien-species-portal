@@ -317,7 +317,7 @@ results$exoten_data <- reactive({
 output$nrowsFinal <- renderText({
     
     validate(need(nrow(results$exoten_data()) > 0, "No data available"))
-    paste0(translate(results$translations, "totalSpecies"), ": ", 
+    paste0(translate(results$translations, "totalSpecies")$title, ": ", 
       length(unique(results$exoten_data()$key)))
 
   })
