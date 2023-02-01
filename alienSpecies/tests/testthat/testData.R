@@ -20,10 +20,10 @@ test_that("Load data", {
     # Load latest dictionary
     keyData <- loadMetaData(type = "keys")
     
-    # Load exoten data
-    expect_warning(loadTabularData(type = "indicators"))
-    loadTabularData(type = "unionlist")
-    expect_warning(loadTabularData(type = "occurrence"))
+    # Load tabular data
+    exotenData <- loadTabularData(type = "indicators")
+    unionList <- loadTabularData(type = "unionlist")
+    occurrenceData <- loadTabularData(type = "occurrence")
     
     # Translations
     loadMetaData(language = "nl")

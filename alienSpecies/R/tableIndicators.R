@@ -12,6 +12,10 @@
 #' @export
 tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
   
+  # For R CMD check
+  pathway <- NULL
+  first_observed <- NULL
+  
   if (nrow(exotenData) == 0)
     return(NULL)
   

@@ -160,6 +160,8 @@ loadTabularData <- function(
   # For R CMD check
   scientificName <- NULL
   i.scientificName <- NULL
+  i.classKey <- NULL
+  ..currentHabitats <- NULL
   
   warningMessage <- NULL
   

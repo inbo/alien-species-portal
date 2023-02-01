@@ -15,6 +15,14 @@
 createSummaryRegions <- function(data, regionLevel = c("communes", "provinces"),
   year, unit = c("cpue", "absolute")) {
   
+  # For R CMD check
+  region <- NULL
+  eventID <- NULL
+  n_fuiken <- NULL
+  count <- NULL
+  effort <- NULL
+  n <- NULL
+  
   unit <- match.arg(unit)
   
   data <- as.data.frame(data)
@@ -165,15 +173,13 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
 
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
 #' 
-#' @param filter() list with filters to be shown in the app;
-#' names should match a plotFunction in \code{uiText}; 
-#' values define the choices in \code{selectInput}
 #' @inheritParams welcomeSectionServer
 #' @inheritParams createCubeData
 #' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @param species reactive character, readable name of the selected species
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
+#' @param occurrenceData data.table, as obtained by \code{loadTabularData(type = "occurrence")}
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -182,8 +188,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot webshot
 #' @export
-mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
-) {
+mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -284,7 +289,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
           validate(need(nrow(summaryData()) > 0, noData()))
           
           mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
-            shapeData = allShapes, uiText = uiText(), regionLevel = input$regionLevel)
+            shapeData = shapeData, uiText = uiText(), regionLevel = input$regionLevel)
           
         })
       
@@ -353,7 +358,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
           
           if (!is.null(input$globe) & !is.null(proxy)){
             
-            if (input$globe %% 2 == 0){
+            if (input$globe %% 2 == 1){
               
               updateActionLink(session, inputId = "globe", 
                 label = translate(uiText(), "hideGlobe")$title)
@@ -430,8 +435,8 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData
       finalMap <- reactive({
           
           newMap <- mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
-            shapeData = allShapes, uiText = uiText(), regionLevel = input$regionLevel,
-            legend = input$legend, addGlobe = input$globe %% 2 == 0)
+            shapeData = shapeData, uiText = uiText(), regionLevel = input$regionLevel,
+            legend = input$legend, addGlobe = input$globe %% 2 == 1)
       
           
           # save the zoom level and centering to the map object

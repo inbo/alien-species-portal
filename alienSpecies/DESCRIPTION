@@ -1,8 +1,8 @@
 Package: alienSpecies
 Type: Package
 Title: Portal for alien and invasive species indicators
-Version: 0.0.2
-Date: 2021-11-24
+Version: 0.0.3
+Date: 2023-02-01
 Author: Machteld Varewyck
 Maintainer: Machteld Varewyck <machteld.varewyck@openanalytics.eu>
 Description: INBO shiny application based on the TRIAS package.
@@ -11,7 +11,6 @@ License: MIT + file LICENSE
 Imports: 
     data.table,
     DT,
-    ggplot2,
     htmltools,
     htmlwidgets,
     INBOtheme,

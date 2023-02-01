@@ -126,15 +126,6 @@ test_that("Module plotModule", {
   })
 
 
-test_that("Module optionsModule", {
-    shiny::testServer(optionsModuleServer, {
-        
-        expect_true(TRUE)
-        
-      })
-  })
-
-
 test_that("Module titleModule", {
     shiny::testServer(titleModuleServer, 
       args = list(
@@ -165,8 +156,8 @@ test_that("Module filterSelect", {
     shiny::testServer(filterSelectServer, 
       args = list(
         url = reactive(list()),
-        placeholder = "All habitats",
-        initChoices = attr(exotenData, "habitats")
+        initChoices = attr(exotenData, "habitats"),
+        translations = reactive(translations)
       ), {
         
         expect_true(!is.null(output$filter))

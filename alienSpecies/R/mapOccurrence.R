@@ -337,8 +337,6 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
 #' @param species reactive character, readable name of the selected species
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param baseMap leaflet object as returned by \code{\link{createBaseMap}}
-#' @param showGlobeDefault boolean, whether the globe is shown by default 
-#' when the map is first created; default value is TRUE
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -349,7 +347,7 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
 #' @export
 mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
   filter = reactive(list(source = c("all"))), 
-  groupVariable, showPeriod = FALSE, showGlobeDefault = TRUE
+  groupVariable, showPeriod = FALSE
 ) {
   
   moduleServer(id,
@@ -491,7 +489,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
             validate(need(cubeShape(), noData()))
             
             mapCube(cubeShape = cubeShape(), baseMap = baseMap, 
-              groupVariable = groupVariable, addGlobe = TRUE, legend = "topright")
+              groupVariable = groupVariable, addGlobe = FALSE, legend = "topright")
             
           }
           
@@ -506,7 +504,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           
           if (!is.null(input$globe) & !is.null(proxy)){
             
-            if (input$globe %% 2 == as.numeric(showGlobeDefault) - 1){
+            if (input$globe %% 2 == 1){
               
               updateActionLink(session, inputId = "globe", 
                 label = translate(uiText(), "hideGlobe")$title)
@@ -565,7 +563,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
             newMap <- mapOccurrence(
               occurrenceData = subData(), 
               baseMap = baseMap,
-              addGlobe = input$globe %% 2 == as.numeric(showGlobeDefault) - 1
+              addGlobe = input$globe %% 2 == 1
             )
             
           } else {
@@ -575,7 +573,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
               groupVariable = groupVariable,
               baseMap = baseMap,
               legend = input$legend,
-              addGlobe = input$globe %% 2 == as.numeric(showGlobeDefault) - 1
+              addGlobe = input$globe %% 2 == 1
             )
             
           }

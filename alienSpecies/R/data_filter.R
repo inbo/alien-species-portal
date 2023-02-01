@@ -45,6 +45,14 @@ createTaxaChoices <- function(exotenData) {
 #' @export
 createTaxaChoices2 <- function(exotenData) {
   
+  # For R CMD check
+  kingdom <- kingdomKey <- NULL
+  phylum <- phylumKey <- NULL
+  classKey <- NULL
+  orderKey <- NULL
+  family <- familyKey <- NULL
+  species <- key <- NULL
+  
   subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
       kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
   subData <- subData[!duplicated(subData), ]
@@ -86,6 +94,9 @@ createTaxaChoices2 <- function(exotenData) {
 #' @export
 createDoubleChoices <- function(exotenData,
   columns = c("pathway_level1", "pathway_level2")) {
+  
+  # For R CMD check
+  ..columnsTranslate <- NULL
   
   if (length(columns) != 2)
     stop("Exactly 2 columns should be defined")

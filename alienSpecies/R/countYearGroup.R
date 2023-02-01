@@ -14,6 +14,9 @@
 countYearGroup <- function(df, groupVar = "", uiText = NULL,
   summarizeBy = c("sum", "cumsum")) {
   
+  # For R CMD check
+  count <- NULL
+  group <- NULL
   
   summarizeBy <- match.arg(summarizeBy)
   
@@ -63,7 +66,7 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
   toPlot <- plot_ly(data = summaryData, x = ~year, 
         y = ~count, color = ~group, hoverinfo = "text+name",
         colors = colors, type = "bar") %>%
-      layout(title = title,
+      layout(
         xaxis = list(title = translate(uiText, "year")$title), 
         yaxis = list(title = translate(uiText, "count")$title),
         legend = list(title = list(translate(uiText, "group")$title)),
@@ -85,8 +88,8 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
 
 
 
-#' Shiny module for creating the plot \code{\link{countYearAge}} - server side
-#' @inheritParams countYearGroup 
+#' Shiny module for creating the plot \code{\link{countYearGroup}} - server side
+#' @inheritParams countOccupancyServer
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -112,7 +115,7 @@ countYearGroupServer <- function(id, uiText, data) {
 
 
 
-#' Shiny module for creating the plot \code{\link{countYearAge}} - UI side
+#' Shiny module for creating the plot \code{\link{countYearGroup}} - UI side
 #' @template moduleUI
 #' 
 #' @author mvarewyck

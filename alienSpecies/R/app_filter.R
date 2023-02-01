@@ -46,7 +46,6 @@ comboTreeInput <- function(inputId, choices, multiple = TRUE, cascaded = FALSE,
 #' Module for filter selection - server side
 #' @inheritParams welcomeSectionUI
 #' @param url reactive character, url search query
-#' @param placeholder character, placeholder if none is selected
 #' @param initChoices character vector, choices for the \code{selectInput}
 #' @param translations reactive data.frame with translations
 #' @return reactive, selected filter value

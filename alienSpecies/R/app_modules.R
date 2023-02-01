@@ -138,6 +138,8 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       
       output$period <- renderUI({
           
+          validate(need("first_observed" %in% colnames(data()), "No year available"))
+          
           timeRange <- range(data()$first_observed, na.rm = TRUE) 
           
           div(class = "sliderBlank", 

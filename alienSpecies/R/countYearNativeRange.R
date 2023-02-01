@@ -6,8 +6,8 @@
 #' in the plot; if NULL no selection on year(s) is made
 #' @param type character, native_range level of interest should be one of 
 #' \code{c("native_continent", "native_range")} 
-#' @param width plot width (optional)
-#' @param height plot height (optional)
+#' @param uiText data.frame, as obtained by \code{\link{loadMetaData}} for
+#' translating labels
 #' @return list with:
 #' \itemize{
 #' \item{'plot': }{plotly object, for a given specie the observed number 
@@ -27,8 +27,7 @@
 #' @export
 countYearNativerange <- function(df, jaartallen = NULL, 
     type = c("native_continent", "native_range"),
-    uiText = NULL,
-    width = NULL, height = NULL) {
+    uiText = NULL) {
   
     
   type <- match.arg(type)
@@ -70,7 +69,7 @@ countYearNativerange <- function(df, jaartallen = NULL,
   
   # Create plot
   pl <- plot_ly(data = summaryData, x = ~first_observed, y = ~N, color = ~locatie,
-          colors = colors, type = "bar",  width = width, height = height) %>%
+          colors = colors, type = "bar") %>%
       layout(title = title,
           xaxis = list(title = translate(uiText, "year")$title), 
           yaxis = list(title = translate(uiText, "number")$title, tickformat = ",d"),

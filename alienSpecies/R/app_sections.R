@@ -8,7 +8,8 @@
 
 #' Shiny module for creating welcome section - server side
 #' @param id character, unique identifier
-#' @param uiText reactive object, data.frame contains title and explanation text to display
+#' @param uiText reactive object, data.frame contains title and description
+#' to display; as obtained by \code{\link{loadMetaData}}
 #' @return no return value
 #' 
 #' @author mvarewyck

@@ -60,9 +60,18 @@ test_that("Define user choices and filter data", {
     tmpChoices[matchTaxum + 1]
     
     habitatChoices <- attr(exotenData, "habitats")
+    exotenData[, ':=' (
+        pathway_level1_translate = translate(translations, pathway_level1)$title,
+        pathway_level2_translate = translate(translations, pathway_level2)$title)
+    ]
     pwChoices <- createDoubleChoices(exotenData = exotenData, 
       columns = c("pathway_level1", "pathway_level2"))
-
+    expect_type(pwChoices, "list")
+    
+    exotenData[, ':=' (
+        native_continent_translate = translate(translations, native_continent)$title,
+        native_range_translate = translate(translations, native_range)$title)
+    ]
     nativeChoices <- createDoubleChoices(exotenData = exotenData,
       columns = c("native_continent", "native_range"))
     expect_type(nativeChoices, "list")
@@ -195,6 +204,11 @@ test_that("CBD Level 1/2 introduction pathways", {
     expect_s3_class(tmpResult$plot, "plotly")
     expect_s3_class(tmpResult$data, "data.frame")
     
+    
+    exotenData[, ':=' (
+        pathway_level1_translate = translate(translations, pathway_level1)$title,
+        pathway_level2_translate = translate(translations, pathway_level2)$title)
+    ]
     levelOneChoice <- createDoubleChoices(exotenData = exotenData, 
       columns = c("pathway_level1", "pathway_level2"))[[1]]$id
     
