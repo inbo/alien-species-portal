@@ -104,7 +104,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @import shiny
 #' @importFrom utils write.table
 #' @importFrom DT datatable formatRound renderDT
-#' @importFrom plotly ggplotly
+#' @importFrom plotly ggplotly layout
 #' @export
 plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
   outputType = NULL, triasFunction = NULL, triasArgs = NULL, 
@@ -205,8 +205,15 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       
       output$plot <- renderPlotly({  
           
-          resultFct()$plot
-          
+          if (!is.null(triasFunction) && triasFunction == "apply_gam") {
+            # remove title
+            myPlot <- resultFct()$plot %>% layout(title = "")
+            # move annotation to the left
+            myPlot$x$data[[2]]$x <- tail(sort(myPlot$x$data[[1]]$x), n = 3)
+            myPlot$x$data[[2]]$hovertext <- NULL
+            myPlot
+          } else resultFct()$plot
+        
         })
 
       if (plotFunction != "countOccupancy")

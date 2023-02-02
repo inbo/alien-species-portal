@@ -684,11 +684,11 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
         )
       )
     ),
-    withSpinner(leafletOutput(ns("spacePlot"))),
+    withSpinner(leafletOutput(ns("spacePlot"), height = "600px")),
     
     if (showPeriod) {
       tagList(
-        plotModuleUI(id = ns("countOccurrence"), height = "400px"),
+        plotModuleUI(id = ns("countOccurrence"), height = "200px"),
         uiOutput(ns("period"))
       )
     },
