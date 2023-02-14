@@ -177,33 +177,15 @@ paletteMap <- function(groupNames, groupVariable) {
 #' @return leaflet object
 #' @author mvarewyck
 #' @import leaflet
-#' @importFrom sp proj4string CRS spTransform
-#' @importFrom rgdal readOGR  
+#' @importFrom rgdal readOGR
 #' @export
 createBaseMap <- function() {
   
-  crs_wgs <- CRS("+proj=longlat +datum=WGS84 +no_defs ")
-  crs_bel <- CRS("+proj=lcc +lat_1=51.16666723333333 +lat_2=49.8333339 +lat_0=90 +lon_0=4.367486666666666 +x_0=150000.013 +y_0=5400088.438 +ellps=intl +towgs84=-106.869,52.2978,-103.724,0.3366,-0.457,1.8422,-1.2747 +units=m +no_defs ")
+  gewestBel <- readOGR(system.file("extdata", "grid", "gewestbel.shp", package = "alienSpecies"), "gewestbel", stringsAsFactors = FALSE)
   
-  bioreg_bel_clip <- readOGR(system.file("extdata", "grid", "bioreg_bel_clip.geojson", package = "alienSpecies"), "bioreg_bel_clip", stringsAsFactors = FALSE)
-  bel_borders <- readOGR(system.file("extdata", "grid", "Belgie.geojson", package = "alienSpecies"), "Belgie", stringsAsFactors = FALSE)
-  
-  sp::proj4string(bel_borders) <- crs_bel
-  
-  bioreg_pal <- colorFactor(palette = c("darkgrey", "white"), 
-    domain = bioreg_bel_clip$BIOGEO, levels = c("Continental", "Atlantic"))
-  
-  baseMap <- leaflet(bioreg_bel_clip) %>% 
-    addPolygons(fillColor = ~bioreg_pal(BIOGEO),
-      fillOpacity = 0.5,
-      stroke = FALSE) %>% 
-#    addPolylines(data = bel_borders, 
-    addPolylines(data = spTransform(bel_borders, crs_wgs),
-      color = "black",
-      opacity = 1,
-      weight = 2) %>% 
+  baseMap <- leaflet(gewestBel) %>% 
+    addPolylines(color = "black", opacity = 1, weight = 2) %>% 
     addScaleBar(position = "bottomleft")
-#    setMapWidgetStyle(list(background= "white"))
   
   baseMap
   
