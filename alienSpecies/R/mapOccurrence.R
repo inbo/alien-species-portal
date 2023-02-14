@@ -383,18 +383,19 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       
       output$filters <- renderUI({
           
-          lapply(names(filter()), function(filterName) {
-              
-              choices <- filter()[[filterName]]
-              names(choices) <- translate(uiText(), choices)$title
-              
-              column(6, 
-                selectInput(inputId = ns(filterName), 
-                  label = translate(uiText(), filterName)$title,
-                  choices = choices,
-                  multiple = TRUE, selected = filter()[[filterName]])
-              )
-            })
+          if (!is.null(filter()))
+            lapply(names(filter()), function(filterName) {
+                
+                choices <- filter()[[filterName]]
+                names(choices) <- translate(uiText(), choices)$title
+                
+                column(6, 
+                  selectInput(inputId = ns(filterName), 
+                    label = translate(uiText(), filterName)$title,
+                    choices = choices,
+                    multiple = TRUE, selected = filter()[[filterName]])
+                )
+              })
           
         })
       
@@ -436,10 +437,10 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           filterData <- df()
           
           # Other filters
-          for (iFilter in names(filter())) {
-            if (iFilter != "source")
+          if (!is.null(filter()))
+            for (iFilter in names(filter())) {
               filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
-          }
+            }
           
           filterData
           

@@ -86,6 +86,7 @@ mapCubeServer(id = "observations",
       req(taxonKey())
       occurrenceData[taxonKey %in% taxonKey(), ]
     }),
+  filter = reactive(NULL),
   groupVariable = "cell_code",
   shapeData = allShapes,
   baseMap = baseMap,
@@ -158,21 +159,12 @@ observe({
   })
 
 
-# t1
-mapCubeServer(id = "reporting_t1",
-  uiText = reactive(results$translations),
-  species = reactive(input$species_choice),
-  df = reactive(dfCube[dfCube$source == "t1" & species %in% input$species_choice, ]),
-  groupVariable = "source",
-  shapeData = allShapes,
-  baseMap = baseMap
-)
-
 # t0 and t1
 mapCubeServer(id = "reporting_t01",
   uiText = reactive(results$translations),
   species = reactive(input$species_choice),
   df = reactive(dfCube[species %in% input$species_choice, ]),
+  filter = reactive(list(source = unique(dfCube$source[dfCube$species %in% input$species_choice]))),
   groupVariable = "source",
   shapeData = allShapes,
   baseMap = baseMap

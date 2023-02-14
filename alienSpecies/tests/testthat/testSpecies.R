@@ -104,37 +104,16 @@ test_that("Emergence status GAM - Observations", {
   })
 
 
-test_that("Reporting t1", {
-    
-    load(file = file.path(dataDir, "dfCube.RData"))
-    
-    # Filter on taxonKey and source
-    reportingData <- dfCube[species %in% allSpecies[1] & source == "t1", ]
-    
-    occurrenceShape <- createCubeData(df = reportingData, shapeData = allShapes,
-      groupVariable = "source")
-    expect_equal(length(occurrenceShape), 2)
-    expect_s3_class(occurrenceShape[[1]], "sf")
-    expect_lte(nrow(occurrenceShape[[1]]), length(unique(reportingData$cell_code10)))
-    
-    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
-      legend = "topright", addGlobe = TRUE, groupVariable = "source")
-    expect_s3_class(myPlot, "leaflet")
-    
-    # For data download in the app
-    myData <- do.call(rbind, occurrenceShape)
-    myData$source <- attr(occurrenceShape, "splitFactor")
-    expect_s3_class(myData, "data.frame")
-    
-  })  
-
   
 test_that("Reporting t0 and t1", {
     
     load(file = file.path(dataDir, "dfCube.RData"))
     
     # Filter on taxonKey and source
-    reportingData <- dfCube[species %in% allSpecies[1], ]
+    reportingData <- dfCube[species %in% allSpecies[2], ]
+    
+#    # Filter on source
+#    reportingData <- reportingData[reportingData$source == "t1", ]
     
     occurrenceShape <- createCubeData(df = reportingData, shapeData = allShapes,
       groupVariable = "source")
