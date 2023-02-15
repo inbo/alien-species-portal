@@ -421,6 +421,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           # Other filters
           if (!is.null(filter()))
             for (iFilter in names(filter())) {
+              req(input[[iFilter]])
               filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
             }
           

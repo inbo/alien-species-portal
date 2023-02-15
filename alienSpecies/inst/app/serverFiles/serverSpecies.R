@@ -215,12 +215,12 @@ results$species_managementData <- reactive({
   })
 
 
-## Map + barplot
 observe({
     
     req(results$species_managementData())
     
     if (input$species_choice %in% cubeSpecies) {
+      ## Map
       
       mapCubeServer(id = "management",
         uiText = reactive(results$translations),
@@ -240,17 +240,18 @@ observe({
       )
       
     } else {
+      ## Map + barplot
       
       mapRegionsServer(
-        id = "management",
+        id = "management2",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         df = results$species_managementData,
         occurrenceData = occurrenceData,
         shapeData = allShapes
-        )
+      )
       countYearGroupServer(
-        id = "management", 
+        id = "management2", 
         uiText = reactive(results$translations), 
         data = results$species_managementData
       )
@@ -258,18 +259,18 @@ observe({
     
   })
 
-observeEvent(input$species_choice, shinyjs::reset("species_managementContent"))
-  
 output$species_managementContent <- renderUI({
     
     req(results$species_managementData())
     
+    # Important: different ids used, otherwise there is communication between both cases
+    # e.g. input$legend exists for both
     if (input$species_choice %in% cubeSpecies) {
       mapCubeUI(id = "management", showPeriod = TRUE, showLegend = FALSE)
     } else {
       tagList(
-        mapRegionsUI(id = "management"),
-        countYearGroupUI(id = "management")
+        mapRegionsUI(id = "management2"),
+        countYearGroupUI(id = "management2")
       )
     }
     

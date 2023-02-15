@@ -33,6 +33,9 @@ createSummaryRegions <- function(data, regionLevel = c("communes", "provinces"),
     provinces = "provincie"
   )
   
+  if (!regionVar %in% colnames(data))
+    return(NULL)
+  
   colnames(data)[colnames(data) == regionVar] <- "region"
   
   if (unit == "cpue") {
@@ -286,7 +289,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       # Send map to the UI
       output$regionsPlot <- renderLeaflet({
           
-          validate(need(nrow(summaryData()) > 0, noData()))
+          validate(need(nrow(req(summaryData())) > 0, noData()))
           
           mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
             shapeData = shapeData, uiText = uiText(), regionLevel = input$regionLevel)
@@ -297,7 +300,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       # Define text to be shown in the pop-ups
       textPopup <- reactive({
           
-          validate(need(nrow(summaryData()) > 0, noData()))
+          validate(need(nrow(req(summaryData())) > 0, noData()))
           
           if (input$regionLevel == "communes") {
             regionNames <- spatialData()$NAAM[match(summaryData()$region, spatialData()$regionName)]
@@ -397,6 +400,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       observe({
           
           req(input$legend)
+          req(summaryData())
           
           proxy <- leafletProxy("regionsPlot")
           proxy %>% 
