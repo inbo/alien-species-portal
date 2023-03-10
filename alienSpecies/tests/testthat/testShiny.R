@@ -59,7 +59,7 @@ test_that("Module mapCube", {
         uiText = reactive(translations),
         species = reactive(mySpecies),
         df = reactive(occurrenceData[taxonKey %in% myKey, ]),
-        groupVariable = "cell_code",
+        groupVariable = "source",
         shapeData = allShapes,
         baseMap = baseMap,
         showPeriod = TRUE

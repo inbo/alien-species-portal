@@ -9,7 +9,7 @@
 #' @importFrom sp spTransform
 #' @importFrom sf st_read
 #' @export
-readShapeData <- function(extension = c(".shp", ".geojson"),
+readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
   dataDir = system.file("extdata", "grid", package = "alienSpecies")
 ) {
   
@@ -17,7 +17,7 @@ readShapeData <- function(extension = c(".shp", ".geojson"),
   
   shapeFiles <- list.files(dataDir, pattern = extension)
   
-  if (extension == ".shp") {
+  if (extension %in% c(".gpkg", ".shp")) {
     
     toReturn <- lapply(shapeFiles, function(iFile) {
         
@@ -25,7 +25,7 @@ readShapeData <- function(extension = c(".shp", ".geojson"),
         
       })
     
-  } else {
+  } else if (extension == ".geojson") {
     
     toReturn <- lapply(shapeFiles, function(iFile) {
         
@@ -34,7 +34,7 @@ readShapeData <- function(extension = c(".shp", ".geojson"),
         
       })
   
-  }
+  } 
   
   
   
@@ -161,7 +161,6 @@ loadTabularData <- function(
   scientificName <- NULL
   i.scientificName <- NULL
   i.classKey <- NULL
-  ..currentHabitats <- NULL
   
   warningMessage <- NULL
   
@@ -456,6 +455,12 @@ getDutchNames <- function(x, type = c("regio")) {
 #' @author mvarewyck
 #' @export
 translate <- function(data, id) {
+  
+  # Helpfull during development to see which are missing
+  # can be turned of in production
+  if (!is.null(data) & !all(id %in% data$id))
+    warning("Not in translation file: ", vectorToTitleString(id))
+  
   
   data <- rbind(
     data,

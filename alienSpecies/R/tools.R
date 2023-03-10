@@ -63,47 +63,47 @@ displayName <- function(text, translations = NULL) {
 
 #' Transform vector ready to be in title
 #' 
-#' Separates elements of vectors with a comma; the final element of the vector is seperated with 'en'
-#' 
 #' @param vector character vector with elements to be collapsed together into one string
 #' @return string Elements of the vector are separated by comma in the string, 
-#' ultimate and penultimate element are separated by 'en'. 
+#' ultimate and penultimate element are separated by 'and'. 
 #' 
 #' @author Eva Adriaensen
 #' @export
 vectorToTitleString <- function(vector) {
   
-  sub(",\\s+([^,]+)$", " en \\1", toString(vector))
+  vector <- sort(unique(vector))
   
+  if (length(vector) > 3) {
+    paste0(paste(vector[1:3], collapse = ", "), ", ...")
+  } else if (length(vector) > 1) { 
+    paste(vector[1:length(vector)], collapse = ", ")
+  } else {
+    vector
+  }
+
 }
 
 
 #' Transform numeric vector with years ready to be in title
 #' 
-#' @param year numeric, vector of length 1 or 2
+#' @param year numeric, vector with year values for which to print the range
 #' @param brackets logical, should the output string with years be wrapped in brackets? Defaults to TRUE 
-#' @return string Numbers of the vector are separated by 'tot' in the string, 
-#' brackets are put around (\code{brackets = TRUE}). If length of vector is only one, or if both elements
-#' of the vector are the same, a string with the year between brackets is returned. 
+#' @return string ready to be printed in the title 
 #' 
 #' @author Eva Adriaensen
 #' @export
 yearToTitleString <- function(year, brackets = TRUE) {
   
-  if (!is.numeric(year) | any(is.na(year))) {
-    stop("Argument is niet aanvaard.")
-  }
+  year <- sort(unique(year))
   
-  if (length(year) == 2) {
-    ifelse(year[1] != year[2],
-      if (brackets) paste0("(", year[1], " - ", year[2], ")") else paste0(year[1], " - ", year[2]),
-      if (brackets) paste0("(", year[1], ")") else paste0(year[1])
-    )
-  } else if (length(year) == 1) {
-    if (brackets) paste0("(", year[1], ")") else paste0(year[1]) 
-  } else {
-    stop("Kan periode niet formatteren.")
-  }
+  toReturn <- if (year[1] != year[length(year)])
+      paste(year[1], "-", year[length(year)]) else
+      year[1]
+  
+  if (brackets)
+    paste0("(", toReturn, ")") else 
+    toReturn
+
 }
 
 
@@ -117,5 +117,67 @@ drawBullet <- function(color) {
   
   div(style = paste0("background-color: ", color, 
       "; display: inline-block; vertical-align:top; width: 20px; height: 20px; border-radius: 10px"))
+  
+}
+
+
+
+#' Replicate inbo colors if more than 9 needed
+#' @param nColors integer, number of colors needed
+#' @return list with
+#' colors = character vector with (repeated) inbo colors
+#' warning = character, not NULL if colors are repeated
+#' 
+#' @author mvarewyck
+#' @importFrom INBOtheme inbo_palette
+#' @export
+replicateColors <- function(nColors) {
+  
+  rest <- nColors%%9
+  times <- floor(nColors/9)
+  
+  colors <- c()
+  
+  if (times > 0)
+    colors <- rep(inbo_palette(n = 9), times)
+  if(rest > 0)
+    colors <- c(colors, inbo_palette(n = rest))
+  
+  # warning if noLocaties exceeds 9 colours
+  warningText <- NULL
+  if(nColors > 9) {
+    warningText <- "Door de ruime selectie werden de kleuren van deze grafiek hergebruikt. 
+      Hierdoor is verwarring mogelijk. Verklein de selectie om dit te voorkomen."
+  }
+  
+  return(
+    list(
+      colors = colors, 
+      warning = warningText
+    )
+  )
+  
+  
+}
+
+
+#' Capitalize first letter
+#' @param names character vector, names to be capitalized (e.g. countries)
+#' @param keepNames boolean, whether to keep the names for the returned vector;
+#' default is TRUE
+#' @return character vector, capitalized version of \code{names}
+#' @author mvarewyck
+#' @export
+simpleCap <- function(names, keepNames = TRUE) {
+  
+  sapply(names, function(x) {
+      
+      if (is.na(x))
+        return(x)
+      
+      s <- tolower(as.character(x))
+      paste0(toupper(substring(s, 1, 1)), substring(s, 2))
+      
+    }, USE.NAMES = keepNames)
   
 }

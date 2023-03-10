@@ -63,12 +63,15 @@ test_that("Barplot for Bullfrogs", {
     countYearGroup(df = managementData)$plot
     countYearGroup(df = managementData, groupVar = "lifeStage")$plot
     
-    countYearGroup(df = managementData, summarizeBy = "cumsum")
+    myResult <- countYearGroup(df = managementData, summarizeBy = "cumsum")
+    expect_type(myResult, "list")
+    expect_s3_class(myResult$plot, "plotly")
+    expect_s3_class(myResult$data, "data.frame")
     countYearGroup(df = managementData, summarizeBy = "cumsum", groupVar = "lifeStage")
     
   })
 
-test_that("Map for Bullfrogs", {
+test_that("Map & trend for Bullfrogs", {
     
     allShapes <- c(
       # Grid data
@@ -82,10 +85,41 @@ test_that("Map for Bullfrogs", {
     # Filter on taxonKey and year
     occurrenceData <- occurrenceData[occurrenceData$scientificName == gsub("_", " ", gsub(".csv", "", outFile)) & year == 2018, ]
     
-    summaryData <- createSummaryRegions(data = managementData, regionLevel = "communes", year = 2018, unit = "absolute")
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "communes", year = 2018, unit = "cpue")
     
+    # Map
     myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
       shapeData = allShapes, regionLevel = "communes")
     expect_s3_class(myPlot, "leaflet")
+    
+  })
+
+
+test_that("Trend for Bullfrogs", {
+    
+    # Municipalities
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "communes", year = unique(managementData$year))
+    
+    myResult <- trendYearRegion(df = summaryData[summaryData$region %in% c("Arendonk", "Kasterlee"), ])
+    expect_type(myResult, "list")
+    expect_s3_class(myResult$plot, "plotly")
+    expect_s3_class(myResult$data, "data.frame")
+    
+    # Provinces
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "provinces",
+      year = unique(managementData$year))
+    
+    trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerpen", "Limburg"), ])
+    
+    trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerpen", "Limburg"), ],
+      combine = TRUE)
+    
+    # Flanders
+    summaryData <- createSummaryRegions(data = managementData, regionLevel = "flanders")
+    
+    trendYearRegion(df = summaryData)
     
   })

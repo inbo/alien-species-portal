@@ -29,7 +29,7 @@ test_that("Occurrence grid shape", {
     expect_equal(length(allShapes), 2)
     
     expect_type(allShapes, "list")
-    expect_equal(names(allShapes), c("be_10km", "be_1km"))
+    expect_setequal(names(allShapes), c("utm1_bel_with_regions", "utm10_bel_with_regions"))
     
   })
 
@@ -45,7 +45,7 @@ test_that("Occurrence plots", {
     
     # Leaflet data
     occurrenceShape <- createCubeData(df = occurrenceData, shapeData = allShapes,
-      groupVariable = "cell_code")
+      region = "flanders", groupVariable = "cell_code")
     expect_equal(length(occurrenceShape), 2)
     expect_s3_class(occurrenceShape[[1]], "sf")
     expect_lte(nrow(occurrenceShape[[1]]), length(unique(taxData$cell_code1[taxData$taxonKey == myKey])))
@@ -119,9 +119,9 @@ test_that("Reporting t0 and t1", {
       groupVariable = "source")
     expect_equal(length(occurrenceShape), 4)
     expect_s3_class(occurrenceShape[[1]], "sf")
-    expect_lte(nrow(occurrenceShape[[length(occurrenceShape)]]), length(unique(reportingData$cell_code10)))
+    expect_equal(sum(sapply(occurrenceShape[1:3], nrow)), length(unique(reportingData$cell_code10)))
     
-    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
+    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap,
       legend = "topright", addGlobe = TRUE, groupVariable = "source")
     expect_s3_class(myPlot, "leaflet")
     

@@ -53,10 +53,10 @@ The data at spatial level 1km x 1km are summarized using the R function `alienSp
 
 # Spatial Data
 
-The files `grid/be_1km.*` contain 1x1 km grid data (shapefile)
-The files `grid/be_10km.*` contain 10x10 km grid data (shapefile)
-Data source + description (EEA): https://www.eea.europa.eu/data-and-maps/data/eea-reference-grids-2
-
+The file `grid/utm1_bel_with_regions.gpkg` contain 1x1 km EEA grid data (geopackage)
+The file `grid/utm10_bel_with_regions.gpkg` contain 10x10 km EEA grid data (geopackage)
+[Deprecated] Data source + description (EEA): https://www.eea.europa.eu/data-and-maps/data/eea-reference-grids-2
+Data source (including regions): https://github.com/trias-project/indicators/tree/add-regions-to-grids/data/output 
 
 # Meta Data
 

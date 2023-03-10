@@ -98,7 +98,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @param plotFunction character, defines the plot function to be called
 #' @param data reactive data.frame, data for chosen species
 #' @param period reactive numeric vector of length 2, selected period 
-#' 
+#' @param combine boolean, see \code{\link{trendYearRegion}}
 #' @return no return value; plot output object is created
 #' @author mvarewyck
 #' @import shiny
@@ -108,7 +108,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @export
 plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
   outputType = NULL, triasFunction = NULL, triasArgs = NULL, 
-  period = NULL) {
+  period = NULL, combine = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -119,7 +119,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       output$group <- renderUI({
           
           choices <- c("", "lifeStage")
-          names(choices) <- translate(uiText(), choices)$title
+          names(choices) <- c("", translate(uiText(), choices[-1])$title)
           
           selectInput(inputId = ns("group"), label = translate(uiText(), "group")$title, 
             choices = choices)
@@ -167,17 +167,24 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           req(nrow(subData()) > 0)
           
           argList <- c(
-            list(df = subData()),
+            list(
+            # General
+              df = subData()),
             if (!is.null(outputType))
               list(outputType = outputType),
             if (!is.null(uiText))
               list(uiText = uiText()),
+            # Trias
             if (!is.null(triasFunction))
               list(triasFunction = triasFunction),
             if (!is.null(triasArgs))
               list(triasArgs = triasArgs()),
+            # Reactives
             if (!is.null(period))
               list(period = period()),
+            if (!is.null(combine))
+              list(combine = combine()),
+            # Input
             if (!is.null(input$group))
               list(groupVar = input$group),
             if (!is.null(input$summarizeBy))

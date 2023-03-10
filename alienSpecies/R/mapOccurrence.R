@@ -5,6 +5,8 @@
 #' @param groupVariable character, defines for which groups to create cube data;
 #' \code{groupVariable} should match a column name in \code{df};
 #' exception if \code{cell_code} then groups are created per cellcode (spatial level)
+#' @param region character, regions for which to create data;
+#' default is \code{c("flanders", "wallonia", "brussels")}
 #' @return list with sf data.frame for each group/cube level to be plotted
 #' 
 #' When \code{groupVariable} is defined, return a list with data.frame of cellcodes
@@ -14,13 +16,22 @@
 #' per cube level
 #' 
 #' @author mvarewyck
-#' @importFrom sf st_as_sf st_transform
+#' @importFrom sf st_as_sf st_transform st_drop_geometry
 #' @importFrom data.table data.table rbindlist copy
 #' @export
-createCubeData <- function(df, shapeData, groupVariable) {
+createCubeData <- function(df, shapeData, groupVariable, 
+  region = c("flanders", "wallonia", "brussels")) {
   
   cellCodes <- c("cell_code1", "cell_code10")
   cellCodes <- cellCodes[cellCodes %in% colnames(df)]
+  
+  # Filter shapeData
+  regionCols <- paste0("is", simpleCap(region))
+  shapeData <- shapeData[grepl("utm", names(shapeData))]
+  shapeData <- sapply(shapeData, function(iShape)
+      iShape[apply(sf::st_drop_geometry(iShape[, regionCols]), 1, sum) > 0, ],
+    simplify = FALSE, USE.NAMES = TRUE)
+  
     
   if (!is.null(groupVariable) && groupVariable != "cell_code") {
     
@@ -35,7 +46,7 @@ createCubeData <- function(df, shapeData, groupVariable) {
       df <- rbind(df[!df[[cellCodes]] %in% combinedData[[cellCodes]], ], combinedData)
     } else combinedGroup <- NULL
     # neither
-    allCodes <- shapeData[[paste0("be_", gsub("cell_code", "", cellCodes), "km")]]$CELLCODE
+    allCodes <- shapeData[[paste0("utm", gsub("cell_code", "", cellCodes), "_bel_with_regions")]]$CELLCODE
     notData <- data.table(
       source = "negative", 
       cell_code = allCodes[!allCodes %in% df[[cellCodes]]] 
@@ -60,7 +71,7 @@ createCubeData <- function(df, shapeData, groupVariable) {
       
       iCode <- cellCodes[cellCodes %in% colnames(iData)]
       isOccurred <- unique(iData[[iCode]])
-      iShape <- shapeData[[paste0("be_", gsub("cell_code", "", iCode), "km")]]
+      iShape <- shapeData[[paste0("utm", gsub("cell_code", "", iCode), "_bel_with_regions")]]
       st_as_sf(iShape[iShape$CELLCODE %in% isOccurred, ], 
           coords = c("decimalLongitude", "decimalLatitude"),
           crs = 4326) %>%
@@ -162,7 +173,7 @@ paletteMap <- function(groupNames, groupVariable) {
   myColors <- rev(myPalette[seq_along(groupNames)]) 
   
   if (groupVariable == "cell_code")
-    valuesPalette <- factor(paste0("UTM ", groupNames, "x", groupNames, " km squares")) else
+    valuesPalette <- factor(paste0(groupNames, "x", groupNames, " km squares")) else
     valuesPalette <- groupNames
   
   list(
@@ -184,7 +195,12 @@ createBaseMap <- function() {
   gewestBel <- readOGR(system.file("extdata", "grid", "gewestbel.shp", package = "alienSpecies"), "gewestbel", stringsAsFactors = FALSE)
   
   baseMap <- leaflet(gewestBel) %>% 
-    addPolylines(color = "black", opacity = 1, weight = 2) %>% 
+    addPolylines(
+      color = "black", 
+      opacity = 0.8, 
+      weight = 3, 
+      group = "borderRegion"
+    ) %>% 
     addScaleBar(position = "bottomleft")
   
   baseMap
@@ -217,15 +233,15 @@ mapCube <- function(cubeShape, baseMap = createBaseMap(), legend = "none",
   myMap <- baseMap
   
   for (i in length(cubeShape):1)
-    
-    myMap <- myMap %>%
-      addPolygons(color = ~ palette(myColors$levels[i]),
-        popup = ~CELLCODE,
+   
+     myMap <- myMap %>%
+      addPolygons(
         data = cubeShape[[i]],
-        group = myColors$levels[i],
-        opacity = 1,
+        weight = 1,
+        color = ~ palette(myColors$levels[i]),
         fillOpacity = if (groupVariable != "cell_code" && i != length(cubeShape)) 0.5 else 0,
-        weight = 1
+        popup = ~CELLCODE,
+        group = myColors$levels[i]
       )
   
   
@@ -381,6 +397,16 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           
         })
       
+      output$region <- renderUI({
+          
+          choices <- c("flanders", "wallonia", "brussels")
+          names(choices) <- translate(uiText(), choices)$title
+          
+          selectInput(inputId = ns("region"), label = translate(uiText(), "regions"),
+            choices = choices, multiple = TRUE, selected = choices)
+          
+        })
+      
       output$period <- renderUI({
           
           req(df())
@@ -453,7 +479,8 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           createCubeData(
             df = subData(),
             shapeData = shapeData,
-            groupVariable = groupVariable
+            groupVariable = groupVariable,
+            region = input$region
           )
           
         })
@@ -596,7 +623,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
           
           # convert temp .html file into .png for download
           webshot::webshot(url = finalMap(), file = file,
-            vwidth = 1000, vheight = 500, cliprect = "viewport")
+            vwidth = 1200, vheight = 600, cliprect = "viewport")
           
         }
       )
@@ -657,6 +684,7 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
     
     wellPanel(
       fixedRow(uiOutput(ns("filters")),
+        column(6, uiOutput(ns("region"))),
         if (showLegend)
           column(6, 
             uiOutput(ns("legend"))

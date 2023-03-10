@@ -269,7 +269,7 @@ output$species_managementContent <- renderUI({
       mapCubeUI(id = "management", showPeriod = TRUE, showLegend = FALSE)
     } else {
       tagList(
-        mapRegionsUI(id = "management2"),
+        mapRegionsUI(id = "management2", plotDetails = c("flanders", "region")),
         countYearGroupUI(id = "management2")
       )
     }
