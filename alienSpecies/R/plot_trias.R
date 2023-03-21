@@ -114,11 +114,28 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
               })
         })
       
+      output$regionFilter <- renderUI({
+          
+          choices <- c("flanders", "wallonia", "brussels")
+          names(choices) <- translate(uiText(), choices)$title
+          
+          selectInput(inputId = ns("region"), label = translate(uiText(), "regions"),
+            choices = choices, multiple = TRUE, selected = choices)
+          
+        })
+      
       plotData <- reactive({
           
+          subData <- data()
+          
+          if (!is.null(input$region))
+            # only for GAM
+            subData <- summarizeTimeSeries(rawData = subData, region = input$region)
+          
           if (!is.null(input$protected))
-            data()[protected == input$protected, ] else
-            data()
+            subData <- subData[protected == input$protected, ]
+          
+          subData
           
         })
       
@@ -153,7 +170,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-plotTriasUI <- function(id, outputType = c("plot", "table")) {
+plotTriasUI <- function(id, outputType = c("plot", "table"), showRegion = FALSE) {
   
   ns <- NS(id)
   outputType <- match.arg(outputType)
@@ -165,7 +182,13 @@ plotTriasUI <- function(id, outputType = c("plot", "table")) {
     conditionalPanel("input.linkPlotTrias % 2 == 1", ns = ns,
       
       uiOutput(ns("descriptionPlotTrias")),
-      uiOutput(ns("filters")),
+      wellPanel(
+        fluidRow(
+          column(6, uiOutput(ns("filters"))),
+          if (showRegion)
+            column(6, uiOutput(ns("regionFilter")))
+        )
+      ),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else

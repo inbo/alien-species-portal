@@ -65,7 +65,7 @@ countYearNativerange <- function(df, jaartallen = NULL,
   allYears <- sort(unique(summaryData$first_observed))
   
   colors <- rev(inbo_palette(n = nlevels(summaryData$locatie)))
-  title <- yearToTitleString(year = c(jaartallen[1], tail(jaartallen, 1)), brackets = FALSE)
+  title <- yearToTitleString(year = jaartallen, brackets = FALSE)
   
   # Create plot
   pl <- plot_ly(data = summaryData, x = ~first_observed, y = ~N, color = ~locatie,

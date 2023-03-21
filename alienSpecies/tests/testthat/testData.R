@@ -9,7 +9,10 @@ test_that("Create data in tempdir", {
     skip("Takes long time to run")
     
     createKeyData(dataDir = tempdir())
-    createTimeseries(packageDir = tempdir())
+    createTimeseries(
+      packageDir = tempdir(), 
+      shapeData = readShapeData()$utm1_bel_with_regions
+    )
     createOccupancyCube(packageDir = tempdir())
     
   })
@@ -39,8 +42,10 @@ test_that("Tools", {
     myFile <- nameFile(species = "abc", content = "test", fileExt = "csv")
     expect_type(myFile, "character")
     
-    myName <- displayName(text = "test", translations = loadMetaData(language = "nl"))
-    expect_type(myName, "character")
+    expect_warning({
+        myName <- displayName(text = "test", translations = loadMetaData(language = "nl"))
+        expect_type(myName, "character")
+      })
 
     myString <- vectorToTitleString(1:10)
     expect_type(myString, "character")

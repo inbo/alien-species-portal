@@ -95,15 +95,13 @@ createTaxaChoices2 <- function(exotenData) {
 createDoubleChoices <- function(exotenData,
   columns = c("pathway_level1", "pathway_level2")) {
   
-  # For R CMD check
-  ..columnsTranslate <- NULL
   
   if (length(columns) != 2)
     stop("Exactly 2 columns should be defined")
   
   columnsTranslate <- c(columns, paste0(columns, "_translate"))
   
-  subData <- exotenData[ , ..columnsTranslate]
+  subData <- exotenData[ , columnsTranslate, with = FALSE]
   subData <- subData[!duplicated(subData), ]
   setkeyv(subData, columns)
   

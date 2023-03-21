@@ -49,7 +49,6 @@ test_that("Module mapCube", {
     mySpecies <- "Oxyura jamaicensis"
     
     allShapes <- readShapeData()
-    baseMap <- createBaseMap()
     
     dictionary <- loadMetaData(type = "keys")
     myKey <- dictionary$taxonKey[match(mySpecies, dictionary$scientificName)]
@@ -61,15 +60,13 @@ test_that("Module mapCube", {
         df = reactive(occurrenceData[taxonKey %in% myKey, ]),
         groupVariable = "cell_code",
         shapeData = allShapes,
-        baseMap = baseMap,
         showPeriod = TRUE
-      ), {
-        
+      ), {        
         session$setInputs(period = c(2002, 2020))
-        expect_true(!is.null(output$spacePlot))
-        
+        expect_true(!is.null(output$region))        
       })
   })
+
 
 
 test_that("Module plotTrias", {

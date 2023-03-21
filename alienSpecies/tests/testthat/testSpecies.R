@@ -7,7 +7,6 @@
 ## Load data
 allShapes <- readShapeData()
 taxData <- loadTabularData(type = "occurrence")
-baseMap <- createBaseMap()
 ## Settings
 # many versus few occurrences
 allSpecies <- c("Alopochen aegyptiaca", "Muntiacus reevesi")
@@ -17,10 +16,14 @@ period <- c(2000, 2018)
 
 test_that("Create summary data", {
     
-    if (!file.exists(file.path(dataDir, "sum_timeseries.csv")))
+    if (!file.exists(file.path(dataDir, "full_timeseries.csv")))
       createTimeseries()
+    expect_true(file.exists(file.path(dataDir, "full_timeseries.csv")))
+    
     if (!file.exists(file.path(dataDir, "dfCube.RData")))
       createOccupancyCube()
+    expect_true(file.exists(file.path(dataDir, "dfCube.RData")))
+    
     
   })
 
@@ -29,7 +32,7 @@ test_that("Occurrence grid shape", {
     expect_equal(length(allShapes), 2)
     
     expect_type(allShapes, "list")
-    expect_equal(names(allShapes), c("be_10km", "be_1km"))
+    expect_setequal(names(allShapes), c("utm1_bel_with_regions", "utm10_bel_with_regions"))
     
   })
 
@@ -45,7 +48,7 @@ test_that("Occurrence plots", {
     
     # Leaflet data
     occurrenceShape <- createCubeData(df = occurrenceData, shapeData = allShapes,
-      groupVariable = "cell_code")
+      region = "flanders", groupVariable = "cell_code")
     expect_equal(length(occurrenceShape), 2)
     expect_s3_class(occurrenceShape[[1]], "sf")
     expect_lte(nrow(occurrenceShape[[1]]), length(unique(taxData$cell_code1[taxData$taxonKey == myKey])))
@@ -57,19 +60,28 @@ test_that("Occurrence plots", {
     expect_s3_class(myData, "data.frame")
     
     # Leaflet plot
-    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
-      legend = "topright", addGlobe = TRUE, groupVariable = "cell_code")
+    myPlot <- mapCube(cubeShape = occurrenceShape, addGlobe = TRUE, 
+      groupVariable = "cell_code")
     expect_s3_class(myPlot, "leaflet")
     
+    # Change borders
+    map2 <- addBaseMap(map = myPlot, regions = c("flanders", "wallonia"), combine = TRUE)
+    map3 <- addBaseMap(map = map2, regions = c("flanders", "wallonia"), combine = FALSE)
+    
     # Barplot
-    occurrenceData <- taxData[taxData$taxonKey %in% myKey, ]
-    myResult <- countOccurrence(df = occurrenceData, period = c(2012, 2018))
+    # Add region as group variable
+    df <- merge(taxData[taxData$taxonKey %in% myKey, ], 
+      sf::st_drop_geometry(allShapes$utm1_bel_with_regions)[, c("CELLCODE", "isFlanders", "isBrussels")], 
+      by.x = "cell_code1", by.y = "CELLCODE")
+    myResult <- countOccurrence(df = df, period = c(2012, 2021), combine = FALSE, 
+      uiText = loadMetaData(type = "ui"))
     
     expect_s3_class(myResult$plot, "plotly")
     expect_s3_class(myResult$data, "data.frame")
     
     # Color bars when full range selected
-    myResult <- countOccurrence(df = occurrenceData, period = c(1950, 2021))$plot
+    myResult <- countOccurrence(df = df, period = c(1950, 2021),
+      uiText = loadMetaData(type = "ui"))$plot
         
   })
 
@@ -77,7 +89,10 @@ test_that("Occurrence plots", {
 
 test_that("Emergence status GAM - Observations", {
 
-    timeseries <- loadTabularData(type = "timeseries")
+    timeseries <- summarizeTimeSeries(
+      rawData = loadTabularData(type = "timeseries"), 
+      region = c("flanders", "brussels")
+    )
     
     myKey <- unique(taxData$taxonKey[taxData$scientificName == allSpecies[2]])
     
@@ -119,9 +134,9 @@ test_that("Reporting t0 and t1", {
       groupVariable = "source")
     expect_equal(length(occurrenceShape), 4)
     expect_s3_class(occurrenceShape[[1]], "sf")
-    expect_lte(nrow(occurrenceShape[[length(occurrenceShape)]]), length(unique(reportingData$cell_code10)))
+    expect_equal(sum(sapply(occurrenceShape[1:3], nrow)), length(unique(reportingData$cell_code10)))
     
-    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
+    myPlot <- mapCube(cubeShape = occurrenceShape,
       legend = "topright", addGlobe = TRUE, groupVariable = "source")
     expect_s3_class(myPlot, "leaflet")
     

@@ -23,7 +23,7 @@ managementDir <- system.file("extdata", "management", package = "alienSpecies")
 
 
 # Create summary data
-if (!file.exists(file.path(dataDir, "sum_timeseries.csv")))
+if (!file.exists(file.path(dataDir, "full_timeseries.csv")))
   createTimeseries()
 if (!file.exists(file.path(dataDir, "dfCube.RData")))
   createOccupancyCube()
@@ -57,10 +57,6 @@ if (!doDebug | !exists("allShapes"))
       extension = ".geojson")
   )
 dictionary <- loadMetaData(type = "keys")
-
-# Load base map
-if (!doDebug | !exists("baseMap"))
-  baseMap <- createBaseMap()
 
 
 # Initial exoten filter choices

@@ -36,9 +36,16 @@ getGbifOccurrence <- function(datasetKey,
   # Clean columns
   cleanData <- cleanData[, c("gbifID", "kingdom", "phylum", "class", "order", "family", "species",
       "scientificName", "year", "individualCount", "samplingProtocol",
-      "decimalLatitude", "decimalLongitude")]
+      "decimalLatitude", "decimalLongitude", "level1Name")]
   colnames(cleanData)[colnames(cleanData) == "individualCount"] <- "count"
   cleanData$gbifID <- as.character(cleanData$gbifID)
+  
+  # boolean for regions
+  cleanData$isFlanders <- cleanData$level1Name == "Vlaanderen"
+  cleanData$isBrussels <- cleanData$level1Name == "Bruxelles"
+  cleanData$isWallonia <- cleanData$level1Name == "Wallonie"
+  cleanData$level1Name <- NULL
+  
   
   ## Extract verbatim data -- needed for gender
   extractDir <- file.path(tempdir(), "gbifdownload", datasetKey)
@@ -85,6 +92,8 @@ getGbifOccurrence <- function(datasetKey,
   )
   verbatimData$sex <- NULL
   verbatimData$lifeStage <- NULL
+  verbatimData$gbifID <- as.character(verbatimData$gbifID)
+  
   
   # Combine clean and verbatim data
   df <- merge(cleanData, verbatimData)

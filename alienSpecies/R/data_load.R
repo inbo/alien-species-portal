@@ -9,7 +9,7 @@
 #' @importFrom sp spTransform
 #' @importFrom sf st_read
 #' @export
-readShapeData <- function(extension = c(".shp", ".geojson"),
+readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
   dataDir = system.file("extdata", "grid", package = "alienSpecies")
 ) {
   
@@ -17,24 +17,24 @@ readShapeData <- function(extension = c(".shp", ".geojson"),
   
   shapeFiles <- list.files(dataDir, pattern = extension)
   
-  if (extension == ".shp") {
+  if (extension %in% c(".gpkg", ".shp")) {
     
     toReturn <- lapply(shapeFiles, function(iFile) {
         
-        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile))
+        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
         
       })
     
-  } else {
+  } else if (extension == ".geojson") {
     
     toReturn <- lapply(shapeFiles, function(iFile) {
         
-        spatialData <- readOGR(dsn = file.path(dataDir, iFile), verbose = TRUE)
+        spatialData <- readOGR(dsn = file.path(dataDir, iFile), verbose = FALSE)
         sp::spTransform(spatialData, CRS("+proj=longlat +datum=WGS84"))
         
       })
   
-  }
+  } 
   
   
   
@@ -100,7 +100,8 @@ createKeyData <- function(dataDir = system.file("extdata", package = "alienSpeci
 #' @importFrom data.table fread rbindlist
 #' @export
 createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
-  packageDir = system.file("extdata", package = "alienSpecies")) {
+  packageDir = system.file("extdata", package = "alienSpecies"),
+  shapeData) {
   
   # For R CMD check
   obs <- cobs <- pa_obs <- pa_cobs <- classKey <- taxonKey <- year <- protected <- NULL
@@ -115,24 +116,14 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
   # pa_obs: presence of species in protected areas (1 = yes, 0 = no)
   # pa_cobs: presence of class in protected areas (1 = yes, 0 = no)
   
-  ## Summarize over the 1km x 1km grids
-  # obs: number of observations for species per year
-  # cobs: number of observations for class per year
-  # ncells: number of 1x1 grids with species present in protected areas (occupancy)
-  # c_ncells: number of 1x1 grids with class present in protected areas (occupancy)
-  nonProtectedData <- rawData[, .(obs = sum(obs), cobs = sum(cobs), 
-      ncells = sum(pa_obs), c_ncells = sum(pa_cobs), classKey = unique(classKey)), by = .(taxonKey, year)][, protected := FALSE]
+  # Merge with shapeData for region indicators
+  regions <- c("flanders", "wallonia", "brussels")
+  fullData <- merge(rawData, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
+    by.x = "eea_cell_code", by.y = "CELLCODE")
   
-  protectedData <- rawData[(natura2000), .(obs = sum(obs), cobs = sum(cobs), 
-      ncells = sum(pa_obs), c_ncells = sum(pa_cobs), classsKey = unique(classKey)), by = .(taxonKey, year)][, protected := TRUE]
-  
-  combinedData <- do.call(rbindlist, list(list(nonProtectedData, protectedData), fill = TRUE))
-  
-  write.csv(combinedData, file = file.path(packageDir, "sum_timeseries.csv"), 
+  write.csv(fullData, file = file.path(packageDir, "full_timeseries.csv"), 
     row.names = FALSE)
-  
-  return(TRUE)  
-  
+
 }
 
 
@@ -161,7 +152,6 @@ loadTabularData <- function(
   scientificName <- NULL
   i.scientificName <- NULL
   i.classKey <- NULL
-  ..currentHabitats <- NULL
   
   warningMessage <- NULL
   
@@ -172,7 +162,7 @@ loadTabularData <- function(
 #      "indicators" = c("description.txt", "distribution.txt", "speciesprofile.txt", "taxon.txt"),
       unionlist = "eu_concern_species.tsv",
       occurrence = "be_alientaxa_cube.csv",
-      timeseries = "sum_timeseries.csv"))
+      timeseries = "full_timeseries.csv"))
   
   if (type == "indicators") {
     
@@ -455,7 +445,13 @@ getDutchNames <- function(x, type = c("regio")) {
 #' 
 #' @author mvarewyck
 #' @export
-translate <- function(data, id) {
+translate <- function(data = loadMetaData(type = "ui"), id) {
+  
+  # Helpfull during development to see which are missing
+  # can be turned of in production
+  if (!is.null(data) & !all(id %in% data$id))
+    warning("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
+  
   
   data <- rbind(
     data,
