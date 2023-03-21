@@ -7,7 +7,6 @@
 ## Load data
 allShapes <- readShapeData()
 taxData <- loadTabularData(type = "occurrence")
-baseMap <- createBaseMap()
 ## Settings
 # many versus few occurrences
 allSpecies <- c("Alopochen aegyptiaca", "Muntiacus reevesi")
@@ -19,8 +18,12 @@ test_that("Create summary data", {
     
     if (!file.exists(file.path(dataDir, "sum_timeseries.csv")))
       createTimeseries()
+    expect_true(file.exists(file.path(dataDir, "sum_timeseries.csv")))
+    
     if (!file.exists(file.path(dataDir, "dfCube.RData")))
       createOccupancyCube()
+    expect_true(file.exists(file.path(dataDir, "dfCube.RData")))
+    
     
   })
 
@@ -57,19 +60,28 @@ test_that("Occurrence plots", {
     expect_s3_class(myData, "data.frame")
     
     # Leaflet plot
-    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap, 
-      legend = "topright", addGlobe = TRUE, groupVariable = "cell_code")
+    myPlot <- mapCube(cubeShape = occurrenceShape, addGlobe = TRUE, 
+      groupVariable = "cell_code")
     expect_s3_class(myPlot, "leaflet")
     
+    # Change borders
+    map2 <- addBaseMap(map = myPlot, regions = c("flanders", "wallonia"), combine = TRUE)
+    map3 <- addBaseMap(map = map2, regions = c("flanders", "wallonia"), combine = FALSE)
+    
     # Barplot
-    occurrenceData <- taxData[taxData$taxonKey %in% myKey, ]
-    myResult <- countOccurrence(df = occurrenceData, period = c(2012, 2018))
+    # Add region as group variable
+    df <- merge(taxData[taxData$taxonKey %in% myKey, ], 
+      sf::st_drop_geometry(allShapes$utm1_bel_with_regions)[, c("CELLCODE", "isFlanders", "isBrussels")], 
+      by.x = "cell_code1", by.y = "CELLCODE")
+    myResult <- countOccurrence(df = df, period = c(2012, 2021), combine = FALSE, 
+      uiText = loadMetaData(type = "ui"))
     
     expect_s3_class(myResult$plot, "plotly")
     expect_s3_class(myResult$data, "data.frame")
     
     # Color bars when full range selected
-    myResult <- countOccurrence(df = occurrenceData, period = c(1950, 2021))$plot
+    myResult <- countOccurrence(df = df, period = c(1950, 2021),
+      uiText = loadMetaData(type = "ui"))$plot
         
   })
 
@@ -121,7 +133,7 @@ test_that("Reporting t0 and t1", {
     expect_s3_class(occurrenceShape[[1]], "sf")
     expect_equal(sum(sapply(occurrenceShape[1:3], nrow)), length(unique(reportingData$cell_code10)))
     
-    myPlot <- mapCube(cubeShape = occurrenceShape, baseMap = baseMap,
+    myPlot <- mapCube(cubeShape = occurrenceShape,
       legend = "topright", addGlobe = TRUE, groupVariable = "source")
     expect_s3_class(myPlot, "leaflet")
     

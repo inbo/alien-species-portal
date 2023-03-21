@@ -58,10 +58,6 @@ if (!doDebug | !exists("allShapes"))
   )
 dictionary <- loadMetaData(type = "keys")
 
-# Load base map
-if (!doDebug | !exists("baseMap"))
-  baseMap <- createBaseMap()
-
 
 # Initial exoten filter choices
 # e.g. search for Stylommatophora

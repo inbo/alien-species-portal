@@ -84,12 +84,10 @@ mapCubeServer(id = "observations",
   species = reactive(input$species_choice),
   df = reactive({
       req(taxonKey())
-      occurrenceData[taxonKey %in% taxonKey(), ]
+      occurrenceData[taxonKey %in% taxonKey(), ]      
     }),
-  filter = reactive(NULL),
   groupVariable = "cell_code",
   shapeData = allShapes,
-  baseMap = baseMap,
   showPeriod = TRUE
 )
 
@@ -166,8 +164,7 @@ mapCubeServer(id = "reporting_t01",
   df = reactive(dfCube[species %in% input$species_choice, ]),
   filter = reactive(list(source = unique(dfCube$source[dfCube$species %in% input$species_choice]))),
   groupVariable = "source",
-  shapeData = allShapes,
-  baseMap = baseMap
+  shapeData = allShapes
 )
 
 
@@ -220,7 +217,7 @@ observe({
     req(results$species_managementData())
     
     if (input$species_choice %in% cubeSpecies) {
-      ## Map
+      ## Map + slider barplot
       
       mapCubeServer(id = "management",
         uiText = reactive(results$translations),
@@ -235,12 +232,11 @@ observe({
           }),
         groupVariable = NULL,
         shapeData = NULL,
-        baseMap = baseMap,
         showPeriod = TRUE
       )
       
     } else {
-      ## Map + barplot
+      ## Map + choices barplot
       
       mapRegionsServer(
         id = "management2",

@@ -102,14 +102,16 @@ createCubeData <- function(df, shapeData, groupVariable,
 #' @param minYear numeric, start year of the barplot
 #' @param period numeric vector of length 2, selected period is colored blue,
 #' other years are colored gray
+#' @inheritParams trendYearRegion
 #' @return plotly
 #' 
 #' @author mvarewyck
 #' @import plotly
 #' @importFrom INBOtheme inbo_lichtgrijs inbo_steun_blauw
+#' @importFrom data.table setkey
 #' @export
 countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
-  period = c(2000, 2018)) {
+  period = c(2000, 2018), uiText, combine = FALSE) {
   
   
   # For R CMD check
@@ -124,32 +126,83 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
       '10km' = "cell_code10"
   )
   
-  if (!iCode %in% colnames(df)) {
+  # Filter data
+  df <- df[year > minYear, ][, selected := year >= period[1] & year <= period[2]]
+  
+  # Filter & color by regions
+  regions <- c("flanders", "brussels", "wallonia")
+  regionCols <- paste0("is", simpleCap(regions))
+  if (any(regionCols %in% colnames(df))) {
     
-    nOccurred <- df[, .(count = sum(count)), by = year]
+    if (combine) {
+      
+      df$region <- factor(c("not selected", "selected")[df$selected + 1],
+        levels = c("not selected", "selected"))
+      
+    } else {
+      
+      keepRegions <- regionCols %in% colnames(df)
+      regions <- regions[keepRegions]
+      regionCols <- regionCols[keepRegions]
+      
+      # Filter on regions
+      df <- df[apply(df[, regionCols, with = FALSE], 1, sum) > 0, ]
+      
+      df$region <- factor(
+        ifelse(!df$selected, "not selected", 
+          ifelse(apply(df[, regionCols, with = FALSE], 1, sum) > 1, "multipleRegions",
+            apply(df[, regionCols, with = FALSE], 1, function(x) regions[x > 0]))),
+        levels = c("not selected", regions, "multipleRegions"))
+      
+    }
+    
+    # Rename
+    newLevels <- as.list(levels(droplevels(df$region)))
+    names(newLevels) <- translate(uiText, unlist(newLevels))$title
+    levels(df$region) <- newLevels
+    
+  }
+  
+  
+  if (!"count" %in% colnames(df))
+    df[, count := length(unique(base::get(iCode))), by = .(year, region, selected)]
+  
+  if ("region" %in% colnames(df)) {
+    # with region information
+    
+    nOccurred <- df[, .(count = sum(count)), by = .(year, region, selected)]
+    setkey(nOccurred, year, region)
+    returnData <- nOccurred[, .(year, region, count)]
     
   } else {
     
-    nOccurred <- df[, .(count = length(unique(get(iCode)))), by = year]
+    nOccurred <- df[, .(count = sum(count)), by = .(year, selected)]
+    setkey(nOccurred, year)
+    returnData <- nOccurred
     
-  } 
-
-  # Filter data
-  nOccurred <- nOccurred[year > minYear, ][, selected := year >= period[1] & year <= period[2]]
+  }
   
-  myColors <- c(inbo_lichtgrijs, inbo_steun_blauw)
   
-  myPlot <- plot_ly(data = nOccurred, x = ~year, y = ~count, type = "bar",
-      marker = list(color = ~myColors[selected + 1]),
-      hoverinfo = "x+y") %>%
+  
+  myPlot <- plot_ly(data = nOccurred[nOccurred$selected, ], 
+      x = ~year, y = ~count, type = "bar",
+      color = if (!is.null(nOccurred$region)) ~region, 
+      text = if (!is.null(nOccurred$region)) ~region, 
+      colors = inbo_palette(n = max(1, nlevels(df$region))), 
+      hoverinfo = "x+y+text") %>%
+    add_trace(data = nOccurred[!nOccurred$selected, ], 
+        x = ~year, y = ~count, showlegend = FALSE,
+        marker = list(color = inbo_lichtgrijs)) %>%
     layout(
-      xaxis = list(title = "Year", range = c(minYear, currentYear)),
+      xaxis = list(title = translate(uiText, "year")$title, range = c(minYear, currentYear)),
       yaxis = list(title = ""),
-      showlegend = FALSE
+      showlegend = !combine & !is.null(nOccurred$region),
+      barmode = "stack",
+      legend = list(orientation = 'h', x = 0.5, y = 1, xanchor = "center")
   )
   
   
-  list(plot = myPlot, data = nOccurred)
+  list(plot = myPlot, data = returnData)
   
 }
 
@@ -185,25 +238,44 @@ paletteMap <- function(groupNames, groupVariable) {
 
 
 #' Create base map of Belgium
+#' @param map leaflet object, map to which a layer with belgian boundaries should be added
+#' @param regions character vector, selected regions
+#' @inheritParams countOccurrence
 #' @return leaflet object
+#' 
 #' @author mvarewyck
 #' @import leaflet
 #' @importFrom rgdal readOGR
+#' @importFrom rgeos gUnaryUnion
 #' @export
-createBaseMap <- function() {
+addBaseMap <- function(map = leaflet(), 
+  regions = c("flanders", "brussels", "wallonia"), combine = FALSE) {
   
-  gewestBel <- readOGR(system.file("extdata", "grid", "gewestbel.shp", package = "alienSpecies"), "gewestbel", stringsAsFactors = FALSE)
+  if (is.null(regions))
+    return(map)
   
-  baseMap <- leaflet(gewestBel) %>% 
+  gewestBel <- readOGR(system.file("extdata", "grid", "gewestbel.shp", package = "alienSpecies"), 
+    layer = "gewestbel", verbose = FALSE, stringsAsFactors = FALSE)
+  
+  matchingRegions <- data.frame(name = c("flanders", "brussels", "wallonia"), 
+    shape = c("Vlaams", "Brussels", "Waals"))
+  gewestBel <- subset(gewestBel, GEWEST %in% matchingRegions$shape[match(regions, matchingRegions$name)])
+  
+  if (combine)
+    gewestBel <- rgeos::gUnaryUnion(gewestBel)
+    
+  map %>% 
+    clearGroup("borderRegion") %>%
     addPolylines(
+      data = gewestBel,
       color = "black", 
       opacity = 0.8, 
       weight = 3, 
       group = "borderRegion"
     ) %>% 
-    addScaleBar(position = "bottomleft")
-  
-  baseMap
+    addScaleBar(
+      position = "bottomleft"
+    )
   
 }
 
@@ -221,7 +293,7 @@ createBaseMap <- function() {
 #' @author mvarewyck
 #' @import leaflet
 #' @export
-mapCube <- function(cubeShape, baseMap = createBaseMap(), legend = "none", 
+mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none", 
   addGlobe = FALSE,
   groupVariable) {
   
@@ -229,7 +301,6 @@ mapCube <- function(cubeShape, baseMap = createBaseMap(), legend = "none",
   myColors <- paletteMap(groupNames = names(cubeShape), groupVariable = groupVariable)
   palette <- colorFactor(palette = myColors$colors, levels = myColors$levels)
   
-#  myMap <- leaflet()
   myMap <- baseMap
   
   for (i in length(cubeShape):1)
@@ -280,10 +351,10 @@ mapCube <- function(cubeShape, baseMap = createBaseMap(), legend = "none",
 #' @return leaflet map
 #' 
 #' @author mvarewyck
-#' @importFrom leaflet addMarkers addTiles `%>%` markerClusterOptions
+#' @importFrom leaflet addMarkers addTiles `%>%` markerClusterOptions leaflet
 #' @import data.table
 #' @export
-mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
+mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
   addGlobe = FALSE) {
   
   # For R CMD check
@@ -334,7 +405,6 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
 #' @inheritParams mapCubeUI
 #' @param species reactive character, readable name of the selected species
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
-#' @param baseMap leaflet object as returned by \code{\link{createBaseMap}}
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -342,10 +412,10 @@ mapOccurrence <- function(occurrenceData, baseMap = createBaseMap(),
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot webshot
+#' @importFrom sf st_drop_geometry
 #' @export
-mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
-  filter = reactive(list(source = c("all"))), 
-  groupVariable, showPeriod = FALSE
+mapCubeServer <- function(id, uiText, species, df, shapeData,
+  filter = reactive(NULL), groupVariable, showPeriod = FALSE
 ) {
   
   moduleServer(id,
@@ -406,14 +476,14 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
             choices = choices, multiple = TRUE, selected = choices)
           
         })
-      
+           
       output$period <- renderUI({
           
           req(df())
           
           periodChoice <- range(df()$year, na.rm = TRUE)
           
-          div(class = "sliderBlank", style = "margin-left:50px; margin-right:10px;",
+          div(style = "margin-left:50px; margin-right:10px;",
             sliderInput(
               inputId = ns("period"), 
               label = NULL,
@@ -474,7 +544,8 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       cubeShape <- reactive({
           
           validate(need(subData(), noData()),
-            need(nrow(subData()) > 0, noData()))
+            need(nrow(subData()) > 0, noData()),
+            need(input$region, noData()))
           
           createCubeData(
             df = subData(),
@@ -492,17 +563,33 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
             
             validate(need(nrow(subData()) > 0, noData()))
             
-            mapOccurrence(occurrenceData = subData(), baseMap = baseMap,
+            mapOccurrence(occurrenceData = subData(),
+              # when switching species, need to create correct basemap
+              baseMap = addBaseMap(regions = isolate(input$region), combine = isolate(input$combine)),
               addGlobe = TRUE)
             
           } else {
             
             validate(need(cubeShape(), noData()))
             
-            mapCube(cubeShape = cubeShape(), baseMap = baseMap, 
-              groupVariable = groupVariable, addGlobe = FALSE, legend = "topright")
+            mapCube(cubeShape = cubeShape(), groupVariable = groupVariable, 
+              # when switching species, need to create correct basemap
+              baseMap = addBaseMap(regions = isolate(input$region), combine = isolate(input$combine)),
+              addGlobe = FALSE, legend = "topright")
             
           }
+          
+        })
+      
+      # Add border region
+      observe({
+          
+          validate(need(input$region, noData()),
+            need(!is.null(input$combine), noData()))
+          
+          proxy <- leafletProxy("spacePlot")
+          
+          addBaseMap(map = proxy, regions = input$region, combine = input$combine)
           
         })
       
@@ -573,7 +660,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
             
             newMap <- mapOccurrence(
               occurrenceData = subData(), 
-              baseMap = baseMap,
+              baseMap = addBaseMap(regions = req(input$region), combine = input$combine),
               addGlobe = input$globe %% 2 == 1
             )
             
@@ -582,7 +669,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
             newMap <- mapCube(
               cubeShape = cubeShape(),
               groupVariable = groupVariable,
-              baseMap = baseMap,
+              baseMap = addBaseMap(regions = req(input$region), combine = input$combine),
               legend = input$legend,
               addGlobe = input$globe %% 2 == 1
             )
@@ -647,12 +734,27 @@ mapCubeServer <- function(id, uiText, species, df, shapeData, baseMap,
       ## Barplot for Occurrence ##
       ## ---------------------- ##
       
-    
+      observe({
+          
+          updateCheckboxInput(session = session, inputId = "combine",
+            label = translate(uiText(), "combineRegions")$title)
+          
+        })  
       
       plotModuleServer(id = "countOccurrence",
         plotFunction = "countOccurrence", 
-        data = filterData,
-        period = reactive(input$period)
+        data = reactive({
+            validate(need(input$region, noData()))
+            if (!is.null(shapeData))
+              merge(filterData(), 
+                # attach regions for coloring
+                sf::st_drop_geometry(shapeData$utm1_bel_with_regions)[, c("CELLCODE", paste0("is", simpleCap(input$region)))], 
+                by.x = "cell_code1", by.y = "CELLCODE", all.x = TRUE) else
+              filterData()
+          }),
+        period = reactive(input$period),
+        combine = reactive(input$combine),
+        uiText = uiText
       )
       
     })  
@@ -693,7 +795,8 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
         column(6, 
           actionLink(inputId = ns("globe"), label = "Show globe",
             icon = icon("globe"))
-        )
+        ),
+      column(6, checkboxInput(inputId = ns("combine"), label = "Combine all selected regions"))
       )
     ),
     withSpinner(leafletOutput(ns("spacePlot"), height = "600px")),

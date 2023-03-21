@@ -21,7 +21,7 @@ readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
     
     toReturn <- lapply(shapeFiles, function(iFile) {
         
-        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile))
+        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
         
       })
     
@@ -29,7 +29,7 @@ readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
     
     toReturn <- lapply(shapeFiles, function(iFile) {
         
-        spatialData <- readOGR(dsn = file.path(dataDir, iFile), verbose = TRUE)
+        spatialData <- readOGR(dsn = file.path(dataDir, iFile), verbose = FALSE)
         sp::spTransform(spatialData, CRS("+proj=longlat +datum=WGS84"))
         
       })
@@ -454,12 +454,12 @@ getDutchNames <- function(x, type = c("regio")) {
 #' 
 #' @author mvarewyck
 #' @export
-translate <- function(data, id) {
+translate <- function(data = loadMetaData(type = "ui"), id) {
   
   # Helpfull during development to see which are missing
   # can be turned of in production
   if (!is.null(data) & !all(id %in% data$id))
-    warning("Not in translation file: ", vectorToTitleString(id))
+    warning("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
   
   
   data <- rbind(
