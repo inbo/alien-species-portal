@@ -93,6 +93,7 @@ createKeyData <- function(dataDir = system.file("extdata", package = "alienSpeci
 
 #' Summarize timeseries data over 1km x 1km cubes
 #' @inheritParams createOccupancyCube
+#' @param shapeData spatialPolygonsDataFrame for utm1 grid data
 #' @return TRUE if creation succeeded
 #' 
 #' @author mvarewyck
@@ -102,10 +103,6 @@ createKeyData <- function(dataDir = system.file("extdata", package = "alienSpeci
 createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
   packageDir = system.file("extdata", package = "alienSpecies"),
   shapeData) {
-  
-  # For R CMD check
-  obs <- cobs <- pa_obs <- pa_cobs <- classKey <- taxonKey <- year <- protected <- NULL
-  natura2000 <- NULL
   
   # created from https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
   ## Data at 1km x 1km grid level

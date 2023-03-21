@@ -166,6 +166,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
 
 #' Shiny module for creating the plot \code{\link{plotTrias}} - UI side
 #' @template moduleUI
+#' @param showRegion boolean, whether to show filter for region
 #' @inheritParams plotTrias
 #' @author mvarewyck
 #' @import shiny

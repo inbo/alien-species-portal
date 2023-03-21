@@ -115,9 +115,7 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   
   
   # For R CMD check
-  count <- NULL
-  year <- NULL
-  selected <- NULL
+  count <- year <- selected <- region <- NULL
   currentYear <- as.numeric(format(Sys.Date(), "%Y"))
   
   spatialLevel <- match.arg(spatialLevel)
@@ -250,6 +248,10 @@ paletteMap <- function(groupNames, groupVariable) {
 #' @export
 addBaseMap <- function(map = leaflet(), 
   regions = c("flanders", "brussels", "wallonia"), combine = FALSE) {
+  
+  # For R CMD check
+  GEWEST <- NULL
+  
   
   if (is.null(regions))
     return(map)
