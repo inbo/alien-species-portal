@@ -131,7 +131,8 @@ plotTriasServer(id = "species_gam",
         y_label = translate(results$translations, "observations")$title
       )
     }),
-  filters = c("bias", "protected")
+  filters = c("bias", "protected"),
+  filterRegion = TRUE
 )
 
 

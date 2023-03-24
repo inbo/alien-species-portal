@@ -47,6 +47,13 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
         data = resultFct$output
       )
       
+    } else if (all(c("interactive_plot", "data") %in% names(resultFct))) {
+      
+      list(
+        plot = ggplotly(resultFct$interactive_plot + INBOtheme::theme_inbo(transparent = TRUE)), 
+        data = resultFct$data
+      ) 
+      
     } else {
 
       list(
@@ -77,6 +84,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' trias package
 #' @param filters character vector, additional filters for the TRIAS plot to 
 #' be dipslayed
+#' @param filterRegion boolean, whether to show filter for region
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -84,7 +92,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @import trias
 #' @export
 plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
-  filters = NULL, outputType = c("plot", "table")) {
+  filters = NULL, filterRegion = FALSE, outputType = c("plot", "table")) {
   
   # For R CMD check
   protected <- NULL
@@ -122,6 +130,19 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
           selectInput(inputId = ns("region"), label = translate(uiText(), "regions"),
             choices = choices, multiple = TRUE, selected = choices)
           
+        })
+      
+      output$filterPanel <- renderUI({
+          
+          if (!is.null(filters) | filterRegion)
+            wellPanel(
+              fluidRow(
+                column(6, uiOutput(ns("filters"))),
+                if (filterRegion)
+                  column(6, uiOutput(ns("regionFilter")))
+              )
+            )
+        
         })
       
       plotData <- reactive({
@@ -166,12 +187,11 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
 
 #' Shiny module for creating the plot \code{\link{plotTrias}} - UI side
 #' @template moduleUI
-#' @param showRegion boolean, whether to show filter for region
 #' @inheritParams plotTrias
 #' @author mvarewyck
 #' @import shiny
 #' @export
-plotTriasUI <- function(id, outputType = c("plot", "table"), showRegion = FALSE) {
+plotTriasUI <- function(id, outputType = c("plot", "table")) {
   
   ns <- NS(id)
   outputType <- match.arg(outputType)
@@ -183,13 +203,7 @@ plotTriasUI <- function(id, outputType = c("plot", "table"), showRegion = FALSE)
     conditionalPanel("input.linkPlotTrias % 2 == 1", ns = ns,
       
       uiOutput(ns("descriptionPlotTrias")),
-      wellPanel(
-        fluidRow(
-          column(6, uiOutput(ns("filters"))),
-          if (showRegion)
-            column(6, uiOutput(ns("regionFilter")))
-        )
-      ),
+      uiOutput(ns("filterPanel")),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else
