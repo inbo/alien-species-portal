@@ -25,6 +25,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libpng-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Missing for tidyverse install
+
+RUN apt-get update && apt-get install --no-install-recommends -y libfontconfig1-dev
+
 RUN R -e "cat(\"local(options(repos = c(CRAN = 'https://cloud.r-project.org')))\n\", file = R.home('etc/Rprofile.site'), append = TRUE)"
 
 # install dependencies
@@ -34,7 +38,7 @@ RUN R -q -e "install.packages('remotes')" && \
     R -q -e "remotes::install_version('bit', version = '4.0.5', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('brew', version = '1.0-8', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('brio', version = '1.1.3', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('cli', version = '3.6.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('cli', version = '3.6.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('clipr', version = '0.8.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('colorspace', version = '2.1-0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('commonmark', version = '1.9.0', upgrade = FALSE)"
@@ -93,13 +97,12 @@ RUN R -q -e "remotes::install_version('yaml', version = '2.3.7', upgrade = FALSE
     R -q -e "remotes::install_version('bit64', version = '4.0.5', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('cachem', version = '1.0.7', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('class', version = '7.3-21', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('conditionz', version = '0.1.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('desc', version = '1.4.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('diffobj', version = '0.3.5', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('ellipsis', version = '0.3.2', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('highr', version = '0.10', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('later', version = '1.3.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('lifecycle', version = '1.0.3', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('highr', version = '0.10', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('later', version = '1.3.0', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('lifecycle', version = '1.0.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('markdown', version = '1.5', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('Matrix', version = '1.5-3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('munsell', version = '0.5.0', upgrade = FALSE)" && \
@@ -107,9 +110,9 @@ RUN R -q -e "remotes::install_version('later', version = '1.3.0', upgrade = FALS
     R -q -e "remotes::install_version('plyr', version = '1.8.8', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('processx', version = '3.8.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('rex', version = '1.2.1', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('s2', version = '1.1.2', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('sp', version = '1.6-0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('systemfonts', version = '1.0.4', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('s2', version = '1.1.2', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('sp', version = '1.6-0', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('systemfonts', version = '1.0.4', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('terra', version = '1.7-18', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('timechange', version = '0.2.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('tinytex', version = '0.44', upgrade = FALSE)" && \
@@ -117,9 +120,9 @@ RUN R -q -e "remotes::install_version('sp', version = '1.6-0', upgrade = FALSE)"
     R -q -e "remotes::install_version('tzdb', version = '0.3.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('units', version = '0.8-1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('callr', version = '3.7.3', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('e1071', version = '1.7-13', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('gtable', version = '0.3.3', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('htmltools', version = '0.5.4', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('e1071', version = '1.7-13', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('gtable', version = '0.3.3', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('htmltools', version = '0.5.5', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('knitr', version = '1.42', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('lubridate', version = '1.9.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('memoise', version = '2.0.1', upgrade = FALSE)" && \
@@ -127,9 +130,9 @@ RUN R -q -e "remotes::install_version('gtable', version = '0.3.3', upgrade = FAL
     R -q -e "remotes::install_version('openssl', version = '2.0.6', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('pkgload', version = '1.3.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('promises', version = '1.2.0.1', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('raster', version = '3.6-20', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('rgdal', version = '1.6-5', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('rgeos', version = '0.6-2', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('raster', version = '3.6-20', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('rgdal', version = '1.6-5', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('rgeos', version = '0.6-2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('scales', version = '1.2.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('textshaping', version = '0.3.6', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('urltools', version = '1.7.3', upgrade = FALSE)" && \
@@ -137,9 +140,9 @@ RUN R -q -e "remotes::install_version('rgdal', version = '1.6-5', upgrade = FALS
     R -q -e "remotes::install_version('blob', version = '1.2.4', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('classInt', version = '0.4-9', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('conflicted', version = '1.2.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('crosstalk', version = '1.2.0', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('crul', version = '1.3', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('fontawesome', version = '0.5.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('crosstalk', version = '1.2.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('crul', version = '1.3', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('fontawesome', version = '0.5.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('gridExtra', version = '2.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('hms', version = '1.1.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('httpuv', version = '1.6.9', upgrade = FALSE)" && \
@@ -147,9 +150,9 @@ RUN R -q -e "remotes::install_version('crul', version = '1.3', upgrade = FALSE)"
     R -q -e "remotes::install_version('ids', version = '1.0.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('jquerylib', version = '0.1.4', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('pillar', version = '1.9.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('pkgbuild', version = '1.4.0', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('purrr', version = '1.0.1', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('ragg', version = '1.2.5', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('pkgbuild', version = '1.4.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('purrr', version = '1.0.1', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('ragg', version = '1.2.5', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('sass', version = '0.4.5', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('stringr', version = '1.5.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('tidyselect', version = '1.2.0', upgrade = FALSE)" && \
@@ -157,9 +160,9 @@ RUN R -q -e "remotes::install_version('purrr', version = '1.0.1', upgrade = FALS
     R -q -e "remotes::install_version('bslib', version = '0.4.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('covr', version = '3.6.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('gargle', version = '1.3.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('progress', version = '1.2.2', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('roxygen2', version = '7.2.3', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('selectr', version = '0.4-2', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('progress', version = '1.2.2', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('roxygen2', version = '7.2.3', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('selectr', version = '0.4-2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('sf', version = '1.0-12', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('tibble', version = '3.2.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('cellranger', version = '1.1.0', upgrade = FALSE)" && \
@@ -167,19 +170,19 @@ RUN R -q -e "remotes::install_version('roxygen2', version = '7.2.3', upgrade = F
     R -q -e "remotes::install_version('forcats', version = '1.0.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('ggplot2', version = '3.4.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('googledrive', version = '2.1.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('oai', version = '0.4.0', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('rematch2', version = '2.1.2', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('rmarkdown', version = '2.20', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('oai', version = '0.4.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('rematch2', version = '2.1.2', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('rmarkdown', version = '2.20', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('rvest', version = '1.0.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('shiny', version = '1.7.4', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('vroom', version = '1.6.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('dtplyr', version = '1.3.1', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('googlesheets4', version = '1.0.1', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('googlesheets4', version = '1.1.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('htmlwidgets', version = '1.6.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('readr', version = '2.1.4', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('readxl', version = '1.4.2', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('reprex', version = '2.0.2', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('rgbif', version = '3.7.5', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('readxl', version = '1.4.2', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('reprex', version = '2.0.2', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('rgbif', version = '3.7.6', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('shinycssloaders', version = '1.0.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('shinyjs', version = '2.1.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('tidyr', version = '1.3.0', upgrade = FALSE)" && \
@@ -187,9 +190,9 @@ RUN R -q -e "remotes::install_version('reprex', version = '2.0.2', upgrade = FAL
     R -q -e "remotes::install_version('waldo', version = '0.4.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('broom', version = '1.0.4', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('dbplyr', version = '2.3.2', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('DT', version = '0.27', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('haven', version = '2.5.2', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('leaflet', version = '2.1.2', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('DT', version = '0.27', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('haven', version = '2.5.2', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('leaflet', version = '2.1.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('plotly', version = '4.10.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('testthat', version = '3.1.7', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('modelr', version = '0.1.11', upgrade = FALSE)" && \

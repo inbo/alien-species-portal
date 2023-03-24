@@ -4,6 +4,10 @@
 
 #include packamon.system-dependencies
 
+# Missing for tidyverse install
+
+RUN apt-get update && apt-get install --no-install-recommends -y libfontconfig1-dev
+
 #include packamon.r-repos
 
 #include packamon.r-dependencies
