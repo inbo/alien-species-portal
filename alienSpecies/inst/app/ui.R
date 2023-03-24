@@ -35,10 +35,12 @@ shinyUI(
     tags$body(
       
       tags$div(class = "navbar1", 
-        navbarPage(title = tags$div(
+        navbarPage(
+          title = tags$div(
             HTML("&emsp;"),
+            img(src = "logoTrias.png", height = "45px", style = "margin-right: 50px"), 
             img(src = "logo.png", float = "top", height = "45px"),
-            style = "margin-top: -13px; margin-bottom: -13px",
+            style = "margin-top: -13px; margin-bottom: -13px; margin-left: -150px; margin-right: 50px;",
             tags$script(HTML(paste("var header = $('.navbar > .container');",
                   "header.append('<div style=\"float:right;\"><span class = \"version\">", 
                   paste0("v", packageVersion("alienSpecies")),"</span></div>')"))
