@@ -256,7 +256,7 @@ results$exoten_data <- reactive({
     if (!is.null(input$exoten_pw)) {
       matchPw <- matchCombo(selected = input$exoten_pw, longChoices = unlist(results$filter_pwChoices()))
       searchId <- paste0(searchId, "&pw=", matchPw)
-      subData <- filterCombo(exotenData = subData, inputValue = matchPw, 
+      subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchPw, split = ",")[[1]], 
         inputLevels = c("pathway_level1", "pathway_level2"))
     }
     
@@ -268,9 +268,9 @@ results$exoten_data <- reactive({
     
     # native
     if (!is.null(input$exoten_native)) {
-      matchNative <- matchCombo(selected = input$exoten_native, longChoices = longNativeChoices) 
+      matchNative <- matchCombo(selected = input$exoten_native, longChoices = unlist(results$filter_nativeChoices())) 
       searchId <- paste0(searchId, "&native=", matchNative)
-      subData <- filterCombo(exotenData = subData, inputValue = matchNative, 
+      subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchNative, split = ",")[[1]], 
         inputLevels = c("native_continent", "native_range"))
     }
     
@@ -423,9 +423,10 @@ countOccupancyServer(id = "checklist",
 
 
 ## Plot number of species per year by native region
-countYearNativerangeServer(id = "checklist",
+plotTriasServer(id = "checklist_yearNativeRange",
   uiText = reactive(results$translations),
-  data = results$exoten_data
+  data = results$exoten_data,
+  triasFunction = "indicator_native_range_year"
 )
 
 

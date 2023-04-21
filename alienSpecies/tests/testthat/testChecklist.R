@@ -165,7 +165,12 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio
     expect_s3_class(tmpResult$plot, "plotly")
     expect_s3_class(tmpResult$data, "data.frame")
     
-    trias::indicator_native_range_year(data = exotenData)
+    tmpResult <- trias::indicator_native_range_year(data = exotenData)
+    expect_type(tmpResult, "list")
+    
+    expect_s3_class(tmpResult$interactive_plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
+    
     
   })
 

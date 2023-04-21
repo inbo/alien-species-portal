@@ -96,7 +96,7 @@ tagList(
       ),
       
       tabPanel(titleModuleUI(id = "checklist_origin"),
-        countYearNativerangeUI(id = "checklist")
+        plotTriasUI(id = "checklist_yearNativeRange")
       )
     )
   )
