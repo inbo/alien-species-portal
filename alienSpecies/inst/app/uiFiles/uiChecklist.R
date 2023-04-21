@@ -91,7 +91,8 @@ tagList(
         plotTriasUI(id = "checklist_tablePathway", outputType = "table"),
         plotTriasUI(id = "checklist_pathway1"),
         plotTriasUI(id = "checklist_pathway1Trend"),
-        plotTriasUI(id = "checklist_pathway2")
+        plotTriasUI(id = "checklist_pathway2"),
+        plotTriasUI(id = "checklist_pathway2Trend")
       
       ),
       

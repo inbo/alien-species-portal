@@ -497,3 +497,26 @@ plotTriasServer(id = "checklist_pathway2",
       )
     })
 )
+
+
+plotTriasServer(id = "checklist_pathway2Trend",
+  uiText = reactive(results$translations),
+  data = results$exoten_data,
+  triasFunction = "visualize_pathways_year_level2",
+  triasArgs = reactive({
+      validate(need(length(unique(results$exoten_data()$pathway_level1)) == 1, 
+          translate(results$translations, "singlePathway")$title))
+      list(
+        chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1),
+        x_lab = translate(results$translations, "period")$title,
+        y_lab = translate(results$translations, "numberTaxa")$title,
+        cbd_standard = FALSE,
+        pathways = {
+          levelsP2 <- sort(unique(results$exoten_data()$pathway_level2))
+          c(grep(unknownValue(), levelsP2, value = TRUE, invert = TRUE), 
+            grep(unknownValue(), levelsP2, value = TRUE)
+          )          
+        }
+      )
+    })
+)

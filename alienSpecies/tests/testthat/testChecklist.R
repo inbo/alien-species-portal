@@ -195,6 +195,7 @@ test_that("Introduction pathways per category", {
 # PLOT: CBD Level 1/2 introduction pathways
 test_that("CBD Level 1/2 introduction pathways", {
     
+    # Level 1
     tmpResult <- plotTrias(triasFunction = "visualize_pathways_level1", df = exotenData,
       triasArgs = list(cbd_standard = FALSE))
     expect_type(tmpResult, "list")
@@ -209,7 +210,7 @@ test_that("CBD Level 1/2 introduction pathways", {
     expect_s3_class(tmpResult$plot, "plotly")
     expect_s3_class(tmpResult$data, "data.frame")
     
-    
+    # Level 2
     exotenData[, ':=' (
         pathway_level1_translate = translate(translations, pathway_level1)$title,
         pathway_level2_translate = translate(translations, pathway_level2)$title)
@@ -223,5 +224,9 @@ test_that("CBD Level 1/2 introduction pathways", {
     
     expect_s3_class(tmpResult$plot, "plotly")
     expect_s3_class(tmpResult$data, "data.frame")
+    
+    tmpResult <- plotTrias(triasFunction = "visualize_pathways_year_level2", df = exotenData,
+      triasArgs = list("chosen_pathway_level1" = levelOneChoice))
+    expect_type(tmpResult, "list")
     
   })
