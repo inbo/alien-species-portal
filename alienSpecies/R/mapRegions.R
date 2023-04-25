@@ -15,7 +15,7 @@
 #' @importFrom data.table copy
 #' @export
 createSummaryRegions <- function(data, shapeData, 
-  regionLevel = c("communes", "provinces"),
+  regionLevel = c("communes", "provinces", "gewest", "flanders"),
   year = NULL, unit = c("cpue", "absolute")) {
   
   # For R CMD check
@@ -36,7 +36,8 @@ createSummaryRegions <- function(data, shapeData,
   
   regionVar <- switch(regionLevel,
     communes = "NAAM",
-    provinces = "provincie"
+    provinces = "provincie",
+    gewest = "GEWEST"
   )
   
   if (regionLevel == "flanders")
@@ -85,7 +86,8 @@ createSummaryRegions <- function(data, shapeData,
   fullData <- cbind(expand.grid(
       year = myYear,
       region = if (regionLevel == "flanders") 
-          "flanders" else 
+          "flanders" else if (regionLevel == "gewest")
+          unique(shapeData$communes@data$GEWEST) else
           unique(shapeData[[regionLevel]]@data$NAAM)))
   allData <- merge(summaryData, fullData, all.x = TRUE, all.y = TRUE)
   allData$outcome[is.na(allData$outcome)] <- 0
@@ -212,6 +214,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot webshot
+#' @importFrom sf st_drop_geometry
 #' @export
 mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData) {
   
@@ -308,6 +311,29 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           
         })
       
+      # Filter on gewest
+      output$gewest <- renderUI({
+          
+          choices <- c("flanders", "brussels", "wallonia")
+          names(choices) <- translate(uiText(), choices)$title
+          
+          selectInput(inputId = ns("gewestLevel"), label = translate(uiText(), "gewest")$title,
+            choices = choices, selected = choices, multiple = TRUE)
+          
+        })
+      
+      subShape <- reactive({
+          
+          req(input$gewestLevel)
+          # Subset for GEWEST
+          lapply(shapeData, function(iData) {
+              if (!"sf" %in% class(iData) && "GEWEST" %in% colnames(iData@data))
+                iData[iData$GEWEST %in% input$gewestLevel, ] else
+                iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(input$gewestLevel)), drop = FALSE]), 1, sum) > 0, ]
+            })
+          
+        })
+      
       output$regionLevel <- renderUI({
           
           choices <- c("communes", "provinces")
@@ -321,7 +347,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       output$region <- renderUI({
           
           selectInput(inputId = ns("region"), label = translate(uiText(), "regions")$title,
-              choices = sort(unique(shapeData[[req(input$regionLevel)]]$NAAM)), multiple = TRUE)
+              choices = sort(unique(subShape()[[req(input$regionLevel)]]$NAAM)), multiple = TRUE)
           
         })
       
@@ -348,6 +374,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           
         })
       
+      
       # Filter Occurrence data
       subOccurrence <- reactive({
           
@@ -363,7 +390,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           validate(need(nrow(req(summaryData())) > 0, noData()))
           
           mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
-            shapeData = shapeData, uiText = uiText(), regionLevel = input$regionLevel)
+            shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel)
           
         })
       
@@ -548,7 +575,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       finalMap <- reactive({
           
           newMap <- mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
-            shapeData = shapeData, uiText = uiText(), regionLevel = input$regionLevel,
+            shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel,
             legend = input$legend, addGlobe = input$globe %% 2 == 1)
       
           
@@ -616,7 +643,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           createSummaryRegions(
             data = df(), 
             shapeData = shapeData,
-            regionLevel = "flanders",
+            regionLevel = "gewest",
             year = input$period[1]:input$period[2],
             unit = req(input$unit)
           )
@@ -625,7 +652,9 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       
       plotModuleServer(id = "timePlotFlanders",
         plotFunction = "trendYearRegion", 
-        data = timeDataFlanders,
+        data = reactive({
+            timeDataFlanders()[timeDataFlanders()$region %in% req(input$gewestLevel), ]
+          }),
         uiText = uiText,
         period = reactive(input$period)
       )
@@ -697,8 +726,9 @@ mapRegionsUI <- function(id, plotDetails = NULL) {
     
     wellPanel(
       fixedRow(
+        column(4, uiOutput(ns("gewest"))),
         column(4, uiOutput(ns("regionLevel"))),
-        column(8, uiOutput(ns("region")))
+        column(4, uiOutput(ns("region")))
       ),
       fixedRow(
         column(6, uiOutput(ns("year"))),

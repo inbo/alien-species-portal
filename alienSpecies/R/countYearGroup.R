@@ -126,7 +126,8 @@ countYearGroupUI <- function(id) {
   
   tagList(
      
-      optionsModuleUI(id = ns("countYearGroup"), showGroup = TRUE, showSummary = TRUE),
+      optionsModuleUI(id = ns("countYearGroup"), showGroup = TRUE, showSummary = TRUE,
+        showGewest = TRUE),
       plotModuleUI(id = ns("countYearGroup")),
       tags$hr()
     

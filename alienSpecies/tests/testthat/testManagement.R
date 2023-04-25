@@ -38,7 +38,8 @@ test_that("Map for Ruddy Duck", {
     managementData <- managementData[managementData$gender == filterValue, ]
     sum(managementData$count)
     
-    myPlot <- mapOccurrence(occurrenceData = managementData, addGlobe = TRUE)
+    myPlot <- mapOccurrence(occurrenceData = managementData, addGlobe = TRUE,
+      baseMap = addBaseMap(regions = "flanders"))
     expect_s3_class(myPlot, "leaflet")
     
   })
@@ -60,6 +61,9 @@ test_that("Barplot for Ruddy Duck", {
 outFile <- "Lithobates_catesbeianus.csv"
 
 managementData <- loadGbif(dataFile = outFile)
+# Add GEWEST
+managementData$GEWEST <- allShapes$communes@data$GEWEST[
+  match(managementData$NISCODE, allShapes$communes@data$NISCODE)]
 
 test_that("Barplot for Bullfrogs", {
    
@@ -71,12 +75,10 @@ test_that("Barplot for Bullfrogs", {
     expect_s3_class(myResult$plot, "plotly")
     expect_s3_class(myResult$data, "data.frame")
     countYearGroup(df = managementData, summarizeBy = "cumsum", groupVar = "lifeStage")
-    
+        
   })
 
 test_that("Map & trend for Bullfrogs", {
-    
-    
     
     occurrenceData <- loadTabularData(type = "occurrence")
     # Filter on taxonKey and year
@@ -89,6 +91,16 @@ test_that("Map & trend for Bullfrogs", {
     myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
       shapeData = allShapes, regionLevel = "communes")
     expect_s3_class(myPlot, "leaflet")
+    
+    # Filter on gewest
+    gewest <- "flanders"
+    subShape <- lapply(allShapes, function(iData) {
+        if (!"sf" %in% class(iData) && "GEWEST" %in% colnames(iData@data))
+          iData[iData$GEWEST %in% gewest, ] else
+          iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(gewest)), drop = FALSE]), 1, sum) > 0, ]
+      })
+    mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
+      shapeData = subShape, regionLevel = "communes")
     
   })
 
@@ -114,9 +126,10 @@ test_that("Trend for Bullfrogs", {
     trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerpen", "Limburg"), ],
       combine = TRUE)
     
-    # Flanders
-    summaryData <- createSummaryRegions(data = managementData, regionLevel = "flanders")
+    # Flanders - per gewest
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "gewest")
     
-    trendYearRegion(df = summaryData)
+    trendYearRegion(df = summaryData[summaryData$region %in% c("flanders", "wallonia"), ])
     
   })

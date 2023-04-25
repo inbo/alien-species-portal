@@ -208,7 +208,10 @@ observe({
 results$species_managementData <- reactive({
     
     validate(need(results$species_managementFile(), translate(results$translations, "noData")$title))
-    loadGbif(dataFile = results$species_managementFile())
+    tmpData <- loadGbif(dataFile = results$species_managementFile())
+    tmpData$GEWEST <- allShapes$communes@data$GEWEST[
+      match(tmpData$NISCODE, allShapes$communes@data$NISCODE)]
+    tmpData
     
   })
 

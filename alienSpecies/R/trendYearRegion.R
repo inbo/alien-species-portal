@@ -36,8 +36,8 @@ trendYearRegion <- function(df, uiText = NULL,
   plotData <- df
   colorList <- replicateColors(nColors = length(unique(df$region)))
   
-  
-  title <- paste(vectorToTitleString(df$region), yearToTitleString(period))
+  regionText <- translate(uiText, df$region)$title
+  title <- paste(vectorToTitleString(regionText), yearToTitleString(period))
   
   if (combine) {
     plotData <- plotData[, c("year", "outcome")]

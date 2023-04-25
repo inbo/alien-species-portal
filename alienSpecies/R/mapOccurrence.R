@@ -567,7 +567,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
             
             mapOccurrence(occurrenceData = subData(),
               # when switching species, need to create correct basemap
-              baseMap = addBaseMap(regions = isolate(input$region), combine = isolate(input$combine)),
+              baseMap = addBaseMap(regions = input$region, combine = input$combine),
               addGlobe = TRUE)
             
           } else {
