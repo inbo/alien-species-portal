@@ -13,7 +13,7 @@ Imports:
     DT,
     htmltools,
     htmlwidgets,
-    INBOtheme,
+    INBOtheme (<= 0.5.9),
     jsonlite,
     leaflet,
     plotly,
@@ -30,7 +30,7 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     shinyjs
-RoxygenNote: 7.2.2
+RoxygenNote: 7.2.3
 Remotes: 
     trias-project/trias, 
     inbo/INBOtheme

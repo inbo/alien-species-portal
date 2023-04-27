@@ -426,7 +426,13 @@ countOccupancyServer(id = "checklist",
 plotTriasServer(id = "checklist_yearNativeRange",
   uiText = reactive(results$translations),
   data = results$exoten_data,
-  triasFunction = "indicator_native_range_year"
+  triasFunction = "indicator_native_range_year",
+  triasArgs = reactive({
+      list(
+        x_lab = translate(results$translations, "year")$title,
+        y_lab = translate(results$translations, "number")$title
+      )
+    })
 )
 
 

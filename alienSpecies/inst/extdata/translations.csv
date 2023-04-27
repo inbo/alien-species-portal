@@ -2,7 +2,7 @@ title_id;title_nl;description_nl;title_fr;description_fr;title_en;description_en
 apply_gam;Status van toename (GAM) - Waarnemingen;;Statut d'augmentation (GAM) - Observations;;Emergence status (GAM) - Observations;
 indicator_introduction_year;Aantal nieuw geïntroduceerde soorten per jaar;;Nombre d'espèces nouvellement introduites par an;;Number of newly introduced species per year;
 indicator_total_year;Cumulatief aantal geïntroduceerde soorten;;Nombre cumulé d'espèces introduites;;Cumulative number of introduced species;
-countYearNativerange;Aantal geïntroduceerde soorten per jaar en per continent van oorsprong;;Nombre d'espèces introduites par an et par continent d'origine;;Number of introduced species per year and per native continent;
+indicator_native_range_year;Aantal geïntroduceerde soorten per jaar en per continent van oorsprong;;Nombre d'espèces introduites par an et par continent d'origine;;Number of introduced species per year and per native continent;
 countOccupancy;Mate van verspreiding van de Unielijstsoorten;AANDACHT: Figuur onafhankelijk van geselecteerde filters bovenaan;Degré de répartition des espèces de la liste de l'Union;ATTENTION: Figure indépendante des filtres sélectionnés en haut;Trend in occupancy of Union list species;NOTE: Plot independent of the selected filters above
 get_table_pathways;Aantal geïntroduceerde soorten per introductieroute;;Nombre d'espèces introduites par voie d'introduction;;Number of introduced species per introduction pathways;
 observations-mapOccurrence;Waarnemingen van;;Observations de;;Observations of;

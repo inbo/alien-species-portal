@@ -47,10 +47,10 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
         data = resultFct$output
       )
       
-    } else if (all(c("interactive_plot", "data") %in% names(resultFct))) {
+    } else if (all(c("static_plot", "data") %in% names(resultFct))) {
       
       list(
-        plot = ggplotly(resultFct$interactive_plot + INBOtheme::theme_inbo(transparent = TRUE)), 
+        plot = ggplotly(resultFct$static_plot + INBOtheme::theme_inbo(transparent = TRUE)), 
         data = resultFct$data
       ) 
       

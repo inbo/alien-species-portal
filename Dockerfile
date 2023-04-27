@@ -197,7 +197,7 @@ RUN R -q -e "remotes::install_version('leaflet', version = '2.1.2', upgrade = FA
     R -q -e "remotes::install_version('testthat', version = '3.1.7', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('modelr', version = '0.1.11', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('tidyverse', version = '2.0.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_github('inbo/INBOtheme')" && \
+    R -q -e "remotes::install_github('inbo/INBOtheme@v0.5.9')" && \
     R -q -e "remotes::install_github('trias-project/trias')"
 
 
