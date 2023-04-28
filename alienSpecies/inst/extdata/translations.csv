@@ -163,9 +163,9 @@ escape_other;Andere ontsnapping uit gehouden omgeving;;Autres fuites de zones de
 contaminant_nursery;Besmetting van plantgoed;;Contaminant de matériel de pépinière;;Contaminant nursery material;
 contaminant_bait;Besmetting van aas;;Appâts contaminés;;Contaminated bait;
 contaminant_food;Besmetting van voedsel (incl. van levend voedsel);;Contaminant alimentaire (y compris d’aliments vivants);;Food contaminant (including of live food);
-contaminant_on_animals;Besemetting op dieren (excl. parasieten, soorten vervoerd door gastheer/vector);;Contaminants des animaux (hormis les parasites, espèces transportées par un hôte/vecteur);;Contaminant on animals (except parasites, species transported by host/vector);
+contaminant_on_animals;Besmetting op dieren (excl. parasieten, soorten vervoerd door gastheer/vector);;Contaminants des animaux (hormis les parasites, espèces transportées par un hôte/vecteur);;Contaminant on animals (except parasites, species transported by host/vector);
 contaminant_animal_parasite;Parasieten van dieren (incl. soorten vervoerd door gastheer/vector);;Parasites des animaux (y compris les espèces transportées par un hôte/vecteur);;Parasites on animals (including species transported by host and vector);
-contaminant_on_plants;Besemetting op planten (excl. parasieten, soorten vervoerd door gastheer/vector);;Contaminants des végétaux (hormis les parasites, espèces transportées par un hôte/vecteur);;Contaminant on plants (except parasites, species transported by host/vector);
+contaminant_on_plants;Besmetting op planten (excl. parasieten, soorten vervoerd door gastheer/vector);;Contaminants des végétaux (hormis les parasites, espèces transportées par un hôte/vecteur);;Contaminant on plants (except parasites, species transported by host/vector);
 contaminant_plant_parasite;Parasieten van planten (incl. soorten vervoerd door gastheer/vector);;Parasites des végétaux (y compris les espèces transportées par un hôte/vecteur);;Parasites on plants (including species transported by host and vector);
 contaminant_seed;Besmetting van zaadgoed;;Contaminants des graines;;Seed contaminant;
 contaminant_timber;Houthandel;;Commerce du bois;;Timber trade;
