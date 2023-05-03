@@ -159,12 +159,6 @@ test_that("Grafiek: Mate van verspreiding van de Unielijstsoorten", {
 ## PLOT 4
 test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio van oorsprong", {
     
-    tmpResult <- countYearNativerange(df = exotenData, type = "native_continent", jaartallen = 2014)
-    expect_type(tmpResult, "list")
-    
-    expect_s3_class(tmpResult$plot, "plotly")
-    expect_s3_class(tmpResult$data, "data.frame")
-    
     tmpResult <- trias::indicator_native_range_year(df = exotenData)
     expect_type(tmpResult, "list")
     

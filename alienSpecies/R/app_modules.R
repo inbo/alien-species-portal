@@ -106,7 +106,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @return no return value; plot output object is created
 #' @author mvarewyck
 #' @import shiny
-#' @importFrom utils write.table
+#' @importFrom utils write.table tail
 #' @importFrom DT datatable formatRound renderDT
 #' @importFrom plotly ggplotly layout
 #' @export

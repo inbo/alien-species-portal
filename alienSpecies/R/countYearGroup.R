@@ -1,7 +1,7 @@
 
 #' Create interactive plot for counts per group category and year
 #' 
-#' @inheritParams countYearNativerange
+#' @inheritParams countOccupancy
 #' @param groupVar character, variable in \code{data} that should server as group variable
 #' @param summarizeBy character, how to summarize counts over groups
 #' 

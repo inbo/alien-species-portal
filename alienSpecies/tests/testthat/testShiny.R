@@ -30,20 +30,6 @@ test_that("Module countOccupancy", {
   })
 
 
-test_that("Module countYearNativerange", {
-    shiny::testServer(countYearNativerangeServer, 
-      args = list(
-        uiText = reactive(translations), 
-        data = reactive(exotenData)
-      ), {
-        
-        session$setInputs(linkYearNativerange = 1)
-        expect_true(TRUE)
-        
-      })
-  })
-
-
 test_that("Module mapCube", {
     
     mySpecies <- "Oxyura jamaicensis"

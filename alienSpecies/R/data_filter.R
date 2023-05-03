@@ -141,6 +141,7 @@ matchCombo <- function(selected, longChoices) {
 #' @return data.table, subset of \code{exotenData}
 #' 
 #' @author mvarewyck
+#' @importFrom utils tail
 #' @export
 filterCombo <- function(exotenData, inputValue, inputLevels) {
  

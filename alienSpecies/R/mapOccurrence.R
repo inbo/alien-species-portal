@@ -220,7 +220,7 @@ paletteMap <- function(groupNames, groupVariable) {
   # Actually only needed if groupVariable == "cell_codes"
   groupNames <- gsub(groupVariable, "", groupNames)
   
-  myPalette <- c("black", inbo_palette())
+  myPalette <- c("transparent", inbo_palette())
   myColors <- rev(myPalette[seq_along(groupNames)]) 
   
   if (groupVariable == "cell_code")
@@ -311,7 +311,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
       addPolygons(
         data = cubeShape[[i]],
         weight = 1,
-        color = ~ palette(myColors$levels[i]),
+        color = if (i != length(cubeShape)) ~ palette(myColors$levels[i]) else "black",
         fillOpacity = if (groupVariable != "cell_code" && i != length(cubeShape)) 0.5 else 0,
         popup = ~CELLCODE,
         group = myColors$levels[i]

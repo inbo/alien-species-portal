@@ -140,6 +140,7 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
 #' @return data.table, loaded indicator/unionlist data; 
 #' and attribute 'Date', the date that this data file was created
 #' @importFrom data.table fread :=
+#' @importFrom utils tail
 #' @export
 loadTabularData <- function(
   dataDir = system.file("extdata", package = "alienSpecies"),

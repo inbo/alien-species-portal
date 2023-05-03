@@ -145,7 +145,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
       group = "region"
     )
   
-  # Add provinces borders
+  # Add borders
   if (regionLevel == "communes") {
     
     myMap <- myMap %>% 
@@ -155,8 +155,12 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
         color = "black",
         opacity = 0.8,
         group = "borderRegion"
-    )
+    ) 
   
+  } else if (regionLevel == "provinces") {
+    
+    myMap <- myMap %>% addBaseMap()
+    
   }
   
   # Add legend

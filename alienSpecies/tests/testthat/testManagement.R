@@ -4,6 +4,21 @@
 ###############################################################################
 
 
+
+allShapes <- c(
+  # Grid data
+  readShapeData(),
+  # gemeentes & provinces
+  suppressWarnings(readShapeData(dataDir = system.file("extdata", package = "alienSpecies"),
+      extension = ".geojson"))
+)
+uiText <- loadMetaData()
+
+
+
+## Rosse stekelstaart ##
+
+
 outFile <- "Oxyura_jamaicensis.csv"
 
 test_that("Create management data", {
@@ -17,16 +32,6 @@ test_that("Create management data", {
 
 
 managementData <- loadGbif(dataFile = outFile)
-allShapes <- c(
-  # Grid data
-  readShapeData(),
-  # gemeentes & provinces
-  suppressWarnings(readShapeData(dataDir = system.file("extdata", package = "alienSpecies"),
-    extension = ".geojson"))
-)
-uiText <- loadMetaData()
-
-
 
 test_that("Map for Ruddy Duck", {
     
@@ -58,6 +63,9 @@ test_that("Barplot for Ruddy Duck", {
   })
 
 
+
+## Amerikaanse stierkikker ##
+
 outFile <- "Lithobates_catesbeianus.csv"
 
 managementData <- loadGbif(dataFile = outFile)
@@ -84,13 +92,19 @@ test_that("Map & trend for Bullfrogs", {
     # Filter on taxonKey and year
     occurrenceData <- occurrenceData[occurrenceData$scientificName == gsub("_", " ", gsub(".csv", "", outFile)) & year == 2018, ]
     
+    
+    # Map - gemeente
     summaryData <- createSummaryRegions(data = managementData, 
       shapeData = allShapes, regionLevel = "communes", year = 2018, unit = "cpue")
-    
-    # Map
     myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
       shapeData = allShapes, regionLevel = "communes")
     expect_s3_class(myPlot, "leaflet")
+    
+    # Map - provinces
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "provinces", year = 2018)
+    myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
+      shapeData = allShapes, regionLevel = "provinces")
     
     # Filter on gewest
     gewest <- "flanders"
