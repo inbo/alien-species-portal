@@ -445,11 +445,16 @@ getDutchNames <- function(x, type = c("regio")) {
 #' @export
 translate <- function(data = loadMetaData(type = "ui"), id) {
   
+  # id NA
+  if (all(is.na(id)))
+    return(data)
+  
   # Helpfull during development to see which are missing
   # can be turned of in production
-  if (!is.null(data) & !all(id %in% data$id))
-    warning("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
-  
+  if (!is.null(data) & !all(id %in% data$id)) {
+    if (!all(is.na(id[!id %in% data$id])))
+      warning("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
+  }
   
   data <- rbind(
     data,
