@@ -186,6 +186,7 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
       x = ~year, y = ~count, type = "bar",
       color = if (!is.null(nOccurred$region)) ~region, 
       text = if (!is.null(nOccurred$region)) ~region, 
+      textposition = "none",
       colors = inbo_palette(n = max(1, nlevels(df$region))), 
       hoverinfo = "x+y+text") %>%
     add_trace(data = nOccurred[!nOccurred$selected, ], 
