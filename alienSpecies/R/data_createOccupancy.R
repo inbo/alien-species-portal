@@ -8,8 +8,6 @@
 #' @return TRUE if creation succeeded
 #' 
 #' @author mvarewyck
-#' @importFrom rgdal readOGR
-#' @importFrom sp spTransform CRS
 #' @importFrom sf st_read
 #' @importFrom data.table as.data.table
 #' @export
@@ -21,16 +19,15 @@ createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trend
   
   # geojson: https://zenodo.org/record/3835756#.Yoc5oLxBw5m
   data_t0 <- lapply(seq(2016, 2020, by = 2), function(iYear) {
-      dataYear <- rgdal::readOGR(dsn = file.path(dataDir, paste0("ias_belgium_t0_", iYear, ".geojson")), verbose = TRUE)
-      dataYear <- sp::spTransform(dataYear, sp::CRS("+proj=longlat +datum=WGS84"))
+      dataYear <- sf::st_read(file.path(dataDir, paste0("ias_belgium_t0_", iYear, ".geojson")), quiet = TRUE)
       # inconsistent colnames over the years
-      colnames(dataYear@data) <- c("cellcode", "reference", "data_partn", "accepted", "species", "notes")
+      colnames(dataYear) <- c("cellcode", "reference", "data_partn", "accepted", "species", "notes")
       dataYear$year <- iYear
       dataYear
     })
   # sp::plot(data_t0[[1]])
   
-  data_t0_all <- do.call(rbind, data_t0)@data
+  data_t0_all <- do.call(rbind, data_t0)
   data_t0_all$source <- "t0"
   # table(data_t0_all)
   

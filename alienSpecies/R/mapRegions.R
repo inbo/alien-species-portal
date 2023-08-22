@@ -87,8 +87,8 @@ createSummaryRegions <- function(data, shapeData,
       year = myYear,
       region = if (regionLevel == "flanders") 
           "flanders" else if (regionLevel == "gewest")
-          unique(shapeData$communes@data$GEWEST) else
-          unique(shapeData[[regionLevel]]@data$NAAM)))
+          unique(shapeData$communes$GEWEST) else
+          unique(shapeData[[regionLevel]]$NAAM)))
   allData <- merge(summaryData, fullData, all.x = TRUE, all.y = TRUE)
   allData$outcome[is.na(allData$outcome)] <- 0
   
@@ -120,7 +120,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
   
   palette <- colorFactor(palette = "YlOrBr", levels = levels(managementData$group), 
     na.color = "transparent")
-  valuesPalette <- managementData$group[match(spatialData@data$NAAM, managementData$region)]
+  valuesPalette <- managementData$group[match(spatialData$NAAM, managementData$region)]
   
   spread <- createCubeData(df = occurrenceData, shapeData = shapeData,
     groupVariable = "cell_code")
@@ -141,7 +141,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
       color = "gray",
       fillColor = ~ palette(valuesPalette),
       fillOpacity = 0.8,
-      layerId = spatialData@data$NAAM,
+      layerId = spatialData$NAAM,
       group = "region"
     )
   
@@ -331,7 +331,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           req(input$gewestLevel)
           # Subset for GEWEST
           lapply(shapeData, function(iData) {
-              if (!"sf" %in% class(iData) && "GEWEST" %in% colnames(iData@data))
+              if ("GEWEST" %in% colnames(iData))
                 iData[iData$GEWEST %in% input$gewestLevel, ] else
                 iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(input$gewestLevel)), drop = FALSE]), 1, sum) > 0, ]
             })

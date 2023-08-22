@@ -174,16 +174,19 @@ mapCubeServer(id = "reporting_t01",
 ### ----------------
 
 # Species for which to show mapCube output
-# Other species will have mapRegions output
 cubeSpecies <- c("Oxyura jamaicensis")
-
+# Species for whichto show heatMap output
+heatSpecies <- c("Vespa velutina")
+# Other species will have mapRegions output
 
 results$species_managementFile <- reactive({
     
     req(input$species_choice)
     dataFile <- gsub(" ", "_", paste0(input$species_choice, ".csv"))
     if (file.exists(file.path(managementDir, dataFile)))
-      dataFile else
+      dataFile else if (input$species_choice %in% heatSpecies)
+      # path to folder
+      gsub(" ", "_", input$species_choice) else
       NULL
     
   })
@@ -207,11 +210,29 @@ observe({
 
 results$species_managementData <- reactive({
     
-    validate(need(results$species_managementFile(), translate(results$translations, "noData")$title))
-    tmpData <- loadGbif(dataFile = results$species_managementFile())
-    tmpData$GEWEST <- allShapes$communes@data$GEWEST[
-      match(tmpData$NISCODE, allShapes$communes@data$NISCODE)]
-    tmpData
+    req(input$species_choice)
+    
+    if (input$species_choice %in% heatSpecies) {
+      
+      validate(need(!is.null(list.files(results$species_managementFile())), 
+          translate(results$translations, "noData")$title))
+      
+      readShapeData(
+        extension = ".geojson", 
+        dataDir = file.path(system.file("extdata", "management", package = "alienSpecies"), "Vespa_velutina")
+      )
+      
+      
+    } else {
+      
+      validate(need(results$species_managementFile(), translate(results$translations, "noData")$title))
+      
+      tmpData <- loadGbif(dataFile = results$species_managementFile())
+      tmpData$GEWEST <- allShapes$communes$GEWEST[
+        match(tmpData$NISCODE, allShapes$communes$NISCODE)]
+      tmpData
+      
+    }
     
   })
 
@@ -239,11 +260,23 @@ observe({
         showPeriod = TRUE
       )
       
+    } else if (input$species_choice %in% heatSpecies) {
+      ## Heat map + diagnostics
+      
+      mapHeatServer(id = "management2",
+        uiText = reactive(results$translations),
+        species = reactive(input$species_choice),
+        activeData = reactive(results$species_managementData()$actieve_haarden),
+        managedData = reactive(results$species_managementData()$beheerde_nesten), 
+        untreatedData = reactive(results$species_managementData()$onbehandelde_nesten),
+        filter = reactive(list(nest = c("managed nest", "untreated nest")))
+      )
+      
     } else {
       ## Map + choices barplot
       
       mapRegionsServer(
-        id = "management2",
+        id = "management3",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         df = results$species_managementData,
@@ -251,7 +284,7 @@ observe({
         shapeData = allShapes
       )
       countYearGroupServer(
-        id = "management2", 
+        id = "management3", 
         uiText = reactive(results$translations), 
         data = results$species_managementData
       )
@@ -263,15 +296,23 @@ output$species_managementContent <- renderUI({
     
     req(results$species_managementData())
     
-    # Important: different ids used, otherwise there is communication between both cases
+    # Important: different ids needed, otherwise there is communication between both cases
     # e.g. input$legend exists for both
     if (input$species_choice %in% cubeSpecies) {
+      
       mapCubeUI(id = "management", showPeriod = TRUE, showLegend = FALSE)
+      
+    } else if (input$species_choice %in% heatSpecies) {
+      
+      mapHeatUI(id = "management2")
+      
     } else {
+      
       tagList(
-        mapRegionsUI(id = "management2", plotDetails = c("flanders", "region")),
-        countYearGroupUI(id = "management2")
+        mapRegionsUI(id = "management3", plotDetails = c("flanders", "region")),
+        countYearGroupUI(id = "management3")
       )
+      
     }
     
   })

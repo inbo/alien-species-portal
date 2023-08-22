@@ -5,8 +5,6 @@
 #' @return list with sf objects
 #' 
 #' @author mvarewyck
-#' @importFrom rgdal readOGR
-#' @importFrom sp spTransform
 #' @importFrom sf st_read
 #' @export
 readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
@@ -29,8 +27,7 @@ readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
     
     toReturn <- lapply(shapeFiles, function(iFile) {
         
-        spatialData <- readOGR(dsn = file.path(dataDir, iFile), verbose = FALSE)
-        sp::spTransform(spatialData, CRS("+proj=longlat +datum=WGS84"))
+        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
         
       })
   

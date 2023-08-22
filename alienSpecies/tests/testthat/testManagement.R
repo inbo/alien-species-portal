@@ -70,8 +70,8 @@ outFile <- "Lithobates_catesbeianus.csv"
 
 managementData <- loadGbif(dataFile = outFile)
 # Add GEWEST
-managementData$GEWEST <- allShapes$communes@data$GEWEST[
-  match(managementData$NISCODE, allShapes$communes@data$NISCODE)]
+managementData$GEWEST <- allShapes$communes$GEWEST[
+  match(managementData$NISCODE, allShapes$communes$NISCODE)]
 
 test_that("Barplot for Bullfrogs", {
    
@@ -109,7 +109,7 @@ test_that("Map & trend for Bullfrogs", {
     # Filter on gewest
     gewest <- "flanders"
     subShape <- lapply(allShapes, function(iData) {
-        if (!"sf" %in% class(iData) && "GEWEST" %in% colnames(iData@data))
+        if ("GEWEST" %in% colnames(iData))
           iData[iData$GEWEST %in% gewest, ] else
           iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(gewest)), drop = FALSE]), 1, sum) > 0, ]
       })
@@ -147,3 +147,22 @@ test_that("Trend for Bullfrogs", {
     trendYearRegion(df = summaryData[summaryData$region %in% c("flanders", "wallonia"), ])
     
   })
+
+
+
+
+
+## Aziatische hoornaar ##
+
+vespaData <- readShapeData(
+  extension = ".geojson", 
+  dataDir = file.path(system.file("extdata", "management", package = "alienSpecies"), "Vespa_velutina")
+)
+
+mapHeat(
+  activeData = vespaData$actieve_haarden,
+  managedData = vespaData$beheerde_nesten,
+  untreatedData = vespaData$onbehandelde_nesten,
+  addGlobe = TRUE
+)
+

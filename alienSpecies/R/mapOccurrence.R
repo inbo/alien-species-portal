@@ -244,8 +244,7 @@ paletteMap <- function(groupNames, groupVariable) {
 #' 
 #' @author mvarewyck
 #' @import leaflet
-#' @importFrom rgdal readOGR
-#' @importFrom rgeos gUnaryUnion
+#' @importFrom sf st_union
 #' @export
 addBaseMap <- function(map = leaflet(), 
   regions = c("flanders", "brussels", "wallonia"), combine = FALSE) {
@@ -257,15 +256,14 @@ addBaseMap <- function(map = leaflet(),
   if (is.null(regions))
     return(map)
   
-  gewestBel <- readOGR(system.file("extdata", "grid", "gewestbel.shp", package = "alienSpecies"), 
-    layer = "gewestbel", verbose = FALSE, stringsAsFactors = FALSE)
+  gewestBel <- readShapeData(extension = ".shp", system.file("extdata", "grid", package = "alienSpecies"))[[1]]
   
   matchingRegions <- data.frame(name = c("flanders", "brussels", "wallonia"), 
     shape = c("Vlaams", "Brussels", "Waals"))
   gewestBel <- subset(gewestBel, GEWEST %in% matchingRegions$shape[match(regions, matchingRegions$name)])
   
   if (combine)
-    gewestBel <- rgeos::gUnaryUnion(gewestBel)
+    gewestBel <- sf::st_union(gewestBel)
     
   map %>% 
     clearGroup("borderRegion") %>%
