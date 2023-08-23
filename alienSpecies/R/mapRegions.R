@@ -371,6 +371,8 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       # Subset on filters
       summaryData <- reactive({
           
+          req(inherits(df(), "data.frame"))
+          
           createSummaryRegions(data = df(), 
             shapeData = shapeData,
             regionLevel = req(input$regionLevel),

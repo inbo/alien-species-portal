@@ -158,11 +158,35 @@ vespaData <- readShapeData(
   extension = ".geojson", 
   dataDir = file.path(system.file("extdata", "management", package = "alienSpecies"), "Vespa_velutina")
 )
-
-mapHeat(
+# Actieve haarden
+combinedData <- combineActiveData(
   activeData = vespaData$actieve_haarden,
   managedData = vespaData$beheerde_nesten,
-  untreatedData = vespaData$onbehandelde_nesten,
+  untreatedData = vespaData$onbehandelde_nesten
+)
+myColors <- c("blue", "black", "red")
+names(myColors) <- c("individual", "managed nest", "untreated nest")
+
+mapHeat(
+  combinedData = combinedData,
+  colors = myColors,
+  selected = unique(combinedData$filter),
+  blur = "individual",
   addGlobe = TRUE
 )
 
+
+# Alle observaties
+combinedData <- combineNestenData(pointsData = vespaData$points, nestenData = vespaData$nesten)
+myColors <- c("blue", "red")
+names(myColors) <- c("individual", "nest")
+
+names(currentColors) <- sapply(names(currentColors), function(x) translate(uiText(), x)$title)
+
+
+mapHeat(
+  combinedData = combinedData,
+  colors = myColors,
+  selected = unique(combinedData$filter),
+  addGlobe = TRUE
+)

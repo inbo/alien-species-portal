@@ -10,6 +10,7 @@ Encoding: UTF-8
 License: MIT + file LICENSE
 Imports: 
     data.table,
+    dplyr,
     DT,
     htmltools,
     htmlwidgets,

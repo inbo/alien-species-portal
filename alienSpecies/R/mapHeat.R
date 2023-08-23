@@ -1,9 +1,82 @@
-
-#' Create leaflet heatmap for the occurrence of Vespa Velutina (management data)
+#' Combine data for observations on Actieve haarden data
+#' 
+#' Used on Management page for Vespa Velutina
 #' 
 #' @param activeData sf, points data with actieve haarden
 #' @param managedData sf, points data with beheerde nesten
 #' @param untreatedData sf, points data with onbehandelde nesten
+#' @return sf data.frame, combining all data sources
+#' 
+#' @author mvarewyck
+#' @importFrom dplyr select filter mutate group_by summarise
+#' @export
+combineActiveData <- function(activeData, managedData, untreatedData) {
+  
+  activeData$type <- "individual"
+  managedData$type <- "managed nest"
+  untreatedData$type <- "untreated nest"
+  
+  toReturn <- rbind(
+    activeData[, c("type", "popup")],
+    managedData[, c("type", "popup")],
+    untreatedData[, c("type", "popup")]
+  )
+  
+  toReturn$filter <- as.factor(toReturn$type)
+  toReturn$type <- as.factor(toReturn$type)
+  
+  toReturn
+  
+}
+
+#' Combine data for observations on Individual and Nest data
+#' 
+#' Used on Management page for Vespa Velutina
+#' 
+#' @param pointsData sf data.frame, points observations for individuals
+#' @param nestenData sf data.frame, points observations for nests
+#' @return sf data.frame, combining both data sources
+#' 
+#' @author mvarewyck
+#' @importFrom dplyr select filter mutate group_by summarise rename
+#' @export
+combineNestenData <- function(pointsData, nestenData) {
+  
+  points_redux <- pointsData %>% 
+    dplyr::filter(year == year(Sys.Date())) %>%
+    dplyr::select(type, eventDate, popup, institutionCode, year) %>%
+    mutate(type = "individual")
+  
+  # punten laag van gemelde nesten
+  nesten <- nestenData %>% 
+    dplyr::filter(year == year(Sys.Date())) %>% 
+    mutate(type = "nest",
+      popup = paste0("Vespawatch rij ", id),
+      institutionCode = "Vespawatch")
+  
+  nesten_redux <- nesten %>% 
+    dplyr::filter(year == year(Sys.Date())) %>% 
+    dplyr::select(type, eventDate = observation_time, popup, institutionCode, year) 
+  
+  # Recombine points
+  points_nesten <- rbind(points_redux, nesten_redux) %>% 
+    mutate(eventDate = format(eventDate, "%Y-%m-%d")) %>% 
+    group_by(geometry, type, eventDate) %>% 
+    summarise(institutionCode = paste(unique(institutionCode), collapse = ","),
+      popup = paste0("<b>", type, "</b></br>",
+        paste(popup, ":", eventDate, collapse = ",<br>"))) %>%
+    rename("filter" = "institutionCode") %>%
+    mutate(filter = as.factor(filter),
+      type = as.factor(type))
+  
+  
+  points_nesten
+  
+} 
+
+
+#' Create leaflet heatmap for the occurrence of Vespa Velutina (management data)
+#' 
 #' @param selected character vector, defines which layers should be shown on the map
 #' @inheritParams mapCube
 #' @return leaflet map
@@ -12,77 +85,60 @@
 #' @importFrom leaflet addTiles `%>%` leaflet addLegend addScaleBar addCircleMarkers 
 #' @importFrom leaflet.extras addHeatmap
 #' @export
-mapHeat <- function(activeData, managedData, untreatedData,
-  selected = c("managed nest", "untreated nest"), legend = "bottomright", addGlobe = FALSE
+mapHeat <- function(combinedData, colors, blur = NULL, selected,
+  legend = "topright", addGlobe = FALSE, uiText = NULL
 ) {
   
   
-  groups <- c("blue", "black", "red")
-  names(groups) <- c("individual", "managed nest", "untreated nest")
-  
-  
-  if (!"managed nest" %in% selected)
-    groups <- groups[!names(groups) %in% "managed nest"]
-  
-  if (!"untreated nest" %in% selected)
-    groups <- groups[!names(groups) %in% "untreated nest"]
-  
-  pal_ah <- colorFactor(palette = groups, levels = names(groups))
-  
+  # Base map
   ah_map <- leaflet() %>%
-    
-    addHeatmap(
-      data = activeData,
-      blur = 25, 
-      max = 1, 
-      radius = 20
-    ) %>%
-    addScaleBar(position = "bottomleft") %>%
-    addCircleMarkers(data = activeData,
-      color = groups[names(groups) == "individual"],
-      opacity = 0.5,
-      radius = 2,
-      popup = ~popup,
-      group = "active") 
-  
+    addScaleBar(position = "bottomleft")
   
   if (addGlobe)
     ah_map <- addTiles(ah_map)
   
   
   if (legend != "none")
-    ah_map <- addLegend(ah_map,
-      pal = pal_ah,
-      values = names(groups),
-      opacity = 0.7,
+    ah_map <- addLegend(
+      map = ah_map,
       position = legend,
+      colors = colors,
+      labels = sapply(names(colors), function(x) translate(uiText, x)$title),
+      opacity = 0.8,
+      title = translate(uiText, "legend")$title,
       layerId = "legend"
     )
   
   
-  if ("managed nest" %in% selected) {
-    
-    ah_map <- ah_map %>% 
-      addCircleMarkers(data = managedData,
-        color = groups[names(groups) == "managed nest"],
-        opacity = 0.5,
-        radius = 1,
-        popup = ~popup,
-        group = "managed nest")
-    
-  }
+  # Filter data
+  plotData <- combinedData[combinedData$filter %in% selected, ]
   
-  if ("untreated nest" %in% selected) {
-    
-    ah_map <- ah_map %>%
-      addCircleMarkers(data = untreatedData,
-        color = groups[names(groups) == "untreated nest"],
-        opacity = 0.5,
-        radius = 2,
-        popup = ~popup,
-        group = "untreated nest")
-    
-  }
+  if (nrow(plotData) == 0)
+    return(ah_map)
+  
+  
+  pal_ah <- colorFactor(palette = colors, levels = names(colors))
+  plotData$color <- pal_ah(plotData$type)
+  
+  # Add blur
+  if (!is.null(blur))
+    ah_map <- addHeatmap(ah_map,
+      data = plotData[plotData$type == blur, ],
+      blur = 25, 
+      max = 1, 
+      radius = 20
+    ) 
+  
+  for (iFilter in levels(plotData$filter))
+    ah_map <- addCircleMarkers(
+      ah_map,
+      data = plotData[plotData$filter == iFilter, ],
+      color = ~color,
+      opacity = 0.5,
+      radius = 2,
+      popup = ~popup,
+      group = iFilter)
+ 
   
   ah_map
   
@@ -107,26 +163,26 @@ mapHeat <- function(activeData, managedData, untreatedData,
 #' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapHeatServer <- function(id, uiText, species, activeData, managedData, untreatedData, 
-  filter
+mapHeatServer <- function(id, uiText, species, combinedData, filter, colors, 
+  blur = NULL, maxDate
 ) {
   
   moduleServer(id,
     function(input, output, session) {
       
       ns <- session$ns
-      rv <- reactiveValues(nest = c("managed nest", "untreated nest"))
       
-      groups <- c("blue", "black", "red")
-      names(groups) <- c("individual", "managed nest", "untreated nest")
       
       noData <- reactive(translate(uiText(), "noData")$title)
       tmpTranslation <- reactive(translate(uiText(), ns("mapHeat")))
       
       output$descriptionMapHeat <- renderUI({
+
+          tmpDescription <- tmpTranslation()$description
+          tmpDescription <- gsub("\\{\\{maxDate\\}\\}", format(maxDate(), "%d/%m/%Y"), tmpDescription)
+          tmpDescription <- gsub("\\{\\{maxYear\\}\\}", format(maxDate(), "%Y"), tmpDescription)
           
-          HTML(gsub("\\{\\{maxDate\\}\\}", format(max(activeData()$eventDate), "%d/%m/%Y"), 
-              tmpTranslation()$description))
+          HTML(tmpDescription)
           
         })
       
@@ -167,48 +223,29 @@ mapHeatServer <- function(id, uiText, species, activeData, managedData, untreate
       # Send map to the UI
       output$spacePlot <- renderLeaflet({
           
-          mapHeat(activeData = activeData(), 
-            managedData = managedData(),
-            untreatedData = untreatedData(),
-            selected = isolate(input$nest)
+          myMap <- mapHeat(
+            combinedData = combinedData(),
+            colors = colors(),
+            selected = unique(combinedData()$filter),
+            blur = blur
           )
+          
+          myMap
           
         })
       
       
-      # Add/remove nest layers
+      # Add/remove map layers
       observe({
           
           proxy <- leafletProxy("spacePlot")
           
           if (!is.null(proxy)) {
             
-            if (is.null(input$nest)) {
-              
-              proxy %>% hideGroup(group = c("managed nest", "untreated nest")) 
-              
-            } else if ("managed nest" %in% input$nest & !"managed nest" %in% rv$nest) {
-              
-              proxy %>%
-                addCircleMarkers(data = managedData(),
-                  color = groups[names(groups) == "managed nest"],
-                  opacity = 0.5,
-                  radius = 1,
-                  popup = ~popup,
-                  group = "managed nest")
-              
-            } else if ("untreated nest" %in% input$nest & !"untreated nest" %in% rv$nest) {
-              
-              proxy %>%
-                addCircleMarkers(data = untreatedData(),
-                  color = groups[names(groups) == "untreated nest"],
-                  opacity = 0.5,
-                  radius = 2,
-                  popup = ~popup,
-                  group = "untreated nest")
-            }
-            
-            rv$nest <- input$nest
+            for (iLayer in filter()[[1]])
+              if (iLayer %in% input[[names(filter())[1]]])
+                proxy %>% showGroup(iLayer) else
+                proxy %>% hideGroup(iLayer)
             
           }
           
@@ -253,23 +290,14 @@ mapHeatServer <- function(id, uiText, species, activeData, managedData, untreate
           
           if (input$legend != "none") {
             
-            groups <- c("blue", "black", "red")
-            names(groups) <- c("individual", "managed nest", "untreated nest")
-            
-            
-            if (!"managed nest" %in% input$nest)
-              groups <- groups[!names(groups) %in% "managed nest"]
-            
-            if (!"untreated nest" %in% input$nest)
-              groups <- groups[!names(groups) %in% "untreated nest"]
-            
-            names(groups) <- sapply(names(groups), function(x) translate(uiText(), x)$title)
-            palette <- colorFactor(palette = groups, levels = names(groups))
+            excludedLayers <- setdiff(input[[names(filter())[1]]], filter()[[1]])
+            currentColors <- colors()[!names(colors()) %in% excludedLayers]
+            names(currentColors) <- sapply(names(currentColors), function(x) translate(uiText(), x)$title)
             
             proxy %>% addLegend(
               position = input$legend,
-              pal = palette, 
-              values = names(groups),
+              colors = currentColors,
+              labels = names(currentColors),
               opacity = 0.8,
               title = translate(uiText(), "legend")$title,
               layerId = "legend"
@@ -284,14 +312,14 @@ mapHeatServer <- function(id, uiText, species, activeData, managedData, untreate
       finalMap <- reactive({
           
           newMap <- mapHeat(
-            activeData = activeData(),
-            managedData = managedData(),
-            untreatedData = untreatedData(),
-            selected = input$nest,
+            combinedData = combinedData(),
+            colors = colors(),
+            selected = input[[names(filter())[1]]],
+            blur = blur, 
             legend = input$legend,
-            addGlobe = input$globe %% 2 == 1
+            addGlobe = input$globe %% 2 == 1,
+            uiText = uiText()
           )
-          
           
           # save the zoom level and centering to the map object
           newMap <- newMap %>% setView(

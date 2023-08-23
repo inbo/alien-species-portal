@@ -288,6 +288,7 @@ addBaseMap <- function(map = leaflet(),
 #' @param baseMap leaflet object as created by \code{createBaseMap}
 #' @param legend character, legend placement; default is "none", no legend
 #' @param addGlobe boolean, whether to add world map to background; default is FALSE 
+#' @param uiText data.frame, for translations
 #' @inheritParams createCubeData
 #' @return leaflet map
 #' 
@@ -295,8 +296,7 @@ addBaseMap <- function(map = leaflet(),
 #' @import leaflet
 #' @export
 mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none", 
-  addGlobe = FALSE,
-  groupVariable) {
+  addGlobe = FALSE, groupVariable, uiText = NULL) {
   
   
   myColors <- paletteMap(groupNames = names(cubeShape), groupVariable = groupVariable)
@@ -326,7 +326,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
       pal = palette, 
       values = myColors$levels,
       opacity = 0.8,
-      title = "Legende",
+      title = translate(uiText, "legend")$title,
       layerId = "legend"
     )
     

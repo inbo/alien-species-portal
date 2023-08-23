@@ -5,10 +5,13 @@ indicator_total_year;Cumulatief aantal geïntroduceerde soorten;;Nombre cumulé 
 indicator_native_range_year;Aantal geïntroduceerde soorten per jaar en per continent van oorsprong;;Nombre d'espèces introduites par an et par continent d'origine;;Number of introduced species per year and per native continent;
 countOccupancy;Mate van verspreiding van de Unielijstsoorten;AANDACHT: Figuur onafhankelijk van geselecteerde filters bovenaan;Degré de répartition des espèces de la liste de l'Union;ATTENTION: Figure indépendante des filtres sélectionnés en haut;Trend in occupancy of Union list species;NOTE: Plot independent of the selected filters above
 get_table_pathways;Aantal geïntroduceerde soorten per introductieroute;;Nombre d'espèces introduites par voie d'introduction;;Number of introduced species per introduction pathways;
-management2-mapHeat;Actieve haarden;"Deze kaart illustreert waar in Vlaanderen waarnemingen zijn gemeld van de Aziatische hoornaar, maar waar nog geen nest succesvol beheerd werd. Op deze plaatsen vinden mogelijks opsporingsacties plaats door de Vespawatchers.
+management2_active-mapHeat;Actieve haarden;"Deze kaart illustreert waar in Vlaanderen waarnemingen zijn gemeld van de Aziatische hoornaar, maar waar nog geen nest succesvol beheerd werd. Op deze plaatsen vinden mogelijks opsporingsacties plaats door de Vespawatchers.
 Waarnemingen worden weerhouden wanneer ze verder dan 2km van een succesvol beheerd nest bevinden en/of na een succesvolle beheeractie gemeld worden. Hoe intenser rood, hoe meer meldingen er in de buurt van elkaar zijn.
 Ontbrekende nesten kunnen steeds gemeld worden op <a href=""https://vespawatch.be"" target = ""_blank"">vespawatch.be</a>.
-</br><em>Laatst geüpdatet op {{maxDate}}</em>";Foyers actifs;TODO;Active hotbeds;TODO
+</br><em>Laatst geüpdatet op {{maxDate}}</em>";TODO;TODO;Active hotbeds;TODO
+management2_observed-mapHeat;Alle observaties;"Op deze kaart is de verspreiding afgebeeld van alle nesten en individuen van de Aziatische hoornaar die in {{maxYear}} zijn gemeld via verschillende kanalen. 
+Nog niet alle meldingen zijn op dit kaartje weergegeven. Binnenkort zullen wel alle meldingen zichtbaar zijn.
+</br><em>Data beschikbaar tot {{maxDate}}</em>";TODO;TODO;All observations;TODO
 observations-mapOccurrence;Waarnemingen van;;Observations de;;Observations of;
 reporting_t1-mapOccurrence;Rapportering van;;Rapportage de;;Reporting of;
 reporting_t01-mapOccurrence;Rapportering van;;Rapportage de;;Reporting of;
@@ -271,5 +274,6 @@ graph;Figuur;;Figure;;Figure;
 ;;;;;;
 managed nest;Beheerd nest;;TODO;;Managed nest;
 untreated nest;Onbehandeld nest;;TODO;;Untreated nest;
-individual;Individu;;TODO;;Individu;
+individual;Individu;;TODO;;Individual;
 nest;Nest;;TODO;;Nest;
+map;Kaart;;Carte;;Map;

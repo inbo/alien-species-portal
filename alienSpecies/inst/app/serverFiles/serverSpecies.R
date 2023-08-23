@@ -261,16 +261,43 @@ observe({
       )
       
     } else if (input$species_choice %in% heatSpecies) {
-      ## Heat map + diagnostics
       
-      mapHeatServer(id = "management2",
+      ## Actieve haarden
+      combinedActive <- combineActiveData(
+        activeData = results$species_managementData()$actieve_haarden,
+        managedData = results$species_managementData()$beheerde_nesten,
+        untreatedData = results$species_managementData()$onbehandelde_nesten
+      )
+      colorsActive <- c("blue", "black", "red")
+      names(colorsActive) <- c("individual", "managed nest", "untreated nest")
+      
+      mapHeatServer(id = "management2_active",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
-        activeData = reactive(results$species_managementData()$actieve_haarden),
-        managedData = reactive(results$species_managementData()$beheerde_nesten), 
-        untreatedData = reactive(results$species_managementData()$onbehandelde_nesten),
-        filter = reactive(list(nest = c("managed nest", "untreated nest")))
+        combinedData = reactive(combinedActive),
+        filter = reactive(list(nest = unique(combinedActive$filter))),
+        colors = reactive(colorsActive),
+        blur = "individual",
+        maxDate = reactive(max(results$species_managementData()$actieve_haarden$eventDate, na.rm = TRUE))      
       )
+      
+      ## Alle observaties
+      combinedObserved <- combineNestenData(
+        pointsData = results$species_managementData()$points, 
+        nestenData = results$species_managementData()$nesten
+      )
+      colorsObserved <- c("blue", "red")
+      names(colorsObserved) <- c("individual", "nest")
+      
+      mapHeatServer(id = "management2_observed",
+        uiText = reactive(results$translations),
+        species = reactive(input$species_choice),
+        combinedData = reactive(combinedObserved),
+        filter = reactive(list(source = unique(combinedObserved$filter))),
+        colors = reactive(colorsObserved),
+        maxDate = reactive(max(results$species_managementData()$points$eventDate, na.rm = TRUE))      
+      )
+      
       
     } else {
       ## Map + choices barplot
@@ -304,7 +331,10 @@ output$species_managementContent <- renderUI({
       
     } else if (input$species_choice %in% heatSpecies) {
       
-      mapHeatUI(id = "management2")
+      tagList(
+        mapHeatUI(id = "management2_active"),
+        mapHeatUI(id = "management2_observed")
+      )
       
     } else {
       
