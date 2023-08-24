@@ -40,7 +40,7 @@ function(input, output, session) {
     exoten_timeNA = defaultTimeNA,
     exoten_time = defaultTime,
     species_choice = if (doDebug) c("Alopochen aegyptiaca", "Muntiacus reevesi",
-          "Lithobates catesbeianus")[3] else NULL
+          "Lithobates catesbeianus", "Vespa velutina")[4] else NULL
   )
   
   

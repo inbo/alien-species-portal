@@ -1,5 +1,8 @@
 title_id;title_nl;description_nl;title_fr;description_fr;title_en;description_en
 apply_gam;Status van toename (GAM) - Waarnemingen;;Statut d'augmentation (GAM) - Observations;;Emergence status (GAM) - Observations;
+barplotLenteNesten;Voorjaarsnesten;Het aantal op vespawatch.be gemelde nesten tussen 1 januari en 19 mei;TODO;TODO;TODO;TODO
+countNesten;Aantal nesten per provincie;"Het aantal op vespawatch.be gemelde nesten per provincie.
+</br><em>Data beschikbaar tot {{maxDate}}<em>";TODO;TODO;TODO;TODO
 indicator_introduction_year;Aantal nieuw geïntroduceerde soorten per jaar;;Nombre d'espèces nouvellement introduites par an;;Number of newly introduced species per year;
 indicator_total_year;Cumulatief aantal geïntroduceerde soorten;;Nombre cumulé d'espèces introduites;;Cumulative number of introduced species;
 indicator_native_range_year;Aantal geïntroduceerde soorten per jaar en per continent van oorsprong;;Nombre d'espèces introduites par an et par continent d'origine;;Number of introduced species per year and per native continent;
@@ -8,7 +11,7 @@ get_table_pathways;Aantal geïntroduceerde soorten per introductieroute;;Nombre 
 management2_active-mapHeat;Actieve haarden;"Deze kaart illustreert waar in Vlaanderen waarnemingen zijn gemeld van de Aziatische hoornaar, maar waar nog geen nest succesvol beheerd werd. Op deze plaatsen vinden mogelijks opsporingsacties plaats door de Vespawatchers.
 Waarnemingen worden weerhouden wanneer ze verder dan 2km van een succesvol beheerd nest bevinden en/of na een succesvolle beheeractie gemeld worden. Hoe intenser rood, hoe meer meldingen er in de buurt van elkaar zijn.
 Ontbrekende nesten kunnen steeds gemeld worden op <a href=""https://vespawatch.be"" target = ""_blank"">vespawatch.be</a>.
-</br><em>Laatst geüpdatet op {{maxDate}}</em>";TODO;TODO;Active hotbeds;TODO
+</br><em>Data beschikbaar tot {{maxDate}}</em>";TODO;TODO;Active hotbeds;TODO
 management2_observed-mapHeat;Alle observaties;"Op deze kaart is de verspreiding afgebeeld van alle nesten en individuen van de Aziatische hoornaar die in {{maxYear}} zijn gemeld via verschillende kanalen. 
 Nog niet alle meldingen zijn op dit kaartje weergegeven. Binnenkort zullen wel alle meldingen zichtbaar zijn.
 </br><em>Data beschikbaar tot {{maxDate}}</em>";TODO;TODO;All observations;TODO
@@ -277,3 +280,4 @@ untreated nest;Onbehandeld nest;;TODO;;Untreated nest;
 individual;Individu;;TODO;;Individual;
 nest;Nest;;TODO;;Nest;
 map;Kaart;;Carte;;Map;
+lenteNesten;Aantal t.e.m. 19 mei gemelde nesten;;TODO;;TODO;

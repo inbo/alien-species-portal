@@ -42,6 +42,10 @@ combineActiveData <- function(activeData, managedData, untreatedData) {
 #' @export
 combineNestenData <- function(pointsData, nestenData) {
   
+  # For R CMD check
+  type <- eventDate <- popup <- institutionCode <- id <- observation_time <- NULL
+  geometry <- NULL
+  
   points_redux <- pointsData %>% 
     dplyr::filter(year == year(Sys.Date())) %>%
     dplyr::select(type, eventDate, popup, institutionCode, year) %>%
@@ -79,6 +83,9 @@ combineNestenData <- function(pointsData, nestenData) {
 #' 
 #' @param selected character vector, defines which layers should be shown on the map
 #' @inheritParams mapCube
+#' @param combinedData, data.frame as returned by \code{\link{combineNestenData}}
+#' @param colors named character vector, defines colors and labels in the map
+#' @param blur character, value of `type` for which to show blur
 #' @return leaflet map
 #' 
 #' @author mvarewyck
@@ -154,6 +161,7 @@ mapHeat <- function(combinedData, colors, blur = NULL, selected,
 #' @param filter reactive list with filters to be shown in the app;
 #' names should match a plotFunction in \code{uiText}; 
 #' values define the choices in \code{selectInput}
+#' @param maxDate reactive date, last observation date in the dataset
 #' @return no return value
 #' 
 #' @author mvarewyck

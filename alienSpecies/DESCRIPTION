@@ -12,6 +12,7 @@ Imports:
     data.table,
     dplyr,
     DT,
+    ggplot2,
     htmltools,
     htmlwidgets,
     INBOtheme (<= 0.5.9),
@@ -23,6 +24,7 @@ Imports:
 	shiny,
 	shinycssloaders,
 	sf,
+	tidyr,
 	tidyverse,
 	trias (>= 2.0.3),
 	webshot

@@ -240,7 +240,8 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
         
         })
 
-      if (plotFunction != "countOccupancy")
+      if (!(plotFunction == "countOccupancy" |
+          (!is.null(triasFunction) && triasFunction %in% c("barplotLenteNesten", "countNesten"))))
         outputOptions(output, "plot", suspendWhenHidden = FALSE)
       
       
@@ -280,7 +281,8 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           DT::datatable(resultFct()$data, rownames = FALSE,
             colnames = resultFct()$columnNames,
             selection = "single",
-            options = list(dom = 'ftp', pageLength = 5))
+            options = list(dom = 'ftp', 
+              pageLength = if (plotFunction == "tableNesten") -1 else 5))
           
         })
       

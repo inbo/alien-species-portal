@@ -219,7 +219,7 @@ results$species_managementData <- reactive({
       
       readShapeData(
         extension = ".geojson", 
-        dataDir = file.path(system.file("extdata", "management", package = "alienSpecies"), "Vespa_velutina")
+        dataDir = system.file("extdata", "management", "Vespa_velutina", package = "alienSpecies")
       )
       
       
@@ -298,6 +298,29 @@ observe({
         maxDate = reactive(max(results$species_managementData()$points$eventDate, na.rm = TRUE))      
       )
       
+      # Aantal lente nesten
+      plotTriasServer(
+        id = "management2_lente",
+        triasFunction = "barplotLenteNesten",
+        data = reactive(read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))),
+        uiText = reactive(results$translations)
+      )
+      
+      # Aantal nesten per provincie
+      plotTriasServer(
+        id = "management2_province",
+        triasFunction = "countNesten",
+        data = reactive(results$species_managementData()$nesten),
+        uiText = reactive(results$translations)
+      )
+      
+      plotModuleServer(
+        id = "management2_provinceTable",
+        plotFunction = "tableNesten",
+        data = reactive(results$species_managementData()$nesten),
+        uiText = reactive(results$translations)
+      )
+      
       
     } else {
       ## Map + choices barplot
@@ -333,7 +356,10 @@ output$species_managementContent <- renderUI({
       
       tagList(
         mapHeatUI(id = "management2_active"),
-        mapHeatUI(id = "management2_observed")
+        mapHeatUI(id = "management2_observed"),
+        plotTriasUI(id = "management2_lente"),
+        plotTriasUI(id = "management2_province"),
+        tableModuleUI(id = "management2_provinceTable")
       )
       
     } else {
