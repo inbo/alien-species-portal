@@ -298,6 +298,33 @@ observe({
         maxDate = reactive(max(results$species_managementData()$points$eventDate, na.rm = TRUE))      
       )
       
+      # Trend region
+      mapRegionsServer(
+        id = "management2",
+        uiText = reactive(results$translations),
+        species = reactive(input$species_choice),
+        df = reactive({
+            vespaPoints <- results$species_managementData()$points
+            # Columns
+            regionVariables <- list(level3Name = "NAAM", level2Name = "provincie", level1Name = "GEWEST")
+            for (iName in names(regionVariables))
+              names(vespaPoints)[match(iName, names(vespaPoints))] <- regionVariables[[iName]]
+            # Gewest
+            vespaPoints$GEWEST <- ifelse(vespaPoints$GEWEST == "Vlaanderen", "flanders", 
+              ifelse(vespaPoints$GEWEST == "Bruxelles", "brussels", 
+                ifelse(vespaPoints$GEWEST == "Wallonie", "wallonia", "")))
+            # Provincie
+            vespaPoints$provincie <- ifelse(vespaPoints$provincie == "Vlaams Brabant", "Vlaams-Brabant",
+              ifelse(vespaPoints$provincie == "Bruxelles", "HoofdstedelijkGewest", 
+                ifelse(vespaPoints$provincie == "Liège", "Luik", 
+                  ifelse(vespaPoints$provincie == "Brabant Wallon", "Waals-Brabant",
+                    ifelse(vespaPoints$provincie == "Hainaut", "Henegouwen", vespaPoints$provincie)))))
+            vespaPoints
+          }),
+        occurrenceData = NULL,
+        shapeData = allShapes
+      )
+      
       # Aantal lente nesten
       plotTriasServer(
         id = "management2_lente",
@@ -311,14 +338,17 @@ observe({
         id = "management2_province",
         triasFunction = "countNesten",
         data = reactive(results$species_managementData()$nesten),
-        uiText = reactive(results$translations)
+        uiText = reactive(results$translations),
+        maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE))
       )
       
-      plotModuleServer(
+      plotTriasServer(
         id = "management2_provinceTable",
-        plotFunction = "tableNesten",
+        triasFunction = "tableNesten",
         data = reactive(results$species_managementData()$nesten),
-        uiText = reactive(results$translations)
+        uiText = reactive(results$translations),
+        maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)),
+        outputType = "table"
       )
       
       
@@ -357,9 +387,10 @@ output$species_managementContent <- renderUI({
       tagList(
         mapHeatUI(id = "management2_active"),
         mapHeatUI(id = "management2_observed"),
+        mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
         plotTriasUI(id = "management2_lente"),
         plotTriasUI(id = "management2_province"),
-        tableModuleUI(id = "management2_provinceTable")
+        plotTriasUI(id = "management2_provinceTable", outputType = "table")
       )
       
     } else {

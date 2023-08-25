@@ -1,7 +1,7 @@
 title_id;title_nl;description_nl;title_fr;description_fr;title_en;description_en
 apply_gam;Status van toename (GAM) - Waarnemingen;;Statut d'augmentation (GAM) - Observations;;Emergence status (GAM) - Observations;
 barplotLenteNesten;Voorjaarsnesten;Het aantal op vespawatch.be gemelde nesten tussen 1 januari en 19 mei;TODO;TODO;TODO;TODO
-countNesten;Aantal nesten per provincie;"Het aantal op vespawatch.be gemelde nesten per provincie.
+countNesten;Aantal nesten per provincie (figuur);"Het aantal op vespawatch.be gemelde nesten per provincie.
 </br><em>Data beschikbaar tot {{maxDate}}<em>";TODO;TODO;TODO;TODO
 indicator_introduction_year;Aantal nieuw geïntroduceerde soorten per jaar;;Nombre d'espèces nouvellement introduites par an;;Number of newly introduced species per year;
 indicator_total_year;Cumulatief aantal geïntroduceerde soorten;;Nombre cumulé d'espèces introduites;;Cumulative number of introduced species;
@@ -20,6 +20,8 @@ reporting_t1-mapOccurrence;Rapportering van;;Rapportage de;;Reporting of;
 reporting_t01-mapOccurrence;Rapportering van;;Rapportage de;;Reporting of;
 management-mapOccurrence;Beheer van;;Gestion de;;Management of;
 tableIndicators;;Tijdelijke aanduiding voor disclaimer;;Espace réservé pour clause;;Placeholder for disclaimer
+tableNesten;Aantal nesten per provincie (tabel);"Het aantal op vespawatch.be gemelde nesten per provincie.
+</br><em>Data beschikbaar tot {{maxDate}}<em>";TODO;TODO;TODO;TODO
 visualize_pathways_level1;Geïntroduceerde soorten per introductieroute (CBD, niveau 1);;Espèces introduites par voie d'introduction (CBD, niveau 1);;Introduced species per pathway (CBD, level 1);
 visualize_pathways_year_level1;Geïntroduceerde soorten per introductieroute (CBD, niveau 1) - trends;;Espèces introduites par voie d'introduction (CBD, niveau 1) - tendances;;Introduced species per pathway (CBD, level 1) - trends;
 visualize_pathways_level2;Geïntroduceerde soorten per introductieroute (CBD, niveau 2);;Espèces introduites par voie d'introduction (CBD, niveau 2);;Introduced species per pathway (CBD, level 2);

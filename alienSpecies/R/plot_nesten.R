@@ -106,12 +106,7 @@ tableNesten <- function(df, uiText = NULL) {
       values_from = n) %>%
     rename(all_of(newName))
   
-  return(
-    list(
-      data = dt_prov_nesten, 
-      columnNames = colnames(dt_prov_nesten)
-    )
-  )
+  dt_prov_nesten
   
 }
 

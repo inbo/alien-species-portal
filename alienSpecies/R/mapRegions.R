@@ -15,8 +15,8 @@
 #' @importFrom data.table copy
 #' @export
 createSummaryRegions <- function(data, shapeData, 
-  regionLevel = c("communes", "provinces", "gewest", "flanders"),
-  year = NULL, unit = c("cpue", "absolute")) {
+  regionLevel = c("communes", "provinces", "gewest"),
+  year = NULL, unit = c("absolute", "cpue")) {
   
   # For R CMD check
   region <- NULL
@@ -34,16 +34,19 @@ createSummaryRegions <- function(data, shapeData,
     myYear <- unique(data$year) else 
     myYear <- year  # rename for tidyverse filtering
   
-  regionVar <- switch(regionLevel,
+  
+  regionVariable <- switch(regionLevel,
     communes = "NAAM",
     provinces = "provincie",
     gewest = "GEWEST"
   )
   
-  if (regionLevel == "flanders")
-    data$region <- "flanders" else if (!regionVar %in% colnames(data))
+  if (!regionVariable %in% colnames(data))
     return(NULL) else
-    colnames(data)[colnames(data) == regionVar] <- "region"
+    colnames(data)[colnames(data) == regionVariable] <- "region"
+  
+  if (is.null(data$count))
+    data$count <- 1
   
   if (unit == "cpue") {
     
@@ -112,7 +115,7 @@ createSummaryRegions <- function(data, shapeData,
 #' @author mvarewyck
 #' @import leaflet
 #' @export
-mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL, 
+mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText = NULL, 
   regionLevel = c("communes", "provinces"),
   legend = "topright", addGlobe = FALSE) {
   
@@ -122,20 +125,8 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
     na.color = "transparent")
   valuesPalette <- managementData$group[match(spatialData$NAAM, managementData$region)]
   
-  spread <- createCubeData(df = occurrenceData, shapeData = shapeData,
-    groupVariable = "cell_code")
   
-# MAP: Bullfrog management in `r jaar`
-#  Suggested filters:
-#  - year
-#  - region-scale (province/commune)
-#  - unit (absolute/cpue)
-  
-  
-  myMap <- leaflet(spatialData) %>%
-    addPolylines(data = spread$cell_code1, 
-      color = "red",
-      weight = 1) %>% 
+  myMap <- leaflet(spatialData) %>% 
     addPolygons(
       weight = 1,
       color = "gray",
@@ -144,6 +135,18 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
       layerId = spatialData$NAAM,
       group = "region"
     )
+  
+  
+  if (!is.null(occurrenceData)) {
+    
+    spread <- createCubeData(df = occurrenceData, shapeData = shapeData,
+      groupVariable = "cell_code")
+    myMap <- myMap %>%
+      addPolylines(data = spread$cell_code1, 
+        color = "red",
+        weight = 1) 
+    
+  }
   
   # Add borders
   if (regionLevel == "communes") {
@@ -155,8 +158,8 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
         color = "black",
         opacity = 0.8,
         group = "borderRegion"
-    ) 
-  
+      ) 
+    
   } else if (regionLevel == "provinces") {
     
     myMap <- myMap %>% addBaseMap()
@@ -176,13 +179,14 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
       layerId = "legend"
     )
     
-    myMap <- addLegend(
-      map = myMap,
-      position = legend,
-      colors = "red",
-      labels = translate(uiText, "occurrence")$title,
-      opacity = 1,
-      layerId = "legend2"
+    if (!is.null(occurrenceData))
+      myMap <- addLegend(
+        map = myMap,
+        position = legend,
+        colors = "red",
+        labels = translate(uiText, "occurrence")$title,
+        opacity = 1,
+        layerId = "legend2"
       )
     
   }
@@ -193,7 +197,7 @@ mapRegions <- function(managementData, occurrenceData, shapeData, uiText = NULL,
     myMap <- addTiles(myMap)
     
   }
-    
+  
   myMap  
   
 }
@@ -239,8 +243,8 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       output$titleMapRegions <- renderUI({
           
           period <- if (!is.null(input$period))
-            c(input$period, req(input$year)) else
-            req(input$year)
+              c(input$period, req(input$year)) else
+              req(input$year)
           
           h3(HTML(paste(tmpTranslation()$title, req(species()), yearToTitleString(period))))
           
@@ -248,7 +252,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       
       output$descriptionMapRegions <- renderUI(HTML(tmpTranslation()$description))
       
-
+      
       # Filters
       output$year <- renderUI({
           
@@ -307,7 +311,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       
       output$unit <- renderUI({
           
-          choices <- c("cpue", "absolute")
+          choices <- c("absolute", "cpue")
           names(choices) <- translate(uiText(), choices)$title
           
           selectInput(inputId = ns("unit"), label = translate(uiText(), "unit")$title, 
@@ -351,7 +355,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
       output$region <- renderUI({
           
           selectInput(inputId = ns("region"), label = translate(uiText(), "regions")$title,
-              choices = sort(unique(subShape()[[req(input$regionLevel)]]$NAAM)), multiple = TRUE)
+            choices = sort(unique(subShape()[[req(input$regionLevel)]]$NAAM)), multiple = TRUE)
           
         })
       
@@ -376,7 +380,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           createSummaryRegions(data = df(), 
             shapeData = shapeData,
             regionLevel = req(input$regionLevel),
-            year = req(input$year), unit = req(input$unit))
+            year = req(input$year), unit = input$unit)
           
         })
       
@@ -388,7 +392,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           occurrenceData <- occurrenceData[occurrenceData$scientificName == species() & year == req(input$year), ]
           
         })
- 
+      
       
       # Send map to the UI
       output$regionsPlot <- renderLeaflet({
@@ -413,9 +417,10 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           validate(need(nrow(req(summaryData())) > 0, noData()))
           
           textPopup <- paste0("<h4>", summaryData()$region, "</h4>",
-            "<strong>", translate(uiText(), "year")$title, "</strong>: ", input$year,
-            "<br><strong>", translate(uiText(), input$unit)$title, "</strong>: ", 
-            if (input$unit == "cpue") 
+            "<strong>", translate(uiText(), "year")$title, "</strong>: ", input$year, "<br>",
+            if (!is.null(input$unit)) 
+              paste0("<strong>", translate(uiText(), input$unit)$title, "</strong>: "), 
+            if (!is.null(input$unit) && input$unit == "cpue") 
                 round(summaryData()$effort, 2) else
                 round(summaryData()$n, 2)
           )
@@ -511,19 +516,21 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
               opacity = 0.8,
               title = translate(uiText(), "legend")$title,
               layerId = "legend"
-            ) %>%  
-            addLegend(
-              position = input$legend,
-              colors = "red",
-              labels = translate(uiText(), "occurrence")$title,
-              opacity = 1,
-              layerId = "legend2"
             )
+            
+            if (!is.null(occurrenceData))
+              proxy %>% addLegend(
+                position = input$legend,
+                colors = "red",
+                labels = translate(uiText(), "occurrence")$title,
+                opacity = 1,
+                layerId = "legend2"
+              )
             
           }
           
         })
-            
+      
       # Which region(s) are selected?
       observe({
           
@@ -583,7 +590,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           newMap <- mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
             shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel,
             legend = input$legend, addGlobe = input$globe %% 2 == 1)
-      
+          
           
           # save the zoom level and centering to the map object
           newMap <- newMap %>% setView(
@@ -651,7 +658,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
             shapeData = shapeData,
             regionLevel = "gewest",
             year = input$period[1]:input$period[2],
-            unit = req(input$unit)
+            unit = input$unit
           )
           
         })
@@ -688,7 +695,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
             shapeData = shapeData,
             regionLevel = req(input$regionLevel),
             year = input$period[1]:input$period[2],
-            unit = req(input$unit)
+            unit = input$unit
           )
           
         })
@@ -712,13 +719,15 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
 #' Shiny module for creating the plot \code{\link{mapCube}} - UI side
 #' @inheritParams welcomeSectionServer
 #' @param plotDetails character vector, which plots to be shown below the map
+#' @param showUnit boolean, whether to show the option to choose unit;
+#' default is TRUE
 #' @return UI object
 #' 
 #' @author mvarewyck
 #' @import shiny
 #' @importFrom leaflet leafletOutput
 #' @export
-mapRegionsUI <- function(id, plotDetails = NULL) {
+mapRegionsUI <- function(id, plotDetails = NULL, showUnit = TRUE) {
   
   ns <- NS(id)
   
@@ -742,7 +751,8 @@ mapRegionsUI <- function(id, plotDetails = NULL) {
       ),
       fixedRow(
         column(6, uiOutput(ns("legend"))),
-        column(6, uiOutput(ns("unit")))
+        if (showUnit)
+          column(6, uiOutput(ns("unit")))
       ),
       if ("region" %in% plotDetails)
         checkboxInput(inputId = ns("combine"), 
@@ -770,7 +780,7 @@ mapRegionsUI <- function(id, plotDetails = NULL) {
             doWellPanel = FALSE)
         )
     ),
-  
+    
     
     tags$hr()
   

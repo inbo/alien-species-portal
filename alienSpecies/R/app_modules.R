@@ -282,7 +282,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
             colnames = resultFct()$columnNames,
             selection = "single",
             options = list(dom = 'ftp', 
-              pageLength = if (plotFunction == "tableNesten") -1 else 5))
+              pageLength = if (triasFunction == "tableNesten") -1 else 5))
           
         })
       

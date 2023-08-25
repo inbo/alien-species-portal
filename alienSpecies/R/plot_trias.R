@@ -85,6 +85,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @param filters character vector, additional filters for the TRIAS plot to 
 #' be dipslayed
 #' @param filterRegion boolean, whether to show filter for region
+#' @param maxDate reactive date, maximum observation date for printing in description
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -92,7 +93,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @import trias
 #' @export
 plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
-  filters = NULL, filterRegion = FALSE, outputType = c("plot", "table")) {
+  filters = NULL, filterRegion = FALSE, maxDate = reactive(NULL), outputType = c("plot", "table")) {
   
   # For R CMD check
   protected <- NULL
@@ -108,7 +109,14 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
       
       output$titlePlotTrias <- renderUI(h3(HTML(tmpTranslation()$title)))
       
-      output$descriptionPlotTrias <- renderUI(HTML(tmpTranslation()$description))
+      output$descriptionPlotTrias <- renderUI({
+          
+          tmpDescription <- tmpTranslation()$description
+          tmpDescription <- gsub("\\{\\{maxDate\\}\\}", format(maxDate(), "%d/%m/%Y"), tmpDescription)
+          
+          HTML(tmpDescription)
+          
+        })
       
       
       output$filters <- renderUI({

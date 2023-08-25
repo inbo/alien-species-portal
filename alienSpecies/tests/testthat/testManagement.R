@@ -18,8 +18,10 @@ uiText <- loadMetaData()
 
 ## Rosse stekelstaart ##
 
+context("Oxyura jamaicensis")
 
 outFile <- "Oxyura_jamaicensis.csv"
+
 
 test_that("Create management data", {
     
@@ -66,12 +68,15 @@ test_that("Barplot for Ruddy Duck", {
 
 ## Amerikaanse stierkikker ##
 
+context("Lithobates catesbeianus")
+
 outFile <- "Lithobates_catesbeianus.csv"
 
 managementData <- loadGbif(dataFile = outFile)
 # Add GEWEST
 managementData$GEWEST <- allShapes$communes$GEWEST[
   match(managementData$NISCODE, allShapes$communes$NISCODE)]
+
 
 test_that("Barplot for Bullfrogs", {
    
@@ -92,17 +97,18 @@ test_that("Map & trend for Bullfrogs", {
     # Filter on taxonKey and year
     occurrenceData <- occurrenceData[occurrenceData$scientificName == gsub("_", " ", gsub(".csv", "", outFile)) & year == 2018, ]
     
-    
     # Map - gemeente
     summaryData <- createSummaryRegions(data = managementData, 
-      shapeData = allShapes, regionLevel = "communes", year = 2018, unit = "cpue")
+      shapeData = allShapes, regionLevel = "communes", 
+      year = 2018, unit = "cpue")
     myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
       shapeData = allShapes, regionLevel = "communes")
     expect_s3_class(myPlot, "leaflet")
     
     # Map - provinces
     summaryData <- createSummaryRegions(data = managementData, 
-      shapeData = allShapes, regionLevel = "provinces", year = 2018)
+      shapeData = allShapes, regionLevel = "provinces",
+      year = 2018)
     myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
       shapeData = allShapes, regionLevel = "provinces")
     
@@ -123,7 +129,8 @@ test_that("Trend for Bullfrogs", {
     
     # Municipalities
     summaryData <- createSummaryRegions(data = managementData, 
-      shapeData = allShapes, regionLevel = "communes", year = unique(managementData$year))
+      shapeData = allShapes, regionLevel = "communes", 
+      year = unique(managementData$year))
     
     myResult <- trendYearRegion(df = summaryData[summaryData$region %in% c("Arendonk", "Kasterlee"), ])
     expect_type(myResult, "list")
@@ -154,49 +161,116 @@ test_that("Trend for Bullfrogs", {
 
 ## Aziatische hoornaar ##
 
+context("Vespa velutina")
+
 vespaData <- readShapeData(
   extension = ".geojson", 
   dataDir = system.file("extdata", "management", "Vespa_velutina", package = "alienSpecies")
 )
 
-# Actieve haarden
-combinedData <- combineActiveData(
-  activeData = vespaData$actieve_haarden,
-  managedData = vespaData$beheerde_nesten,
-  untreatedData = vespaData$onbehandelde_nesten
-)
-mapHeat(
-  combinedData = combinedData,
-  colors = {
-    myColors <- c("blue", "black", "red")
-    names(myColors) <- c("individual", "managed nest", "untreated nest")
-    myColors
-  },
-  selected = unique(combinedData$filter),
-  blur = "individual",
-  addGlobe = TRUE
-)
+test_that("Actieve haarden", {
+    
+    combinedData <- combineActiveData(
+      activeData = vespaData$actieve_haarden,
+      managedData = vespaData$beheerde_nesten,
+      untreatedData = vespaData$onbehandelde_nesten
+    )
+    myPlot <- mapHeat(
+      combinedData = combinedData,
+      colors = {
+        myColors <- c("blue", "black", "red")
+        names(myColors) <- c("individual", "managed nest", "untreated nest")
+        myColors
+      },
+      selected = unique(combinedData$filter),
+      blur = "individual",
+      addGlobe = TRUE
+    )
+    
+    expect_s3_class(myPlot, "leaflet")
+    
+  })
 
 
-# Alle observaties
-combinedData <- combineNestenData(pointsData = vespaData$points, nestenData = vespaData$nesten)
-mapHeat(
-  combinedData = combinedData,
-  colors = {
-    myColors <- c("blue", "red")
-    names(myColors) <- c("individual", "nest")
-    myColors
-  },
-  selected = unique(combinedData$filter),
-  addGlobe = TRUE
-)
 
+test_that("Alle observaties", {
+    
+    combinedData <- combineNestenData(pointsData = vespaData$points, nestenData = vespaData$nesten)
+    myPlot <- mapHeat(
+      combinedData = combinedData,
+      colors = {
+        myColors <- c("blue", "red")
+        names(myColors) <- c("individual", "nest")
+        myColors
+      },
+      selected = unique(combinedData$filter),
+      addGlobe = TRUE
+    )
+    
+    expect_s3_class(myPlot, "leaflet")
+    
+  })
 
-# Voorjaarsnesten
-barplotLenteNesten(df = read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies")))
+test_that("Voorjaarsnesten", {
+    
+    myPlot <- barplotLenteNesten(df = read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies")))
+    expect_s3_class(myPlot, "ggplot")
+    
+  })
 
-# Provincie nesten
-countNesten(df = vespaData$nesten)
-tmp <- tableNesten(df = vespaData$nesten)
+test_that("Provincie nesten", {
+    
+    myPlot <- countNesten(df = vespaData$nesten)
+    expect_s3_class(myPlot, "ggplot")
+    
+    myTable <- tableNesten(df = vespaData$nesten)
+    expect_s3_class(myTable, "data.frame")
+    
+  })
+
+test_that("Map Trend", {
+    
+    vespaPoints <- vespaData$points
+    
+    ## Refactor data
+    # Columns
+    regionVariables <- list(level3Name = "NAAM", level2Name = "provincie", level1Name = "GEWEST")
+    for (iName in names(regionVariables))
+      names(vespaPoints)[match(iName, names(vespaPoints))] <- regionVariables[[iName]]
+    # Gewest
+    vespaPoints$GEWEST <- ifelse(vespaPoints$GEWEST == "Vlaanderen", "flanders", 
+      ifelse(vespaPoints$GEWEST == "Bruxelles", "brussels", 
+        ifelse(vespaPoints$GEWEST == "Wallonie", "wallonia", "")))
+    # Provincie
+    vespaPoints$provincie <- ifelse(vespaPoints$provincie == "Vlaams Brabant", "Vlaams-Brabant",
+      ifelse(vespaPoints$provincie == "Bruxelles", "HoofdstedelijkGewest", 
+        ifelse(vespaPoints$provincie == "Liège", "Luik", 
+          ifelse(vespaPoints$provincie == "Brabant Wallon", "Waals-Brabant",
+            ifelse(vespaPoints$provincie == "Hainaut", "Henegouwen", vespaPoints$provincie)))))
+    
+    summaryData <- createSummaryRegions(data = vespaPoints, shapeData = allShapes,
+      regionLevel = "communes",
+      year = 2022,
+      unit = "absolute")
+    mapRegions(managementData = summaryData, shapeData = allShapes,
+      regionLevel = "communes")
+    
+    
+    summaryData <- createSummaryRegions(data = vespaPoints, shapeData = allShapes,
+      regionLevel = "provinces",
+      year = 2022,
+      unit = "absolute")
+    mapRegions(managementData = summaryData, shapeData = allShapes,
+      regionLevel = "provinces")
+    
+#    # TODO same for vespaData$nesten - missing info https://github.com/inbo/alien-species-portal/issues/27#issuecomment-1692896317
+#    # Add GEWEST
+#    nestenRegions <- vespaData$nesten
+#    nestenRegions$province <- nestenRegions$NAAM
+#    nestenRegions <- merge(nestenRegions, sf::st_drop_geometry(allShapes$communes),
+#      by = "NISCODE", all.x = TRUE)
+    
+  })
+
 
 
