@@ -71,8 +71,13 @@ createSummaryRegions <- function(data, shapeData,
     
     summaryData <- data %>%
       filter(year %in% myYear, !is.na(region), region != "NA") %>% 
+#      group_by(region, year, type) %>% 
+#      summarise(n = sum(count, na.rm = TRUE)) %>%
+#      tidyr::spread(type, n) %>%
+#      summarise(n = sum(individual, nest, na.rm = TRUE))
       group_by(region, year) %>% 
       summarise(n = sum(count, na.rm = TRUE))
+
       
       
     summaryData$group <- cut(x = summaryData$n, 

@@ -17,8 +17,7 @@ uiText <- loadMetaData()
 
 
 ## Rosse stekelstaart ##
-
-context("Oxyura jamaicensis")
+## Oxyura jamaicensis
 
 outFile <- "Oxyura_jamaicensis.csv"
 
@@ -67,8 +66,7 @@ test_that("Barplot for Ruddy Duck", {
 
 
 ## Amerikaanse stierkikker ##
-
-context("Lithobates catesbeianus")
+## Lithobates catesbeianus
 
 outFile <- "Lithobates_catesbeianus.csv"
 
@@ -160,8 +158,7 @@ test_that("Trend for Bullfrogs", {
 
 
 ## Aziatische hoornaar ##
-
-context("Vespa velutina")
+## Vespa velutina
 
 vespaData <- readShapeData(
   extension = ".geojson", 
@@ -230,7 +227,9 @@ test_that("Provincie nesten", {
 
 test_that("Map Trend", {
     
+    ## Points data
     vespaPoints <- vespaData$points
+    vespaPoints$type <- "individual"
     
     ## Refactor data
     # Columns
@@ -263,13 +262,24 @@ test_that("Map Trend", {
     mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
     
-#    # TODO same for vespaData$nesten - missing info https://github.com/inbo/alien-species-portal/issues/27#issuecomment-1692896317
-#    # Add GEWEST
-#    nestenRegions <- vespaData$nesten
-#    nestenRegions$province <- nestenRegions$NAAM
-#    nestenRegions <- merge(nestenRegions, sf::st_drop_geometry(allShapes$communes),
-#      by = "NISCODE", all.x = TRUE)
+    ## Nesten data
+    vespaNesten <- vespaData$nesten
+    vespaNesten$type <- "nest"
     
+    
+#    keepColumns <- c("year", "type", "NAAM", "provincie", "GEWEST", "geometry")
+#    vespaBoth <- rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
+#    summaryData <- createSummaryRegions(
+#      data = vespaBoth, shapeData = allShapes,
+#      regionLevel = "communes",
+#      year = 2022,
+#      unit = "absolute",
+#      split = "type")
+#    mapRegions(managementData = summaryData, shapeData = allShapes,
+#      regionLevel = "communes")
+    
+    # TODO combined on 1 map
+
   })
 
 

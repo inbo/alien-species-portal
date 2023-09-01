@@ -99,7 +99,7 @@ createKeyData <- function(dataDir = system.file("extdata", package = "alienSpeci
 #' @export
 createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
   packageDir = system.file("extdata", package = "alienSpecies"),
-  shapeData) {
+  shapeData = readShapeData()$utm1_bel_with_regions) {
   
   # created from https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
   ## Data at 1km x 1km grid level

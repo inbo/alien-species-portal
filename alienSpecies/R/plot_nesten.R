@@ -46,11 +46,10 @@ barplotLenteNesten <- function(df, uiText = NULL) {
 countNesten <- function(df, uiText = NULL) {
   
   # For R CMD check
-  NAAM <- provincie <- NULL
+  provincie <- NULL
   
   plotData <- df %>% 
     st_drop_geometry() %>% 
-    rename(provincie = NAAM) %>% 
     group_by(provincie, year) %>% 
     summarise(n = n()) %>% 
     ungroup() 
@@ -89,19 +88,19 @@ tableNesten <- function(df, uiText = NULL) {
     st_drop_geometry() %>% 
     group_by(year) %>% 
     summarise(n = n()) %>% 
-    mutate(NAAM = translate(uiText, id = "total")$title)
+    mutate(provincie = translate(uiText, id = "total")$title)
   
   prov_per_year <- df %>% 
     st_drop_geometry()  %>% 
-    group_by(NAAM, year) %>% 
+    group_by(provincie, year) %>% 
     summarise(n = n()) %>% 
     ungroup()
   
-  newName <- "NAAM"
+  newName <- "provincie"
   names(newName) <- translate(uiText, id = "provinces")$title
   
   dt_prov_nesten <- rbind(prov_per_year, total_per_year) %>% 
-    tidyr::pivot_wider(id_cols = NAAM,
+    tidyr::pivot_wider(id_cols = provincie,
       names_from = year,
       values_from = n) %>%
     rename(all_of(newName))
