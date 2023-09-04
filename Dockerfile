@@ -93,7 +93,7 @@ RUN R -q -e "remotes::install_version('sys', version = '3.4.2', upgrade = FALSE)
     R -q -e "remotes::install_version('xml2', version = '1.3.5', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('xtable', version = '1.8-4', upgrade = FALSE)"
 RUN R -q -e "remotes::install_version('yaml', version = '2.3.7', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('askpass', version = '1.1', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('askpass', version = '1.2.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('bit64', version = '4.0.5', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('cachem', version = '1.0.8', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('class', version = '7.3-22', upgrade = FALSE)" && \
@@ -163,7 +163,7 @@ RUN R -q -e "remotes::install_version('tidyselect', version = '1.2.0', upgrade =
     R -q -e "remotes::install_version('sf', version = '1.0-14', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('tibble', version = '3.2.1', upgrade = FALSE)"
 RUN R -q -e "remotes::install_version('cellranger', version = '1.1.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('dplyr', version = '1.1.2', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('dplyr', version = '1.1.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('forcats', version = '1.0.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('ggplot2', version = '3.4.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('googledrive', version = '2.1.1', upgrade = FALSE)" && \
@@ -194,17 +194,20 @@ RUN R -q -e "remotes::install_version('tidyr', version = '1.3.0', upgrade = FALS
     R -q -e "remotes::install_version('testthat', version = '3.1.10', upgrade = FALSE)"
 RUN R -q -e "remotes::install_version('leaflet.extras', version = '1.0.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('modelr', version = '0.1.11', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('tidyverse', version = '2.0.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_github('inbo/INBOtheme')" && \
-    R -q -e "remotes::install_github('trias-project/trias')"
+    R -q -e "remotes::install_version('tidyverse', version = '2.0.0', upgrade = FALSE)"
+    
+RUN R -q -e "remotes::install_github('trias-project/trias')"
 
+# Specific version INBOtheme
+RUN R -q -e "remotes::install_github('inbo/INBOtheme@v0.5.9')"
 
 # To prevent errors 
 ## when opening ggplot via linux docker
 ## when installing phantomjs via webshot
 RUN apt-get update && apt-get install --no-install-recommends -y \
     libxt-dev \
-    wget
+    wget \ 
+    bzip2 
     
 # To download leaflet maps from within the app
 ## Attention: do not install phantomjs directly, will not work then!

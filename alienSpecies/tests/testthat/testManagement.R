@@ -266,19 +266,20 @@ test_that("Map Trend", {
     vespaNesten <- vespaData$nesten
     vespaNesten$type <- "nest"
     
+    # TODO combined on 1 map - test from here
     
-#    keepColumns <- c("year", "type", "NAAM", "provincie", "GEWEST", "geometry")
-#    vespaBoth <- rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
-#    summaryData <- createSummaryRegions(
-#      data = vespaBoth, shapeData = allShapes,
-#      regionLevel = "communes",
-#      year = 2022,
-#      unit = "absolute",
-#      split = "type")
-#    mapRegions(managementData = summaryData, shapeData = allShapes,
-#      regionLevel = "communes")
+    keepColumns <- c("year", "type", "NAAM", "provincie", "GEWEST", "geometry")
+    vespaBoth <- rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
+    summaryData <- createSummaryRegions(
+      data = vespaBoth, shapeData = allShapes,
+      regionLevel = "communes",
+      year = 2022,
+      unit = "absolute",
+      groupingVariable = "type")
+    mapRegions(managementData = summaryData, shapeData = allShapes,
+      regionLevel = "communes")
     
-    # TODO combined on 1 map
+    
 
   })
 

@@ -16,7 +16,7 @@
 #' @export
 createSummaryRegions <- function(data, shapeData, 
   regionLevel = c("communes", "provinces", "gewest"),
-  year = NULL, unit = c("absolute", "cpue")) {
+  year = NULL, unit = c("absolute", "cpue"), groupingVariable = NULL) {
   
   # For R CMD check
   region <- NULL
@@ -69,17 +69,20 @@ createSummaryRegions <- function(data, shapeData,
     
   } else {
     
-    summaryData <- data %>%
-      filter(year %in% myYear, !is.na(region), region != "NA") %>% 
-#      group_by(region, year, type) %>% 
-#      summarise(n = sum(count, na.rm = TRUE)) %>%
-#      tidyr::spread(type, n) %>%
-#      summarise(n = sum(individual, nest, na.rm = TRUE))
-      group_by(region, year) %>% 
-      summarise(n = sum(count, na.rm = TRUE))
-
+    if (!is.null(groupingVariable)) {
       
+      summaryData <- reshape2::dcast(data, region + year ~ get(groupingVariable), value.var = "count", fun.aggregate = sum)
+      summaryData$n <- apply(summaryData[, -(1:2), drop = FALSE], 1, sum, na.rm = TRUE)     
       
+    } else {
+      
+      summaryData <- data %>%
+        filter(year %in% myYear, !is.na(region), region != "NA") %>% 
+        group_by(region, year) %>% 
+        summarise(n = sum(count, na.rm = TRUE))
+      
+    }
+    
     summaryData$group <- cut(x = summaryData$n, 
       breaks = c(0, 1000, 5000, 10000, Inf),
       labels = c("1-1000", "1001-5000", "5001-10000", 
