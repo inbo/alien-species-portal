@@ -20,6 +20,7 @@ Imports:
     leaflet,
     leaflet.extras,
     plotly,
+    reshape2,
     rgbif,
 	shiny,
 	shinycssloaders,

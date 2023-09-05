@@ -81,7 +81,7 @@ countNesten <- function(df, uiText = NULL) {
 tableNesten <- function(df, uiText = NULL) {
   
   # For R CMD check
-  NAAM <- NULL
+  NAAM <- provincie <- NULL
   
   
   total_per_year <- df %>% 

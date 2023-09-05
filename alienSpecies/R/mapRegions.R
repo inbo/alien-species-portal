@@ -7,12 +7,14 @@
 #' @param year integer, year of interest
 #' @param unit character, should be one of \code{c("cpue", "absolute")},
 #' catch per unit of effort or absolute count
+#' @param groupingVariable character, split the number of counts per group value
 #' 
 #' @return data.frame
 #' 
 #' @author mvarewyck
 #' @import tidyverse
 #' @importFrom data.table copy
+#' @importFrom reshape2 dcast
 #' @export
 createSummaryRegions <- function(data, shapeData, 
   regionLevel = c("communes", "provinces", "gewest"),
@@ -71,7 +73,10 @@ createSummaryRegions <- function(data, shapeData,
     
     if (!is.null(groupingVariable)) {
       
-      summaryData <- reshape2::dcast(data, region + year ~ get(groupingVariable), value.var = "count", fun.aggregate = sum)
+      summaryData <- data %>%
+        filter(year %in% myYear, !is.na(region), region != "NA", region != "")
+      summaryData <- reshape2::dcast(summaryData, region + year ~ get(groupingVariable), 
+        value.var = "count", fun.aggregate = sum)
       summaryData$n <- apply(summaryData[, -(1:2), drop = FALSE], 1, sum, na.rm = TRUE)     
       
     } else {
@@ -220,9 +225,13 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
 #' @inheritParams createCubeData
 #' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
+#' @inheritParams createSummaryRegions
 #' @param species reactive character, readable name of the selected species
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param occurrenceData data.table, as obtained by \code{loadTabularData(type = "occurrence")}
+#' @param sourceChoices character vector, choices for the data source;
+#' default value is NULL then no choices are shown
+#' 
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -232,7 +241,8 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
 #' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData) {
+mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
+  sourceChoices = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -327,6 +337,17 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           
         })
       
+      output$bronMap <- renderUI({
+          
+          req(sourceChoices)
+          
+          selectInput(inputId = ns("bronMap"),
+            label = translate(uiText(), "source")$title,
+            choices = sourceChoices, selected = sourceChoices,
+            multiple = TRUE)
+          
+        })
+      
       # Filter on gewest
       output$gewest <- renderUI({
           
@@ -385,10 +406,19 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           
           req(inherits(df(), "data.frame"))
           
-          createSummaryRegions(data = df(), 
+          subData <- df()
+          if (!is.null(sourceChoices)) {
+            req(input$bronMap)
+            subData <- subData[subData$type %in% input$bronMap, ]
+          }
+          
+          createSummaryRegions(data = subData, 
             shapeData = shapeData,
             regionLevel = req(input$regionLevel),
-            year = req(input$year), unit = input$unit)
+            year = req(input$year), 
+            unit = input$unit,
+            groupingVariable = if (!is.null(sourceChoices)) "type"
+          )
           
         })
       
@@ -424,18 +454,24 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData)
           
           validate(need(nrow(req(summaryData())) > 0, noData()))
           
-          textPopup <- paste0("<h4>", summaryData()$region, "</h4>",
+          paste0("<h4>", summaryData()$region, "</h4>",
             "<strong>", translate(uiText(), "year")$title, "</strong>: ", input$year, "<br>",
             if (!is.null(input$unit)) 
               paste0("<strong>", translate(uiText(), input$unit)$title, "</strong>: "), 
+            if (!is.null(input$bronMap)) {
+              availableBron <- input$bronMap[input$bronMap %in% colnames(summaryData())]
+              names(availableBron) <- sapply(availableBron, function(x) translate(uiText(), x)$title)
+              if (length(availableBron) > 1)
+                paste0(apply(do.call(cbind, Map(paste, names(availableBron), summaryData()[, availableBron], sep = ": ")), 1, function(x)
+                      paste("</br>", paste(x, collapse = "</br>"))),
+                  "</br><em>", translate(uiText(), "total")$title, "</em>: ") else
+                paste0(names(availableBron), ": ")
+            },
             if (!is.null(input$unit) && input$unit == "cpue") 
                 round(summaryData()$effort, 2) else
                 round(summaryData()$n, 2)
           )
-          
-          
-          return(textPopup)
-          
+                    
         })
       
       # Add popups
@@ -760,7 +796,8 @@ mapRegionsUI <- function(id, plotDetails = NULL, showUnit = TRUE) {
       fixedRow(
         column(6, uiOutput(ns("legend"))),
         if (showUnit)
-          column(6, uiOutput(ns("unit")))
+          column(6, uiOutput(ns("unit"))),
+        column(6, uiOutput(ns("bronMap")))
       ),
       if ("region" %in% plotDetails)
         checkboxInput(inputId = ns("combine"), 

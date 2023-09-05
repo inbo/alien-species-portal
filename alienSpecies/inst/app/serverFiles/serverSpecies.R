@@ -304,7 +304,10 @@ observe({
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         df = reactive({
+            
+            ## Individual data
             vespaPoints <- results$species_managementData()$points
+            vespaPoints$type <- "individual"
             # Columns
             regionVariables <- list(level3Name = "NAAM", level2Name = "provincie", level1Name = "GEWEST")
             for (iName in names(regionVariables))
@@ -320,9 +323,18 @@ observe({
                   ifelse(vespaPoints$provincie == "Brabant Wallon", "Waals-Brabant",
                     ifelse(vespaPoints$provincie == "Hainaut", "Henegouwen", vespaPoints$provincie)))))
             vespaPoints
+            
+            ## Nest data
+            vespaNesten <- results$species_managementData()$nesten
+            vespaNesten$type <- "nest"
+                        
+            keepColumns <- c("year", "type", "NAAM", "provincie", "GEWEST", "geometry")
+            rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
+            
           }),
         occurrenceData = NULL,
-        shapeData = allShapes
+        shapeData = allShapes,
+        sourceChoices = c("individual", "nest")
       )
       
       # Aantal lente nesten
@@ -333,7 +345,7 @@ observe({
         uiText = reactive(results$translations)
       )
       
-      # Aantal nesten per provincie
+      # Aantal nesten per provincie - figuur
       plotTriasServer(
         id = "management2_province",
         triasFunction = "countNesten",
@@ -342,6 +354,7 @@ observe({
         maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE))
       )
       
+      # Aantal nesten per provincie - tabel
       plotTriasServer(
         id = "management2_provinceTable",
         triasFunction = "tableNesten",

@@ -158,11 +158,12 @@ RUN R -q -e "remotes::install_version('tidyselect', version = '1.2.0', upgrade =
     R -q -e "remotes::install_version('covr', version = '3.6.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('gargle', version = '1.5.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('progress', version = '1.2.2', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('reshape2', version = '1.4.4', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('roxygen2', version = '7.2.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('selectr', version = '0.4-2', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('sf', version = '1.0-14', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('tibble', version = '3.2.1', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('cellranger', version = '1.1.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('sf', version = '1.0-14', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('tibble', version = '3.2.1', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('cellranger', version = '1.1.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('dplyr', version = '1.1.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('forcats', version = '1.0.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('ggplot2', version = '3.4.3', upgrade = FALSE)" && \
@@ -170,9 +171,9 @@ RUN R -q -e "remotes::install_version('cellranger', version = '1.1.0', upgrade =
     R -q -e "remotes::install_version('oai', version = '0.4.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('rematch2', version = '2.1.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('rmarkdown', version = '2.24', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('rvest', version = '1.0.3', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('shiny', version = '1.7.5', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('vroom', version = '1.6.3', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('rvest', version = '1.0.3', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('shiny', version = '1.7.5', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('vroom', version = '1.6.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('dtplyr', version = '1.3.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('googlesheets4', version = '1.1.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('htmlwidgets', version = '1.6.2', upgrade = FALSE)" && \
@@ -180,9 +181,9 @@ RUN R -q -e "remotes::install_version('vroom', version = '1.6.3', upgrade = FALS
     R -q -e "remotes::install_version('readxl', version = '1.4.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('reprex', version = '2.0.2', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('rgbif', version = '3.7.7', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('shinycssloaders', version = '1.0.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('shinyjs', version = '2.1.0', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('tidyr', version = '1.3.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('shinycssloaders', version = '1.0.0', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('shinyjs', version = '2.1.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('tidyr', version = '1.3.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('viridis', version = '0.6.4', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('waldo', version = '0.5.1', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('broom', version = '1.0.5', upgrade = FALSE)" && \
@@ -190,13 +191,13 @@ RUN R -q -e "remotes::install_version('tidyr', version = '1.3.0', upgrade = FALS
     R -q -e "remotes::install_version('DT', version = '0.29', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('haven', version = '2.5.3', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('leaflet', version = '2.2.0', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('plotly', version = '4.10.2', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('testthat', version = '3.1.10', upgrade = FALSE)"
-RUN R -q -e "remotes::install_version('leaflet.extras', version = '1.0.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('plotly', version = '4.10.2', upgrade = FALSE)"
+RUN R -q -e "remotes::install_version('testthat', version = '3.1.10', upgrade = FALSE)" && \
+    R -q -e "remotes::install_version('leaflet.extras', version = '1.0.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('modelr', version = '0.1.11', upgrade = FALSE)" && \
-    R -q -e "remotes::install_version('tidyverse', version = '2.0.0', upgrade = FALSE)"
-    
-RUN R -q -e "remotes::install_github('trias-project/trias')"
+    R -q -e "remotes::install_version('tidyverse', version = '2.0.0', upgrade = FALSE)" && \
+    R -q -e "remotes::install_github('inbo/INBOtheme')" && \
+    R -q -e "remotes::install_github('trias-project/trias')"
 
 # Specific version INBOtheme
 RUN R -q -e "remotes::install_github('inbo/INBOtheme@v0.5.9')"
