@@ -398,6 +398,8 @@ output$species_managementContent <- renderUI({
     } else if (input$species_choice %in% heatSpecies) {
       
       tagList(
+        tags$a(href = "https://vespawatch.be/", target = "_blank",
+          tags$img(src = 'logo_vespawatch.png', height = 50)),
         mapHeatUI(id = "management2_active"),
         mapHeatUI(id = "management2_observed"),
         mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
