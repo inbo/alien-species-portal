@@ -33,6 +33,6 @@ Suggests:
     shinyjs
 RoxygenNote: 7.2.3
 Remotes: 
-    trias-project/trias, 
-    inbo/INBOtheme (<= 0.5.9)
+    inbo/INBOtheme (<= 0.5.9),
+    trias-project/trias    
 Config/testthat/edition: 3
