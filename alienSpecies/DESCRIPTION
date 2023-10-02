@@ -15,7 +15,6 @@ Imports:
     ggplot2,
     htmltools,
     htmlwidgets,
-    INBOtheme (<= 0.5.9),
     jsonlite,
     leaflet,
     leaflet.extras,
@@ -35,5 +34,5 @@ Suggests:
 RoxygenNote: 7.2.3
 Remotes: 
     trias-project/trias, 
-    inbo/INBOtheme
+    inbo/INBOtheme (<= 0.5.9)
 Config/testthat/edition: 3
