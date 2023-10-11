@@ -197,7 +197,7 @@ RUN R -q -e "remotes::install_version('testthat', version = '3.2.0', upgrade = F
     R -q -e "remotes::install_version('modelr', version = '0.1.11', upgrade = FALSE)" && \
     R -q -e "remotes::install_version('tidyverse', version = '2.0.0', upgrade = FALSE)" && \
     R -q -e "remotes::install_github('inbo/INBOtheme@v0.5.9')" && \
-    R -q -e "remotes::install_github('trias-project/trias')"
+    R -q -e "remotes::install_github('trias-project/trias@v2.0.6')"
 
 # To prevent errors 
 ## when opening ggplot via linux docker
