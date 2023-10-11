@@ -340,8 +340,8 @@ output$exoten_legendText <- renderUI({
     
     tagList(
     tags$b(translate(results$translations, "icons")$title),
-    p(icon("star"), translate(results$translations, "min_1_obs")$title),
-    p(icon("play"), translate(results$translations, "is_union")$title),
+    p(icon("star"), translate(results$translations, "is_union")$title),
+    p(icon("play"), translate(results$translations, "min_1_obs")$title),
     tags$b(translate(results$translations, "colors")$title),
     p(drawBullet(color = "black"), translate(results$translations, "only_obs")$title),
     p(drawBullet(color = "orange"), translate(results$translations, "incomplete_out")$title),
