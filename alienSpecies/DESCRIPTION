@@ -15,6 +15,7 @@ Imports:
     ggplot2,
     htmltools,
     htmlwidgets,
+    INBOtheme (<= 0.5.9),
     jsonlite,
     leaflet,
     leaflet.extras,
@@ -33,6 +34,6 @@ Suggests:
     shinyjs
 RoxygenNote: 7.2.3
 Remotes: 
-    inbo/INBOtheme@0.5.9,
-    trias-project/trias    
+    inbo/INBOtheme@v0.5.9,
+    trias-project/trias
 Config/testthat/edition: 3

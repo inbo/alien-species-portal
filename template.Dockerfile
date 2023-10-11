@@ -12,9 +12,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y libfontconfig1-
 
 #include packamon.r-dependencies
 
-# Specific version INBOtheme
-RUN R -q -e "remotes::install_github('inbo/INBOtheme@v0.5.9')"
-
 # To prevent errors 
 ## when opening ggplot via linux docker
 ## when installing phantomjs via webshot
