@@ -344,8 +344,8 @@ output$exoten_legendText <- renderUI({
     p(icon("play"), translate(results$translations, "min_1_obs")$title),
     tags$b(translate(results$translations, "colors")$title),
     p(drawBullet(color = "black"), translate(results$translations, "only_obs")$title),
-    p(drawBullet(color = "orange"), translate(results$translations, "incomplete_out")$title),
-    p(drawBullet(color = "green"), translate(results$translations, "all_out")$title)
+#    p(drawBullet(color = "orange"), translate(results$translations, "incomplete_out")$title),
+    p(drawBullet(color = "#E4E517"), translate(results$translations, "all_out")$title)
   )
   
   })
@@ -370,12 +370,15 @@ tmpKey <- tableIndicatorsServer(
 observeEvent(tmpKey(), {
     
     # Strip off the timestamp
-    gbifKey <- strsplit(tmpKey(), "_")[[1]][1]
+    gbifKey <- strsplit(tmpKey(), "_")[[1]][2]
+    tabPage <- strsplit(tmpKey(), "_")[[1]][1]
     
     # Lookup key for occurrence data
     newSpecies <- dictionary$scientificName[match(gbifKey, dictionary$gbifKey)]
     
     updateNavbarPage(session = session, inputId = "tabs", selected = "species_information")
+    # 2nd update only works if the tabs already exist
+    updateTabsetPanel(session = session, inputId = "species_tabs", selected = paste0("species_", tabPage))
     results$species_choice <- newSpecies
     
   })
