@@ -218,8 +218,8 @@ results$species_managementData <- reactive({
           translate(results$translations, "noData")$title))
       
       readShapeData(
-        extension = ".geojson", 
-        dataDir = system.file("extdata", "management", "Vespa_velutina", package = "alienSpecies")
+        extension = ".geojson"
+        #dataDir = system.file("extdata", "management", "Vespa_velutina", package = "alienSpecies")
       )
       
       
@@ -341,10 +341,12 @@ observe({
       plotTriasServer(
         id = "management2_lente",
         triasFunction = "barplotLenteNesten",
-        data = reactive(read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))),
+        data = reactive( s3read_using(FUN = read.csv, object = "aantal_lente_nesten.csv", bucket = bucket)),
+          #read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))
         uiText = reactive(results$translations)
       )
       
+     
       # Aantal nesten per provincie - figuur
       plotTriasServer(
         id = "management2_province",

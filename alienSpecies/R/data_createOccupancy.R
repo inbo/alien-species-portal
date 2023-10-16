@@ -4,15 +4,22 @@
 #' Create data.frame with occupancy for t0 and t1 data per cellcode
 #'  
 #' @param dataDir path to folder where to find the raw t0 and t1 files
-#' @param packageDir path to folder where to save the created data.frame
+#' @param bucket character, name of the S3 bucket as specified in the config.yml file;
+#' default value is "inbo-exotenportaal-uat-eu-west-1-default". The created data.frame will be 
+#' saved in the bucket.
+#' @param packageDir  
 #' @return TRUE if creation succeeded
 #' 
 #' @author mvarewyck
 #' @importFrom sf st_read
+#' @importFrom aws.s3 s3save
 #' @importFrom data.table as.data.table
 #' @export
 createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trendOccupancy",
-  packageDir = system.file("extdata", package = "alienSpecies")) {
+  #packageDir = system.file("extdata", package = "alienSpecies"),
+  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
+
+  ) {
   
   ## DATA T0 ##
   ## ------- ##
@@ -61,6 +68,8 @@ createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trend
   setnames(dfCube, "cellcode", "cell_code10")
   
   save(dfCube, file = file.path(packageDir, "dfCube.RData"))
+  
+  s3save(dfCube, bucket = bucket, object = "dfCube.RData")
   
   return(TRUE)  
   
