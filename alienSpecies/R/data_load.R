@@ -1,36 +1,61 @@
 #' Read shape data
 #' @param extension character, path extension for files to be picked up
-#' @param dataDir path to the shape files. Folder should contain .shp file but also
-#' helper files such as .dbf and .prj
+#' @param bucket character, name of the S3 bucket as specified in the config.yml file;
+#' default value is "inbo-exotenportaal-uat-eu-west-1-default"
 #' @return list with sf objects
 #' 
 #' @author mvarewyck
 #' @importFrom sf st_read
+#' @importFrom aws.s3 get_object get_bucket_df
 #' @export
 readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
-  dataDir = system.file("extdata", "grid", package = "alienSpecies")
+  #dataDir = system.file("extdata", "grid", package = "alienSpecies")
+  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
 ) {
-  
+ 
+    # this need to do in global.r (once)/test file
+
   extension <- match.arg(extension)
+
+  allFiles <- get_bucket_df(bucket = bucket)
+  shapeFiles <- grep(paste0("\\",extension,"$"), allFiles$Key, value = TRUE) #shapeFiles <- list.files(dataDir, pattern = extension)
   
-  shapeFiles <- list.files(dataDir, pattern = extension)
+
+  # The following is not working https://github.com/r-spatial/sf/issues/1935
+  #s3read_using(FUN =   sf::st_read,object  = shapeFiles, bucket = bucket,layer = gsub(extension, "", "gewestbel.shp"), quiet = TRUE)
+  # for the time being, first download data and then feed to sf::st_read
   
   if (extension %in% c(".gpkg", ".shp")) {
     
     toReturn <- lapply(shapeFiles, function(iFile) {
-        
-        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
+      
+    
+      # download all .shx/shp/sbx/sbn with same file name
+      tmpDir <- tempdir()
+      fileName <- gsub(extension, "", iFile)
+      toDownloadAws <- grep(fileName,    allFiles$Key, value = TRUE)
+      
+      lapply( toDownloadAws, function(iiFile){
+      writeBin(get_object(iiFile, bucket = bucket),   con = file.path( tmpDir, iiFile))
+      })
+      
+      sf::st_read( file.path(tmpDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
+
+      #sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
         
       })
     
   } else if (extension == ".geojson") {
     
     toReturn <- lapply(shapeFiles, function(iFile) {
+        tmpDir <- tempdir()
+        writeBin(get_object(iFile, bucket = bucket),   con = file.path( tmpDir, iFile))
+        sf::st_read(file.path( tmpDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
         
-        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
+        #sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
         
       })
-  
+   
   } 
   
   
@@ -52,14 +77,20 @@ readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
 #' @importFrom data.table fread setnames as.data.table
 #' @importFrom rgbif name_usage
 #' @export
-createKeyData <- function(dataDir = system.file("extdata", package = "alienSpecies")) {
+createKeyData <- function(
+    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
+    #dataDir = system.file("extdata", package = "alienSpecies")
+  ) {
   
   # For R CMD check
   classKey <- NULL
   i.classKey <- NULL
     
   # Occurrence cube
-  taxaData <- fread(file.path(dataDir, "be_alientaxa_info.csv"))
+  #taxaData <- fread(file.path(dataDir, "be_alientaxa_info.csv"))
+  taxaData <- s3read_using(FUN = fread, object = "be_alientaxa_info.csv", bucket = bucket)
+  
+  
   classKeys <- as.data.table(do.call(rbind, lapply(unique(taxaData$taxonKey), function(k) {
       tmpData <- rgbif::name_usage(key = k)$data
       if (!"classKey" %in% colnames(tmpData))
@@ -73,7 +104,9 @@ createKeyData <- function(dataDir = system.file("extdata", package = "alienSpeci
   taxaData$scientificName <- sapply(strsplit(taxaData$scientificName, split = " "), function(x) paste(x[1:2], collapse = " "))
   
   # Checklist
-  exotenData <- loadTabularData(dataDir = dataDir, type = "indicators")[, c('key', 'species')]
+  exotenData <-loadTabularData(dataDir = dataDir, type = "indicators")[, c('key', 'species')]
+
+  
   exotenData <- exotenData[!duplicated(exotenData), ]
   dictionary <- merge(taxaData, exotenData,
     by.x = "scientificName", by.y = "species", all = TRUE)
@@ -90,15 +123,18 @@ createKeyData <- function(dataDir = system.file("extdata", package = "alienSpeci
 
 #' Summarize timeseries data over 1km x 1km cubes
 #' @inheritParams createOccupancyCube
+#' @inheritParams readS3
 #' @param shapeData spatialPolygonsDataFrame for utm1 grid data
 #' @return TRUE if creation succeeded
 #' 
 #' @author mvarewyck
 #' @importFrom utils write.csv
 #' @importFrom data.table fread rbindlist
-#' @export
+#' @importFrom aws.s3 put_object
+
 createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
   packageDir = system.file("extdata", package = "alienSpecies"),
+  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   shapeData = readShapeData()$utm1_bel_with_regions) {
   
   # created from https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
@@ -112,11 +148,18 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
   
   # Merge with shapeData for region indicators
   regions <- c("flanders", "wallonia", "brussels")
-  fullData <- merge(rawData, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
+  timeseries <- merge(rawData, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
     by.x = "eea_cell_code", by.y = "CELLCODE")
   
-  write.csv(fullData, file = file.path(packageDir, "full_timeseries.csv"), 
+  write.csv(timeseries, file = file.path(packageDir, "full_timeseries.csv"),
     row.names = FALSE)
+  
+  # put_object(file = file.path(packageDir, "full_timeseries.csv"),
+  #            bucket = bucket, object = "full_timeseries.csv")
+  
+  # put time series data RData to the bucket to speed up reading process
+  
+  s3save(timeseries, object = "full_timeseries.RData", bucket = bucket)
 
 }
 
@@ -128,6 +171,7 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
 #' by default data for which \code{first_observed < 1950} is excluded.
 #' For unionlist data:
 #' only 'scientific name', 'english name' and 'kingdom' are retained
+#' @inheritParams readS3
 #' @param dataDir character vector, defines the path to the data file(s)
 #' @param type data type, one of:
 #' \itemize{
@@ -140,7 +184,8 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
 #' @importFrom utils tail
 #' @export
 loadTabularData <- function(
-  dataDir = system.file("extdata", package = "alienSpecies"),
+  #dataDir = system.file("extdata", package = "alienSpecies"),
+  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   type = c("indicators", "unionlist", "occurrence", "timeseries")) {
   
   # For R CMD check
@@ -152,18 +197,19 @@ loadTabularData <- function(
   
   type <- match.arg(type)
   
-  dataFiles <- file.path(dataDir, switch(type,
+  dataFiles <- switch(type,
       indicators = "data_input_checklist_indicators.tsv",
 #      "indicators" = c("description.txt", "distribution.txt", "speciesprofile.txt", "taxon.txt"),
       unionlist = "eu_concern_species.tsv",
       occurrence = "be_alientaxa_cube.csv",
-      timeseries = "full_timeseries.csv"))
+      timeseries = "full_timeseries.csv")
   
   if (type == "indicators") {
     
     # recode missing values to NA
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
-    
+    #fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
+    rawData <- s3read_using(FUN =  fread, object =   dataFiles,
+                 bucket = bucket)
     # Warning if new habitat columns
     currentHabitats <- c("marine", "freshwater", "terrestrial")
     if (!all(unlist(strsplit(rawData$habitat, split = "|", fixed = TRUE)) %in% c(NA, currentHabitats)))    
@@ -288,18 +334,28 @@ loadTabularData <- function(
     
     
   } else if (type == "unionlist") {
+   
+    rawData <- readS3(FUN =  fread, stringsAsFactors = FALSE, na.strings = "",
+           select = c("checklist_scientificName", "english_name", "checklist_kingdom"),
+           col.names = c("scientificName", "englishName", "kingdom"),  file =   dataFiles,
+           bucket = bucket, forceDownload = TRUE)
     
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
-      select = c("checklist_scientificName", "english_name", "checklist_kingdom", "backbone_taxonKey"),
-      col.names = c("scientificName", "englishName", "kingdom", "taxonKey")
-    )
+      # fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
+      # select = c("checklist_scientificName", "english_name", "checklist_kingdom"),
+      # col.names = c("scientificName", "englishName", "kingdom")
+
     
   } else if (type == "occurrence") {
     
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
-      drop = "min_coord_uncertainty")
-    
-    ## exclude data before 1950 - keeps values with NA for first_observed
+ # rawData <- s3read_using(FUN =  fread, stringsAsFactors = FALSE, na.strings = "",
+ #                            drop = "min_coord_uncertainty", object =   dataFiles,
+ #                            bucket = bucket)
+      # 
+      # fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",drop = "min_coord_uncertainty")
+ rawData <- readS3(FUN = fread, stringsAsFactors = FALSE, na.strings = "",
+       drop = "min_coord_uncertainty", file =   dataFiles,
+       bucket = bucket, forceDownload = TRUE)
+ ## exclude data before 1950 - keeps values with NA for first_observed
     toExclude <- (rawData$year < 1950 & !is.na(rawData$year))
     warningMessage <- c(warningMessage,
       paste0(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten"))
@@ -320,8 +376,11 @@ loadTabularData <- function(
     
   } else if (type == "timeseries") {
     
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
-      
+    # rawData <- readS3(FUN = fread,stringsAsFactors = FALSE, na.strings = "",
+    #                   file =   dataFiles,
+    #                   bucket = bucket, forceDownload = TRUE)
+    s3load(bucket = bucket, object = "full_timeseries.RData")
+    rawData <- timeseries
   }
   
   attr(rawData, "Date") <- file.mtime(dataFiles)
@@ -345,17 +404,26 @@ loadTabularData <- function(
 #' @importFrom utils read.csv
 #' @export
 loadMetaData <- function(type = c("ui", "keys"),
-  dataDir = system.file("extdata", package = "alienSpecies"), 
+  #dataDir = system.file("extdata", package = "alienSpecies"), 
+  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   language = c("nl", "fr", "en")) {
   
   type <- match.arg(type)
   language <- match.arg(language)
+  # 
+  # allData <- read.csv(file.path(dataDir, switch(type, 
+  #       ui = "translations.csv",
+  #       keys = "keys.csv"
+  #     )), sep = if (type == "ui") ";" else ",", 
+  #   encoding = "UTF-8") 
+  # 
+ fileName <- switch(type, 
+         ui = "translations.csv",
+         keys = "keys.csv"
+  )
   
-  allData <- read.csv(file.path(dataDir, switch(type, 
-        ui = "translations.csv",
-        keys = "keys.csv"
-      )), sep = if (type == "ui") ";" else ",", 
-    encoding = "UTF-8") 
+ allData <- readS3(FUN = read.csv,  sep = if (type == "ui") ";" else ",",encoding = "UTF-8", 
+ file = fileName)
   
   filterData <- switch(type, 
     ui = {

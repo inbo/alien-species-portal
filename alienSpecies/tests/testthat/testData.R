@@ -3,6 +3,74 @@
 # Author: mvarewyck
 ###############################################################################
 
+setupS3()
+
+test_that("Connection to S3", {
+  
+  checkS3()
+  
+})
+
+
+test_that("Preprocess data", {
+  
+  skip("For local use only - will overwrite files")
+  
+  downloadS3()
+  
+  #aws.s3::delete_object(object = "Toekenningen_ree.csv", bucket = "inbo-wbe-uat-data")
+  
+  #    for (iType in c("eco", "geo", "wildschade", "kbo_wbe", "waarnemingen"))
+  #for (iType in c("eco", "geo", "wildschade", "kbo_wbe"))
+  #  createRawData(dataDir = "~/git/reporting-rshiny-grofwildjacht/dataS3", type = iType)    
+  
+})
+
+
+
+test_that("List available files", {
+  
+  skip("Blows up memory")
+  
+  # List all available files on the S3 bucket
+  tmpTable <- aws.s3::get_bucket_df(
+    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")))
+  #    write.csv(tmpTable, file = file.path(system.file("extdata", package = "reportingGrofwild"), "tmpTable.csv"))
+  # unique(tmpTable$Key)
+  
+  # Bucket is not empty
+  expect_gte(length(unique(tmpTable$Key)), 1)
+  
+  # Size of S3 files should be > 100
+  expect_true(all(tmpTable$Size > 100), info = paste("Empty data files:", toString(unique(tmpTable$Key[tmpTable$Size < 100]))))
+  
+  #    # Read single file
+  #    rawData <- readS3(FUN = read.csv, file = unique(tmpTable$Key)[1]) 
+  #    expect_is(rawData, "data.frame")
+  
+})
+
+
+
+
+
+test_that("Preprocess data", {
+  
+  # to be adjusted
+  skip("For local use only - will overwrite files")
+  
+  downloadS3()
+  
+  aws.s3::delete_object(object = "Toekenningen_ree.csv", bucket = "inbo-wbe-uat-data")
+  
+  #    for (iType in c("eco", "geo", "wildschade", "kbo_wbe", "waarnemingen"))
+  for (iType in c("eco", "geo", "wildschade", "kbo_wbe"))
+    createRawData(dataDir = "~/git/reporting-rshiny-grofwildjacht/dataS3", type = iType)    
+  
+})
+
+
+
 
 test_that("Create data in tempdir", {
     
@@ -61,7 +129,7 @@ test_that("Tools", {
 
 test_that("S3 bucket connection", {
     
-    skip("under development")
+    #skip("under development")
     
     awsFile <- "~/.aws/credentials"
     
@@ -72,7 +140,7 @@ test_that("S3 bucket connection", {
     credentials <- strsplit(x, profile)[[1]][2]
     
     Sys.setenv(
-      AWS_DEFAULT_REGION = eval(parse(text = config::get("credentials", file = system.file("config.yml", package = "reportingGrofwild"))$region)),
+      AWS_DEFAULT_REGION = eval(parse(text = config::get("credentials", file = system.file("config.yml", package = "alienSpecies"))$region)),
       AWS_ACCESS_KEY_ID = strsplit(strsplit(credentials, "aws_access_key_id = ")[[1]][2], "\n")[[1]][1], 
       AWS_SECRET_ACCESS_KEY = strsplit(strsplit(credentials, "aws_secret_access_key = ")[[1]][2], "\n")[[1]][1],
       AWS_SESSION_TOKEN = strsplit(strsplit(credentials, "aws_session_token = ")[[1]][2], "\n")[[1]][1]

@@ -3,6 +3,9 @@
 #' 
 #' @param datasetKey character, key of the dataset to be downloaded from GBIF
 #' @param saveDir path, where to save the occurrence data
+#' @param bucket character, name of the S3 bucket as specified in the config.yml file;
+#' default value is "inbo-exotenportaal-uat-eu-west-1-default". The created data.frame will be 
+#' saved in the bucket.
 #' @param outFile character, name of the file to save occurrence data. If NULL
 #' dataset title is used
 #' @param user character, username to access GBIF
@@ -12,12 +15,14 @@
 #' 
 #' @importFrom rgbif occ_download pred occ_download_wait occ_download_get occ_download_import
 #' @importFrom utils write.csv read.table
+#' @importFrom aws.s3 put_object
 #' @importFrom data.table melt as.data.table
 #' 
 #' @author mvarewyck
 #' @export
 getGbifOccurrence <- function(datasetKey, 
-  saveDir = system.file("extdata", "management", package = "alienSpecies"), 
+    saveDir = system.file("extdata", "management", package = "alienSpecies"), 
+    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   outFile = NULL,
   user, pwd, email = "machteld.varewyck@openanalytics.eu") {
   
@@ -127,6 +132,8 @@ getGbifOccurrence <- function(datasetKey,
   
   write.csv(df, file.path(saveDir, outFile), row.names = FALSE)
   
+  put_object(file = file.path(saveDir, outFile),
+             bucket = bucket, object = outFile)
   
   return(TRUE)
   
@@ -136,7 +143,8 @@ getGbifOccurrence <- function(datasetKey,
 
 #' Read GBIF occurrence data
 #' @param dataFile character, name of the occurrence data file
-#' @param dataDir path, where to find the \code{dataFile}
+##' @param dataDir path, where to find the \code{dataFile}
+#' @inheritParams readS3
 #' @return data.table
 #' 
 #' @importFrom data.table fread setnames
@@ -144,9 +152,14 @@ getGbifOccurrence <- function(datasetKey,
 #' @author mvarewyck
 #' @export
 loadGbif <- function(dataFile, 
-  dataDir = system.file("extdata", "management", package = "alienSpecies")) {
+  #dataDir = system.file("extdata", "management", package = "alienSpecies")
+  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
+  ) {
   
-  rawData <- fread(file.path(dataDir, dataFile), stringsAsFactors = FALSE, na.strings = "")
+  rawData <- readS3(FUN = fread, stringsAsFactors = FALSE, na.strings = "", bucket = bucket, 
+                    file = file.path(dataDir, dataFile))
+    
+    #fread(file.path(dataDir, dataFile), stringsAsFactors = FALSE, na.strings = "")
   
   # Rename
   if ("individualCount" %in% colnames(rawData) & !"count" %in% colnames(rawData)) {
