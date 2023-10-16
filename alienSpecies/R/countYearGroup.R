@@ -24,7 +24,7 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
     groupVar <- NULL
   
   # Select data
-  plotData <- df[, c("year", groupVar, "count"), with = FALSE]
+  plotData <- df[!is.na(count), c("year", groupVar, "count"), with = FALSE]
   
   setkey(plotData, year)
   
