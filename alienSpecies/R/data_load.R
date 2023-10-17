@@ -290,8 +290,8 @@ loadTabularData <- function(
   } else if (type == "unionlist") {
     
     rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
-      select = c("checklist_scientificName", "english_name", "checklist_kingdom"),
-      col.names = c("scientificName", "englishName", "kingdom")
+      select = c("checklist_scientificName", "english_name", "checklist_kingdom", "backbone_taxonKey"),
+      col.names = c("scientificName", "englishName", "kingdom", "taxonKey")
     )
     
   } else if (type == "occurrence") {

@@ -288,8 +288,8 @@ results$exoten_data <- reactive({
       searchId <- paste0(searchId, "&union=", filter_union())
       if (length(filter_union()) == 1) {
         if (filter_union() == "Union list")
-          subData <- subData[species %in% unionlistData$scientificName, ] else if (filter_union() == "Non-union list")
-          subData <- subData[!species %in% unionlistData$scientificName, ]
+          subData <- subData[nubKey %in% unionlistData$taxonKey, ] else if (filter_union() == "Non-union list")
+          subData <- subData[!nubKey %in% unionlistData$taxonKey, ]
       }
     }
     
