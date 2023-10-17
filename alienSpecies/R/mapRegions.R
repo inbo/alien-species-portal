@@ -18,7 +18,7 @@
 #' @export
 createSummaryRegions <- function(data, shapeData, 
   regionLevel = c("communes", "provinces", "gewest"),
-  year = NULL, unit = c("absolute", "cpue"), groupingVariable = NULL) {
+  year = NULL, unit = c("absolute", "cpue", "difference"), groupingVariable = NULL) {
   
   # For R CMD check
   region <- NULL
@@ -68,6 +68,28 @@ createSummaryRegions <- function(data, shapeData,
     )
     
     summaryData$outcome <- summaryData$effort
+    
+  } else if (unit == "difference") {
+    
+    currentData <- data %>%
+      filter(year %in% myYear, !is.na(region), region != "NA") %>% 
+      group_by(region, year) %>% 
+      summarise(nCurrent = sum(count, na.rm = TRUE))
+    previousData <- data %>%
+      filter(year %in% (myYear - 1), !is.na(region), region != "NA") %>% 
+      group_by(region, year) %>% 
+      summarise(nPrevious = sum(count, na.rm = TRUE))
+    previousData$year <- previousData$year + 1
+    summaryData <- merge(currentData, previousData)
+    summaryData$n <- summaryData$nCurrent - summaryData$nPrevious
+    
+    summaryData$group <- cut(x = summaryData$n, 
+      breaks = c(-Inf, -20, -10, 0, 10, 20, Inf),
+      labels = c(paste0(min(-50, floor(min(summaryData$n, na.rm = TRUE))), ", -20"), "-20, -10", "-10, 0", 
+          "0, 10", "10, 20", paste0("20, ", max(50, ceiling(max(summaryData$n, na.rm = TRUE)))))
+    )
+    
+    summaryData$outcome <- ceiling(summaryData$n)
     
   } else {
     
@@ -121,6 +143,7 @@ createSummaryRegions <- function(data, shapeData,
 #' @param shapeData list with spatial data (grid and regions)
 #' @param uiText data.frame, for translations
 #' @param regionLevel character, region level to color polygons
+#' @param palette character, color palette to be used, see also \code{\link[leaflet]{colorFactor}}
 #' @param legend character, where to place legend
 #' @param addGlobe boolean, whether to have background map
 #' @return leaflet object
@@ -129,13 +152,14 @@ createSummaryRegions <- function(data, shapeData,
 #' @import leaflet
 #' @export
 mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText = NULL, 
-  regionLevel = c("communes", "provinces"),
+  regionLevel = c("communes", "provinces"), palette = "YlOrBr",
   legend = "topright", addGlobe = FALSE) {
   
   spatialData <- shapeData[[regionLevel]]
   
-  palette <- colorFactor(palette = "YlOrBr", levels = levels(managementData$group), 
-    na.color = "transparent")
+  paletteFunction <- colorFactor(palette = palette, levels = levels(managementData$group), 
+    na.color = "transparent",
+    reverse = (palette != "YlOrBr"))
   valuesPalette <- managementData$group[match(spatialData$NAAM, managementData$region)]
   
   
@@ -143,7 +167,7 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
     addPolygons(
       weight = 1,
       color = "gray",
-      fillColor = ~ palette(valuesPalette),
+      fillColor = ~ paletteFunction(valuesPalette),
       fillOpacity = 0.8,
       layerId = spatialData$NAAM,
       group = "region"
@@ -185,7 +209,7 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
     myMap <- addLegend(
       map = myMap,
       position = legend,
-      pal = palette, 
+      pal = paletteFunction, 
       values = valuesPalette,
       opacity = 0.8,
       title = translate(uiText, "legend")$title,
@@ -329,7 +353,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       
       output$unit <- renderUI({
           
-          choices <- c("absolute", "cpue")
+          choices <- c("absolute", "difference", "cpue")
           names(choices) <- translate(uiText(), choices)$title
           
           selectInput(inputId = ns("unit"), label = translate(uiText(), "unit")$title, 
@@ -436,9 +460,11 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       output$regionsPlot <- renderLeaflet({
           
           validate(need(nrow(req(summaryData())) > 0, noData()))
+          req(input$unit)
           
           mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
-            shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel)
+            shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel,
+            palette = if (input$unit == "difference") "RdYlGn" else "YlOrBr")
           
         })
       
@@ -548,14 +574,15 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           
           if (input$legend != "none") {
             
-            palette <- colorFactor(palette = "YlOrBr", levels = levels(summaryData()$group), 
-              na.color = "transparent")
+            palette <- if (input$unit == "difference") "RdYlGn" else "YlOrBr"
+            paletteFunction <- colorFactor(palette = palette, levels = levels(summaryData()$group), 
+              na.color = "transparent", reverse = (palette != "YlOrBr"))
             valuesPalette <- summaryData()$group[match(spatialData()$NAAM, summaryData()$region)]
             
             
             proxy %>% addLegend(
               position = input$legend,
-              pal = palette, 
+              pal = paletteFunction, 
               values = valuesPalette,
               opacity = 0.8,
               title = translate(uiText(), "legend")$title,
@@ -633,7 +660,8 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           
           newMap <- mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
             shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel,
-            legend = input$legend, addGlobe = input$globe %% 2 == 1)
+            legend = input$legend, addGlobe = input$globe %% 2 == 1,
+            palette = if (input$unit == "difference") "RdYlGn" else "YlOrBr")
           
           
           # save the zoom level and centering to the map object

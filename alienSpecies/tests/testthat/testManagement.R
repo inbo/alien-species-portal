@@ -320,7 +320,7 @@ test_that("Map & trend for Muskrat", {
     # Map - provinces
     summaryData <- createSummaryRegions(data = managementData, 
       shapeData = allShapes, regionLevel = "provinces",
-      year = 2022)
+      year = 2022, unit = "difference")
     myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
       shapeData = allShapes, regionLevel = "provinces")
     
@@ -354,7 +354,8 @@ test_that("Trend for Muskrat", {
       shapeData = allShapes, regionLevel = "provinces",
       year = unique(managementData$year))
     
-    trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerp", "Limburg"), ])
+    trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerp", "Limburg"), ],
+      unit = "difference")
     
     trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerp", "Limburg"), ],
       combine = TRUE)

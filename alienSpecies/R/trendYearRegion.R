@@ -45,10 +45,12 @@ trendYearRegion <- function(df, uiText = NULL,
     plotData$region <- translate(uiText, "total")$title
   } else plotData$region <- translate(uiText, plotData$region)$title
   
+  # Display year without decimals
+  plotData$year <- as.character(plotData$year)
+  
   # Filter NA's
   plotData <- plotData[!is.na(plotData$outcome), ]
-  
-  
+    
   # Create plot
   pl <- plot_ly(data = plotData, x = ~year, y = ~outcome,
       color = ~region, colors = colorList$colors, 
@@ -57,8 +59,7 @@ trendYearRegion <- function(df, uiText = NULL,
     layout(title = title,
       xaxis = list(title = translate(uiText, "year")$title),
       yaxis = list(title = unitName,
-        range = c(0, ~max(outcome)*1.05),
-        rangemode = "nonnegative"),
+        range = c(~min(outcome)*1.05, ~max(outcome)*1.05)),
       showlegend = TRUE,
       margin = list(b = 80, t = 100))     
   
