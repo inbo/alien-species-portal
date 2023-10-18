@@ -36,7 +36,7 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
       if (all(is.na(tableData[[iName]]))) {
         newData <- data.frame(key = unique(tableData$key), iName = NA)
       } else {
-        newData <- aggregate(get(iName) ~ key, data = tableData, FUN = function(x)
+        newData <- aggregate(base::get(iName) ~ key, data = tableData, FUN = function(x)
             paste(unique(x), collapse = "</br>"))
       }
       colnames(newData)[2] <- iName

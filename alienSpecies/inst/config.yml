@@ -6,5 +6,12 @@ default:
     secret: Sys.getenv('AWS_SECRET_ACCESS_KEY')
   datacheck: false
   defaultYear: 2022
+  
+uat:
+  datacheck: false
+    
+production:
+  bucket: inbo-exotenportaal-prod-eu-west-1-default
+  datacheck: false
 
 

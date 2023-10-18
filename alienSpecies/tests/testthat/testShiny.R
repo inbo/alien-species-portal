@@ -14,8 +14,8 @@ translations <- loadMetaData(language = "nl")
 
 test_that("Module countOccupancy", {
     
-    load(file = file.path(dataDir, "dfCube.RData"))
-    occupancy <- createOccupancyData(dfCube = dfCube)
+    readS3(file = "dfCube.RData")
+    occupancy <- loadOccupancyData(dfCube = dfCube)
     
     shiny::testServer(countOccupancyServer, 
       args = list(

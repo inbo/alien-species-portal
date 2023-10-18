@@ -143,7 +143,6 @@ getGbifOccurrence <- function(datasetKey,
 
 #' Read GBIF occurrence data
 #' @param dataFile character, name of the occurrence data file
-##' @param dataDir path, where to find the \code{dataFile}
 #' @inheritParams readS3
 #' @return data.table
 #' 
@@ -152,14 +151,11 @@ getGbifOccurrence <- function(datasetKey,
 #' @author mvarewyck
 #' @export
 loadGbif <- function(dataFile, 
-  #dataDir = system.file("extdata", "management", package = "alienSpecies")
   bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
   ) {
   
   rawData <- readS3(FUN = fread, stringsAsFactors = FALSE, na.strings = "", bucket = bucket, 
-                    file = file.path(dataDir, dataFile))
-    
-    #fread(file.path(dataDir, dataFile), stringsAsFactors = FALSE, na.strings = "")
+                    file = dataFile)
   
   # Rename
   if ("individualCount" %in% colnames(rawData) & !"count" %in% colnames(rawData))

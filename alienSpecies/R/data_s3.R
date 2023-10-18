@@ -35,7 +35,8 @@ downloadS3 <- function(
     dataDir = file.path("~/git/alien-species-portal/dataS3"),
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))) {
   
-  if( !dir.exists(dataDir) ) dir.create(dataDir)
+  if (!dir.exists(dataDir))
+    dir.create(dataDir)
   
   # List all available files on the S3 bucket
   allFiles <- aws.s3::get_bucket_df(bucket = bucket)
@@ -60,7 +61,7 @@ checkS3 <- function() {
     # Try to retrieve metadata from the instance
     metadata$instance_id()
   } else {
-    credentials <- Sys.getenv(c("AWS_DEFAULT_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"))
+    credentials <- Sys.getenv(c("AWS_DEFAULT_REGION", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"))
     if (any(credentials == ""))
       stop("Please specify 'Sys.setenv()' for ", 
            paste(names(credentials)[which(credentials == "")], collapse = ", "))

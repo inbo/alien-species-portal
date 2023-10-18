@@ -2,7 +2,7 @@
 
 
 #' Create occupancy bar chart
-#' @param df data.frame as created by \code{\link{createOccupancyData}}
+#' @param df data.frame as created by \code{\link{loadOccupancyData}}
 #' @param nSquares integer, total number of squares for calculating percentages
 #' @inheritParams welcomeSectionServer
 #' @return list with plotly object and data.frame

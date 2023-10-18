@@ -49,7 +49,7 @@ The file `df_timeseries.tsv` is located outside the R package `~/git/alien-speci
 It can be retrieved by running the script https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
 Dependency data source + description (Zenodo): https://zenodo.org/record/4299976#.YsV4QtJBxhF
 
-The data at spatial level 1km x 1km are summarized using the R function `alienSpecies::createTimeseries()` which writes to the file `full_timeseries.csv`
+The data at spatial level 1km x 1km are summarized using the R function `alienSpecies::createTimeseries()` which writes to the file `full_timeseries.RData`
 
 # Spatial Data
 

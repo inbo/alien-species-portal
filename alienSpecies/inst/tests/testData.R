@@ -3,7 +3,7 @@
 # Author: mvarewyck
 ###############################################################################
 
-setupS3()
+# setupS3()
 
 test_that("Connection to S3", {
   
@@ -18,11 +18,18 @@ test_that("Preprocess data", {
   
   downloadS3()
   
-  #aws.s3::delete_object(object = "Toekenningen_ree.csv", bucket = "inbo-wbe-uat-data")
+  # Clean the bucket
+#  aws.s3::delete_object(object = "readme.md", bucket = "inbo-exotenportaal-uat-eu-west-1-default")
   
-  #    for (iType in c("eco", "geo", "wildschade", "kbo_wbe", "waarnemingen"))
-  #for (iType in c("eco", "geo", "wildschade", "kbo_wbe"))
-  #  createRawData(dataDir = "~/git/reporting-rshiny-grofwildjacht/dataS3", type = iType)    
+  # These are the commands Sander will need for preprocessing the data on AWS S3
+  createShapeData(dataDir = "~/git/alien-species-portal/data/grid")
+  createShapeData(dataDir = "~/git/alien-species-portal/data/Vespa_velutina_shape")
+  createKeyData(dataDir = tempdir())
+  createTimeseries(
+    packageDir = tempdir(), 
+    shapeData = readShapeData()$utm1_bel_with_regions
+  )
+  createOccupancyCube(packageDir = tempdir())
   
 })
 
@@ -30,12 +37,9 @@ test_that("Preprocess data", {
 
 test_that("List available files", {
   
-  skip("Blows up memory")
-  
   # List all available files on the S3 bucket
   tmpTable <- aws.s3::get_bucket_df(
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")))
-  #    write.csv(tmpTable, file = file.path(system.file("extdata", package = "reportingGrofwild"), "tmpTable.csv"))
   # unique(tmpTable$Key)
   
   # Bucket is not empty
@@ -51,39 +55,6 @@ test_that("List available files", {
 })
 
 
-
-
-
-test_that("Preprocess data", {
-  
-  # to be adjusted
-  skip("For local use only - will overwrite files")
-  
-  downloadS3()
-  
-  aws.s3::delete_object(object = "Toekenningen_ree.csv", bucket = "inbo-wbe-uat-data")
-  
-  #    for (iType in c("eco", "geo", "wildschade", "kbo_wbe", "waarnemingen"))
-  for (iType in c("eco", "geo", "wildschade", "kbo_wbe"))
-    createRawData(dataDir = "~/git/reporting-rshiny-grofwildjacht/dataS3", type = iType)    
-  
-})
-
-
-
-
-test_that("Create data in tempdir", {
-    
-    skip("Takes long time to run")
-    
-    createKeyData(dataDir = tempdir())
-    createTimeseries(
-      packageDir = tempdir(), 
-      shapeData = readShapeData()$utm1_bel_with_regions
-    )
-    createOccupancyCube(packageDir = tempdir())
-    
-  })
 
 
 test_that("Load data", {
@@ -151,9 +122,11 @@ test_that("S3 bucket connection", {
     
     # List all available files on the S3 bucket
     tmpTable <- aws.s3::get_bucket_df(bucket = bucket)
-    
-    s3read_using(FUN = read.table, object = basename("myfile.txt"), bucket = bucket)
-    put_object(file = "myfile.txt", object = "myfile.txt", bucket = bucket, multipart = TRUE)
-    
+   
   })
+
+
+# TODO create test for each data file that is loaded in the app
+# Most of these are listed in global.R
+# Some specific data files are loaded for the management pages, see serverSpecies.R
 
