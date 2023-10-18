@@ -14,16 +14,13 @@ period <- c(2000, 2018)
 
 
 
-test_that("Create summary data", {
+test_that("Check summary data", {
     
-    if (!file.exists(file.path(dataDir, "full_timeseries.csv")))
-      createTimeseries()
-    expect_true(file.exists(file.path(dataDir, "full_timeseries.csv")))
+    dataFiles <- aws.s3::get_bucket_df(
+      bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")))$Key
     
-    if (!file.exists(file.path(dataDir, "dfCube.RData")))
-      createOccupancyCube()
-    expect_true(file.exists(file.path(dataDir, "dfCube.RData")))
-    
+    expect_true("full_timeseries.RData" %in% dataFiles)
+    expect_true("dfCube.RData" %in% dataFiles)
     
   })
 
@@ -89,8 +86,10 @@ test_that("Occurrence plots", {
 
 test_that("Emergence status GAM - Observations", {
 
+    readS3(file = "full_timeseries.RData")
+    
     timeseries <- summarizeTimeSeries(
-      rawData = loadTabularData(type = "timeseries"), 
+      rawData = timeseries, 
       region = c("flanders", "brussels")
     )
     
@@ -122,7 +121,7 @@ test_that("Emergence status GAM - Observations", {
   
 test_that("Reporting t0 and t1", {
     
-    load(file = file.path(dataDir, "dfCube.RData"))
+    readS3(file = "dfCube.RData")
     
     # Filter on taxonKey and source
     reportingData <- dfCube[species %in% allSpecies[2], ]

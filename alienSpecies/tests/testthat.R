@@ -1,6 +1,8 @@
 library(testthat)
 library(alienSpecies)
 
-dataDir <- system.file("extdata", package = "alienSpecies")
+
+setupS3()
+
 
 test_check("alienSpecies")

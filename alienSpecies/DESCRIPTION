@@ -9,6 +9,9 @@ Description: INBO shiny application based on the TRIAS package.
 Encoding: UTF-8
 License: MIT + file LICENSE
 Imports: 
+    aws.ec2metadata,
+    aws.s3,
+    config,
     data.table,
     dplyr,
     DT,
@@ -19,18 +22,19 @@ Imports:
     jsonlite,
     leaflet,
     leaflet.extras,
+    methods,
     plotly,
     reshape2,
     rgbif,
 	shiny,
 	shinycssloaders,
 	sf,
-	tidyr,
+	testthat (>= 3.0.0),
+    tidyr,
 	tidyverse,
 	trias (>= 2.0.3),
 	webshot
 Suggests:
-    testthat (>= 3.0.0),
     shinyjs
 RoxygenNote: 7.2.3
 Remotes: 

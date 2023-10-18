@@ -9,8 +9,7 @@ allShapes <- c(
   # Grid data
   readShapeData(),
   # gemeentes & provinces
-  suppressWarnings(readShapeData(dataDir = system.file("extdata", package = "alienSpecies"),
-      extension = ".geojson"))
+  suppressWarnings(readShapeData(extension = ".geojson"))
 )
 uiText <- loadMetaData()
 
@@ -57,7 +56,7 @@ test_that("Barplot for Ruddy Duck", {
     expect_s3_class(myPlot$plot, "plotly")
     
     # Filter on sampling
-    filterValue <- unique(managementData$samplingProtocol)[2]
+    filterValue <- unique(managementData$samplingProtocol)[1]
     countOccurrence(df = managementData[managementData$samplingProtocol == filterValue, ],
       uiText = uiText)
     
@@ -160,17 +159,15 @@ test_that("Trend for Bullfrogs", {
 ## Aziatische hoornaar ##
 ## Vespa velutina
 
-vespaData <- readShapeData(
-  extension = ".geojson", 
-  dataDir = system.file("extdata", "management", "Vespa_velutina", package = "alienSpecies")
-)
+readS3(file = "Vespa_velutina_shape.RData")
+
 
 test_that("Actieve haarden", {
     
     combinedData <- combineActiveData(
-      activeData = vespaData$actieve_haarden,
-      managedData = vespaData$beheerde_nesten,
-      untreatedData = vespaData$onbehandelde_nesten
+      activeData = Vespa_velutina_shape$actieve_haarden,
+      managedData = Vespa_velutina_shape$beheerde_nesten,
+      untreatedData = Vespa_velutina_shape$onbehandelde_nesten
     )
     myPlot <- mapHeat(
       combinedData = combinedData,
@@ -192,7 +189,7 @@ test_that("Actieve haarden", {
 
 test_that("Alle observaties", {
     
-    combinedData <- combineNestenData(pointsData = vespaData$points, nestenData = vespaData$nesten)
+    combinedData <- combineNestenData(pointsData = Vespa_velutina_shape$points, nestenData = Vespa_velutina_shape$nesten)
     myPlot <- mapHeat(
       combinedData = combinedData,
       colors = {
@@ -217,10 +214,10 @@ test_that("Voorjaarsnesten", {
 
 test_that("Provincie nesten", {
     
-    myPlot <- countNesten(df = vespaData$nesten)
+    myPlot <- countNesten(df = Vespa_velutina_shape$nesten)
     expect_s3_class(myPlot, "ggplot")
     
-    myTable <- tableNesten(df = vespaData$nesten)
+    myTable <- tableNesten(df = Vespa_velutina_shape$nesten)
     expect_s3_class(myTable, "data.frame")
     
   })
@@ -228,7 +225,7 @@ test_that("Provincie nesten", {
 test_that("Map Trend", {
     
     ## Points data
-    vespaPoints <- vespaData$points
+    vespaPoints <- Vespa_velutina_shape$points
     vespaPoints$type <- "individual"
     
     ## Refactor data
@@ -263,7 +260,7 @@ test_that("Map Trend", {
       regionLevel = "provinces")
     
     ## Nesten data
-    vespaNesten <- vespaData$nesten
+    vespaNesten <- Vespa_velutina_shape$nesten
     vespaNesten$type <- "nest"
     
     # TODO combined on 1 map - test from here

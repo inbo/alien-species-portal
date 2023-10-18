@@ -68,102 +68,6 @@ readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
 
 
 
-#' Create dictionary for combining data keys from multiple data sources
-#' @inheritParams loadTabularData
-#' @return TRUE if creation succeeded, data is written to \code{file.path(dataDir, "keys.csv")}
-#' 
-#' @author mvarewyck
-#' @importFrom utils write.csv
-#' @importFrom data.table fread setnames as.data.table
-#' @importFrom rgbif name_usage
-#' @export
-createKeyData <- function(
-    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
-    #dataDir = system.file("extdata", package = "alienSpecies")
-  ) {
-  
-  # For R CMD check
-  classKey <- NULL
-  i.classKey <- NULL
-    
-  # Occurrence cube
-  #taxaData <- fread(file.path(dataDir, "be_alientaxa_info.csv"))
-  taxaData <- s3read_using(FUN = fread, object = "be_alientaxa_info.csv", bucket = bucket)
-  
-  
-  classKeys <- as.data.table(do.call(rbind, lapply(unique(taxaData$taxonKey), function(k) {
-      tmpData <- rgbif::name_usage(key = k)$data
-      if (!"classKey" %in% colnames(tmpData))
-        tmpData$classKey <- NA
-      tmpData[, c("key", "classKey")]
-    })))
-  setnames(classKeys, "key", "taxonKey")
-  taxaData <- taxaData[classKeys, classKey := i.classKey, on = "taxonKey"]
-  
-  ## clean scientific name
-  taxaData$scientificName <- sapply(strsplit(taxaData$scientificName, split = " "), function(x) paste(x[1:2], collapse = " "))
-  
-  # Checklist
-  exotenData <-loadTabularData(dataDir = dataDir, type = "indicators")[, c('key', 'species')]
-
-  
-  exotenData <- exotenData[!duplicated(exotenData), ]
-  dictionary <- merge(taxaData, exotenData,
-    by.x = "scientificName", by.y = "species", all = TRUE)
-  setnames(dictionary, "key", "gbifKey")
-    
-  
-  write.csv(dictionary, file = file.path(dataDir, "keys.csv"),
-    row.names = FALSE)  
-  
-  return(TRUE)
-  
-}
-
-
-#' Summarize timeseries data over 1km x 1km cubes
-#' @inheritParams createOccupancyCube
-#' @inheritParams readS3
-#' @param shapeData spatialPolygonsDataFrame for utm1 grid data
-#' @return TRUE if creation succeeded
-#' 
-#' @author mvarewyck
-#' @importFrom utils write.csv
-#' @importFrom data.table fread rbindlist
-#' @importFrom aws.s3 put_object
-
-createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
-  packageDir = system.file("extdata", package = "alienSpecies"),
-  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
-  shapeData = readShapeData()$utm1_bel_with_regions) {
-  
-  # created from https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
-  ## Data at 1km x 1km grid level
-  rawData <- fread(file.path(dataDir, "df_timeseries.tsv"), 
-    stringsAsFactors = FALSE, na.strings = "")
-  # obs: number of observations for species
-  # cobs: number of observations for class
-  # pa_obs: presence of species in protected areas (1 = yes, 0 = no)
-  # pa_cobs: presence of class in protected areas (1 = yes, 0 = no)
-  
-  # Merge with shapeData for region indicators
-  regions <- c("flanders", "wallonia", "brussels")
-  timeseries <- merge(rawData, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
-    by.x = "eea_cell_code", by.y = "CELLCODE")
-  
-  write.csv(timeseries, file = file.path(packageDir, "full_timeseries.csv"),
-    row.names = FALSE)
-  
-  # put_object(file = file.path(packageDir, "full_timeseries.csv"),
-  #            bucket = bucket, object = "full_timeseries.csv")
-  
-  # put time series data RData to the bucket to speed up reading process
-  
-  s3save(timeseries, object = "full_timeseries.RData", bucket = bucket)
-
-}
-
-
 
 #' Load tabular data
 #' 
@@ -172,7 +76,6 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
 #' For unionlist data:
 #' only 'scientific name', 'english name' and 'kingdom' are retained
 #' @inheritParams readS3
-#' @param dataDir character vector, defines the path to the data file(s)
 #' @param type data type, one of:
 #' \itemize{
 #' \item{\code{"indicators"}:}{for indicator data, i.e. main data set}
@@ -186,7 +89,7 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
 loadTabularData <- function(
   #dataDir = system.file("extdata", package = "alienSpecies"),
   bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
-  type = c("indicators", "unionlist", "occurrence", "timeseries")) {
+  type = c("indicators", "unionlist", "occurrence")) {
   
   # For R CMD check
   scientificName <- NULL
@@ -201,8 +104,7 @@ loadTabularData <- function(
       indicators = "data_input_checklist_indicators.tsv",
 #      "indicators" = c("description.txt", "distribution.txt", "speciesprofile.txt", "taxon.txt"),
       unionlist = "eu_concern_species.tsv",
-      occurrence = "be_alientaxa_cube.csv",
-      timeseries = "full_timeseries.csv")
+      occurrence = "be_alientaxa_cube.csv")
   
   if (type == "indicators") {
     
@@ -374,13 +276,6 @@ loadTabularData <- function(
         substr(rawData$eea_cell_code, start = 9, stop = 12)))
     colnames(rawData)[colnames(rawData) == "eea_cell_code"] <- "cell_code1"
     
-  } else if (type == "timeseries") {
-    
-    # rawData <- readS3(FUN = fread,stringsAsFactors = FALSE, na.strings = "",
-    #                   file =   dataFiles,
-    #                   bucket = bucket, forceDownload = TRUE)
-    s3load(bucket = bucket, object = "full_timeseries.RData")
-    rawData <- timeseries
   }
   
   attr(rawData, "Date") <- file.mtime(dataFiles)
@@ -453,6 +348,27 @@ loadMetaData <- function(type = c("ui", "keys"),
 
 
 
+
+#' Create data with occupancy for t0 and t1 data
+#' 
+#' @param dfCube data.table, with species, source and cell code column
+#' @author mvarewyck
+#' @importFrom data.table dcast setDT as.data.table
+#' @export
+loadOccupancyData <- function(dfCube) {
+  
+  dfCube$cell_code10 <- NULL
+  dfCube$year <- NULL
+  dfTable <- dcast(data = setDT(as.data.frame(table(dfCube))), 
+    species ~ source, value.var = "Freq")
+  dfTable$total <- dfTable$t0 + dfTable$t1
+  
+  dfTable <- dfTable[order(dfTable$total), ]
+  dfTable$species <- factor(dfTable$species, levels = unique(dfTable$species)) # sort by freq in barchart
+  
+  as.data.table(dfTable)
+  
+}
 
 #' List Dutch names to replace English names for exoten
 #' 
