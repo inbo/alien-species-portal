@@ -222,7 +222,7 @@ RUN mkdir -p /tmp
 WORKDIR /tmp
 COPY alienSpecies /tmp/alienSpecies
 #RUN R -q -e "roxygen2::roxygenize('alienSpecies'); #install.packages(pkgbuild::build('alienSpecies'), repos = NULL, dependencies = FALSE)"
-RUN R -e "ll <- installed.packages(); ll[grep('INBOtheme',ll[,1]),]['Version']; remotes::install_local('/tmp/alienSpecies')"
+RUN R -e "remotes::install_local('/tmp/alienSpecies')"
 
 #packamon.run-shiny-start
 RUN R -e "cat(\"local(options(shiny.port = 3838, shiny.host = '0.0.0.0'))\n\", file = R.home('etc/Rprofile.site'), append = TRUE)"
