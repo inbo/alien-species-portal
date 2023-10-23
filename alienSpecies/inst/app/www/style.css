@@ -143,3 +143,16 @@ p, li, label {
  font-size: 16px
 }
 
+
+/*** Button colors ***/
+
+
+.table-icon-orange {
+    color: orange
+}
+
+.table-icon-green {
+	color: #E4E517
+}
+
+

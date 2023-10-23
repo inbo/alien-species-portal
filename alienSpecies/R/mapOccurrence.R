@@ -221,7 +221,8 @@ paletteMap <- function(groupNames, groupVariable) {
   # Actually only needed if groupVariable == "cell_codes"
   groupNames <- gsub(groupVariable, "", groupNames)
   
-  myPalette <- c("transparent", inbo_palette())
+  myPalette <- c("transparent", "red", inbo_palette())
+
   myColors <- rev(myPalette[seq_along(groupNames)]) 
   
   if (groupVariable == "cell_code")

@@ -282,3 +282,89 @@ test_that("Map Trend", {
 
 
 
+## Muskusrat ##
+## Ondatra zibethicus
+
+outFile <- "Ondatra_zibethicus.csv"
+
+managementData <- loadGbif(dataFile = outFile)
+
+test_that("Barplot for Muskrat", {
+    
+    myResult <- countYearGroup(df = managementData)$plot
+    
+    myResult <- countYearGroup(df = managementData, summarizeBy = "cumsum")
+    expect_type(myResult, "list")
+    expect_s3_class(myResult$plot, "plotly")
+    expect_s3_class(myResult$data, "data.frame")
+    
+  })
+
+test_that("Map & trend for Muskrat", {
+    
+    occurrenceData <- loadTabularData(type = "occurrence")
+    # Filter on taxonKey and year
+    occurrenceData <- occurrenceData[occurrenceData$scientificName == gsub("_", " ", gsub(".csv", "", outFile)) & year == 2018, ]
+    
+    # Map - gemeente
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "communes", 
+      year = 2022, unit = "absolute")
+    myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
+      shapeData = allShapes, regionLevel = "communes")
+    expect_s3_class(myPlot, "leaflet")
+    
+    # Map - provinces
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "provinces",
+      year = 2022, unit = "difference")
+    myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
+      shapeData = allShapes, regionLevel = "provinces")
+    
+    # Filter on gewest
+    gewest <- "flanders"
+    subShape <- lapply(allShapes, function(iData) {
+        if ("GEWEST" %in% colnames(iData))
+          iData[iData$GEWEST %in% gewest, ] else
+          iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(gewest)), drop = FALSE]), 1, sum) > 0, ]
+      })
+    mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
+      shapeData = subShape, regionLevel = "communes")
+    
+  })
+
+
+test_that("Trend for Muskrat", {
+    
+    # Municipalities
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "communes", 
+      year = unique(managementData$year))
+    
+    myResult <- trendYearRegion(df = summaryData[summaryData$region %in% c("Aalst", "Assenede"), ])
+    expect_type(myResult, "list")
+    expect_s3_class(myResult$plot, "plotly")
+    expect_s3_class(myResult$data, "data.frame")
+    
+    # Provinces
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "provinces",
+      year = unique(managementData$year))
+    
+    trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerp", "Limburg"), ],
+      unit = "difference")
+    
+    trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerp", "Limburg"), ],
+      combine = TRUE)
+    
+    # Flanders - per gewest
+    summaryData <- createSummaryRegions(data = managementData, 
+      shapeData = allShapes, regionLevel = "gewest")
+    
+    # TODO gewest variable is missing
+#    trendYearRegion(df = summaryData[summaryData$region %in% c("flanders", "wallonia"), ])
+    
+  })
+
+
+

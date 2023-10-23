@@ -259,6 +259,7 @@ observe({
       )
       
     } else if (input$species_choice %in% heatSpecies) {
+      ## heatmap
       
       ## Actieve haarden
       combinedActive <- combineActiveData(
@@ -305,6 +306,7 @@ observe({
             
             ## Individual data
             vespaPoints <- results$species_managementData()$points
+            req(vespaPoints)
             vespaPoints$type <- "individual"
             # Columns
             regionVariables <- list(level3Name = "NAAM", level2Name = "provincie", level1Name = "GEWEST")

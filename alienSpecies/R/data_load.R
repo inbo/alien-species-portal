@@ -245,7 +245,11 @@ loadTabularData <- function(
       # fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
       # select = c("checklist_scientificName", "english_name", "checklist_kingdom"),
       # col.names = c("scientificName", "englishName", "kingdom")
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> branch 'feature#53' of https://github.com/inbo/alien-species-portal.git
     
   } else if (type == "occurrence") {
     

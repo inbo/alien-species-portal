@@ -19,7 +19,7 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
   if (nrow(exotenData) == 0)
     return(NULL)
   
-  tableData <- exotenData[, c("key", "species", "gbifLink", "first_observed", "last_observed", "habitat",
+  tableData <- exotenData[, c("key", "nubKey", "species", "gbifLink", "first_observed", "last_observed", "habitat",
       "pathway_level1", "pathway_level2", "degree_of_establishment", "sourceLink", "locality")]
   
   ## combine pathways
@@ -50,10 +50,17 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
     tableData <- merge(tableData, combinedData[[iName]], by = "key", all.x = TRUE)
   }
   
+  managementSpecies <- sapply(strsplit(list.files(system.file("extdata/management", package = "alienSpecies")), split = "\\."),
+    function(x) x[1])
+  managementSpecies <- gsub("_", " ", managementSpecies)
+  colorCode <- ifelse(tableData$species %in% managementSpecies, "green", "black")
   # Add unionlist info
-  tableData$unionColor <- c(NA, "orange")[tableData$species %in% unionlistData$scientificName + 1]
+  tableData$unionColor <- ifelse(tableData$nubKey %in% unionlistData$taxonKey, colorCode, NA)
   # Add occurrence info
-  tableData$occurColor <- c(NA, "green")[tableData$species %in% occurrenceData$scientificName + 1]
+  tableData$occurColor <- ifelse(tableData$species %in% occurrenceData$scientificName, colorCode, NA)
+  
+  # Remove after matching
+  tableData$nubKey <- NULL
   
   tableData
   
@@ -132,13 +139,13 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
       
       observeEvent(input$union, {
           
-          selectedKey(input$union)
+          selectedKey(paste0("reporting_", input$union))
           
         })
       
       observeEvent(input$occur, {
           
-          selectedKey(input$occur)
+          selectedKey(paste0("observations_", input$occur))
           
         })
       

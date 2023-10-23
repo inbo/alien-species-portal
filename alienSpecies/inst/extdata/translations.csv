@@ -1,6 +1,6 @@
 title_id;title_nl;description_nl;title_fr;description_fr;title_en;description_en
 apply_gam;Status van toename (GAM) - Waarnemingen;;Statut d'augmentation (GAM) - Observations;;Emergence status (GAM) - Observations;
-barplotLenteNesten;Voorjaarsnesten;Het aantal op vespawatch.be gemelde nesten tussen 1 januari en 19 mei;TODO;TODO;TODO;TODO
+barplotLenteNesten;Voorjaarsnesten;Het aantal op vespawatch.be gemelde nesten tussen 1 januari en 19 mei;Nids de printemps;Le nombre de nids signalés sur vespawatch.be entre le 1er janvier et le 19 mai;Spring nests;The number of nests reported on vespawatch.be between January 1 and May 19
 countNesten;Aantal nesten per provincie (figuur);"Het aantal op vespawatch.be gemelde nesten per provincie.
 </br><em>Data beschikbaar tot {{maxDate}}<em>";TODO;TODO;TODO;TODO
 indicator_introduction_year;Aantal nieuw geïntroduceerde soorten per jaar;;Nombre d'espèces nouvellement introduites par an;;Number of newly introduced species per year;
@@ -277,10 +277,11 @@ occurColor;Waarneming kleur;;Observation couleur;;Observation colour;
 occurrence;Waarneming;;Observation;;Observation;
 graph;Figuur;;Figure;;Figure;
 ;;;;;;
-managed nest;Beheerd nest;;TODO;;Managed nest;
-untreated nest;Onbehandeld nest;;TODO;;Untreated nest;
-individual;Individu;;TODO;;Individual;
-nest;Nest;;TODO;;Nest;
-map;Kaart;;Carte;;Map;
-lenteNesten;Aantal t.e.m. 19 mei gemelde nesten;;TODO;;TODO;
+managed nest;Behandeld nest;;Nid traité;;Managed nest;
+untreated nest;Onbehandeld nest;;Nid non traité;;Untreated nest;
+individual;Individu;;Individu;;Individual;
+nest;Nest;;Nid;;Nest;
+lenteNesten;Aantal gemelde nesten t.e.m. 19 mei;;Nombre de nids signalés jusqu'à 19 mai;;Number of reported nests up to May 19;
 total;Totaal;;Total;;Total;
+map;Kaart;;Carte;;Map;
+difference;Verschil;;Différence;;Difference;

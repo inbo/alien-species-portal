@@ -158,8 +158,10 @@ loadGbif <- function(dataFile,
                     file = dataFile)
   
   # Rename
-  if ("individualCount" %in% colnames(rawData) & !"count" %in% colnames(rawData))
+  if ("individualCount" %in% colnames(rawData) & !"count" %in% colnames(rawData)) {
     data.table::setnames(rawData, "individualCount", "count")
+    rawData[, count := as.numeric(count)]
+  }
   
   attr(rawData, "Date") <- file.mtime(dataFile)
   
