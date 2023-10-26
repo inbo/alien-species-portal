@@ -5,7 +5,7 @@
 
 
 ## Load data
-allShapes <- readShapeData()
+allShapes <- loadShapeData("grid.RData")
 taxData <- loadTabularData(type = "occurrence")
 ## Settings
 # many versus few occurrences
@@ -26,11 +26,14 @@ test_that("Check summary data", {
 
 test_that("Occurrence grid shape", {
     
-    expect_equal(length(allShapes), 2)
+    expect_equal(length(allShapes), 7)
     
     expect_type(allShapes, "list")
-    expect_setequal(names(allShapes), c("utm1_bel_with_regions", "utm10_bel_with_regions"))
     
+    expect_setequal(
+      c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions","be_10km", "be_1km","provinces","communes"  ) , names(allShapes)
+      
+    ) 
   })
 
 test_that("Occurrence plots", {

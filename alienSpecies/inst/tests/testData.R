@@ -5,6 +5,12 @@
 
 # setupS3()
 
+test_that("Set up connection to S3", {
+  
+ setupS3()
+  
+})
+
 test_that("Connection to S3", {
   
   checkS3()
@@ -20,16 +26,35 @@ test_that("Preprocess data", {
   
   # Clean the bucket
 #  aws.s3::delete_object(object = "readme.md", bucket = "inbo-exotenportaal-uat-eu-west-1-default")
+
+# These are the commands Sander will need for preprocessing the data on AWS S3
+  #TODO delete the .geojson data object on AWS S3
   
-  # These are the commands Sander will need for preprocessing the data on AWS S3
+  # create shape data
   createShapeData(dataDir = "~/git/alien-species-portal/data/grid")
   createShapeData(dataDir = "~/git/alien-species-portal/data/Vespa_velutina_shape")
-  createKeyData(dataDir = tempdir())
+  createShapeData(dataDir = "~/git/alien-species-portal/data/occurrenceCube")
+  createShapeData(dataDir = "~/git/alien-species-portal/dataS3/provinces.geojson")
+  createShapeData(dataDir = "~/git/alien-species-portal/dataS3/communes.geojson")
+  
+  # create key data
+  createKeyData(dataDir = "~/git/alien-species-portal/data")
+  
+  # create time series data
   createTimeseries(
-    packageDir = tempdir(), 
-    shapeData = readShapeData()$utm1_bel_with_regions
+    dataDir = "~/git/alien-species-portal/data", 
+    shapeData = loadShapeData("grid.RData")$utm1_bel_with_regions
   )
-  createOccupancyCube(packageDir = tempdir())
+  
+  # create occupancy cube - gives error
+
+  createOccupancyCube()
+  
+ # create tabular data
+  
+  createTabularData(type = "indicators")
+  createTabularData(type = "unionlist")
+  createTabularData(type = "occurrence")
   
 })
 
@@ -129,4 +154,73 @@ test_that("S3 bucket connection", {
 # TODO create test for each data file that is loaded in the app
 # Most of these are listed in global.R
 # Some specific data files are loaded for the management pages, see serverSpecies.R
+
+
+
+test_that("Load shape data", {
+  
+  allShapes <- c(
+    # Grid data
+    #readShapeData(),
+    loadShapeData("grid.RData"),
+    loadShapeData("occurrenceCube.RData"),
+    # gemeentes & provinces
+    "provinces" = list(loadShapeData("provinces.RData")),
+    "communes" = list(loadShapeData("communes.RData"))
+    #readShapeData(extension = ".geojson")
+  )
+  
+  expect_gt(length(  allShapes), 1)
+  
+  expect_setequal(
+  c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions","be_10km", "be_1km","provinces","communes"  ) , names(allShapes)
+    
+  )  
+  
+})
+
+
+
+test_that("Load exotenData", {
+  exotenData <- loadTabularData(type = "indicators")
+  expect_s3_class(   exotenData, "data.table")
+})
+
+
+test_that("Load unionlistData", {
+  unionlistData <- loadTabularData(type = "unionlist")
+  
+  expect_s3_class( unionlistData, "data.table")
+  
+})
+
+test_that("Load occurrenceData", {
+  occurrenceData <- loadTabularData(type = "occurrence")
+  expect_s3_class( occurrenceData, "data.table")
+
+})
+
+
+
+test_that("Load full_timeseries", {
+  readS3(file = "full_timeseries.RData")
+  expect_true(exists("timeseries"))
+  expect_s3_class(timeseries, "data.table")
+})
+
+
+test_that("Load cube data", {
+
+  occupancy <- loadOccupancyData()
+  expect_true(exists("dfCube"))
+  expect_s3_class(occupancy, "data.table")
+})
+
+
+test_that("Load Vespa_velutina_shape", {
+
+    Vespa_velutina_shape <- loadShapeData("Vespa_velutina_shape.RData")
+    expect_type(Vespa_velutina_shape, "list")
+
+})
 

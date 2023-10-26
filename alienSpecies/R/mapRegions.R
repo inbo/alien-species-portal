@@ -13,7 +13,7 @@
 #' 
 #' @author mvarewyck
 #' @import tidyverse
-#' @importFrom data.table copy
+#' @importFrom data.table copy dcast
 #' @importFrom reshape2 dcast
 #' @export
 createSummaryRegions <- function(data, shapeData, 
@@ -99,6 +99,7 @@ createSummaryRegions <- function(data, shapeData,
         filter(year %in% myYear, !is.na(region), region != "NA", region != "")
       summaryData <- reshape2::dcast(summaryData, region + year ~ base::get(groupingVariable), 
         value.var = "count", fun.aggregate = sum)
+
       summaryData$n <- apply(summaryData[, -(1:2), drop = FALSE], 1, sum, na.rm = TRUE)     
       
     } else {

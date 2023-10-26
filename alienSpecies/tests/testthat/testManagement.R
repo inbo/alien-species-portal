@@ -6,10 +6,14 @@
 
 
 allShapes <- c(
-  # Grid data
-  readShapeData(),
+ # # Grid data
+  #readShapeData(),
+ # # gemeentes & provinces
+  #suppressWarnings(readShapeData(extension = ".geojson"))
+  loadShapeData("grid.RData"),
   # gemeentes & provinces
-  suppressWarnings(readShapeData(extension = ".geojson"))
+  "provinces" = list(loadShapeData("provinces.RData")),
+  "communes" = list(loadShapeData("communes.RData"))
 )
 uiText <- loadMetaData()
 
@@ -206,8 +210,10 @@ test_that("Alle observaties", {
   })
 
 test_that("Voorjaarsnesten", {
-    
-    myPlot <- barplotLenteNesten(df = read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies")))
+    myPlot <- barplotLenteNesten(df =  s3read_using(FUN= read.csv, object = "aantal_lente_nesten.csv", 
+                                                    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")))
+    )
+                                
     expect_s3_class(myPlot, "ggplot")
     
   })

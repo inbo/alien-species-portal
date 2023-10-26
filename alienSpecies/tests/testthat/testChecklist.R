@@ -143,8 +143,8 @@ test_that("Grafiek: Cumulatief aantal geïntroduceerde uitheemse soorten per jaa
 
 test_that("Grafiek: Mate van verspreiding van de Unielijstsoorten", {
     
-    readS3(file = "dfCube.RData")
-    occupancy <- loadOccupancyData(dfCube = dfCube)
+    #readS3(file = "dfCube.RData")
+    occupancy <- loadOccupancyData()
     
     tmpResult <- countOccupancy(df = occupancy)
     

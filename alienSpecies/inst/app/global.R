@@ -18,9 +18,8 @@ if (!exists("doDebug"))
 
 tabChoices <- c("start", "global_indicators", "species_information", 
   "early_warning", "management")[1:4]
-managementDir <- system.file("extdata", "management", package = "alienSpecies")
 
-setupS3()
+managementDir <- system.file("extdata", "management", package = "alienSpecies")
 
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")
@@ -37,17 +36,24 @@ defaultYear <- max(exotenData$first_observed, na.rm = TRUE)
 defaultTimeNA <- TRUE
 defaultTime <- c(min(exotenData$first_observed, na.rm = TRUE), defaultYear)
 # Load occupancy data from createOccupancyCube()
-readS3(file = "dfCube.RData")
-occupancy <- loadOccupancyData(dfCube = dfCube)
+
+if (!doDebug | !exists("occupancy")){
+occupancy <- loadOccupancyData()
+}
 
 # Load cube data
 if (!doDebug | !exists("allShapes"))
   allShapes <- c(
     # Grid data
-    readShapeData(),
+    #readShapeData(),
+    loadShapeData("grid.RData"),
+    loadShapeData("occurrenceCube.RData"),
     # gemeentes & provinces
-    readShapeData(extension = ".geojson")
+    "provinces" = list(loadShapeData("provinces.RData")),
+    "communes" = list(loadShapeData("communes.RData"))
+    #readShapeData(extension = ".geojson")
   )
+
 dictionary <- loadMetaData(type = "keys")
 
 
@@ -62,4 +68,5 @@ habitatChoices <- attr(exotenData, "habitats")
 doeChoices <- sort(unique(exotenData$degree_of_establishment))
 regionChoices <- sort(unique(exotenData$locality))
 bronChoices <- sort(levels(exotenData$source))
+
 
