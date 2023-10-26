@@ -568,7 +568,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
             mapOccurrence(occurrenceData = subData(),
               # when switching species, need to create correct basemap
               baseMap = addBaseMap(regions = input$region, combine = input$combine),
-              addGlobe = TRUE)
+              addGlobe = isolate(input$globe %% 2 == 0))
             
           } else {
             
@@ -604,7 +604,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
           
           if (!is.null(input$globe) & !is.null(proxy)){
             
-            if (input$globe %% 2 == 1){
+            if (input$globe %% 2 == 0){
               
               updateActionLink(session, inputId = "globe", 
                 label = translate(uiText(), "hideGlobe")$title)
@@ -663,7 +663,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
             newMap <- mapOccurrence(
               occurrenceData = subData(), 
               baseMap = addBaseMap(regions = req(input$region), combine = input$combine),
-              addGlobe = input$globe %% 2 == 1
+              addGlobe = input$globe %% 2 == 0
             )
             
           } else {
@@ -673,7 +673,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
               groupVariable = groupVariable,
               baseMap = addBaseMap(regions = req(input$region), combine = input$combine),
               legend = input$legend,
-              addGlobe = input$globe %% 2 == 1
+              addGlobe = input$globe %% 2 == 0
             )
             
           }

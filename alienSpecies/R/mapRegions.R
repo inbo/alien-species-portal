@@ -180,7 +180,7 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
       groupVariable = "cell_code")
     myMap <- myMap %>%
       addPolylines(data = spread$cell_code1, 
-        color = "red",
+        color = "blue",
         weight = 1) 
     
   }
@@ -220,7 +220,7 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
       myMap <- addLegend(
         map = myMap,
         position = legend,
-        colors = "red",
+        colors = "blue",
         labels = translate(uiText, "occurrence")$title,
         opacity = 1,
         layerId = "legend2"
@@ -460,11 +460,11 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       output$regionsPlot <- renderLeaflet({
           
           validate(need(nrow(req(summaryData())) > 0, noData()))
-          req(input$unit)
           
           mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
             shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel,
-            palette = if (input$unit == "difference") "RdYlGn" else "YlOrBr")
+            addGlobe = isolate(input$globe %% 2 == 1),
+            palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr")
           
         })
       
@@ -574,7 +574,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           
           if (input$legend != "none") {
             
-            palette <- if (input$unit == "difference") "RdYlGn" else "YlOrBr"
+            palette <- if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
             paletteFunction <- colorFactor(palette = palette, levels = levels(summaryData()$group), 
               na.color = "transparent", reverse = (palette != "YlOrBr"))
             valuesPalette <- summaryData()$group[match(spatialData()$NAAM, summaryData()$region)]
@@ -592,7 +592,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
             if (!is.null(occurrenceData))
               proxy %>% addLegend(
                 position = input$legend,
-                colors = "red",
+                colors = "blue",
                 labels = translate(uiText(), "occurrence")$title,
                 opacity = 1,
                 layerId = "legend2"

@@ -235,6 +235,7 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
             combinedData = combinedData(),
             colors = colors(),
             selected = unique(combinedData()$filter),
+            addGlobe = isolate(input$globe %% 2 == 1),
             blur = blur
           )
           
