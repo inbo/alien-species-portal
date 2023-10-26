@@ -198,12 +198,6 @@ loadTabularData <- function(
         "species", "canonicalName"
       )]
     
-    ## exclude data before 1950 - keeps values with NA for first_observed
-    toExclude <- (rawData$first_observed < 1950 & !is.na(rawData$first_observed))
-    warningMessage <- c(warningMessage, 
-      paste0(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten"))
-    rawData <- rawData[!toExclude, ]
-    
     ## convert english to dutch names for region
     rawData$locality <- getDutchNames(rawData$locality, type = "regio")
     
