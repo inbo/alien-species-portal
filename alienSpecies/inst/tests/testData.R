@@ -147,7 +147,9 @@ test_that("S3 bucket connection", {
     
     # List all available files on the S3 bucket
     tmpTable <- aws.s3::get_bucket_df(bucket = bucket)
-   
+    # aws.s3::put_object(file = "~/git/alien-species-portal/instDataBackup/extdata/management/Ondatra_zibethicus.csv",
+    #                    object = "Ondatra_zibethicus.csv", bucket = bucket)
+    # 
   })
 
 
