@@ -47,7 +47,8 @@ if (!doDebug | !exists("allShapes"))
     # Grid data
     #readShapeData(),
     loadShapeData("grid.RData"),
-    loadShapeData("occurrenceCube.RData"),
+    ## be_1km and be_10km data have neither is nor GEWEST attribute to indicate region.
+    #loadShapeData("occurrenceCube.RData"),
     # gemeentes & provinces
     "provinces" = list(loadShapeData("provinces.RData")),
     "communes" = list(loadShapeData("communes.RData"))
