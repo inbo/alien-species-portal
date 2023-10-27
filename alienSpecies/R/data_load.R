@@ -338,7 +338,7 @@ loadTabularData <- function(
 #' Load meta data for the UI
 #' @inheritParams loadTabularData 
 #' @param type character, which type of translations should be loaded;
-#' should be one of \code{c("species", "ui")}
+#' should be one of \code{c("ui","keys")}
 #' @param language character, which language data sheet should be loaded;
 #' should be one of \code{c("nl", "fr", "en")}
 #' @return data.frame
