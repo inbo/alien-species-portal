@@ -267,6 +267,7 @@ createTabularData <- function(
   
   if (type == "indicators"){
     
+    # recode missing values to NA
     rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
     # Warning if new habitat columns
     currentHabitats <- c("marine", "freshwater", "terrestrial")
@@ -301,12 +302,6 @@ createTabularData <- function(
       # union list filtering
       "species", "canonicalName"
     )]
-    
-    ## exclude data before 1950 - keeps values with NA for first_observed
-    toExclude <- (rawData$first_observed < 1950 & !is.na(rawData$first_observed))
-    warningMessage <- c(warningMessage, 
-                        paste0(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten"))
-    rawData <- rawData[!toExclude, ]
     
     ## convert english to dutch names for region
     rawData$locality <- getDutchNames(rawData$locality, type = "regio")
@@ -389,18 +384,19 @@ createTabularData <- function(
     
     
     attr(rawData, "habitats") <- currentHabitats
-    #end type == "indicator"
-  } else if(type == "unionlist"){
+    
+    
+  } else if (type == "unionlist") {
     
     rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
-                     select = c("checklist_scientificName", "english_name", "checklist_kingdom"),
-                     col.names = c("scientificName", "englishName", "kingdom")
-    )    
-    
+      select = c("checklist_scientificName", "english_name", "checklist_kingdom", "backbone_taxonKey"),
+      col.names = c("scientificName", "englishName", "kingdom", "taxonKey")
+    )
     
   } else if (type == "occurrence") {
     
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",drop = "min_coord_uncertainty")
+    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
+      drop = "min_coord_uncertainty")
     
     ## exclude data before 1950 - keeps values with NA for first_observed
     toExclude <- (rawData$year < 1950 & !is.na(rawData$year))
