@@ -13,7 +13,7 @@
 #' 
 #' @author mvarewyck
 #' @import tidyverse
-#' @importFrom data.table copy
+#' @importFrom data.table copy dcast
 #' @importFrom reshape2 dcast
 #' @export
 createSummaryRegions <- function(data, shapeData, 
@@ -97,8 +97,9 @@ createSummaryRegions <- function(data, shapeData,
       
       summaryData <- data %>%
         filter(year %in% myYear, !is.na(region), region != "NA", region != "")
-      summaryData <- reshape2::dcast(summaryData, region + year ~ get(groupingVariable), 
+      summaryData <- reshape2::dcast(summaryData, region + year ~ base::get(groupingVariable), 
         value.var = "count", fun.aggregate = sum)
+
       summaryData$n <- apply(summaryData[, -(1:2), drop = FALSE], 1, sum, na.rm = TRUE)     
       
     } else {
@@ -388,10 +389,13 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           req(input$gewestLevel)
           # Subset for GEWEST
           lapply(shapeData, function(iData) {
-              if ("GEWEST" %in% colnames(iData))
-                iData[iData$GEWEST %in% input$gewestLevel, ] else
+              if ("GEWEST" %in% colnames(iData)){
+                iData$GEWEST <- dplyr::recode(iData$GEWEST, "Brussels" = "brussels", "Vlaams"="flanders", "Waals" =  "wallonia")
+                iData[iData$GEWEST %in% input$gewestLevel, ]}else{
                 iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(input$gewestLevel)), drop = FALSE]), 1, sum) > 0, ]
-            })
+          }
+                })
+          
           
         })
       

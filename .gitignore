@@ -19,6 +19,7 @@
 
 # RStudio files
 .Rproj.user/
+alien-species-portal.Rproj
 
 # produced vignettes
 vignettes/*.html
@@ -47,9 +48,18 @@ alienSpecies/man/
 # Helper scripts
 /data/*.Rmd
 /data/
+/instDataBackup/
 
 # Large data files
 alienSpecies/inst/extdata/full_timeseries.csv
 
 # Tmp files for #27
 /verspaVelutina/
+
+
+# Local copy of S3 files
+/dataS3
+
+# aws secret 
+
+/script/putSecret.sh

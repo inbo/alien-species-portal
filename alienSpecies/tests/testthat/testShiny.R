@@ -14,8 +14,8 @@ translations <- loadMetaData(language = "nl")
 
 test_that("Module countOccupancy", {
     
-    load(file = file.path(dataDir, "dfCube.RData"))
-    occupancy <- createOccupancyData(dfCube = dfCube)
+    readS3(file = "dfCube.RData")
+    occupancy <- loadOccupancyData()
     
     shiny::testServer(countOccupancyServer, 
       args = list(
@@ -34,7 +34,17 @@ test_that("Module mapCube", {
     
     mySpecies <- "Oxyura jamaicensis"
     
-    allShapes <- readShapeData()
+    allShapes <- c(
+      # Grid data
+      #readShapeData(),
+      loadShapeData("grid.RData"),
+      loadShapeData("occurrenceCube.RData"),
+      # gemeentes & provinces
+      "provinces" = list(loadShapeData("provinces.RData")),
+      "communes" = list(loadShapeData("communes.RData"))
+      #readShapeData(extension = ".geojson")
+    )
+    
     
     dictionary <- loadMetaData(type = "keys")
     myKey <- dictionary$taxonKey[match(mySpecies, dictionary$scientificName)]

@@ -1,336 +1,59 @@
-#' Read shape data
-#' @param extension character, path extension for files to be picked up
-#' @param dataDir path to the shape files. Folder should contain .shp file but also
-#' helper files such as .dbf and .prj
-#' @return list with sf objects
-#' 
-#' @author mvarewyck
-#' @importFrom sf st_read
+
+#' Read .RData shape data from s3 bucket
+#' return a data list
+#' @inheritParams readS3
 #' @export
-readShapeData <- function(extension = c(".gpkg", ".shp", ".geojson"),
-  dataDir = system.file("extdata", "grid", package = "alienSpecies")
-) {
-  
-  extension <- match.arg(extension)
-  
-  shapeFiles <- list.files(dataDir, pattern = extension)
-  
-  if (extension %in% c(".gpkg", ".shp")) {
-    
-    toReturn <- lapply(shapeFiles, function(iFile) {
-        
-        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
-        
-      })
-    
-  } else if (extension == ".geojson") {
-    
-    toReturn <- lapply(shapeFiles, function(iFile) {
-        
-        sf::st_read(file.path(dataDir, iFile), layer = gsub(extension, "", iFile), quiet = TRUE)
-        
-      })
-  
-  } 
-  
-  
-  
-  names(toReturn) <- gsub(extension, "", shapeFiles)
-  
-  toReturn
-  
+#' @author yzhang
+
+loadShapeData <- function(file, 
+                          bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
+                          ,...){
+  tempEnv <- new.env()
+  readS3(file = file, bucket = bucket, envir = tempEnv,...)
+  return(tempEnv[[names(tempEnv)]])
 }
 
 
-
-#' Create dictionary for combining data keys from multiple data sources
-#' @inheritParams loadTabularData
-#' @return TRUE if creation succeeded, data is written to \code{file.path(dataDir, "keys.csv")}
-#' 
-#' @author mvarewyck
-#' @importFrom utils write.csv
-#' @importFrom data.table fread setnames as.data.table
-#' @importFrom rgbif name_usage
-#' @export
-createKeyData <- function(dataDir = system.file("extdata", package = "alienSpecies")) {
-  
-  # For R CMD check
-  classKey <- NULL
-  i.classKey <- NULL
-    
-  # Occurrence cube
-  taxaData <- fread(file.path(dataDir, "be_alientaxa_info.csv"))
-  classKeys <- as.data.table(do.call(rbind, lapply(unique(taxaData$taxonKey), function(k) {
-      tmpData <- rgbif::name_usage(key = k)$data
-      if (!"classKey" %in% colnames(tmpData))
-        tmpData$classKey <- NA
-      tmpData[, c("key", "classKey")]
-    })))
-  setnames(classKeys, "key", "taxonKey")
-  taxaData <- taxaData[classKeys, classKey := i.classKey, on = "taxonKey"]
-  
-  ## clean scientific name
-  taxaData$scientificName <- sapply(strsplit(taxaData$scientificName, split = " "), function(x) paste(x[1:2], collapse = " "))
-  
-  # Checklist
-  exotenData <- loadTabularData(dataDir = dataDir, type = "indicators")[, c('key', 'species')]
-  exotenData <- exotenData[!duplicated(exotenData), ]
-  dictionary <- merge(taxaData, exotenData,
-    by.x = "scientificName", by.y = "species", all = TRUE)
-  setnames(dictionary, "key", "gbifKey")
-    
-  
-  write.csv(dictionary, file = file.path(dataDir, "keys.csv"),
-    row.names = FALSE)  
-  
-  return(TRUE)
-  
-}
-
-
-#' Summarize timeseries data over 1km x 1km cubes
-#' @inheritParams createOccupancyCube
-#' @param shapeData spatialPolygonsDataFrame for utm1 grid data
-#' @return TRUE if creation succeeded
-#' 
-#' @author mvarewyck
-#' @importFrom utils write.csv
-#' @importFrom data.table fread rbindlist
-#' @export
-createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
-  packageDir = system.file("extdata", package = "alienSpecies"),
-  shapeData = readShapeData()$utm1_bel_with_regions) {
-  
-  # created from https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
-  ## Data at 1km x 1km grid level
-  rawData <- fread(file.path(dataDir, "df_timeseries.tsv"), 
-    stringsAsFactors = FALSE, na.strings = "")
-  # obs: number of observations for species
-  # cobs: number of observations for class
-  # pa_obs: presence of species in protected areas (1 = yes, 0 = no)
-  # pa_cobs: presence of class in protected areas (1 = yes, 0 = no)
-  
-  # Merge with shapeData for region indicators
-  regions <- c("flanders", "wallonia", "brussels")
-  fullData <- merge(rawData, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
-    by.x = "eea_cell_code", by.y = "CELLCODE")
-  
-  write.csv(fullData, file = file.path(packageDir, "full_timeseries.csv"), 
-    row.names = FALSE)
-
-}
 
 
 
 #' Load tabular data
 #' 
-#' For indicator data:
-#' by default data for which \code{first_observed < 1950} is excluded.
-#' For unionlist data:
-#' only 'scientific name', 'english name' and 'kingdom' are retained
-#' @param dataDir character vector, defines the path to the data file(s)
-#' @param type data type, one of:
-#' \itemize{
-#' \item{\code{"indicators"}:}{for indicator data, i.e. main data set}
-#' \item{\code{"unionlist"}:}{for union list data, i.e. }
-#' }
-#' @return data.table, loaded indicator/unionlist data; 
-#' and attribute 'Date', the date that this data file was created
-#' @importFrom data.table fread :=
-#' @importFrom utils tail
+#' Data is preprocessed by createTabularData()
+#' @inheritParams createTabularData
+#' @return data.frame, loaded data
+#' @author mvarewyck
 #' @export
+
 loadTabularData <- function(
-  dataDir = system.file("extdata", package = "alienSpecies"),
-  type = c("indicators", "unionlist", "occurrence", "timeseries")) {
-  
-  # For R CMD check
-  scientificName <- NULL
-  i.scientificName <- NULL
-  i.classKey <- NULL
-  
-  warningMessage <- NULL
+    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
+    type = c("indicators", "unionlist", "occurrence")) {
   
   type <- match.arg(type)
   
-  dataFiles <- file.path(dataDir, switch(type,
-      indicators = "data_input_checklist_indicators.tsv",
-#      "indicators" = c("description.txt", "distribution.txt", "speciesprofile.txt", "taxon.txt"),
-      unionlist = "eu_concern_species.tsv",
-      occurrence = "be_alientaxa_cube.csv",
-      timeseries = "full_timeseries.csv"))
+  # For R CMD check
+  rawData <- NULL  
   
-  if (type == "indicators") {
-    
-    # recode missing values to NA
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
-    
-    # Warning if new habitat columns
-    currentHabitats <- c("marine", "freshwater", "terrestrial")
-    if (!all(unlist(strsplit(rawData$habitat, split = "|", fixed = TRUE)) %in% c(NA, currentHabitats)))    
-      stop("New habitats detected. Add relevant columns in loadTabularData()")
-    
-    ## extract necessary columns
-    rawData <- rawData[, c(
-        # GBIF key - necessary to use trias function
-        "key", 
-        # Taxon key
-        "nubKey",
-        # full scientific name
-        "scientificName",
-        # Period - slider should use first_observed
-        "first_observed", "last_observed", 
-        # Taxonomy
-        "kingdom", "phylum", "class", "order", "family",
-        # Taxonomy keys - for search queries
-        "kingdomKey", "phylumKey", "classKey", "orderKey", "familyKey",
-        # Locality
-        "locality", "locationId", "native_range",
-        # Degree establishment
-        "degree_of_establishment",
-        # Pathway
-        "pathway_level1", "pathway_level2",
-        # Habitat
-        "habitat", ## easier to use the 3 booleans below instead
-        ..currentHabitats,
-        # Source
-        "source",
-        # union list filtering
-        "species", "canonicalName"
-      )]
-    
-    ## convert english to dutch names for region
-    rawData$locality <- getDutchNames(rawData$locality, type = "regio")
-    
-    ## Extract hyperlinks 
-    
-    ### Extract gbif link
-    rawData$gbifLink <- sapply(strsplit(rawData$source, split = ": "), function(x) x[1])
-    rawData$gbifLink <- paste0("<a href='", rawData$gbifLink, "' target = '_blank'>", 
-      sapply(strsplit(rawData$gbifLink, split = "/"), function(x) tail(x, n = 1)), "</a>")
-    # common name and source: https://www.gbif.org/species/157131005
-    
-    ## recode `source` variable
-    
-    ## Remove everything up until (jjjj)<space(s)>.<space(s)>
-    rawData$source <- sub("(.*?)\\(\\d{4}\\)\\s*\\.\\s*", "", rawData$source)
-    ## Remove everything after the first dot
-    rawData$source <- sub("\\..*$", "", rawData$source)
-    
-    ## re-define source into shorter names
-    rawData[, source := as.factor(source)]
-    levels(rawData$source) <- list(
-      "Ad hoc alien species checklist" = "Ad hoc checklist of alien species in Belgium",
-      "Alien Bird Checklist" = "Checklist of alien birds of Belgium",
-      "Alien Fish Flanders" = "Checklist of non-native freshwater fishes in Flanders, Belgium",
-      "Alien Macroinverts" = "Inventory of alien macroinvertebrates in Flanders, Belgium",
-      "Alien Mollusc checklist" = "Registry of introduced terrestrial molluscs in Belgium", 
-      "Belgian rust fungi" = "Catalogue of the Rust Fungi of Belgium",
-      "Manual of Alien Plants" = "Manual of the Alien Plants of Belgium",
-      "RINSE1" = "RINSE - Registry of non-native species in the Two Seas region countries (Great Britain, France, Belgium and the Netherlands)",
-      "RINSE2" = "RINSE - Pathways and vectors of biological invasions in Northwest Europe",
-      "WRiMS" = "World Register of Introduced Marine Species (WRiMS)")
-    
-    ### source link
-    rawData$sourceLink <- ifelse(is.na(rawData$source), "", 
-      paste0("<a href='", sapply(as.character(rawData$source), function(iSource) switch(iSource,
-              "Ad hoc alien species checklist" = "https://www.gbif.org/dataset/1f3505cd-5d98-4e23-bd3b-ffe59d05d7c2",
-              "Alien Bird Checklist" = "https://www.gbif.org/dataset/e1c3be64-2799-4342-8312-49d076993132",
-              "Alien Fish Flanders" = "https://www.gbif.org/dataset/98940a79-2bf1-46e6-afd6-ba2e85a26f9f",
-              "Alien Macroinverts" = "https://www.gbif.org/dataset/289244ee-e1c1-49aa-b2d7-d379391ce265",
-              "Alien Mollusc checklist" = "https://www.gbif.org/dataset/e082b10e-476f-43c1-aa61-f8d92f33029a",
-              "Belgian rust fungi" = "https://www.gbif.org/dataset/b043c480-dd36-4f4f-aa82-e188753ff09d",
-              "Manual of Alien Plants" = "https://www.gbif.org/dataset/9ff7d317-609b-4c08-bd86-3bc404b77c42",
-              "RINSE1" = "https://www.gbif.org/dataset/3f5e930b-52a5-461d-87ec-26ecd66f14a3",
-              "RINSE2" = "https://www.gbif.org/dataset/1738f272-6b5d-4f43-9a92-453a8c5ea50a",
-              "WRiMS" = "https://www.gbif.org/dataset/0a2eaf0c-5504-4f48-a47f-c94229029dc8")
-        ), 
-        "' target = '_blank'>", rawData$source, "</a>"))
-    
-    ## regroup native_range variable into new native_continent variable
-    ## from https://en.wikipedia.org/wiki/United_Nations_geoscheme
-    
-    africa <- c("Africa", "Northern Africa", "Sub-Saharan Africa", "Subsaharan Africa", "Eastern Africa", "Middle Africa", "Southern Africa", "Western Africa")
-    americas <- c("Americas", "Latin America and the Caribbean", "Caribbean", "Central America", "South America", "Northern America")
-    asia <- c("Asia", "Central Asia", "Eastern Asia", "South-eastern Asia", "Southeastern Asia", "Southern Asia", "Western Asia")
-    europe <- c("Europe", "Eastern Europe", "Northern Europe", "Southern Europe", "Western Europe")
-    oceania <- c("Oceania", "Australia and New Zealand", "Melanesia", "Micronesia", "Polynesia")
-    
-    rawData$native_continent[rawData$native_range %in% c(africa, tolower(africa))] <- "Africa"
-    rawData$native_continent[rawData$native_range %in% c(americas, tolower(americas))] <- "Americas"
-    rawData$native_continent[rawData$native_range %in% c(asia, tolower(asia))] <- "Asia"
-    rawData$native_continent[rawData$native_range %in% c(europe, tolower(europe))] <- "Europe"
-    rawData$native_continent[rawData$native_range %in% c(oceania, tolower(oceania))] <- "Oceania"
-    
-    # group any undefined regions in "undefined"
-    rawData$native_continent[!(rawData$native_range %in% c(africa, tolower(africa),
-            americas, tolower(americas),
-            asia, tolower(asia),
-            europe, tolower(europe),
-            oceania, tolower(oceania))) & 
-        !is.na(rawData$native_range)] <- "undefined"
-    
-    ## replace missing "species" with "canonicalName" if available
-    # then drop "canonicalName"
-    ind <- which(is.na(rawData$species) & !is.na(rawData$canonicalName))
-    rawData$species[ind] <- rawData$canonicalName[ind]
-    rawData$canonicalName <- NULL
-    warningMessage <- c(warningMessage,
-      paste0(type, " data: Voor ", length(ind), " observaties is de 'species' onbekend. 'canonicalName' wordt gebruikt in de plaats."))
-    
-    
-    attr(rawData, "habitats") <- currentHabitats
-    
-    
-  } else if (type == "unionlist") {
-    
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
-      select = c("checklist_scientificName", "english_name", "checklist_kingdom", "backbone_taxonKey"),
-      col.names = c("scientificName", "englishName", "kingdom", "taxonKey")
-    )
-    
-  } else if (type == "occurrence") {
-    
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
-      drop = "min_coord_uncertainty")
-    
-    ## exclude data before 1950 - keeps values with NA for first_observed
-    toExclude <- (rawData$year < 1950 & !is.na(rawData$year))
-    warningMessage <- c(warningMessage,
-      paste0(type, " data: ", sum(toExclude), " observaties dateren van voor 1950 en zijn dus uitgesloten"))
-    
-    rawData <- rawData[!toExclude, ]
-    
-    # for linking scientific name & classKey
-    dictionary <- loadMetaData(type = "keys")
-    rawData <- rawData[dictionary, c("scientificName", "classKey") := list(
-        i.scientificName,
-        i.classKey), on = "taxonKey"]
-        
-    # attach 10km cellcode
-    rawData$cell_code10 <- gsub(pattern = "1km", replacement = "10km", 
-      paste0(substr(rawData$eea_cell_code, start = 1, stop = 7),
-        substr(rawData$eea_cell_code, start = 9, stop = 12)))
-    colnames(rawData)[colnames(rawData) == "eea_cell_code"] <- "cell_code1"
-    
-  } else if (type == "timeseries") {
-    
-    rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
-      
-  }
+  dataFile <-  switch(type,
+         "indicators" = "data_input_checklist_indicators_processed.RData",
+         "unionlist" = "eu_concern_species_processed.RData",
+         "occurrence" = "be_alientaxa_cube_processed.RData"
+  )
   
-  attr(rawData, "Date") <- file.mtime(dataFiles)
-  attr(rawData, "warning") <- warningMessage 
-    
+  readS3(file = dataFile, bucket = bucket, envir = environment())
+  
+  
   return(rawData)
   
 }
 
 
 
+
 #' Load meta data for the UI
 #' @inheritParams loadTabularData 
 #' @param type character, which type of translations should be loaded;
-#' should be one of \code{c("species", "ui")}
+#' should be one of \code{c("ui","keys")}
 #' @param language character, which language data sheet should be loaded;
 #' should be one of \code{c("nl", "fr", "en")}
 #' @return data.frame
@@ -338,18 +61,28 @@ loadTabularData <- function(
 #' @author mvarewyck
 #' @importFrom utils read.csv
 #' @export
+
 loadMetaData <- function(type = c("ui", "keys"),
-  dataDir = system.file("extdata", package = "alienSpecies"), 
+  #dataDir = system.file("extdata", package = "alienSpecies"), 
+  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   language = c("nl", "fr", "en")) {
   
   type <- match.arg(type)
   language <- match.arg(language)
+  # 
+  # allData <- read.csv(file.path(dataDir, switch(type, 
+  #       ui = "translations.csv",
+  #       keys = "keys.csv"
+  #     )), sep = if (type == "ui") ";" else ",", 
+  #   encoding = "UTF-8") 
+  # 
+ fileName <- switch(type, 
+         ui = "translations.csv",
+         keys = "keys.csv"
+  )
   
-  allData <- read.csv(file.path(dataDir, switch(type, 
-        ui = "translations.csv",
-        keys = "keys.csv"
-      )), sep = if (type == "ui") ";" else ",", 
-    encoding = "UTF-8") 
+ allData <- readS3(FUN = read.csv,  sep = if (type == "ui") ";" else ",",encoding = "UTF-8", 
+ file = fileName)
   
   filterData <- switch(type, 
     ui = {
@@ -380,6 +113,29 @@ loadMetaData <- function(type = c("ui", "keys"),
 
 
 
+#' Create data with occupancy for t0 and t1 data
+#' 
+#' @author mvarewyck
+#' @importFrom data.table dcast setDT as.data.table
+#' @export
+
+loadOccupancyData <- function() {
+  
+  readS3(file = "dfCube.RData")
+  
+  dfCube$cell_code10 <- NULL
+  dfCube$year <- NULL
+  dfTable <- dcast(data = setDT(as.data.frame(table(dfCube))), 
+    species ~ source, value.var = "Freq")
+  dfTable$total <- dfTable$t0 + dfTable$t1
+  
+  dfTable <- dfTable[order(dfTable$total), ]
+  dfTable$species <- factor(dfTable$species, levels = unique(dfTable$species)) # sort by freq in barchart
+  
+  as.data.table(dfTable)
+  
+}
+
 #' List Dutch names to replace English names for exoten
 #' 
 #' Will not return NA, but rather the original English name in case
@@ -391,6 +147,7 @@ loadMetaData <- function(type = c("ui", "keys"),
 #' 
 #' @author eadriaensen
 #' @export
+#' 
 getDutchNames <- function(x, type = c("regio")) {
   
   type <- match.arg(type)
@@ -459,23 +216,23 @@ translate <- function(data = loadMetaData(type = "ui"), id) {
 
 
 
-##' Extract the vernacular names using API requests
-##' 
-##' WIP: Currently all missing for this dataset https://www.gbif.org/dataset/6d9e952f-948c-4483-9807-575348147c7e
-##' WARNING: Takes long time to process
-##' @inheritParams loadTabularData
-##' @param taxonKeys numeric vector, taxon keys for GBIF
-##' @return no return value, data file 'vernacular_names.csv' is written to \code{dataDir}
-##' data.frame with
-##' \itemize{
-##' \item{key}{\code{taxonKeys} entered as input}
-##' \item{name}{character, vernacular name (language); multiple names are pasted togeter}
-##' }
-##' @author mvarewyck
-##' @importFrom utils write.csv
-##' @importFrom httr GET content
-##' @export
-##' @examples
+# #' Extract the vernacular names using API requests
+# #' 
+# #' WIP: Currently all missing for this dataset https://www.gbif.org/dataset/6d9e952f-948c-4483-9807-575348147c7e
+# #' WARNING: Takes long time to process
+# #' @inheritParams loadTabularData
+# #' @param taxonKeys numeric vector, taxon keys for GBIF
+# #' @return no return value, data file 'vernacular_names.csv' is written to \code{dataDir}
+# #' data.frame with
+# #' \itemize{
+# #' \item{key}{\code{taxonKeys} entered as input}
+# #' \item{name}{character, vernacular name (language); multiple names are pasted togeter}
+# #' }
+# #' @author mvarewyck
+# #' @importFrom utils write.csv
+# #' @importFrom httr GET content
+# #' @export
+# #' @examples
 ##' fullData <- rgbif::name_lookup(
 ##'  query = "Tricellaria",
 ##'  datasetKey = "0a2eaf0c-5504-4f48-a47f-c94229029dc8",

@@ -182,11 +182,14 @@ heatSpecies <- c("Vespa velutina")
 results$species_managementFile <- reactive({
     
     req(input$species_choice)
-    dataFile <- gsub(" ", "_", paste0(input$species_choice, ".csv"))
-    if (file.exists(file.path(managementDir, dataFile)))
-      dataFile else if (input$species_choice %in% heatSpecies)
-      # path to folder
-      gsub(" ", "_", input$species_choice) else
+    expectFile <- if (input$species_choice %in% heatSpecies)
+        paste0(gsub(" ", "_", input$species_choice), "_shape.RData") else 
+        gsub(" ", "_", paste0(input$species_choice, ".csv"))
+    availableFiles <- aws.s3::get_bucket_df(
+      bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")))$Key
+    
+    if (expectFile %in% availableFiles)
+      expectFile else 
       NULL
     
   })
@@ -212,20 +215,15 @@ results$species_managementData <- reactive({
     
     req(input$species_choice)
     
+    validate(need(results$species_managementFile(), translate(results$translations, "noData")$title))
+    
     if (input$species_choice %in% heatSpecies) {
       
-      validate(need(!is.null(list.files(results$species_managementFile())), 
-          translate(results$translations, "noData")$title))
-      
-      readShapeData(
-        extension = ".geojson", 
-        dataDir = system.file("extdata", "management", "Vespa_velutina", package = "alienSpecies")
-      )
-      
-      
+      readS3(file = results$species_managementFile())
+            
+      base::get(paste0(gsub(" ", "_", heatSpecies), "_shape"))
+            
     } else {
-      
-      validate(need(results$species_managementFile(), translate(results$translations, "noData")$title))
       
       tmpData <- loadGbif(dataFile = results$species_managementFile())
       tmpData$GEWEST <- allShapes$communes$GEWEST[
@@ -342,10 +340,12 @@ observe({
       plotTriasServer(
         id = "management2_lente",
         triasFunction = "barplotLenteNesten",
-        data = reactive(read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))),
+        data = reactive(s3read_using(FUN = read.csv, object = "aantal_lente_nesten.csv", bucket = bucket)),
+          #read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))
         uiText = reactive(results$translations)
       )
       
+     
       # Aantal nesten per provincie - figuur
       plotTriasServer(
         id = "management2_province",

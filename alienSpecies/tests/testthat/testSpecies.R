@@ -5,7 +5,7 @@
 
 
 ## Load data
-allShapes <- readShapeData()
+allShapes <- loadShapeData("grid.RData")
 taxData <- loadTabularData(type = "occurrence")
 ## Settings
 # many versus few occurrences
@@ -14,26 +14,26 @@ period <- c(2000, 2018)
 
 
 
-test_that("Create summary data", {
+test_that("Check summary data", {
     
-    if (!file.exists(file.path(dataDir, "full_timeseries.csv")))
-      createTimeseries()
-    expect_true(file.exists(file.path(dataDir, "full_timeseries.csv")))
+    dataFiles <- aws.s3::get_bucket_df(
+      bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")))$Key
     
-    if (!file.exists(file.path(dataDir, "dfCube.RData")))
-      createOccupancyCube()
-    expect_true(file.exists(file.path(dataDir, "dfCube.RData")))
-    
+    expect_true("full_timeseries.RData" %in% dataFiles)
+    expect_true("dfCube.RData" %in% dataFiles)
     
   })
 
 test_that("Occurrence grid shape", {
     
-    expect_equal(length(allShapes), 2)
+    expect_equal(length(allShapes), 3)
     
     expect_type(allShapes, "list")
-    expect_setequal(names(allShapes), c("utm1_bel_with_regions", "utm10_bel_with_regions"))
     
+    expect_setequal(
+      c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions") , names(allShapes)
+      
+    ) 
   })
 
 test_that("Occurrence plots", {
@@ -89,8 +89,10 @@ test_that("Occurrence plots", {
 
 test_that("Emergence status GAM - Observations", {
 
+    readS3(file = "full_timeseries.RData")
+    
     timeseries <- summarizeTimeSeries(
-      rawData = loadTabularData(type = "timeseries"), 
+      rawData = timeseries, 
       region = c("flanders", "brussels")
     )
     
@@ -122,7 +124,7 @@ test_that("Emergence status GAM - Observations", {
   
 test_that("Reporting t0 and t1", {
     
-    load(file = file.path(dataDir, "dfCube.RData"))
+    readS3(file = "dfCube.RData")
     
     # Filter on taxonKey and source
     reportingData <- dfCube[species %in% allSpecies[2], ]

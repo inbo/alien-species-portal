@@ -252,24 +252,24 @@ addBaseMap <- function(map = leaflet(),
   
   # For R CMD check
   GEWEST <- NULL
-  
+  gewestbel <- NULL
   
   if (is.null(regions))
     return(map)
-  
-  gewestBel <- readShapeData(extension = ".shp", system.file("extdata", "grid", package = "alienSpecies"))[[1]]
+    
+  readS3(file = "gewestbel.RData", envir = environment())
   
   matchingRegions <- data.frame(name = c("flanders", "brussels", "wallonia"), 
     shape = c("Vlaams", "Brussels", "Waals"))
-  gewestBel <- subset(gewestBel, GEWEST %in% matchingRegions$shape[match(regions, matchingRegions$name)])
+  gewestbel <- subset(gewestbel, GEWEST %in% matchingRegions$shape[match(regions, matchingRegions$name)])
   
   if (combine)
-    gewestBel <- sf::st_union(gewestBel)
+    gewestbel <- sf::st_union(gewestbel)
     
   map %>% 
     clearGroup("borderRegion") %>%
     addPolylines(
-      data = gewestBel,
+      data = gewestbel,
       color = "black", 
       opacity = 0.8, 
       weight = 3, 
