@@ -7,12 +7,25 @@
 #' 
 #' @author mvarewyck
 #' @export
-setupS3 <- function(awsFile = "~/.aws/credentials") {
+setupS3 <- function(awsFile = "~/.aws/credentials"){
   
+ 
+  profile <-"inbo-alien" 
+  
+  # for inbo user
+  userProfile <- Sys.getenv("USERPROFILE")
+  user <- basename(  userProfile )
+  
+  if( grepl("(sander_devisscher)|(anneleen_rutten)|(jasmijn_hillaert)", user,  ignore.case = TRUE) ){
+    awsFile <- normalizePath(file.path(userProfile, ".aws", "credentials"))
+    profile <- Sys.getenv("AWS_PROFILE") #https://github.com/inbo/aspbo/blob/main/src/connect_to_bucket.R#L64
+  }
+  
+
   # credentials are in ~/.aws/credentials OR manually copy/paste OR using aws.signature::
   x <- rawToChar(readBin(awsFile, "raw", n = 1e5L))
-  profile <-  "inbo-alien" #Sys.getenv("AWS_PROFILE")
-  credentials <- strsplit(x, profile)[[1]][2]
+
+   credentials <- strsplit(x, profile)[[1]][2]
   
   Sys.setenv(
     AWS_DEFAULT_REGION = eval(parse(text = config::get("credentials", file = system.file("config.yml", package = "alienSpecies"))$region)),
