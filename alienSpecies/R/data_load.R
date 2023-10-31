@@ -40,9 +40,8 @@ loadTabularData <- function(
          "occurrence" = "be_alientaxa_cube_processed.RData"
   )
   
-
-  
   readS3(file = dataFile, bucket = bucket, envir = environment())
+  
   
   return(rawData)
   

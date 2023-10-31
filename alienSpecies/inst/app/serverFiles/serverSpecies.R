@@ -322,7 +322,6 @@ observe({
                 ifelse(vespaPoints$provincie == "Liège", "Luik", 
                   ifelse(vespaPoints$provincie == "Brabant Wallon", "Waals-Brabant",
                     ifelse(vespaPoints$provincie == "Hainaut", "Henegouwen", vespaPoints$provincie)))))
-            vespaPoints
             
             ## Nest data
             vespaNesten <- results$species_managementData()$nesten
