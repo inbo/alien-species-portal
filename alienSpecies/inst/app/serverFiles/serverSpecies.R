@@ -185,7 +185,7 @@ results$species_managementFile <- reactive({
     expectFile <- if (input$species_choice %in% heatSpecies)
         paste0(gsub(" ", "_", input$species_choice), "_shape.RData") else 
         gsub(" ", "_", paste0(input$species_choice, ".csv"))
-    availableFiles <- tmpTable <- aws.s3::get_bucket_df(
+    availableFiles <- aws.s3::get_bucket_df(
       bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")))$Key
     
     if (expectFile %in% availableFiles)

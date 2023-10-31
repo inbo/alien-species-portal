@@ -19,8 +19,6 @@ if (!exists("doDebug"))
 tabChoices <- c("start", "global_indicators", "species_information", 
   "early_warning", "management")[1:4]
 
-managementDir <- system.file("extdata", "management", package = "alienSpecies")
-
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")
 if (!doDebug | !exists("unionlistData"))

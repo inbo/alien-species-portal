@@ -2,7 +2,6 @@
 #' Download GBIF occurrence data 
 #' 
 #' @param datasetKey character, key of the dataset to be downloaded from GBIF
-#' @param saveDir path, where to save the occurrence data
 #' @param bucket character, name of the S3 bucket as specified in the config.yml file;
 #' default value is "inbo-exotenportaal-uat-eu-west-1-default". The created data.frame will be 
 #' saved in the bucket.
@@ -21,7 +20,6 @@
 #' @author mvarewyck
 #' @export
 getGbifOccurrence <- function(datasetKey, 
-    saveDir = system.file("extdata", "management", package = "alienSpecies"), 
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   outFile = NULL,
   user, pwd, email = "machteld.varewyck@openanalytics.eu") {
@@ -130,9 +128,9 @@ getGbifOccurrence <- function(datasetKey,
   if (nTotal != sum(df$count))
     stop("Total counts is not retained during data manipulation.")
   
-  write.csv(df, file.path(saveDir, outFile), row.names = FALSE)
+  write.csv(df, file.path(tempdir(), outFile), row.names = FALSE)
   
-  put_object(file = file.path(saveDir, outFile),
+  put_object(file = file.path(tempdir(), outFile),
              bucket = bucket, object = outFile)
   
   return(TRUE)
