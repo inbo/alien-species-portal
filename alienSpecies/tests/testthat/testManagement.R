@@ -6,10 +6,7 @@
 
 
 allShapes <- c(
- # # Grid data
-  #readShapeData(),
- # # gemeentes & provinces
-  #suppressWarnings(readShapeData(extension = ".geojson"))
+  # Grid data
   loadShapeData("grid.RData"),
   # gemeentes & provinces
   "provinces" = list(loadShapeData("provinces.RData")),
@@ -357,8 +354,7 @@ test_that("Trend for Muskrat", {
       shapeData = allShapes, regionLevel = "provinces",
       year = unique(managementData$year))
     
-    trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerp", "Limburg"), ],
-      unit = "difference")
+    trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerp", "Limburg"), ])
     
     trendYearRegion(df = summaryData[summaryData$region %in% c("Antwerp", "Limburg"), ],
       combine = TRUE)

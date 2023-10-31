@@ -26,12 +26,12 @@ test_that("Check summary data", {
 
 test_that("Occurrence grid shape", {
     
-    expect_equal(length(allShapes), 7)
+    expect_equal(length(allShapes), 3)
     
     expect_type(allShapes, "list")
     
     expect_setequal(
-      c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions","be_10km", "be_1km","provinces","communes"  ) , names(allShapes)
+      c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions") , names(allShapes)
       
     ) 
   })

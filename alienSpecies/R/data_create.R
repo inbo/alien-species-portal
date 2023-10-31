@@ -13,6 +13,7 @@
 #' @importFrom sf st_read st_transform
 #' @importFrom aws.s3 s3save
 #' @importFrom data.table as.data.table
+#' @importFrom utils capture.output
 #' @export
 createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trendOccupancy",
                                 bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
@@ -47,7 +48,7 @@ createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trend
   ## ------- ##
   
   # shp: https://zenodo.org/record/3060173
-  concelOuptputMessage <- capture.output( data_t1_temp <- sf::st_read(file.path(dataDir, "T1_Belgium_Union_List_Species.shp"))
+  concealOutputMessage <- capture.output( data_t1_temp <- sf::st_read(file.path(dataDir, "T1_Belgium_Union_List_Species.shp"))
   )
   # convert the crs to GEOGS format
   suppressMessages( data_t1 <- sf::st_transform(data_t1_temp, 4326))
@@ -84,6 +85,7 @@ createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trend
 
 #' Create dictionary for combining data keys from multiple data sources
 #' @inheritParams loadTabularData
+#' @param dataDir path, to folder where to read data from
 #' @return TRUE if creation succeeded, data is written to \code{file.path(dataDir, "keys.csv")}
 #' 
 #' @author mvarewyck
@@ -232,6 +234,7 @@ createShapeData <- function(
 #' For unionlist data:
 #' only 'scientific name', 'english name' and 'kingdom' are retained
 #' @inheritParams readS3
+#' @param dataDir path, to folder where to read data from
 #' @param type data type, one of:
 #' \itemize{
 #' \item{\code{"indicators"}:}{for indicator data, i.e. main data set}
