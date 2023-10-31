@@ -35,8 +35,8 @@ cd git/alien-species-portal
 docker build -t inbo/alienspecies .
 ```
 
-Run the new docker image from bash
+Run the new docker image from bash. You need to point docker to the .aws folder on your local system to retrieve the credentials.
 
 ```
-docker run -it -p 3000:3838 inbo/alienspecies
+docker run -it -v ~/.aws:/root/.aws 3001:3838 inbo/alienspecies R -e "alienSpecies::setupS3(); alienSpecies::runShiny()" 
 ```
