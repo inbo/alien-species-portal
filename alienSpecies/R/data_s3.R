@@ -7,18 +7,17 @@
 #' 
 #' @author mvarewyck
 #' @export
-setupS3 <- function(awsFile = "~/.aws/credentials"){
+setupS3 <- function(awsFile = "~/.aws/credentials", inboUserName = NULL){
   
- 
-  profile <-"inbo-alien" 
+  #"sander_devisscher"
+  profile <- if(is.null(inboUserName)) "inbo-alien"  else sprintf("inbo-uat-%s", gsub("_", "-", inboUserName))
   
-  # for inbo user
+  # for inbo user on their PC
   userProfile <- Sys.getenv("USERPROFILE")
-  user <- basename(  userProfile )
-  
-  if( grepl("(sander_devisscher)|(anneleen_rutten)|(jasmijn_hillaert)", user,  ignore.case = TRUE) ){
+
+  if( grepl("(sander_devisscher)|(anneleen_rutten)|(jasmijn_hillaert)",   userProfile,  ignore.case = TRUE) ){
     awsFile <- normalizePath(file.path(userProfile, ".aws", "credentials"))
-    profile <- Sys.getenv("AWS_PROFILE") #https://github.com/inbo/aspbo/blob/main/src/connect_to_bucket.R#L64
+#    profile <- Sys.getenv("AWS_PROFILE") #https://github.com/inbo/aspbo/blob/main/src/connect_to_bucket.R#L64
   }
   
 
