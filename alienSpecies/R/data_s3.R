@@ -7,31 +7,30 @@
 #' @return no return value, ENV variables are set correctly
 #' 
 #' @author mvarewyck
+#' @importFrom aws.signature read_credentials
 #' @export
 setupS3 <- function(awsFile = "~/.aws/credentials", inboUserName = NULL){
   
   #"sander_devisscher"
-  profile <- if(is.null(inboUserName)) "inbo-alien"  else sprintf("inbo-uat-%s", gsub("_", "-", inboUserName))
+  profile <- if (is.null(inboUserName)) 
+      "inbo-alien" else 
+      sprintf("inbo-uat-%s", gsub("_", "-", inboUserName))
   
   # for inbo user on their PC
-  userProfile <- Sys.getenv("USERPROFILE")
+  userProfile <- Sys.getenv("USERPROFILE", unset = NA)
 
-  if( grepl("(sander_devisscher)|(anneleen_rutten)|(jasmijn_hillaert)",   userProfile,  ignore.case = TRUE) ){
+  if (!is.na(userProfile))
     awsFile <- normalizePath(file.path(userProfile, ".aws", "credentials"))
-#    profile <- Sys.getenv("AWS_PROFILE") #https://github.com/inbo/aspbo/blob/main/src/connect_to_bucket.R#L64
-  }
   
 
   # credentials are in ~/.aws/credentials OR manually copy/paste OR using aws.signature::
-  x <- rawToChar(readBin(awsFile, "raw", n = 1e5L))
+  x <- aws.signature::read_credentials(file = awsFile)[[profile]]
 
-   credentials <- strsplit(x, profile)[[1]][2]
-  
   Sys.setenv(
     AWS_DEFAULT_REGION = eval(parse(text = config::get("credentials", file = system.file("config.yml", package = "alienSpecies"))$region)),
-    AWS_ACCESS_KEY_ID = strsplit(strsplit(credentials, "aws_access_key_id = ")[[1]][2], "\n")[[1]][1], 
-    AWS_SECRET_ACCESS_KEY = strsplit(strsplit(credentials, "aws_secret_access_key = ")[[1]][2], "\n")[[1]][1],
-    AWS_SESSION_TOKEN = strsplit(strsplit(credentials, "aws_session_token = ")[[1]][2], "\n")[[1]][1] 
+    AWS_ACCESS_KEY_ID = x$AWS_ACCESS_KEY_ID, 
+    AWS_SECRET_ACCESS_KEY = x$AWS_SECRET_ACCESS_KEY,
+    AWS_SESSION_TOKEN = x$AWS_SESSION_TOKEN 
   )
 }
 

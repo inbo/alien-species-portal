@@ -11,6 +11,7 @@ License: MIT + file LICENSE
 Imports: 
     aws.ec2metadata,
     aws.s3,
+    aws.signature,
     config,
     data.table,
     dplyr,
