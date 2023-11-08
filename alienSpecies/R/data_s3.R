@@ -25,6 +25,8 @@ setupS3 <- function(awsFile = "~/.aws/credentials") {
 
 #' Download all files from the S3 bucket for local use
 #' @param dataDir path to folder where to save all the files from S3
+#' @param files character vector, specific files to be downloaded;
+#' if NULL all files in the bucket will be downloaded
 #' @inheritParams readS3
 #' 
 #' @return TRUE, if all downloads succeeded
@@ -34,15 +36,17 @@ setupS3 <- function(awsFile = "~/.aws/credentials") {
 #' @export
 downloadS3 <- function(
     dataDir = file.path("~/git/alien-species-portal/dataS3"),
-    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))) {
+    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
+    files = NULL) {
   
   if (!dir.exists(dataDir))
     dir.create(dataDir)
   
   # List all available files on the S3 bucket
-  allFiles <- aws.s3::get_bucket_df(bucket = bucket)
+  if (is.null(files))
+    files <- aws.s3::get_bucket_df(bucket = bucket)$Key
   
-  for (iFile in allFiles$Key)
+  for (iFile in files)
     aws.s3::save_object(object = iFile, bucket = bucket, file = file.path(dataDir, iFile))
   
   return(TRUE)

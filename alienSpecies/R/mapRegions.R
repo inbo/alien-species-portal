@@ -411,8 +411,12 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       
       output$region <- renderUI({
           
+          choices <- sort(unique(subShape()[[req(input$regionLevel)]]$NAAM))
+          # expected to be missing for some region levels
+          names(choices) <- suppressWarnings(translate(uiText(), choices)$title)
+          
           selectInput(inputId = ns("region"), label = translate(uiText(), "regions")$title,
-            choices = sort(unique(subShape()[[req(input$regionLevel)]]$NAAM)), multiple = TRUE)
+            choices = choices, multiple = TRUE)
           
         })
       

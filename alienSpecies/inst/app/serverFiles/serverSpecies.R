@@ -340,16 +340,18 @@ observe({
       plotTriasServer(
         id = "management2_lente",
         triasFunction = "barplotLenteNesten",
-        data = reactive(s3read_using(FUN = read.csv, object = "aantal_lente_nesten.csv", bucket = bucket)),
+        data = reactive(s3read_using(FUN = read.csv, 
+            object = "aantal_lente_nesten.csv",
+            bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
+          )),
           #read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))
         uiText = reactive(results$translations)
       )
       
      
       # Aantal nesten per provincie - figuur
-      plotTriasServer(
+      countNestenServer(
         id = "management2_province",
-        triasFunction = "countNesten",
         data = reactive(results$species_managementData()$nesten),
         uiText = reactive(results$translations),
         maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE))
@@ -405,7 +407,7 @@ output$species_managementContent <- renderUI({
         mapHeatUI(id = "management2_observed"),
         mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
         plotTriasUI(id = "management2_lente"),
-        plotTriasUI(id = "management2_province"),
+        countNestenUI(id = "management2_province"),
         plotTriasUI(id = "management2_provinceTable", outputType = "table")
       )
       

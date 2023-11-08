@@ -217,8 +217,11 @@ test_that("Voorjaarsnesten", {
 
 test_that("Provincie nesten", {
     
-    myPlot <- countNesten(df = Vespa_velutina_shape$nesten)
-    expect_s3_class(myPlot, "ggplot")
+    df <- createSummaryNesten(data = Vespa_velutina_shape$nesten, regionLevel = "gewest",
+      typeNesten = c("AE", "AP"))
+    myPlot <- trendYearRegion(df = df)
+    expect_s3_class(myPlot$plot, "plotly")
+    myPlot <- trendYearRegion(df = df, combine = TRUE)
     
     myTable <- tableNesten(df = Vespa_velutina_shape$nesten)
     expect_s3_class(myTable, "data.frame")

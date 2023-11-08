@@ -40,3 +40,24 @@ Run the new docker image from bash. You need to point docker to the .aws folder 
 ```
 docker run -it -v ~/.aws:/root/.aws 3001:3838 inbo/alienspecies R -e "alienSpecies::setupS3(); alienSpecies::runShiny()" 
 ```
+
+
+# Update the translations file
+
+Given that the connection with S3 bucket has been set up correctly.
+The current translations file can be downloaded into your temporary directory using:
+
+```
+aws.s3::save_object(object = "translations.csv", 
+bucket = "inbo-exotenportaal-uat-eu-west-1-default, 
+file = file.path(tempdir(), "translations.csv"))
+```
+
+IMPORTANT: Make sure that you don't change the structure of the translations file (column names, delimiter), otherwise the application will fail to start!
+After editing locally, this file can be uploaded using:
+
+```
+aws.s3::put_object(file = file.path(tempdir(), "translations.csv"), object = "translations.csv",
+bucket = "inbo-exotenportaal-uat-eu-west-1-default, 
+multipart = TRUE)
+```

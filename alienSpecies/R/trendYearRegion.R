@@ -36,14 +36,15 @@ trendYearRegion <- function(df, uiText = NULL,
   plotData <- df
   colorList <- replicateColors(nColors = length(unique(df$region)))
   
-  regionText <- translate(uiText, df$region)$title
+  # expected to be missing for some region levels
+  regionText <- suppressWarnings(translate(uiText, df$region)$title)  
   title <- paste(vectorToTitleString(regionText), yearToTitleString(period))
   
   if (combine) {
     plotData <- plotData[, c("year", "outcome")]
     plotData <- aggregate(outcome ~ year, plotData, sum)
     plotData$region <- translate(uiText, "total")$title
-  } else plotData$region <- translate(uiText, plotData$region)$title
+  } else plotData$region <- regionText
   
   # Display year without decimals
   plotData$year <- as.character(plotData$year)

@@ -101,8 +101,8 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @inheritParams plotTriasServer
 #' @param plotFunction character, defines the plot function to be called
 #' @param data reactive data.frame, data for chosen species
-#' @param period reactive numeric vector of length 2, selected period 
-#' @param combine boolean, see \code{\link{trendYearRegion}}
+#' @param period reactive numeric vector of length 2, selected period
+#' @param combine reactive boolean, see \code{\link{trendYearRegion}}
 #' @return no return value; plot output object is created
 #' @author mvarewyck
 #' @import shiny
