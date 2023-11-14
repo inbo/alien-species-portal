@@ -151,7 +151,7 @@ test_that("S3 bucket connection", {
 bucket <- "inbo-exotenportaal-uat-eu-west-1-default"
 tmpTable <- aws.s3::get_bucket_df(bucket = bucket)
 
-# TODO create test for each data file that is loaded in the app
+# create test for each data file that is loaded in the app
 # Most of these are listed in global.R
 # Some specific data files are loaded for the management pages, see serverSpecies.R
 

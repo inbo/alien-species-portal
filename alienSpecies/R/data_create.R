@@ -151,7 +151,8 @@ createKeyData <- function(
 #' @importFrom utils write.csv
 #' @importFrom data.table fread rbindlist
 #' @importFrom aws.s3 put_object
-
+#' @export
+#' 
 createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
                              bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
                              shapeData = loadShapeData("grid.RData")$utm1_bel_with_regions) {

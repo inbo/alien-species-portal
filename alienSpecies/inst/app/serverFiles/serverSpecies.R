@@ -340,7 +340,7 @@ observe({
       plotTriasServer(
         id = "management2_lente",
         triasFunction = "barplotLenteNesten",
-        data = reactive(s3read_using(FUN = read.csv, 
+        data = reactive(aws.s3::s3read_using(FUN = read.csv, 
             object = "aantal_lente_nesten.csv",
             bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
           )),
