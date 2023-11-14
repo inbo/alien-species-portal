@@ -48,7 +48,7 @@ test_that("Preprocess data", {
   
   # create occupancy cube - gives error
 
-  createOccupancyCube()
+  createOccupancyCube("~/git/alien-species-portal/data/trendOccupancy")
   
  # create tabular data
   

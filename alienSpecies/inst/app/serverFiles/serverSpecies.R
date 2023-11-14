@@ -175,7 +175,7 @@ mapCubeServer(id = "reporting_t01",
 
 # Species for which to show mapCube output
 cubeSpecies <- c("Oxyura jamaicensis")
-# Species for whichto show heatMap output
+# Species for which to show heatMap output
 heatSpecies <- c("Vespa velutina")
 # Other species will have mapRegions output
 
@@ -274,7 +274,7 @@ observe({
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         combinedData = reactive(combinedActive),
-        filter = reactive(list(nest = unique(combinedActive$filter))),
+        filter = reactive(list(nest = unique(combinedActive$filter), radius = na.omit(unique(combinedActive$radius)))),
         colors = reactive(colorsActive),
         blur = "individual",
         maxDate = reactive(max(results$species_managementData()$actieve_haarden$eventDate, na.rm = TRUE))      
