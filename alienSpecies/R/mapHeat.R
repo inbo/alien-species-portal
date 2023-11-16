@@ -98,13 +98,13 @@ combineNestenData <- function(pointsData, nestenData) {
 #' @importFrom leaflet addTiles `%>%` leaflet addLegend addScaleBar addCircleMarkers 
 #' @importFrom leaflet.extras addHeatmap
 #' @export
-mapHeat <- function(combinedData, colors, blur = NULL, selected,
+mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, selected,
   legend = "topright", addGlobe = FALSE, uiText = NULL
 ) {
   
   
   # Base map
-  ah_map <- leaflet() %>%
+  ah_map <- baseMap %>%
     addScaleBar(position = "bottomleft")
   
   if (addGlobe)

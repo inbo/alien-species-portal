@@ -407,10 +407,18 @@ output$species_managementContent <- renderUI({
       
     } else if (input$species_choice %in% heatSpecies) {
       
+      isSeason <- Sys.Date() >= as.Date(paste0("01-04-", format(Sys.Date(), "%Y")), format = "%d-%m-%Y") &
+        Sys.Date() < as.Date(paste0("01-12-", format(Sys.Date(), "%Y")), format = "%d-%m-%Y")
+      
       tagList(
         tags$a(href = "https://vespawatch.be/", target = "_blank",
           tags$img(src = 'logo_vespawatch.png', height = 50)),
-        mapHeatUI(id = "management2_active"),
+        if (isSeason) 
+            mapHeatUI(id = "management2_active") else 
+            tags$div(class = "container",
+              h3(HTML(translate(results$translations, "management2_active-mapHeat")$title)),
+              helpText(translate(results$translations, "disclaimerVespa")$title)
+            ),
         mapHeatUI(id = "management2_observed"),
         mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
         plotTriasUI(id = "management2_lente"),
