@@ -49,7 +49,7 @@ The current translations file can be downloaded into your temporary directory us
 
 ```
 aws.s3::save_object(object = "translations.csv", 
-bucket = "inbo-exotenportaal-uat-eu-west-1-default, 
+bucket = "inbo-exotenportaal-uat-eu-west-1-default", 
 file = file.path(tempdir(), "translations.csv"))
 ```
 
@@ -58,6 +58,6 @@ After editing locally, this file can be uploaded using:
 
 ```
 aws.s3::put_object(file = file.path(tempdir(), "translations.csv"), object = "translations.csv",
-bucket = "inbo-exotenportaal-uat-eu-west-1-default, 
+bucket = "inbo-exotenportaal-uat-eu-west-1-default", 
 multipart = TRUE)
 ```

@@ -304,6 +304,7 @@ observe({
         species = reactive(input$species_choice),
         df = reactive({
             
+            # TODO this should be done in a createVespaData() function before uploading on S3
             ## Individual data
             vespaPoints <- results$species_managementData()$points
             req(vespaPoints)
@@ -322,13 +323,19 @@ observe({
                 ifelse(vespaPoints$provincie == "Liège", "Luik", 
                   ifelse(vespaPoints$provincie == "Brabant Wallon", "Waals-Brabant",
                     ifelse(vespaPoints$provincie == "Hainaut", "Henegouwen", vespaPoints$provincie)))))
+            vespaPoints$nest_type <- "individual"
+            vespaPoints$isBeheerd <- FALSE
             
             ## Nest data
             vespaNesten <- results$species_managementData()$nesten
             vespaNesten$type <- "nest"
-                        
-            keepColumns <- c("year", "type", "NAAM", "provincie", "GEWEST", "geometry")
-            rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
+            vespaNesten$isBeheerd <- vespaNesten$geometry %in% results$species_managementData()$beheerde_nesten$geometry
+            
+            keepColumns <- c("year", "type", "nest_type", "NAAM", "provincie", "GEWEST", "isBeheerd", "geometry")
+            vespaBoth <- rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
+            vespaBoth$nest_type[vespaBoth$nest_type %in% c("NA", "NULL")] <- NA 
+            
+            vespaBoth
             
           }),
         occurrenceData = NULL,

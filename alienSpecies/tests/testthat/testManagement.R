@@ -269,21 +269,30 @@ test_that("Map Trend", {
     vespaNesten <- Vespa_velutina_shape$nesten
     vespaNesten$type <- "nest"
     
-    # TODO combined on 1 map - test from here
+#    Vespa_velutina_shape$beheerde_nesten[!(Vespa_velutina_shape$beheerde_nesten$geometry %in% Vespa_velutina_shape$nesten$geometry), c("id", "comments", "NAAM", "geometry")]
+    vespaNesten$isBeheerd <- vespaNesten$geometry %in% Vespa_velutina_shape$beheerde_nesten$geometry
     
-    keepColumns <- c("year", "type", "NAAM", "provincie", "GEWEST", "geometry")
+    
+    # Nesten and Points combined on 1 map - test from here
+    vespaPoints$nest_type <- "individual"
+    vespaPoints$isBeheerd <- FALSE
+    keepColumns <- c("year", "type", "nest_type", "NAAM", 
+      "provincie", "GEWEST", "isBeheerd",
+      "geometry")
     vespaBoth <- rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
+    vespaBoth$nest_type[vespaBoth$nest_type %in% c("NA", "NULL")] <- NA 
     summaryData <- createSummaryRegions(
       data = vespaBoth, shapeData = allShapes,
-      regionLevel = "communes",
-      year = 2022,
+      regionLevel = "provinces",
+      year = 2023,
       unit = "absolute",
-      groupingVariable = "type")
+      groupingVariable = c("nest_type", "isBeheerd"))
     mapRegions(managementData = summaryData, shapeData = allShapes,
-      regionLevel = "communes")
+      regionLevel = "provinces")
     
+    # create popup with summary table in it
+    mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, unit = "absolute", bronMap = "nesten")
     
-
   })
 
 

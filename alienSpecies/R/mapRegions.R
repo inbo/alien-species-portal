@@ -97,7 +97,12 @@ createSummaryRegions <- function(data, shapeData,
       
       summaryData <- data %>%
         filter(year %in% myYear, !is.na(region), region != "NA", region != "")
-      summaryData <- reshape2::dcast(summaryData, region + year ~ base::get(groupingVariable), 
+      
+      if (nrow(summaryData) == 0)
+        return(NULL)
+      
+      myFormula <- as.formula(paste("region + year ~", paste(groupingVariable, collapse = " + ")))
+      summaryData <- reshape2::dcast(summaryData, myFormula, 
         value.var = "count", fun.aggregate = sum)
 
       summaryData$n <- apply(summaryData[, -(1:2), drop = FALSE], 1, sum, na.rm = TRUE)     
@@ -242,7 +247,53 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
 
 
 
-
+#' Create popup text to display in \code{\link{mapRegions}}
+#' @param summaryData data.frame, as returned by \code{\link{createSummaryRegions}}
+#' @inheritParams mapRegionsServer 
+#' @inheritParams createSummaryRegions
+#' @param bronMap character vector, sources to be shown in the popup
+#' @return character vector with popup text for each row in \code{summaryData}
+#' 
+#' @author mvarewyck
+#' @importFrom xtable xtable
+#' @importFrom reshape2 melt dcast
+#' @export
+mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
+  
+  
+  paste0("<h4>", summaryData$region, "</h4>",
+    "<strong>", translate(uiText, "year")$title, "</strong>: ", year, "<br>",
+    if (!is.null(unit)) 
+      paste0("<strong>", translate(uiText, unit)$title, "</strong>: "), 
+    if (!is.null(bronMap)) {
+      lapply(split(summaryData, summaryData$region), function(iData) {
+            tmpData <- suppressWarnings(reshape2::melt(iData, id.vars = colnames(iData)[1:2]))
+            tmpData$nest <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[1])
+            tmpData$isBeheerd <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) { 
+                if (length(x) > 1) {
+                  if (x[2] == "TRUE")
+                  "managed nest" else if (x[2] == "FALSE")
+                  "untreated nest"
+              } else NA
+              })
+            tmpData <- tmpData[!is.na(tmpData$isBeheerd), ]
+            formattedTable <- reshape2::dcast(tmpData[, c("nest", "isBeheerd", "value")], nest ~ isBeheerd, value.var = "value")
+            formattedTable$nest[formattedTable$nest == "NA"] <- "unknown"
+            formattedTable$nest <- translate(uiText, formattedTable$nest)$title
+            formattedTable <- formattedTable[order(formattedTable$nest), ]
+            colnames(formattedTable) <- translate(uiText, colnames(formattedTable))$title
+            
+            as.character(print(xtable::xtable(formattedTable), 
+                include.rownames = FALSE, type = "html", print.results = FALSE))
+          })
+    } else {
+    if (!is.null(unit) && unit == "cpue") 
+        round(summaryData$effort, 2) else
+        round(summaryData$n, 2)
+    }
+  )
+  
+}
 
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
 #' 
@@ -434,22 +485,32 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       
       
       # Subset on filters
-      summaryData <- reactive({
+      subData <- reactive({
           
           req(inherits(df(), "data.frame"))
           
           subData <- df()
+          
           if (!is.null(sourceChoices)) {
             req(input$bronMap)
             subData <- subData[subData$type %in% input$bronMap, ]
           }
           
-          createSummaryRegions(data = subData, 
+          subData
+          
+        })
+      
+      
+      summaryData <- reactive({
+          
+          req(nrow(subData()) > 0)
+          
+          createSummaryRegions(data = subData(), 
             shapeData = shapeData,
             regionLevel = req(input$regionLevel),
             year = req(input$year), 
             unit = input$unit,
-            groupingVariable = if (!is.null(sourceChoices)) "type"
+            groupingVariable = if (!is.null(sourceChoices)) c("nest_type", "isBeheerd")
           )
           
         })
@@ -488,24 +549,9 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           
           validate(need(nrow(req(summaryData())) > 0, noData()))
           
-          paste0("<h4>", summaryData()$region, "</h4>",
-            "<strong>", translate(uiText(), "year")$title, "</strong>: ", input$year, "<br>",
-            if (!is.null(input$unit)) 
-              paste0("<strong>", translate(uiText(), input$unit)$title, "</strong>: "), 
-            if (!is.null(input$bronMap)) {
-              availableBron <- input$bronMap[input$bronMap %in% colnames(summaryData())]
-              names(availableBron) <- sapply(availableBron, function(x) translate(uiText(), x)$title)
-              if (length(availableBron) > 1)
-                paste0(apply(do.call(cbind, Map(paste, names(availableBron), summaryData()[, availableBron], sep = ": ")), 1, function(x)
-                      paste("</br>", paste(x, collapse = "</br>"))),
-                  "</br><em>", translate(uiText(), "total")$title, "</em>: ") else
-                paste0(names(availableBron), ": ")
-            },
-            if (!is.null(input$unit) && input$unit == "cpue") 
-                round(summaryData()$effort, 2) else
-                round(summaryData()$n, 2)
-          )
-                    
+          mapPopup(summaryData = summaryData(), uiText = uiText(), year = input$year,
+            unit = input$unit, bronMap = input$bronMap)
+                              
         })
       
       # Add popups
@@ -734,7 +780,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           req(input$period)
           
           createSummaryRegions(
-            data = df(), 
+            data = subData(), 
             shapeData = shapeData,
             regionLevel = "gewest",
             year = input$period[1]:input$period[2],
@@ -771,7 +817,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           req(input$period)
           
           createSummaryRegions(
-            data = df(),
+            data = subData(),
             shapeData = shapeData,
             regionLevel = req(input$regionLevel),
             year = input$period[1]:input$period[2],
