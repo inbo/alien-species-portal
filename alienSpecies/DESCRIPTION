@@ -34,7 +34,8 @@ Imports:
     tidyr,
 	tidyverse,
 	trias (>= 2.0.3),
-	webshot
+	webshot,
+	xtable
 Suggests:
     shinyjs
 RoxygenNote: 7.2.3

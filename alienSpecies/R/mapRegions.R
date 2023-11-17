@@ -520,7 +520,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       subOccurrence <- reactive({
           
           # Filter on taxonKey and year
-          occurrenceData <- occurrenceData[occurrenceData$scientificName == species() & year == req(input$year), ]
+          occurrenceData <- occurrenceData[occurrenceData$scientificName == species() & occurrenceData$year == req(input$year), ]
           
         })
       

@@ -97,7 +97,7 @@ checkS3 <- function() {
 testS3 <- function() {
   
   cat("Test Data in S3 bucket\n")
-  testResult <- test_file(system.file("tests/testData.R", package = "alienSpecies"), reporter = "minimal")
+  testResult <- test_file(system.file("tests/testData/testData.R", package = "alienSpecies"), reporter = "minimal")
   
   # Remove objects loaded globally during tests
   allResults <- ls(envir = .GlobalEnv)

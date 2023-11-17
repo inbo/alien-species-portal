@@ -3,7 +3,7 @@
 # Author: mvarewyck
 ###############################################################################
 
-# setupS3()
+library(testthat)
 
 test_that("Set up connection to S3", {
   
@@ -24,13 +24,10 @@ test_that("Preprocess data", {
   
   downloadS3()
   
-  # Clean the bucket
+# Clean the bucket
 #  aws.s3::delete_object(object = "readme.md", bucket = "inbo-exotenportaal-uat-eu-west-1-default")
 
-# These are the commands Sander will need for preprocessing the data on AWS S3
-  #TODO delete the .geojson data object on AWS S3
-  
-  # create shape data
+    # create shape data
   createShapeData(dataDir = "~/git/alien-species-portal/data/grid")
   createShapeData(dataDir = "~/git/alien-species-portal/data/Vespa_velutina_shape")
   createShapeData(dataDir = "~/git/alien-species-portal/data/occurrenceCube")
@@ -83,7 +80,8 @@ test_that("List available files", {
 
 
 test_that("Load data", {
-    
+  
+  
     # Load latest dictionary
     keyData <- loadMetaData(type = "keys")
     
@@ -161,24 +159,24 @@ test_that("Load shape data", {
   
   allShapes <- c(
     # Grid data
-    #readShapeData(),
     loadShapeData("grid.RData"),
     loadShapeData("occurrenceCube.RData"),
     # gemeentes & provinces
     "provinces" = list(loadShapeData("provinces.RData")),
     "communes" = list(loadShapeData("communes.RData"))
-    #readShapeData(extension = ".geojson")
   )
   
   expect_gt(length(  allShapes), 1)
   
-  ## be_10km and be_1km is currently not loaded due to missing region
-  # expect_setequal(
-  # c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions","be_10km", "be_1km","provinces","communes"  ) , names(allShapes)
-  #   
-  # )  
+ 
+  expect_setequal(
+  c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions","be_10km", "be_1km","provinces","communes"  ) , names(allShapes)
+)
+ 
+  expect_in(unlist(lapply(allShapes, class)), c("sf", "data.frame"))
   
-})
+  
+  })
 
 
 
@@ -231,4 +229,11 @@ test_that("management data", {
 expect_in( c("Oxyura_jamaicensis.csv",  "Lithobates_catesbeianus.csv", "Vespa_velutina_shape.RData", "Ondatra_zibethicus.csv"), tmpTable$Key)
 
 })
+
+
+
+
+
+
+
 

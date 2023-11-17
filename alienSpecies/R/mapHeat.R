@@ -372,6 +372,7 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
       finalMap <- reactive({
      
         input[[ names(filter())[2] ]]
+        
           newMap <- mapHeat(
             combinedData =combinedDataPostFilter(),
             colors = colors(),
