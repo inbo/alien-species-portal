@@ -44,20 +44,8 @@ docker run -it -v ~/.aws:/root/.aws 3001:3838 inbo/alienspecies R -e "alienSpeci
 
 # Update the translations file
 
-Given that the connection with S3 bucket has been set up correctly.
-The current translations file can be downloaded into your temporary directory using:
-
-```
-aws.s3::save_object(object = "translations.csv", 
-bucket = "inbo-exotenportaal-uat-eu-west-1-default", 
-file = file.path(tempdir(), "translations.csv"))
-```
+The latest translations file is available in the [aspbo project](https://github.com/inbo/aspbo/). Make sure you navigate to the correct branch.
+It is located in the folder: `data/output/UAT_direct/translations.csv`
 
 IMPORTANT: Make sure that you don't change the structure of the translations file (column names, delimiter), otherwise the application will fail to start!
-After editing locally, this file can be uploaded using:
-
-```
-aws.s3::put_object(file = file.path(tempdir(), "translations.csv"), object = "translations.csv",
-bucket = "inbo-exotenportaal-uat-eu-west-1-default", 
-multipart = TRUE)
-```
+The file will be updated on the S3 bucket automatically.
