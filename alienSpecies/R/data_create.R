@@ -153,14 +153,17 @@ createKeyData <- function(
 #' @importFrom aws.s3 put_object
 #' @export
 #' 
-createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
-                             bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
-                             shapeData = loadShapeData("grid.RData")$utm1_bel_with_regions) {
+createTimeseries <- function(bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
+  shapeData = loadShapeData("grid.RData")$utm1_bel_with_regions) {
   
-  # created from https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
+                             
+  # For R CMD check
+  df_ts <- NULL
+  
+  # created from https://github.com/inbo/aspbo/blob/uat/src/05_occurrence_indicators_preprocessing.Rmd
   ## Data at 1km x 1km grid level
-  rawData <- fread(file.path(dataDir, "df_timeseries.tsv"), 
-                   stringsAsFactors = FALSE, na.strings = "")
+  s3load("df_timeseries.Rdata", bucket = bucket)
+  
   # obs: number of observations for species
   # cobs: number of observations for class
   # pa_obs: presence of species in protected areas (1 = yes, 0 = no)
@@ -168,15 +171,13 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
   
   # Merge with shapeData for region indicators
   regions <- c("flanders", "wallonia", "brussels")
-  timeseries <- merge(rawData, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
+  timeseries <- merge(df_ts, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
                       by.x = "eea_cell_code", by.y = "CELLCODE")
-  
-  # put_object(file = file.path(packageDir, "full_timeseries.csv"),
-  #            bucket = bucket, object = "full_timeseries.csv")
   
   # put time series data RData to the bucket to speed up reading process
   
-  s3save(timeseries, object = "full_timeseries.RData", bucket = bucket)
+  s3save(timeseries, object = "full_timeseries.RData", bucket = bucket, 
+    opts = list(show_progress = TRUE))
   
   return(TRUE)
   

@@ -15,6 +15,7 @@
 #' @import tidyverse
 #' @importFrom data.table copy dcast
 #' @importFrom reshape2 dcast
+#' @importFrom stats as.formula
 #' @export
 createSummaryRegions <- function(data, shapeData, 
   regionLevel = c("communes", "provinces", "gewest"),

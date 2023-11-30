@@ -68,7 +68,7 @@ countOccupancyServer <- function(id, uiText, data) {
 
 
 #' Shiny module for creating the plot \code{\link{countOccupancy}} - UI side
-#' @template moduleUI
+#' @inheritParams plotModuleUI
 #' 
 #' @author mvarewyck
 #' @export
