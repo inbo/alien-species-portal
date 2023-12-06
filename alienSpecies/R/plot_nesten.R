@@ -16,7 +16,7 @@ createSummaryNesten <- function(data,
   typeNesten = NULL) {
   
   # For R CMD check
-  region <- NULL
+  region <- nest_type <- NULL
   
   regionVariable <- switch(regionLevel,
     communes = "NAAM",
@@ -178,7 +178,7 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data) {
 
 
 #' Shiny module for creating the plot countNesten - UI side
-#' @template moduleUI
+#' @inheritParams plotModuleUI
 #' @author mvarewyck
 #' @import shiny
 #' @export

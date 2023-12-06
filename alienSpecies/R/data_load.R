@@ -8,9 +8,11 @@
 loadShapeData <- function(file, 
                           bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
                           ,...){
+                          
   tempEnv <- new.env()
   readS3(file = file, bucket = bucket, envir = tempEnv,...)
   return(tempEnv[[names(tempEnv)]])
+  
 }
 
 

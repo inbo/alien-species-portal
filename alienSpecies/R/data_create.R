@@ -75,7 +75,8 @@ createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trend
   dfCube <- as.data.table(dfCube[!duplicated(dfCube), ])
   setnames(dfCube, "cellcode", "cell_code10")
   
-  s3save(dfCube, bucket = bucket, object = "dfCube.RData")
+  s3save(dfCube, bucket = bucket, object = "dfCube.RData",
+    opts = list(region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)  
   
@@ -153,14 +154,18 @@ createKeyData <- function(
 #' @importFrom aws.s3 put_object
 #' @export
 #' 
-createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
-                             bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
-                             shapeData = loadShapeData("grid.RData")$utm1_bel_with_regions) {
+createTimeseries <- function(
+  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
+  shapeData = loadShapeData("grid.RData")$utm1_bel_with_regions) {
   
-  # created from https://github.com/trias-project/indicators/blob/master/src/05_occurrence_indicators_preprocessing.Rmd
+                             
+  # For R CMD check
+  df_ts <- NULL
+  
+  # created from https://github.com/inbo/aspbo/blob/uat/src/05_occurrence_indicators_preprocessing.Rmd
   ## Data at 1km x 1km grid level
-  rawData <- fread(file.path(dataDir, "df_timeseries.tsv"), 
-                   stringsAsFactors = FALSE, na.strings = "")
+  s3load("df_timeseries.Rdata", bucket = bucket)
+  
   # obs: number of observations for species
   # cobs: number of observations for class
   # pa_obs: presence of species in protected areas (1 = yes, 0 = no)
@@ -168,15 +173,14 @@ createTimeseries <- function(dataDir = "~/git/alien-species-portal/data",
   
   # Merge with shapeData for region indicators
   regions <- c("flanders", "wallonia", "brussels")
-  timeseries <- merge(rawData, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
+  timeseries <- merge(df_ts, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
                       by.x = "eea_cell_code", by.y = "CELLCODE")
-  
-  # put_object(file = file.path(packageDir, "full_timeseries.csv"),
-  #            bucket = bucket, object = "full_timeseries.csv")
   
   # put time series data RData to the bucket to speed up reading process
   
-  s3save(timeseries, object = "full_timeseries.RData", bucket = bucket)
+  s3save(timeseries, object = "full_timeseries.RData", bucket = bucket, 
+    opts = list(show_progress = TRUE, 
+      region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)
   
@@ -222,7 +226,8 @@ createShapeData <- function(
   }
   
   newFile <- paste0(objectName, ".RData")
-  s3save(list = objectName, bucket = bucket, object = newFile)
+  s3save(list = objectName, bucket = bucket, object = newFile,
+    opts = list(region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)
   
@@ -428,7 +433,8 @@ createTabularData <- function(
   
   s3save(rawData, bucket = bucket, 
          object = paste0(basename(tools::file_path_sans_ext(dataFiles)), "_processed.RData"), 
-         opts = list(multipart = TRUE))
+         opts = list(multipart = TRUE,
+           region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   
   return(TRUE)  

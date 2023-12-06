@@ -151,6 +151,9 @@ getGbifOccurrence <- function(datasetKey,
 loadGbif <- function(dataFile, 
   bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
   ) {
+    
+  # For R CMD check
+  count <- NULL
   
   rawData <- readS3(FUN = fread, stringsAsFactors = FALSE, na.strings = "", bucket = bucket, 
                     file = dataFile)
