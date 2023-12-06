@@ -75,7 +75,8 @@ createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trend
   dfCube <- as.data.table(dfCube[!duplicated(dfCube), ])
   setnames(dfCube, "cellcode", "cell_code10")
   
-  s3save(dfCube, bucket = bucket, object = "dfCube.RData")
+  s3save(dfCube, bucket = bucket, object = "dfCube.RData",
+    opts = list(region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)  
   
@@ -153,7 +154,8 @@ createKeyData <- function(
 #' @importFrom aws.s3 put_object
 #' @export
 #' 
-createTimeseries <- function(bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
+createTimeseries <- function(
+  bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   shapeData = loadShapeData("grid.RData")$utm1_bel_with_regions) {
   
                              
@@ -177,7 +179,8 @@ createTimeseries <- function(bucket = config::get("bucket", file = system.file("
   # put time series data RData to the bucket to speed up reading process
   
   s3save(timeseries, object = "full_timeseries.RData", bucket = bucket, 
-    opts = list(show_progress = TRUE))
+    opts = list(show_progress = TRUE, 
+      region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)
   
@@ -223,7 +226,8 @@ createShapeData <- function(
   }
   
   newFile <- paste0(objectName, ".RData")
-  s3save(list = objectName, bucket = bucket, object = newFile)
+  s3save(list = objectName, bucket = bucket, object = newFile,
+    opts = list(region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)
   
@@ -429,7 +433,8 @@ createTabularData <- function(
   
   s3save(rawData, bucket = bucket, 
          object = paste0(basename(tools::file_path_sans_ext(dataFiles)), "_processed.RData"), 
-         opts = list(multipart = TRUE))
+         opts = list(multipart = TRUE,
+           region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   
   return(TRUE)  
