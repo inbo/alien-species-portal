@@ -135,7 +135,8 @@ createKeyData <- function(
   
   aws.s3::s3write_using(dictionary, FUN = write.csv,
                 bucket = bucket,
-                object = "keys.csv")
+                object = "keys.csv",
+                opts = list(region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)
   
