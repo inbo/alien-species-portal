@@ -226,8 +226,10 @@ results$species_managementData <- reactive({
     } else {
       
       tmpData <- loadGbif(dataFile = results$species_managementFile())
+      if( ! "GEWEST" %in% colnames(tmpData) ){
       tmpData$GEWEST <- allShapes$communes$GEWEST[
         match(tmpData$NISCODE, allShapes$communes$NISCODE)]
+      }
       tmpData
       
     }
