@@ -202,7 +202,7 @@ writeS3 <- function(dataFiles,
   
   response <- sapply(dataFiles, function(iFile) {
     put_object(file = iFile, object = basename(iFile), 
-               bucket = bucket, multipart = TRUE)
+               bucket = bucket, multipart = TRUE,opts = list(region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   })
   
   response
