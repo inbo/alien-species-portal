@@ -16,10 +16,10 @@ combineActiveData <- function(activeData, managedData, untreatedData) {
   managedData$type <- "managed nest"
   untreatedData$type <- "untreated nest"
   
-  # for intermediate data (no radiu yet)
+  # for intermediate data (no radius yet)
   if(is.null(managedData$radius)) managedData$radius <- NA
   if(is.null( activeData$radius))  activeData$radius <- NA
-  if(is.null( untreatedData$radius))  activeData$radius <- NA
+  if(is.null( untreatedData$radius))  untreatedData$radius <- NA
   
 
   toReturn <- rbind(

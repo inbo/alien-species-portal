@@ -282,8 +282,10 @@ createTabularData <- function(
     rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "")
     # Warning if new habitat columns
     currentHabitats <- c("marine", "freshwater", "terrestrial")
-    if (!all(unlist(strsplit(rawData$habitat, split = "|", fixed = TRUE)) %in% c(NA, currentHabitats)))    
-      stop("New habitats detected. Add relevant columns in loadTabularData()")
+    rawData$habitat[rawData$habitat == "NA"] <- NA
+    
+    if (!all(unlist(strsplit(rawData$habitat, split = "|", fixed = TRUE)) %in% c(NA, currentHabitats)))  
+      stop("New habitats detected. Add relevant columns in createTabularData()")
     
     ## extract necessary columns
     rawData <- rawData[, c(

@@ -131,7 +131,8 @@ getGbifOccurrence <- function(datasetKey,
   write.csv(df, file.path(tempdir(), outFile), row.names = FALSE)
   
   put_object(file = file.path(tempdir(), outFile),
-             bucket = bucket, object = outFile)
+             bucket = bucket, object = outFile, 
+             opts = list(region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)
   
