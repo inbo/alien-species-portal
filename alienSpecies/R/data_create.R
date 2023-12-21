@@ -151,8 +151,8 @@ createKeyData <- function(
 #' 
 #' @author mvarewyck
 #' @importFrom utils write.csv
-#' @importFrom data.table fread rbindlist
-#' @importFrom aws.s3 put_object
+#' @importFrom data.table as.data.table
+#' @importFrom aws.s3 s3save s3load
 #' @export
 #' 
 createTimeseries <- function(
@@ -178,9 +178,10 @@ createTimeseries <- function(
                       by.x = "eea_cell_code", by.y = "CELLCODE")
   
   # put time series data RData to the bucket to speed up reading process
+  timeseries <- as.data.table(timeseries)
   
   s3save(timeseries, object = "full_timeseries.RData", bucket = bucket, 
-    opts = list(show_progress = TRUE, 
+    opts = list(show_progress = TRUE, multipart = TRUE,
       region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)
