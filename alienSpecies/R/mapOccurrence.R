@@ -425,7 +425,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
       
       # For R CMD check
       year <- NULL
-      currentYear <- as.numeric(format(Sys.Date(), "%Y")) - 1
+      currentYear <- as.numeric(format(Sys.Date(), "%Y"))
       
       ns <- session$ns
       
