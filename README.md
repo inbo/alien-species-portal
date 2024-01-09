@@ -20,9 +20,10 @@ Enkele relevante URLS:
 The dockerfile needs to be updated only when some of the **dependencies** for `alienSpecies` changed.
 This file is generated automatically by packamon: please do not edit by hand. 
 The following commands are run to update this dockerfile.
-TODO: Add link to packamon - currently using develop branch
 
 ```
+if (!require(packamon))
+  install.packages("packamon", repos = c(rdepot = "https://repos.openanalytics.eu/repo/public", getOption("repos")))
 library(packamon)
 writeDockerfile(sourceDir = ".", installSource = TRUE,
 overwrite = TRUE, shinyFunction = "alienSpecies::runShiny()")

@@ -3,7 +3,7 @@ Type: Package
 Title: Portal for alien and invasive species indicators
 Version: 0.0.5
 Date: 2023-11-30
-Author: Machteld Varewyck
+Author: Machteld Varewyck, Yingjie Zhang, Eva Adriaensen
 Maintainer: Machteld Varewyck <machteld.varewyck@openanalytics.eu>
 Description: INBO shiny application based on the TRIAS package.
 Encoding: UTF-8
