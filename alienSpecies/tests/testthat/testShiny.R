@@ -24,6 +24,37 @@ allShapes <- c(
 translations <- loadMetaData(language = "nl")
 
 
+test_that("App does not crash on startup", {   
+    
+    shiny::testServer(
+      app = system.file("app/", package = "alienSpecies"),
+      expr = testthat::expect_true(TRUE)
+    )
+    
+  })
+
+
+test_that("Test error data load App", {   
+    
+    expect_type(config::get("datacheck", file = system.file("config.yml", package = "alienSpecies")),
+      "logical")
+    
+    
+    shiny::testServer(
+      app = tryCatch(
+        stop("simulated error"),
+        error = function(err)
+          shinyApp(ui = fluidPage(
+              tags$h3("Error during Data Check"),
+              HTML(err$message)
+            ), server = function(input, output, session){})
+      ),
+      expr = testthat::expect_true(TRUE)
+    )
+    
+  })
+
+
 test_that("Module countOccupancy", {
     
     readS3(file = "dfCube.RData")
@@ -202,7 +233,6 @@ test_that("Module mapHeat",{
 # 
 test_that("Module mapRegions",{
 
-  #skip("WIP")
   vespaPoints <- Vespa_velutina_shape$points
   vespaPoints$type <- "individual"
   # Columns
@@ -283,40 +313,6 @@ test_that("Module countNesten",{
                       expect_true(!is.null(plotData()))
                     
                     })
-})
-
-
-context("Test Shiny Apps")
-
-
-test_that("App does not crash on startup", {   
-  
-shiny::testServer(
-    app = system.file("app/", package = "alienSpecies"),
-    expr = testthat::expect_true(TRUE)
-  )
-  
-})
-
-
-test_that("Test error data load App", {   
- 
-  expect_type(config::get("datacheck", file = system.file("config.yml", package = "alienSpecies")),
-            "logical")
-
-  
-  shiny::testServer(
-    app = tryCatch(
-        stop("simulated error"),
-        error = function(err)
-        shinyApp(ui = fluidPage(
-            tags$h3("Error during Data Check"),
-            HTML(err$message)
-        ), server = function(input, output, session){})
-    ),
-    expr = testthat::expect_true(TRUE)
-  )
-  
 })
 
 

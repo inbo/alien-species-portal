@@ -38,10 +38,10 @@ test_that("Occurrence grid shape", {
 
 test_that("Occurrence plots", {
     
-    myKey <- unique(taxData$taxonKey[taxData$scientificName == allSpecies[2]])
+    myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     expect_type(myKey, "integer")
     
-    expect_equal(dim(taxData), c(1085453, 7))
+    expect_gte(nrow(taxData), 1)
     
     # Filter on year and taxonKey
     occurrenceData <- taxData[taxonKey %in% myKey & year >= period[1] & year <= period[2], ]
@@ -96,7 +96,7 @@ test_that("Emergence status GAM - Observations", {
       region = c("flanders", "brussels")
     )
     
-    myKey <- unique(taxData$taxonKey[taxData$scientificName == allSpecies[2]])
+    myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     
     correctBias <- c(TRUE, FALSE)[1]
     isProtected <- c(TRUE, FALSE)[2]

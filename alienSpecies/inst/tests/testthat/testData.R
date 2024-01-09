@@ -173,7 +173,7 @@ test_that("Load shape data", {
   c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions","be_10km", "be_1km","provinces","communes"  ) , names(allShapes)
 )
  
-  expect_in(unlist(lapply(allShapes, class)), c("sf", "data.frame"))
+  expect_true(all(unlist(lapply(allShapes, class)) %in% c("sf", "data.frame")))
   
   
   })
@@ -226,7 +226,7 @@ test_that("Load Vespa_velutina_shape", {
 
 test_that("management data", {
   
-expect_in( c("Oxyura_jamaicensis.csv",  "Lithobates_catesbeianus.csv", "Vespa_velutina_shape.RData", "Ondatra_zibethicus.csv"), tmpTable$Key)
+expect_true(all(c("Oxyura_jamaicensis.csv",  "Lithobates_catesbeianus.csv", "Vespa_velutina_shape.RData", "Ondatra_zibethicus.csv") %in% tmpTable$Key))
 
 })
 
