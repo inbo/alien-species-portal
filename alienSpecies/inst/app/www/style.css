@@ -9,7 +9,7 @@ src: url("FlandersArtSans-Regular.ttf");
   font-size: 16px;
 }
 
-.sliderBlank .irs-bar-edge, .sliderBlank .irs-bar {
+.sliderBlank .form-group .irs .irs-bar {
 background: none;
 border: none;
 }
@@ -53,7 +53,7 @@ footer {
       
 .radio-inline input:checked ~ span div {
   background-image: url("blue-white-pattern.jpg");
-  background-size: 260px 80px;
+  background-size: 360px 80px;
 }
 
 .radio-inline:hover {
@@ -69,43 +69,40 @@ a, a:visited, a:hover, a:active, a:focus {
   color: #c1c443;
 }
 
-#wild_linkTable1, #wild_linkPlot1, #wild_linkPlot2, #wild_linkPlot3, #wild_linkPlot4, #wild_linkPlot5, #wild_linkPlot6, #wild_linkPlot7, #wild_linkPlot8, #wild_linkPlot9, #wild_linkPlot10, #wild_linkPlot11, #wild_linkPlot12, #schade_linkPlot1, #schade_linkTable2, #schade_linkPlot2, #schade_linkTable1 {
- font-size: 22px;
- color: #356196;
-}
 
-#geodataBron, #contact {
+#showShare, #contact, #translate_en, #translate_fr, #translate_nl {
   font-size: 14px;
   line-height: 20px;
   color: #595959
 }
 
-#wildZwijnFoto {
-  width: 260px; 
-  height: 186px;
-  background-image: url("wildZwijn.jpeg");
-  background-size: 260px 186px;
+
+#global_indicatorsFoto {
+  width: 360px; 
+  height: 236px;
+  background-image: url("global_indicators.png");
+  background-size: 360px 236px;
 }
 
-#reeFoto {
-  width: 260px; 
-  height: 186px;
-  background-image: url("ree.jpeg");
-  background-size: 260px 186px;
+#species_informationFoto {
+  width: 360px; 
+  height: 236px;
+  background-image: url("species_information.jpg");
+  background-size: 360px 236px;
 }
 
-#edelhertFoto {
-  width: 260px; 
-  height: 186px;
-  background-image: url("edelhert.jpeg");
-  background-size: 260px 186px;
+#early_warningFoto {
+  width: 360px; 
+  height: 236px;
+  background-image: url("early_warning.jpg");
+  background-size: 360px 236px;
 }
 
-#damhertFoto {
-  width: 260px; 
-  height: 186px;
-  background-image: url("damhert.jpeg");
-  background-size: 260px 186px;
+#managementFoto {
+  width: 360px; 
+  height: 236px;
+  background-image: url("management.jpg");
+  background-size: 360px 236px;
 }
 
 .fotoTitel {
@@ -117,7 +114,7 @@ a, a:visited, a:hover, a:active, a:focus {
   padding-top: 25px;
 }
 
-.downloadButton {
+.shiny-download-link {
   display: inline-block;
   background-color: #356196;
   text-transform: uppercase;
@@ -133,7 +130,7 @@ a, a:visited, a:hover, a:active, a:focus {
   border-radius: 0;
 }
 
-.downloadButton:hover {
+.shiny-download-link:hover {
   background-color: #264870;
   color: #fff; 
 }
@@ -145,4 +142,17 @@ a, a:visited, a:hover, a:active, a:focus {
 p, li, label {
  font-size: 16px
 }
+
+
+/*** Button colors ***/
+
+
+.table-icon-orange {
+    color: orange
+}
+
+.table-icon-green {
+	color: #E4E517
+}
+
 

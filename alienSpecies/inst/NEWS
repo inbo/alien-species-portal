@@ -1,2 +1,11 @@
+0.0.5
+    o fix for timeseries aspbo: read unprocessed from S3 bucket
+0.0.4
+    o fix #27: add management page Vespa velutina
+    o remove deprecated sp, rgdal & rgeos functions
+0.0.3
+    o changes as listed in https://github.com/inbo/alien-species-portal/issues/33
+0.0.2
+    o changes after first review
 0.0.1
-    o initial commit
+    o mockup version of the app

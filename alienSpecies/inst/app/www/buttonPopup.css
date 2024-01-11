@@ -1,0 +1,64 @@
+/* =============== select button with popup window =============== */
+
+/* caret on the right of the button*/
+button#exoten_timeButton .fa.fa-caret-down::before {
+	float: right;
+}
+button#exoten_timeButton .fa {
+	display: inline;
+} 
+
+/*button*/
+button#exoten_timeButton {
+margin-bottom: 15px;
+margin-left: 25px;
+margin-right: 25px;
+}
+
+div.selection-button {
+flex-direction: column;
+align-items: flex-start; 
+height: 90px; /* to let the shiny-notification-panel overflow */
+background-color: #f5f5f5;
+}
+
+/* container of the select button and popup window */
+.selection-btn-wrapper {
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+/*popup window*/
+span#time-popup > div#shiny-notification-panel {
+padding: 0;
+webkit-box-shadow: 2px 1px 4px 0px #ccc;
+box-shadow: 2px 1px 4px 0px #ccc;
+background-color: white;
+position: relative; /*override for fixed position of shiny-notification-panel*/
+}
+
+div#shiny-notification-ref.shiny-notification {
+margin: 0;
+background-color: white;
+border: none;
+}
+
+/*arrow up of the popup window*/
+div#shiny-notification-ref.shiny-notification::after {
+  content: " ";
+  position: absolute;
+  width: 0;
+  height: 0;
+  bottom: 100%;  /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -10px;
+  border-width: 10px;
+  border-style: solid;
+  border-color: transparent transparent white transparent;
+ -webkit-filter: drop-shadow(1px -2px 1px #ebebeb);
+  filter: drop-shadow(1px -2px 1px #ebebeb);
+}
+
+
+

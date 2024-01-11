@@ -13,3 +13,40 @@ Enkele relevante URLS:
 - [VespaR](https://github.com/inbo/vespaR) => Code voor het maken van kaartjes en grafieken ivm vespa velutina beheer & de bijhorende shiny app
 - [T1](https://zenodo.org/record/3060173#.YaEEmdBKiUm) => shapes, zips & geojsons van de verspreiding van soorten van union concern gedurende de eerste rapportage cyclus.
 - [T0](https://zenodo.org/record/3835756#.YaEE4NBKiUm) => shapes, zips & geojsons van de verspreiding van soorten van union concern voor de baseline (van 01-01-2000 tot datum van opname op de lijst).
+
+
+# Build/Run docker image
+
+The dockerfile needs to be updated only when some of the **dependencies** for `alienSpecies` changed.
+This file is generated automatically by packamon: please do not edit by hand. 
+The following commands are run to update this dockerfile.
+
+```
+if (!require(packamon))
+  install.packages("packamon", repos = c(rdepot = "https://repos.openanalytics.eu/repo/public", getOption("repos")))
+library(packamon)
+writeDockerfile(sourceDir = ".", installSource = TRUE,
+overwrite = TRUE, shinyFunction = "alienSpecies::runShiny()")
+```
+
+Then, to build the docker image with the latest dockerfile, run in bash
+
+```
+cd git/alien-species-portal
+docker build -t inbo/alienspecies .
+```
+
+Run the new docker image from bash. You need to point docker to the .aws folder on your local system to retrieve the credentials.
+
+```
+docker run -it -v ~/.aws:/root/.aws -p 3001:3838 inbo/alienspecies R -e "alienSpecies::setupS3(); alienSpecies::runShiny()" 
+```
+
+
+# Update the translations file
+
+The latest translations file is available in the [aspbo project](https://github.com/inbo/aspbo/). Make sure you navigate to the correct branch.
+It is located in the folder: `data/output/UAT_direct/translations.csv`
+
+IMPORTANT: Make sure that you don't change the structure of the translations file (column names, delimiter), otherwise the application will fail to start!
+The file will be updated on the S3 bucket automatically.

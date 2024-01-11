@@ -19,6 +19,7 @@
 
 # RStudio files
 .Rproj.user/
+alien-species-portal.Rproj
 
 # produced vignettes
 vignettes/*.html
@@ -43,3 +44,17 @@ vignettes/*.pdf
 
 # R documentation can be created automatically
 alienSpecies/man/
+
+# Helper scripts
+/data/*.Rmd
+/data/
+/instDataBackup/
+
+# R test result
+alienSpecies/alienSpecies-tests/
+
+# Local copy of S3 files
+/dataS3
+
+# aws secret 
+/script/
