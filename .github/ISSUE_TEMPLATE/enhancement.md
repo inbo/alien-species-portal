@@ -14,7 +14,9 @@ Please use the following title template if possible:
 # Description
 Short description of the requested changes
 
-# (Optional) suggestion how to implement change
+# (Optional) Needed changes in backoffice
 
-# (Optional) additional less important changes 
+# (Optional) Suggestion how to implement change
+
+# (Optional) Additional less important changes 
 nice to haves
