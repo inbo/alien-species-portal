@@ -387,6 +387,32 @@ createTabularData <- function(
                                                            oceania, tolower(oceania))) & 
                                !is.na(rawData$native_range)] <- "undefined"
     
+    ## update last_observed with info from timeseries
+    readS3(file = "full_timeseries.RData", bucket = bucket)
+    # exclude rows without observation
+    timeseries <- timeseries[timeseries$obs > 0, ]
+    # exclude unknown regions
+    timeseries <- timeseries[complete.cases(timeseries[, c("isFlanders", "isWallonia", "isBrussels")])]
+    # select last_year per cube
+    timeseries <- timeseries[timeseries[, .I[which.max(year)], by = .(eea_cell_code, taxonKey)]$V1]
+    timeseries$isBelgium <- apply(timeseries[, c("isFlanders", "isWallonia", "isBrussels")], 1, sum) > 0
+    # wide to long format
+    setnames(timeseries, c("isFlanders", "isWallonia", "isBrussels", "isBelgium"),
+      c("Vlaanderen", "Wallonië", "Brussels Hoofdstedelijk Gewest", "België"))
+    timeseries <- melt.data.table(timeseries, id.vars = c("taxonKey", "year"),
+      measure.vars = c("Vlaanderen", "Wallonië", "Brussels Hoofdstedelijk Gewest", "België"))
+    # select last year per region
+    timeseries <- timeseries[timeseries[, .I[which.max(year)], by = .(variable, taxonKey)]$V1]
+    timeseries <- timeseries[timeseries$value, ]
+    timeseries$value <- NULL
+  
+#    head(rawData[, c("locality", "last_observed", "nubKey")])
+    rawData <- merge(rawData, timeseries, by.x = c("locality", "nubKey"), 
+      by.y = c("variable", "taxonKey"), all.x = TRUE)
+    rawData$last_observed <- apply(rawData[, c("last_observed", "year")], 1, 
+      function(x) if (all(is.na(x))) NA else max(x, na.rm = TRUE))
+      
+                           
     ## replace missing "species" with "canonicalName" if available
     # then drop "canonicalName"
     ind <- which(is.na(rawData$species) & !is.na(rawData$canonicalName))
