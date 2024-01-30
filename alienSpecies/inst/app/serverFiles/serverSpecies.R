@@ -242,7 +242,7 @@ observe({
     req(results$species_managementData())
     
     if (input$species_choice %in% cubeSpecies) {
-      ## Map + slider barplot
+      ## Map + slider barplot: Oxyura jamaicensis
       
       mapCubeServer(id = "management",
         uiText = reactive(results$translations),
@@ -261,7 +261,7 @@ observe({
       )
       
     } else if (input$species_choice %in% heatSpecies) {
-      ## heatmap
+      ## heatmap: Vespa velutina
       
       ## Actieve haarden
       combinedActive <- combineActiveData(
@@ -286,6 +286,8 @@ observe({
       combinedObserved <- combineNestenData(
         pointsData = results$species_managementData()$points, 
         nestenData = results$species_managementData()$nesten
+      # For testing only: when no observations yet, use latest available year
+#        currentYear = format(max(results$species_managementData()$points$eventDate, na.rm = TRUE), "%Y")
       )
       colorsObserved <- c("blue", "red")
       names(colorsObserved) <- c("individual", "nest")
@@ -378,7 +380,7 @@ observe({
       
       
     } else {
-      ## Map + choices barplot
+      ## Map + choices barplot: Lithobates catesbeianus
       
       mapRegionsServer(
         id = "management3",

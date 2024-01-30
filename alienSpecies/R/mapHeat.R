@@ -46,26 +46,26 @@ combineActiveData <- function(activeData, managedData, untreatedData) {
 #' @author mvarewyck
 #' @importFrom dplyr select filter mutate group_by summarise rename
 #' @export
-combineNestenData <- function(pointsData, nestenData) {
+combineNestenData <- function(pointsData, nestenData, currentYear = year(Sys.Date())) {
   
   # For R CMD check
   type <- eventDate <- popup <- institutionCode <- id <- observation_time <- NULL
   geometry <- NULL
   
   points_redux <- pointsData %>% 
-    dplyr::filter(year == year(Sys.Date())) %>%
+    dplyr::filter(year == currentYear) %>%
     dplyr::select(type, eventDate, popup, institutionCode, year) %>%
     mutate(type = "individual")
   
   # punten laag van gemelde nesten
   nesten <- nestenData %>% 
-    dplyr::filter(year == year(Sys.Date())) %>% 
+    dplyr::filter(year == currentYear) %>% 
     mutate(type = "nest",
       popup = paste0("Vespawatch rij ", id),
       institutionCode = "Vespawatch")
   
   nesten_redux <- nesten %>% 
-    dplyr::filter(year == year(Sys.Date())) %>% 
+    dplyr::filter(year == currentYear) %>% 
     dplyr::select(type, eventDate = observation_time, popup, institutionCode, year) 
   
   # Recombine points
@@ -194,7 +194,7 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
 
           tmpDescription <- tmpTranslation()$description
           tmpDescription <- gsub("\\{\\{maxDate\\}\\}", format(maxDate(), "%d/%m/%Y"), tmpDescription)
-          tmpDescription <- gsub("\\{\\{maxYear\\}\\}", format(maxDate(), "%Y"), tmpDescription)
+          tmpDescription <- gsub("\\{\\{maxYear\\}\\}", format(Sys.Date(), "%Y"), tmpDescription)
           
           HTML(tmpDescription)
           
@@ -203,6 +203,8 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
       output$titleMapHeat <- renderUI(h3(HTML(tmpTranslation()$title)))
       
       output$filters <- renderUI({
+          
+          validate(need(nrow(combinedData()) > 0, noData()))
           
           if (!is.null(filter()))
             lapply(names(filter()), function(filterName) {
@@ -259,20 +261,24 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
           input[["global"]]
 
 
-          temp <- combinedData()
+          tmpData <- combinedData()
 
-          for(iFilter in names(filter())[-1]){
+          for (iFilter in names(filter())[-1]){
 
             if (!is.null(input[[iFilter]]) && input[[iFilter]] != "<none>"){
-              index <- !is.na(temp[[iFilter]]) & (temp[[iFilter]] == input[[iFilter]])
-              temp <- temp[index,]
+              index <- !is.na(tmpData[[iFilter]]) & (tmpData[[iFilter]] == input[[iFilter]])
+              tmpData <- tmpData[index,]
             }
           }
-          temp
+          
+          tmpData
+          
         })
       
       # Send map to the UI
       output$spacePlot <- renderLeaflet({
+          
+          validate(need(nrow(combinedDataPostFilter()) > 0, noData()))
           
           myMap <- mapHeat(
             combinedData =  combinedDataPostFilter(),
@@ -371,10 +377,8 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
       # Create final map (for download)
       finalMap <- reactive({
      
-        input[[ names(filter())[2] ]]
-        
           newMap <- mapHeat(
-            combinedData =combinedDataPostFilter(),
+            combinedData = combinedDataPostFilter(),
             colors = colors(),
             selected = input[[names(filter())[1]]],
             blur = blur, 
