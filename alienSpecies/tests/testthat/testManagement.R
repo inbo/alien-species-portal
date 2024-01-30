@@ -167,14 +167,14 @@ test_that("Actieve haarden", {
     
     combinedData <- combineActiveData(
       activeData = Vespa_velutina_shape$actieve_haarden,
-      managedData = Vespa_velutina_shape$beheerde_nesten,
+#      managedData = Vespa_velutina_shape$beheerde_nesten,
       untreatedData = Vespa_velutina_shape$onbehandelde_nesten
     )
     myPlot <- mapHeat(
       combinedData = combinedData,
       colors = {
-        myColors <- c("blue", "black", "red")
-        names(myColors) <- c("individual", "managed nest", "untreated nest")
+        myColors <- c("blue", "black")
+        names(myColors) <- c("individual", "untreated nest")
         myColors
       },
       selected = unique(combinedData$filter),
@@ -190,7 +190,10 @@ test_that("Actieve haarden", {
 
 test_that("Alle observaties", {
     
-    combinedData <- combineNestenData(pointsData = Vespa_velutina_shape$points, nestenData = Vespa_velutina_shape$nesten)
+    combinedData <- combineNestenData(
+      pointsData = Vespa_velutina_shape$points, 
+      nestenData = Vespa_velutina_shape$nesten
+    )
     myPlot <- mapHeat(
       combinedData = combinedData,
       colors = {
@@ -217,7 +220,8 @@ test_that("Voorjaarsnesten", {
 
 test_that("Provincie nesten", {
     
-    df <- createSummaryNesten(data = Vespa_velutina_shape$nesten, regionLevel = "gewest",
+    df <- createSummaryNesten(data = Vespa_velutina_shape$nesten, 
+      regionLevel = "provinces",
       typeNesten = c("AE", "AP"))
     myPlot <- trendYearRegion(df = df)
     expect_s3_class(myPlot$plot, "plotly")
@@ -273,7 +277,7 @@ test_that("Map Trend", {
     vespaNesten$isBeheerd <- vespaNesten$geometry %in% Vespa_velutina_shape$beheerde_nesten$geometry
     
     
-    # Nesten and Points combined on 1 map - test from here
+    # Nesten and Points combined on 1 map
     vespaPoints$nest_type <- "individual"
     vespaPoints$isBeheerd <- FALSE
     keepColumns <- c("year", "type", "nest_type", "NAAM", 
@@ -289,6 +293,22 @@ test_that("Map Trend", {
       groupingVariable = c("nest_type", "isBeheerd"))
     mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
+    
+    # data manipulation for nest linetypes
+    vespaBoth <- vespaBoth[!is.na(vespaBoth$nest_type), ]
+    vespaBoth$nest_group <- ifelse(vespaBoth$nest_type %in% "individual", 
+      "individual", "nest")    
+    summaryData <- createSummaryRegions(
+      data = vespaBoth, shapeData = allShapes,
+      regionLevel = "provinces",
+      groupingVariable = "nest_group", 
+      year = 2018:2023,
+      unit = "absolute")
+    longData <- melt(summaryData[, c("region", "year", "individual", "nest")], 
+      id.vars = c("region", "year"),
+      measure.vars = c("individual", "nest"), variable.name = "group", value.name = "outcome")
+    attr(longData, "unit") <- attr(summaryData, "unit")
+    trendYearRegion(df = longData[longData$region != "", ])$plot
     
     # create popup with summary table in it
     mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, unit = "absolute", bronMap = "nesten")

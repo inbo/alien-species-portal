@@ -266,17 +266,19 @@ observe({
       ## Actieve haarden
       combinedActive <- combineActiveData(
         activeData = results$species_managementData()$actieve_haarden,
-        managedData = results$species_managementData()$beheerde_nesten,
         untreatedData = results$species_managementData()$onbehandelde_nesten
       )
-      colorsActive <- c("blue", "black", "red")
-      names(colorsActive) <- c("individual", "managed nest", "untreated nest")
+      colorsActive <- c("blue", "black")
+      names(colorsActive) <- c("individual", "untreated nest")
       
       mapHeatServer(id = "management2_active",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         combinedData = reactive(combinedActive),
-        filter = reactive(list(nest = unique(combinedActive$filter), radius = na.omit(unique(combinedActive$radius)))),
+        filter = reactive(list(
+            nest = unique(combinedActive$filter), 
+            radius = na.omit(unique(combinedActive$radius))
+          )),
         colors = reactive(colorsActive),
         blur = "individual",
         maxDate = reactive(max(results$species_managementData()$actieve_haarden$eventDate, na.rm = TRUE))      

@@ -3,28 +3,35 @@
 #' Used on Management page for Vespa Velutina
 #' 
 #' @param activeData sf, points data with actieve haarden
-#' @param managedData sf, points data with beheerde nesten
 #' @param untreatedData sf, points data with onbehandelde nesten
+#' @param managedData sf, points data with beheerde nesten; default is NULL
 #' @return sf data.frame, combining all data sources
 #' 
 #' @author mvarewyck
 #' @importFrom dplyr select filter mutate group_by summarise
 #' @export
-combineActiveData <- function(activeData, managedData, untreatedData) {
+combineActiveData <- function(activeData, untreatedData, managedData = NULL) {
   
   activeData$type <- "individual"
-  managedData$type <- "managed nest"
   untreatedData$type <- "untreated nest"
   
   # for intermediate data (no radius yet)
-  if(is.null(managedData$radius)) managedData$radius <- NA
-  if(is.null( activeData$radius))  activeData$radius <- NA
-  if(is.null( untreatedData$radius))  untreatedData$radius <- NA
+  if (is.null(activeData$radius))
+    activeData$radius <- NA
+  if (is.null(untreatedData$radius))
+    untreatedData$radius <- NA
+  
+  if (!is.null(managedData)) {
+    managedData$type <- "managed nest"
+    if (is.null(managedData$radius))
+      managedData$radius <- NA
+  }
   
 
   toReturn <- rbind(
     activeData[, c("type", "popup", "radius")],
-    managedData[, c("type", "popup", "radius")],
+    if (!is.null(managedData))
+      managedData[, c("type", "popup", "radius")],
     untreatedData[, c("type", "popup", "radius")]
   )
   
