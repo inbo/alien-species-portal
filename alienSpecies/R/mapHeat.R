@@ -48,12 +48,14 @@ combineActiveData <- function(activeData, untreatedData, managedData = NULL) {
 #' 
 #' @param pointsData sf data.frame, points observations for individuals
 #' @param nestenData sf data.frame, points observations for nests
+#' @inheritParams mapHeat
 #' @return sf data.frame, combining both data sources
 #' 
 #' @author mvarewyck
-#' @importFrom dplyr select filter mutate group_by summarise rename
+#' @importFrom dplyr select filter mutate group_by summarise rename case_when
 #' @export
-combineNestenData <- function(pointsData, nestenData, currentYear = year(Sys.Date())) {
+combineNestenData <- function(pointsData, nestenData, currentYear = year(Sys.Date()),
+  uiText = NULL) {
   
   # For R CMD check
   type <- eventDate <- popup <- institutionCode <- id <- observation_time <- NULL
@@ -61,14 +63,24 @@ combineNestenData <- function(pointsData, nestenData, currentYear = year(Sys.Dat
   
   points_redux <- pointsData %>% 
     dplyr::filter(year == currentYear) %>%
+    # Only retain individual data, see https://github.com/inbo/alien-species-portal/issues/63#issuecomment-1918810526
+    dplyr::filter(dplyr::case_when(eventDate >= as.Date("31/12/2028", format = "%d/%m/%Y") ~ type == "Individu", TRUE ~ TRUE)) %>%
     dplyr::select(type, eventDate, popup, institutionCode, year) %>%
-    mutate(type = "individual")
+    mutate(type = ifelse(type == "Individu", "individual", "nest"))
   
   # punten laag van gemelde nesten
   nesten <- nestenData %>% 
-    dplyr::filter(year == currentYear) %>% 
+    dplyr::filter(year == currentYear) 
+  
+  if (nrow(nesten) == 0)
+    return(NULL)
+  
+  nesten <- nesten %>% 
     mutate(type = "nest",
-      popup = paste0("Vespawatch rij ", id),
+      popup = paste(
+        translate(uiText, "nest")$title, ":", translate(uiText, nest_type)$title,
+        "</br>", translate(uiText, "management")$title, ":", translate(uiText, result)$title,
+        "</br>Vespawatch", translate(uiText, "row")$title, id), 
       institutionCode = "Vespawatch")
   
   nesten_redux <- nesten %>% 
@@ -133,7 +145,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
   # Filter data
   plotData <- combinedData[combinedData$filter %in% selected, ]
  
-  if (nrow(plotData) == 0)
+  if (is.null(plotData) || nrow(plotData) == 0)
     return(ah_map)
   
   
@@ -292,7 +304,8 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
             colors = colors(),
             selected = unique(combinedDataPostFilter()$filter),
             addGlobe = isolate(input$globe %% 2 == 1),
-            blur = blur
+            blur = blur,
+            uiText = uiText()
           )
           
           myMap

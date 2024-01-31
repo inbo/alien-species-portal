@@ -192,7 +192,8 @@ test_that("Alle observaties", {
     
     combinedData <- combineNestenData(
       pointsData = Vespa_velutina_shape$points, 
-      nestenData = Vespa_velutina_shape$nesten
+      nestenData = Vespa_velutina_shape$nesten,
+      currentYear = 2024
     )
     myPlot <- mapHeat(
       combinedData = combinedData,

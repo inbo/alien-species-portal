@@ -287,7 +287,8 @@ observe({
       ## Alle observaties
       combinedObserved <- combineNestenData(
         pointsData = results$species_managementData()$points, 
-        nestenData = results$species_managementData()$nesten
+        nestenData = results$species_managementData()$nesten,
+        uiText = results$translations
       # For testing only: when no observations yet, use latest available year
 #        currentYear = format(max(results$species_managementData()$points$eventDate, na.rm = TRUE), "%Y")
       )
