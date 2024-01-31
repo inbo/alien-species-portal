@@ -315,6 +315,14 @@ test_that("Map Trend", {
     mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, unit = "absolute", bronMap = "nesten")
     
   })
+  
+test_that("Management succes", {
+    
+    plotData <- summarizeYearGroupData(df = Vespa_velutina_shape$nesten) 
+      
+    countYearGroup(df = plotData, groupVar = "Behandeling")
+    
+  })  
 
 
 

@@ -1,3 +1,26 @@
+#' Summarize Vespa Velutina data for the plot \code{countYearGroup}
+#' 
+#' @param df data.frame with nesten data 
+#' @return data.table with summarized nesten data, as input for \code{codeYearGroup}
+#' 
+#' @author mvarewyck
+#' @importFrom dplyr mutate group_by summarise rename
+#' @importFrom data.table as.data.table
+#' @importFrom sf st_drop_geometry
+#' @export
+summarizeYearGroupData <- function(df) {
+  
+  df %>%
+    st_drop_geometry() %>%
+    mutate(year = as.integer(format(observation_time, "%Y")),
+      result = ifelse(is.na(result), "onbekend", result)) %>% 
+    group_by(year, result, GEWEST) %>%
+    summarise(count = n()) %>% 
+    rename(Behandeling = result)  %>%
+    as.data.table()  
+  
+}
+
 
 #' Create interactive plot for counts per group category and year
 #' 
@@ -68,8 +91,8 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
         colors = colors, type = "bar") %>%
       layout(
         xaxis = list(title = translate(uiText, "year")$title), 
-        yaxis = list(title = translate(uiText, "count")$title),
-        legend = list(title = list(translate(uiText, "group")$title)),
+        yaxis = list(title = translate(uiText, summarizeBy)$title),
+        legend = list(title = if (!is.null(groupVar)) list(text = translate(uiText, groupVar)$title)),
         barmode = if (is.null(groupVar) || length(groupLevels) == 1) "group" else "stack",
         annotations = list(x = totalCount$year, 
           y = totalCount$count, 
@@ -90,22 +113,35 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
 
 #' Shiny module for creating the plot \code{\link{countYearGroup}} - server side
 #' @inheritParams countOccupancyServer
+#' @inheritParams plotModuleServer
 #' @return no return value
 #' 
 #' @author mvarewyck
 #' @import shiny
 #' @export
-countYearGroupServer <- function(id, uiText, data) {
+countYearGroupServer <- function(id, uiText, data, groupChoices) {
   
   moduleServer(id,
     function(input, output, session) {
       
       ns <- session$ns
       
+      tmpTranslation <- reactive(translate(uiText(), ns("countYearGroup")))
+      
+      output$titleCountYearGroup <- renderUI(h3(HTML(tmpTranslation()$title)))
+      
+      output$descriptionCountYearGroup <- renderUI({
+          
+          HTML(tmpTranslation()$description)
+          
+        })
+      
+      
       # Plot
       plotModuleServer(id = "countYearGroup",
         plotFunction = "countYearGroup", 
         data = data,
+        groupChoices = groupChoices,
         uiText = uiText
         )
       
@@ -125,12 +161,19 @@ countYearGroupUI <- function(id) {
   ns <- NS(id)
   
   tagList(
-     
-      optionsModuleUI(id = ns("countYearGroup"), showGroup = TRUE, showSummary = TRUE,
+    
+    actionLink(inputId = ns("linkCountYearGroup"), 
+      label = uiOutput(ns("titleCountYearGroup"))),
+    conditionalPanel("input.linkCountYearGroup % 2 == 1", ns = ns,
+      
+      uiOutput(ns("descriptionCountYearGroup")),
+      
+      optionsModuleUI(id = ns("countYearGroup"), showSummary = TRUE,
         showGewest = TRUE),
       plotModuleUI(id = ns("countYearGroup")),
       tags$hr()
     
+    )
   )
   
 }

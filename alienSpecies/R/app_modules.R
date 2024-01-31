@@ -10,7 +10,6 @@
 
 #' User input for controlling specific plot (ui-side)
 #' @param id character, module id, unique name per plot
-#' @param showGroup boolean, whether to show a select input field for group variable
 #' @param showSummary boolean, whether to show a select input field for summary choice
 #' @param showPeriod boolean, whether to show a slider input field for period (first_observed)
 #' @param showGewest boolean, whether to show filter for gewest
@@ -20,7 +19,7 @@
 #' @return ui object (tagList)
 #' @import shiny
 #' @export
-optionsModuleUI <- function(id, showGroup = FALSE, showSummary = FALSE, 
+optionsModuleUI <- function(id, showSummary = FALSE, 
   showPeriod = FALSE, showGewest = FALSE,
   exportData = TRUE, doWellPanel = TRUE) {
   
@@ -31,8 +30,7 @@ optionsModuleUI <- function(id, showGroup = FALSE, showSummary = FALSE,
     fixedRow(
       if (showGewest)
         column(6, uiOutput(ns("gewest"))),
-      if (showGroup)
-        column(6, uiOutput(ns("group"))),
+      column(6, uiOutput(ns("group"))),
       if (showSummary)
         column(6, uiOutput(ns("summarizeBy"))),
       if (showPeriod)
@@ -103,6 +101,8 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @param data reactive data.frame, data for chosen species
 #' @param period reactive numeric vector of length 2, selected period
 #' @param combine reactive boolean, see \code{\link{trendYearRegion}}
+#' @param groupChoices reactive character, defines the choices for group variable;
+#' if NULL no groupChoices available
 #' @return no return value; plot output object is created
 #' @author mvarewyck
 #' @import shiny
@@ -111,7 +111,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @importFrom plotly ggplotly layout
 #' @export
 plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
-  outputType = NULL, triasFunction = NULL, triasArgs = NULL, 
+  outputType = NULL, triasFunction = NULL, triasArgs = NULL, groupChoices = NULL,
   period = NULL, combine = NULL) {
   
   moduleServer(id,
@@ -131,11 +131,9 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       
       output$group <- renderUI({
           
-          choices <- c("", "lifeStage")
-          names(choices) <- c("", translate(uiText(), choices[-1])$title)
-          
-          selectInput(inputId = ns("group"), label = translate(uiText(), "group")$title, 
-            choices = choices)
+          if (!is.null(groupChoices))
+            selectInput(inputId = ns("group"), label = translate(uiText(), "group")$title, 
+              choices = groupChoices())
           
         })
       

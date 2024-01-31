@@ -381,6 +381,16 @@ observe({
         outputType = "table"
       )
       
+      countYearGroupServer(
+        id = "management2", 
+        uiText = reactive(results$translations), 
+        data = reactive(summarizeYearGroupData(df = results$species_managementData()$nesten)),
+        groupChoices = reactive({
+            choices <- c("", "Behandeling")
+            names(choices) <- c("", translate(results$translations, choices[-1])$title)
+            choices
+          })
+      )
       
     } else {
       ## Map + choices barplot: Lithobates catesbeianus
@@ -396,7 +406,12 @@ observe({
       countYearGroupServer(
         id = "management3", 
         uiText = reactive(results$translations), 
-        data = results$species_managementData
+        data = results$species_managementData,
+        groupChoices = reactive({
+            choices <- c("", "lifeStage")
+            names(choices) <- c("", translate(results$translations, choices[-1])$title)
+            choices
+          })
       )
     } 
     
@@ -430,7 +445,8 @@ output$species_managementContent <- renderUI({
         mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
         plotTriasUI(id = "management2_lente"),
         countNestenUI(id = "management2_province"),
-        plotTriasUI(id = "management2_provinceTable", outputType = "table")
+        plotTriasUI(id = "management2_provinceTable", outputType = "table"),
+        countYearGroupUI(id = "management2")
       )
       
     } else {
