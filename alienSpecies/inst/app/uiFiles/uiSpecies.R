@@ -43,9 +43,11 @@ tagList(
       
       tabPanel(titleModuleUI(id = "species_more"), 
         value = "species_more",
-        tabsetPanel(
+        tabsetPanel(id = "species_more",
           tabPanel(titleModuleUI(id = "species_habitats"), value = "species_habitats"),
-          tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps"),
+          tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps",
+            mapRasterUI("risk")
+          ),
           tabPanel(titleModuleUI(id = "species_links"), value = "species_links"),
           tabPanel(titleModuleUI(id = "species_risk_assessment"), value = "species_risk_management"),
           tabPanel(titleModuleUI(id = "species_images"), value = "species_images")

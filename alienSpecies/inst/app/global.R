@@ -69,3 +69,8 @@ regionChoices <- sort(unique(exotenData$locality))
 bronChoices <- sort(levels(exotenData$source))
 
 
+# Available species for risk maps (Species > More > Risk maps)
+request <- httr::GET("https://api.github.com/repos/trias-project/risk-maps/contents/public/geotiffs")
+keysRiskMap <- unique(sapply(httr::content(request), function(x) 
+      strsplit(gsub("public/geotiffs/be_", "", x$path), split = "_")[[1]][1]))
+

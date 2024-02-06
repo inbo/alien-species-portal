@@ -58,7 +58,8 @@ observe({
 # Taxonkey of selected species
 taxonKey <- reactive({
     
-    dictionary$taxonKey[match(req(input$species_choice), dictionary$scientificName)]
+    req(input$species_choice)
+    dictionary$taxonKey[match(input$species_choice, dictionary$scientificName)]
     
   })
 
@@ -466,12 +467,50 @@ output$species_managementContent <- renderUI({
 # Disable tab if no info
 observe({
     
-    req(input$species_choice)
+    req(taxonKey())
     
     # https://stackoverflow.com/a/64324799
+    
+    # Conditionally enable 'More'
     shinyjs::toggleState(
       selector = '#species_tabs a[data-value="species_more"', 
+      condition = taxonKey() %in% keysRiskMap
+    )
+    # Risk maps
+    shinyjs::toggleState(
+      selector = '#species_more a[data-value="species_risk_maps"', 
+      condition = taxonKey() %in% keysRiskMap
+    )
+    # All other subpanels
+    shinyjs::toggleState(
+      selector = '#species_more a[data-value="species_habitats"', 
       condition = FALSE
+    )
+    shinyjs::toggleState(
+      selector = '#species_more a[data-value="species_links"', 
+      condition = FALSE
+    )
+    shinyjs::toggleState(
+      selector = '#species_more a[data-value="species_risk_management"', 
+      condition = FALSE
+    )
+    shinyjs::toggleState(
+      selector = '#species_more a[data-value="species_images"', 
+      condition = FALSE
+    )
+    
+  })
+
+
+observe({
+    
+    req(taxonKey())
+    
+    mapRasterServer(
+      id = "risk", 
+      uiText = reactive(results$translations),
+      species = reactive(input$species_choice),
+      taxonKey = taxonKey
     )
     
   })
