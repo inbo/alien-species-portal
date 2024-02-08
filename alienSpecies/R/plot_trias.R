@@ -84,7 +84,6 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' trias package
 #' @param filters character vector, additional filters for the TRIAS plot to 
 #' be dipslayed
-#' @param filterRegion boolean, whether to show filter for region
 #' @param maxDate reactive date, maximum observation date for printing in description
 #' @return no return value
 #' 
@@ -93,7 +92,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @import trias
 #' @export
 plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
-  filters = NULL, filterRegion = FALSE, maxDate = reactive(NULL), outputType = c("plot", "table")) {
+  filters = NULL, maxDate = reactive(NULL), outputType = c("plot", "table")) {
   
   # For R CMD check
   protected <- NULL
@@ -130,36 +129,10 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
               })
         })
       
-      output$regionFilter <- renderUI({
-          
-          choices <- c("flanders", "wallonia", "brussels")
-          names(choices) <- translate(uiText(), choices)$title
-          
-          selectInput(inputId = ns("region"), label = translate(uiText(), "regions"),
-            choices = choices, multiple = TRUE, selected = choices)
-          
-        })
-      
-      output$filterPanel <- renderUI({
-          
-          if (!is.null(filters) | filterRegion)
-            wellPanel(
-              fluidRow(
-                column(6, uiOutput(ns("filters"))),
-                if (filterRegion)
-                  column(6, uiOutput(ns("regionFilter")))
-              )
-            )
-        
-        })
       
       plotData <- reactive({
           
           subData <- data()
-          
-          if (!is.null(input$region))
-            # only for GAM
-            subData <- summarizeTimeSeries(rawData = subData, region = input$region)
           
           if (!is.null(input$protected))
             subData <- subData[protected == input$protected, ]
@@ -211,7 +184,7 @@ plotTriasUI <- function(id, outputType = c("plot", "table")) {
     conditionalPanel("input.linkPlotTrias % 2 == 1", ns = ns,
       
       uiOutput(ns("descriptionPlotTrias")),
-      uiOutput(ns("filterPanel")),
+      wellPanel(uiOutput(ns("filters"))),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else

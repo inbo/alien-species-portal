@@ -40,12 +40,12 @@ results$species_choices <- reactive({
 # Gewest selection
 observe({
             
-            choices <- c("flanders", "wallonia", "brussels")
-            names(choices) <- translate(results$translations, choices)$title
+    choices <- c("flanders", "wallonia", "brussels")
+    names(choices) <- translate(results$translations, choices)$title
             
-            updateSelectInput(id = "species_gewest", choices = choices, multiple = TRUE, selected = choices)
+    updateSelectInput(id = "species_gewest", choices = choices, multiple = TRUE, selected = choices)
                         
-        })
+  })
 
 
 observe({
@@ -131,7 +131,7 @@ plotTriasServer(id = "species_gam",
   uiText = reactive(results$translations),
   data = reactive({
       req(taxonKey())
-      timeseries[taxonKey %in% taxonKey(), ]
+      summarizeTimeSeries(rawData = timeseries[taxonKey %in% taxonKey(), ], region = gewest())
     }),
   triasFunction = "apply_gam",
   triasArgs = reactive({
@@ -143,8 +143,7 @@ plotTriasServer(id = "species_gam",
         y_label = translate(results$translations, "observations")$title
       )
     }),
-  filters = c("bias", "protected"),
-  filterRegion = TRUE
+  filters = c("bias", "protected")
 )
 
 
