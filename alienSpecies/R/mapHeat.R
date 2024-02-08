@@ -182,7 +182,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' 
 #' @inheritParams welcomeSectionServer
 #' @inheritParams mapHeat
-#' @param species reactive character, readable name of the selected species
+#' @inheritParams mapCubeServer
 #' @param filter reactive list with filters to be shown in the app;
 #' names should match a plotFunction in \code{uiText}; 
 #' values define the choices in \code{selectInput}
@@ -196,7 +196,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapHeatServer <- function(id, uiText, species, combinedData, filter, colors, 
+mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, colors, 
   blur = NULL, maxDate
 ) {
   
@@ -301,6 +301,7 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
           
           myMap <- mapHeat(
             combinedData =  combinedDataPostFilter(),
+            baseMap = addBaseMap(regions = gewest()),
             colors = colors(),
             selected = unique(combinedDataPostFilter()$filter),
             addGlobe = isolate(input$globe %% 2 == 1),
@@ -399,6 +400,7 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
      
           newMap <- mapHeat(
             combinedData = combinedDataPostFilter(),
+            baseMap = addBaseMap(regions = gewest()),
             colors = colors(),
             selected = input[[names(filter())[1]]],
             blur = blur, 

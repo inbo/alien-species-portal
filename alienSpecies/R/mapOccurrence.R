@@ -406,6 +406,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @param species reactive character, readable name of the selected species
+#' @param gewest reactive character, name of the selected region(s)
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @return no return value
 #' 
@@ -416,7 +417,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapCubeServer <- function(id, uiText, species, df, shapeData,
+mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
   filter = reactive(NULL), groupVariable, showPeriod = FALSE
 ) {
   
@@ -469,16 +470,6 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
           
         })
       
-      output$region <- renderUI({
-          
-          choices <- c("flanders", "wallonia", "brussels")
-          names(choices) <- translate(uiText(), choices)$title
-          
-          selectInput(inputId = ns("region"), label = translate(uiText(), "regions"),
-            choices = choices, multiple = TRUE, selected = choices)
-          
-        })
-           
       output$period <- renderUI({
           
           req(df())
@@ -546,14 +537,13 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
       cubeShape <- reactive({
           
           validate(need(subData(), noData()),
-            need(nrow(subData()) > 0, noData()),
-            need(input$region, noData()))
+            need(nrow(subData()) > 0, noData()))
           
           createCubeData(
             df = subData(),
             shapeData = shapeData,
             groupVariable = groupVariable,
-            region = input$region
+            region = gewest()
           )
           
         })
@@ -567,7 +557,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
             
             mapOccurrence(occurrenceData = subData(),
               # when switching species, need to create correct basemap
-              baseMap = addBaseMap(regions = input$region, combine = input$combine),
+              baseMap = addBaseMap(regions = gewest(), combine = input$combine),
               addGlobe = isolate(input$globe %% 2 == 0))
             
           } else {
@@ -576,7 +566,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
             
             mapCube(cubeShape = cubeShape(), groupVariable = groupVariable, 
               # when switching species, need to create correct basemap
-              baseMap = addBaseMap(regions = isolate(input$region), combine = isolate(input$combine)),
+              baseMap = addBaseMap(regions = isolate(gewest()), combine = isolate(input$combine)),
               addGlobe = FALSE, legend = "topright")
             
           }
@@ -586,12 +576,11 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
       # Add border region
       observe({
           
-          validate(need(input$region, noData()),
-            need(!is.null(input$combine), noData()))
+          validate(need(!is.null(input$combine), noData()))
           
           proxy <- leafletProxy("spacePlot")
           
-          addBaseMap(map = proxy, regions = input$region, combine = input$combine)
+          addBaseMap(map = proxy, regions = gewest(), combine = input$combine)
           
         })
       
@@ -662,7 +651,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
             
             newMap <- mapOccurrence(
               occurrenceData = subData(), 
-              baseMap = addBaseMap(regions = req(input$region), combine = input$combine),
+              baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
               addGlobe = input$globe %% 2 == 0
             )
             
@@ -671,7 +660,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
             newMap <- mapCube(
               cubeShape = cubeShape(),
               groupVariable = groupVariable,
-              baseMap = addBaseMap(regions = req(input$region), combine = input$combine),
+              baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
               legend = input$legend,
               addGlobe = input$globe %% 2 == 0
             )
@@ -746,11 +735,11 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
       plotModuleServer(id = "countOccurrence",
         plotFunction = "countOccurrence", 
         data = reactive({
-            validate(need(input$region, noData()))
+            validate(need(gewest(), noData()))
             if (!is.null(shapeData))
               merge(filterData(), 
                 # attach regions for coloring
-                sf::st_drop_geometry(shapeData$utm1_bel_with_regions)[, c("CELLCODE", paste0("is", simpleCap(input$region)))], 
+                sf::st_drop_geometry(shapeData$utm1_bel_with_regions)[, c("CELLCODE", paste0("is", simpleCap(gewest())))], 
                 by.x = "cell_code1", by.y = "CELLCODE", all.x = TRUE) else
               filterData()
           }),
@@ -788,7 +777,6 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
     
     wellPanel(
       fixedRow(uiOutput(ns("filters")),
-        column(6, uiOutput(ns("region"))),
         if (showLegend)
           column(6, 
             uiOutput(ns("legend"))

@@ -5,12 +5,16 @@
 
 
 tagList(
-  
+
   tags$div(class = "container",
-    
-    selectInput(inputId = "species_choice", label = NULL, 
-      choices = NULL, width = "100%"),    
-    
+    fixedRow(
+      column(6,
+        selectInput(inputId = "species_choice", label = NULL, choices = NULL)),
+      column(6,
+        selectInput(inputId = "species_gewest", label = NULL,
+          choices = NULL, multiple = TRUE))
+    ),
+
     tabsetPanel(id = "species_tabs",
       
       tabPanel(titleModuleUI(id = "species_observations"),

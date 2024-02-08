@@ -70,11 +70,8 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
 #' 
 #' @inheritParams welcomeSectionServer
 #' @inheritParams mapHeat
-#' @param species reactive character, readable name of the selected species
-#' @param filter reactive list with filters to be shown in the app;
-#' names should match a plotFunction in \code{uiText}; 
-#' values define the choices in \code{selectInput}
-#' @param maxDate reactive date, last observation date in the dataset
+#' @inheritParams mapCubeServer
+#' @param taxonKey reactive numeric, taxonkey of the species to select the correct tiff file
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -85,8 +82,10 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
 #' @importFrom terra values rast
 #' @importFrom httr http_status GET
 #' @export
-mapRasterServer <- function(id, uiText, species, taxonKey, colors = "Spectral") {
+mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
   
+  colors <- "Spectral"
+    
   moduleServer(id,
     function(input, output, session) {
       
@@ -192,6 +191,7 @@ mapRasterServer <- function(id, uiText, species, taxonKey, colors = "Spectral") 
           
           mapRaster(
             rasterInput = rasterInput(),
+            baseMap = addBaseMap(regions = gewest()),
             colors = colors,
             legendScale = isolate(gsub("Map", "", input$modelType)),
             addGlobe = isolate(input$globe %% 2 == 1),
@@ -269,6 +269,7 @@ mapRasterServer <- function(id, uiText, species, taxonKey, colors = "Spectral") 
           
           newMap <- mapRaster(
             rasterInput = rasterInput(),
+            baseMap = addBaseMap(regions = gewest()),
             colors = colors,
             legend = input$legend,
             legendScale = gsub("Map", "", input$modelType),

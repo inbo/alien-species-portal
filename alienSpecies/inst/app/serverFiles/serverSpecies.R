@@ -37,6 +37,16 @@ results$species_choices <- reactive({
         
   })
 
+# Gewest selection
+observe({
+            
+            choices <- c("flanders", "wallonia", "brussels")
+            names(choices) <- translate(results$translations, choices)$title
+            
+            updateSelectInput(id = "species_gewest", choices = choices, multiple = TRUE, selected = choices)
+                        
+        })
+
 
 observe({
     
@@ -83,6 +93,7 @@ observe({
 mapCubeServer(id = "observations",
   uiText = reactive(results$translations),
   species = reactive(input$species_choice),
+  gewest = reactive(req(input$species_gewest)),
   df = reactive({
       req(taxonKey())
       occurrenceData[taxonKey %in% taxonKey(), ]      
@@ -163,6 +174,7 @@ observe({
 mapCubeServer(id = "reporting_t01",
   uiText = reactive(results$translations),
   species = reactive(input$species_choice),
+  gewest = reactive(req(input$species_gewest)),
   df = reactive(dfCube[species %in% input$species_choice, ]),
   filter = reactive(list(source = unique(dfCube$source[dfCube$species %in% input$species_choice]))),
   groupVariable = "source",
@@ -248,6 +260,7 @@ observe({
       mapCubeServer(id = "management",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
         filter = reactive({
             filterCandidates <- c("gender", "samplingProtocol", "lifeStage")
@@ -275,6 +288,7 @@ observe({
       mapHeatServer(id = "management2_active",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
         combinedData = reactive(combinedActive),
         filter = reactive(list(
             nest = unique(combinedActive$filter), 
@@ -299,6 +313,7 @@ observe({
       mapHeatServer(id = "management2_observed",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
         combinedData = reactive(combinedObserved),
         filter = reactive(list(source = unique(combinedObserved$filter))),
         colors = reactive(colorsObserved),
@@ -310,6 +325,7 @@ observe({
         id = "management2",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
         df = reactive({
             
             # TODO this should be done in a createVespaData() function before uploading on S3
@@ -400,6 +416,7 @@ observe({
         id = "management3",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
         occurrenceData = occurrenceData,
         shapeData = allShapes

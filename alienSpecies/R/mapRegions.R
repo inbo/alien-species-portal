@@ -303,7 +303,6 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
 #' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @inheritParams createSummaryRegions
-#' @param species reactive character, readable name of the selected species
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param occurrenceData data.table, as obtained by \code{loadTabularData(type = "occurrence")}
 #' @param sourceChoices character vector, choices for the data source;
@@ -318,7 +317,7 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
 #' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
+mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
   sourceChoices = NULL) {
   
   moduleServer(id,
@@ -424,27 +423,16 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
             multiple = TRUE)
           
         })
-      
-      # Filter on gewest
-      output$gewest <- renderUI({
-          
-          choices <- c("flanders", "brussels", "wallonia")
-          names(choices) <- translate(uiText(), choices)$title
-          
-          selectInput(inputId = ns("gewestLevel"), label = translate(uiText(), "gewest")$title,
-            choices = choices, selected = choices, multiple = TRUE)
-          
-        })
-      
+            
       subShape <- reactive({
           
-          req(input$gewestLevel)
+          req(gewest())
           # Subset for GEWEST
           lapply(shapeData, function(iData) {
               if ("GEWEST" %in% colnames(iData)){
                 iData$GEWEST <- dplyr::recode(iData$GEWEST, "Brussels" = "brussels", "Vlaams"="flanders", "Waals" =  "wallonia")
-                iData[iData$GEWEST %in% input$gewestLevel, ]}else{
-                iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(input$gewestLevel)), drop = FALSE]), 1, sum) > 0, ]
+                iData[iData$GEWEST %in% gewest(), ]}else{
+                iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(gewest())), drop = FALSE]), 1, sum) > 0, ]
           }
                 })
           
@@ -793,7 +781,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       plotModuleServer(id = "timePlotFlanders",
         plotFunction = "trendYearRegion", 
         data = reactive({
-            timeDataFlanders()[timeDataFlanders()$region %in% req(input$gewestLevel), ]
+            timeDataFlanders()[timeDataFlanders()$region %in% req(gewest()), ]
           }),
         uiText = uiText,
         period = reactive(input$period)
@@ -868,9 +856,8 @@ mapRegionsUI <- function(id, plotDetails = NULL, showUnit = TRUE) {
     
     wellPanel(
       fixedRow(
-        column(4, uiOutput(ns("gewest"))),
-        column(4, uiOutput(ns("regionLevel"))),
-        column(4, uiOutput(ns("region")))
+        column(6, uiOutput(ns("regionLevel"))),
+        column(6, uiOutput(ns("region")))
       ),
       fixedRow(
         column(6, uiOutput(ns("year"))),
