@@ -37,27 +37,37 @@ results$species_choices <- reactive({
         
   })
 
+
+observe(input$tabs, {
+    # Trigger update when changing tab        
+    if (input$tabs == "species_information")
+      updateSelectizeInput(session = session, inputId = "species_choice",
+        choices = results$species_choices(),
+        selected = urlSearch()$species,
+        server = TRUE)    
+    
+  })
+
+
 # Gewest selection
 observe({
             
     choices <- c("flanders", "wallonia", "brussels")
     names(choices) <- translate(results$translations, choices)$title
             
-    updateSelectInput(id = "species_gewest", choices = choices, multiple = TRUE, selected = choices)
-                        
-  })
+    updateSelectInput(id = "species_gewest", choices = choices, multiple = TRUE, 
+      selected = if (!is.null(urlSearch()$gewest))
+        urlSearch()$gewest else 
+        choices)
+            
+})
 
 
+# Update search ID
 observe({
-    
-    # Trigger update when changing tab
-    input$tabs
-    
-    updateSelectizeInput(session = session, inputId = "species_choice",
-      choices = results$species_choices(),
-      selected = as.character(results$species_choice),
-      server = TRUE)    
-    
+            
+    results$searchId <- paste0("&species=", input$species_choice, "&gewest=", input$species_gewest)
+            
   })
 
 
