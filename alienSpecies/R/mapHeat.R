@@ -48,18 +48,21 @@ combineActiveData <- function(activeData, untreatedData, managedData = NULL) {
 #' 
 #' @param pointsData sf data.frame, points observations for individuals
 #' @param nestenData sf data.frame, points observations for nests
+#' @param currentYear integer, current year for selecting nest data
 #' @inheritParams mapHeat
 #' @return sf data.frame, combining both data sources
 #' 
 #' @author mvarewyck
 #' @importFrom dplyr select filter mutate group_by summarise rename case_when
+#' @importFrom data.table year
 #' @export
-combineNestenData <- function(pointsData, nestenData, currentYear = year(Sys.Date()),
+combineNestenData <- function(pointsData, nestenData, 
+  currentYear = data.table::year(Sys.Date()),
   uiText = NULL) {
   
   # For R CMD check
   type <- eventDate <- popup <- institutionCode <- id <- observation_time <- NULL
-  geometry <- NULL
+  geometry <- nest_type <- result <- NULL
   
   points_redux <- pointsData %>% 
     dplyr::filter(year == currentYear) %>%
@@ -123,8 +126,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
   
   
   # Base map
-  ah_map <- baseMap %>%
-    addScaleBar(position = "bottomleft")
+  ah_map <- baseMap
   
   if (addGlobe)
     ah_map <- addTiles(ah_map)
@@ -182,7 +184,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' 
 #' @inheritParams welcomeSectionServer
 #' @inheritParams mapHeat
-#' @param species reactive character, readable name of the selected species
+#' @inheritParams mapCubeServer
 #' @param filter reactive list with filters to be shown in the app;
 #' names should match a plotFunction in \code{uiText}; 
 #' values define the choices in \code{selectInput}
@@ -196,7 +198,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapHeatServer <- function(id, uiText, species, combinedData, filter, colors, 
+mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, colors, 
   blur = NULL, maxDate
 ) {
   
@@ -301,6 +303,7 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
           
           myMap <- mapHeat(
             combinedData =  combinedDataPostFilter(),
+            baseMap = addBaseMap(regions = gewest()),
             colors = colors(),
             selected = unique(combinedDataPostFilter()$filter),
             addGlobe = isolate(input$globe %% 2 == 1),
@@ -399,6 +402,7 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
      
           newMap <- mapHeat(
             combinedData = combinedDataPostFilter(),
+            baseMap = addBaseMap(regions = gewest()),
             colors = colors(),
             selected = input[[names(filter())[1]]],
             blur = blur, 

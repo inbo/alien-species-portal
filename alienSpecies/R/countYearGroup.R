@@ -1,23 +1,30 @@
 #' Summarize Vespa Velutina data for the plot \code{countYearGroup}
 #' 
 #' @param df data.frame with nesten data 
+#' @param gewest character, which region(s) to filter on
 #' @return data.table with summarized nesten data, as input for \code{codeYearGroup}
 #' 
 #' @author mvarewyck
-#' @importFrom dplyr mutate group_by summarise rename
+#' @importFrom dplyr mutate group_by summarise rename filter
 #' @importFrom data.table as.data.table
 #' @importFrom sf st_drop_geometry
 #' @export
-summarizeYearGroupData <- function(df) {
+summarizeYearGroupData <- function(df, gewest) {
   
-  df %>%
+  # For R CMD check
+  result <- GEWEST <- observation_time <- NULL
+  
+  toReturn <- df %>%
     st_drop_geometry() %>%
     mutate(year = as.integer(format(observation_time, "%Y")),
-      result = ifelse(is.na(result), "onbekend", result)) %>% 
+      result = ifelse(is.na(result), "onbekend", result)) %>%
+    filter(GEWEST %in% gewest) %>%
     group_by(year, result, GEWEST) %>%
     summarise(count = n()) %>% 
     rename(Behandeling = result)  %>%
     as.data.table()  
+  
+  toReturn
   
 }
 
@@ -168,8 +175,7 @@ countYearGroupUI <- function(id) {
       
       uiOutput(ns("descriptionCountYearGroup")),
       
-      optionsModuleUI(id = ns("countYearGroup"), showSummary = TRUE,
-        showGewest = TRUE),
+      optionsModuleUI(id = ns("countYearGroup"), showSummary = TRUE),
       plotModuleUI(id = ns("countYearGroup")),
       tags$hr()
     

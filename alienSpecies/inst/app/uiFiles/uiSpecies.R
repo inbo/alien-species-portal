@@ -5,12 +5,24 @@
 
 
 tagList(
+
+  tags$div(class = "container",
+    tags$div(class = "jumbotron",
+      
+      welcomeSectionUI(id = "species"),
+      fixedRow(
+        column(6,
+          selectInput(inputId = "species_choice", label = NULL, choices = NULL,
+            width = "100%")),
+        column(6,
+          selectInput(inputId = "species_gewest", label = NULL,
+            choices = NULL, multiple = TRUE, width = "100%"))
+      )
+    )
+  ),
   
   tags$div(class = "container",
-    
-    selectInput(inputId = "species_choice", label = NULL, 
-      choices = NULL, width = "100%"),    
-    
+
     tabsetPanel(id = "species_tabs",
       
       tabPanel(titleModuleUI(id = "species_observations"),

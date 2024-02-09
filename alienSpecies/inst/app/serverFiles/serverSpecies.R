@@ -24,6 +24,8 @@ lapply(c("observations", "indicators", "reporting", "management", "more",
       plotFunction = iName
     ))
 
+welcomeSectionServer(id = "species", uiText = reactive(results$translations))
+
 
 # Species selection
 results$species_choices <- reactive({
@@ -41,13 +43,39 @@ results$species_choices <- reactive({
 observe({
     
     # Trigger update when changing tab
-    input$tabs
+    if (input$tabs == "species_information")
+      updateSelectizeInput(session = session, inputId = "species_choice",
+        choices = results$species_choices(),
+        selected = urlSearch()$species,
+        server = TRUE)    
     
-    updateSelectizeInput(session = session, inputId = "species_choice",
-      choices = results$species_choices(),
-      selected = as.character(results$species_choice),
-      server = TRUE)    
+  })
+
+
+# Gewest selection
+observe({
     
+    choices <- c("flanders", "wallonia", "brussels")
+    names(choices) <- translate(results$translations, choices)$title
+    
+    # Trigger update when changing tab
+    if (input$tabs == "species_information")
+      updateSelectInput(session = session, inputId = "species_gewest", 
+      choices = choices,
+      selected = 
+        if (!is.null(urlSearch()$gewest)) 
+          strsplit(urlSearch()$gewest, split = ",")[[1]] else 
+          choices)
+            
+})
+
+
+# Update search ID
+observe({
+            
+    results$searchId <- paste0("&species=", input$species_choice, 
+      "&gewest=", paste(input$species_gewest, collapse = ","))
+            
   })
 
 
@@ -83,6 +111,7 @@ observe({
 mapCubeServer(id = "observations",
   uiText = reactive(results$translations),
   species = reactive(input$species_choice),
+  gewest = reactive(req(input$species_gewest)),
   df = reactive({
       req(taxonKey())
       occurrenceData[taxonKey %in% taxonKey(), ]      
@@ -120,7 +149,8 @@ plotTriasServer(id = "species_gam",
   uiText = reactive(results$translations),
   data = reactive({
       req(taxonKey())
-      timeseries[taxonKey %in% taxonKey(), ]
+      summarizeTimeSeries(rawData = timeseries[taxonKey %in% taxonKey(), ], 
+        region = input$species_gewest)
     }),
   triasFunction = "apply_gam",
   triasArgs = reactive({
@@ -132,8 +162,7 @@ plotTriasServer(id = "species_gam",
         y_label = translate(results$translations, "observations")$title
       )
     }),
-  filters = c("bias", "protected"),
-  filterRegion = TRUE
+  filters = c("bias", "protected")
 )
 
 
@@ -163,6 +192,7 @@ observe({
 mapCubeServer(id = "reporting_t01",
   uiText = reactive(results$translations),
   species = reactive(input$species_choice),
+  gewest = reactive(req(input$species_gewest)),
   df = reactive(dfCube[species %in% input$species_choice, ]),
   filter = reactive(list(source = unique(dfCube$source[dfCube$species %in% input$species_choice]))),
   groupVariable = "source",
@@ -231,7 +261,7 @@ results$species_managementData <- reactive({
       tmpData$GEWEST <- allShapes$communes$GEWEST[
         match(tmpData$NISCODE, allShapes$communes$NISCODE)]
       }
-      tmpData
+      tmpData[tmpData$GEWEST %in% input$species_gewest, ]
       
     }
     
@@ -248,6 +278,7 @@ observe({
       mapCubeServer(id = "management",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
         filter = reactive({
             filterCandidates <- c("gender", "samplingProtocol", "lifeStage")
@@ -275,6 +306,7 @@ observe({
       mapHeatServer(id = "management2_active",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
         combinedData = reactive(combinedActive),
         filter = reactive(list(
             nest = unique(combinedActive$filter), 
@@ -299,6 +331,7 @@ observe({
       mapHeatServer(id = "management2_observed",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
         combinedData = reactive(combinedObserved),
         filter = reactive(list(source = unique(combinedObserved$filter))),
         colors = reactive(colorsObserved),
@@ -310,42 +343,12 @@ observe({
         id = "management2",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
-        df = reactive({
-            
-            # TODO this should be done in a createVespaData() function before uploading on S3
-            ## Individual data
-            vespaPoints <- results$species_managementData()$points
-            req(vespaPoints)
-            vespaPoints$type <- "individual"
-            # Columns
-            regionVariables <- list(level3Name = "NAAM", level2Name = "provincie", level1Name = "GEWEST")
-            for (iName in names(regionVariables))
-              names(vespaPoints)[match(iName, names(vespaPoints))] <- regionVariables[[iName]]
-            # Gewest
-            vespaPoints$GEWEST <- ifelse(vespaPoints$GEWEST == "Vlaanderen", "flanders", 
-              ifelse(vespaPoints$GEWEST == "Bruxelles", "brussels", 
-                ifelse(vespaPoints$GEWEST == "Wallonie", "wallonia", "")))
-            # Provincie
-            vespaPoints$provincie <- ifelse(vespaPoints$provincie == "Vlaams Brabant", "Vlaams-Brabant",
-              ifelse(vespaPoints$provincie == "Bruxelles", "HoofdstedelijkGewest", 
-                ifelse(vespaPoints$provincie == "Liège", "Luik", 
-                  ifelse(vespaPoints$provincie == "Brabant Wallon", "Waals-Brabant",
-                    ifelse(vespaPoints$provincie == "Hainaut", "Henegouwen", vespaPoints$provincie)))))
-            vespaPoints$nest_type <- "individual"
-            vespaPoints$isBeheerd <- FALSE
-            
-            ## Nest data
-            vespaNesten <- results$species_managementData()$nesten
-            vespaNesten$type <- "nest"
-            vespaNesten$isBeheerd <- vespaNesten$geometry %in% results$species_managementData()$beheerde_nesten$geometry
-            
-            keepColumns <- c("year", "type", "nest_type", "NAAM", "provincie", "GEWEST", "isBeheerd", "geometry")
-            vespaBoth <- rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
-            vespaBoth$nest_type[vespaBoth$nest_type %in% c("NA", "NULL")] <- NA 
-            
-            vespaBoth
-            
-          }),
+        gewest = reactive(req(input$species_gewest)),
+        df = reactive(combineVespaData(
+            pointsData = req(results$species_managementData()$points),
+            nestenData = req(results$species_managementData()$nesten),
+            nestenBeheerdData = results$species_managementData()$beheerde_nesten
+          )),
         occurrenceData = NULL,
         shapeData = allShapes,
         sourceChoices = c("individual", "nest")
@@ -385,7 +388,9 @@ observe({
       countYearGroupServer(
         id = "management2", 
         uiText = reactive(results$translations), 
-        data = reactive(summarizeYearGroupData(df = results$species_managementData()$nesten)),
+        data = reactive(summarizeYearGroupData(
+            df = results$species_managementData()$nesten, 
+            gewest = input$species_gewest)),
         groupChoices = reactive({
             choices <- c("", "Behandeling")
             names(choices) <- c("", translate(results$translations, choices[-1])$title)
@@ -400,6 +405,7 @@ observe({
         id = "management3",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
         occurrenceData = occurrenceData,
         shapeData = allShapes

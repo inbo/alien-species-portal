@@ -67,7 +67,6 @@ observeEvent(exoten_triggerMore(), {
 ### Filters for Data
 ### -----------------
 
-urlSearch <- reactive(parseQueryString(session$clientData$url_search))
 
 observeEvent(input$tabs, {
     

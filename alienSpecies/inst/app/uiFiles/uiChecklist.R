@@ -6,14 +6,14 @@
 tagList(
   
   tags$div(class = "container",
-    
-    welcomeSectionUI(id = "checklist"),
-    
-    wellPanel(
+    tags$div(class = "jumbotron",
+      
+      welcomeSectionUI(id = "checklist"),
       
       # https://stackoverflow.com/a/60315446
 #      uiOutput("filter_taxa"),
-      selectizeInput(inputId = "exoten_taxa", label = NULL, choices = NULL, multiple = TRUE),
+      selectizeInput(inputId = "exoten_taxa", label = NULL, choices = NULL, multiple = TRUE,
+        width = "100%"),
       
       fixedRow(        
         # Select habitat

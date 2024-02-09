@@ -38,9 +38,7 @@ function(input, output, session) {
     translations = loadMetaData(language = "en"),
     searchId = "",
     exoten_timeNA = defaultTimeNA,
-    exoten_time = defaultTime,
-    species_choice = if (doDebug) c("Alopochen aegyptiaca", "Muntiacus reevesi",
-          "Lithobates catesbeianus", "Vespa velutina")[4] else NULL
+    exoten_time = defaultTime
   )
   
   
@@ -57,9 +55,11 @@ function(input, output, session) {
   # URL Query
   # ----------
   
+    
+  # Create URL for current session
   observeEvent(input$showShare, {
       
-      searchId <- if (input$tabs %in% c("global_indicators"))
+      searchId <- if (input$tabs != "start")
           results$searchId else 
           ""
       languageId <- paste0("&language=", attr(results$translations, "language"))
@@ -102,12 +102,14 @@ function(input, output, session) {
       
     })
     
+    # Resulting URL from previous session
+    urlSearch <- reactive(parseQueryString(session$clientData$url_search))
+    
+    
     # Update page
     observe({
         
-        # The url will be sth like: http://awsabiirl1118.jnj.com/?step=qc&id=16608
-        url <- parseQueryString(session$clientData$url_search)
-        results$urlPage <- url$page
+        results$urlPage <- urlSearch()$page
         
       })
     
@@ -115,17 +117,18 @@ function(input, output, session) {
         
         updateNavbarPage(session = session, inputId = "tabs", selected = results$urlPage)
         
-        url <- parseQueryString(session$clientData$url_search)
-        if (!is.null(url$habitat))
-          results$urlHabitat <- strsplit(url$habitat, split = ", ")[[1]]
+        # TODO necessary here?
+        if (!is.null(urlSearch()$habitat))
+          results$urlHabitat <- strsplit(urlSearch()$habitat, split = ", ")[[1]]
         
       })
+
+    
     
     # Update language
     observe({
         
-        url <- parseQueryString(session$clientData$url_search)
-        results$urlLanguage <- url$language
+        results$urlLanguage <- urlSearch()$language
         
       })
     
