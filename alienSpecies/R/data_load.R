@@ -203,7 +203,7 @@ translate <- function(data = loadMetaData(type = "ui"), id) {
   # can be turned of in production
   if (!is.null(data) & !all(id %in% data$id)) {
     if (!all(is.na(id[!id %in% data$id])))
-      warning("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
+      message("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
   }
   
   data <- rbind(

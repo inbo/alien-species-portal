@@ -155,4 +155,6 @@ p, li, label {
 	color: #E4E517
 }
 
-
+.jumbotron h1 {
+	font-size: 36px;
+}

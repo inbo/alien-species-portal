@@ -252,6 +252,7 @@ createShapeData <- function(
 #' and attribute 'Date', the date that this data file was created
 #' @importFrom data.table fread :=
 #' @importFrom utils tail
+#' @importFrom stats complete.cases
 #' @export
 
 createTabularData <- function(
@@ -264,6 +265,7 @@ createTabularData <- function(
   scientificName <- NULL
   i.scientificName <- NULL
   i.classKey <- NULL
+  taxonKey <- variable <- eea_cell_code <- NULL
   
   warningMessage <- NULL
   

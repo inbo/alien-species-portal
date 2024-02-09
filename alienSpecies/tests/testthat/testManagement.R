@@ -235,57 +235,32 @@ test_that("Provincie nesten", {
 
 test_that("Map Trend", {
     
-    ## Points data
-    vespaPoints <- Vespa_velutina_shape$points
-    vespaPoints$type <- "individual"
+    # Combine all data
+    vespaBoth <- combineVespaData(
+      pointsData = Vespa_velutina_shape$points,
+      nestenData = Vespa_velutina_shape$nesten, 
+      nestenBeheerdData = Vespa_velutina_shape$beheerde_nesten)
     
-    ## Refactor data
-    # Columns
-    regionVariables <- list(level3Name = "NAAM", level2Name = "provincie", level1Name = "GEWEST")
-    for (iName in names(regionVariables))
-      names(vespaPoints)[match(iName, names(vespaPoints))] <- regionVariables[[iName]]
-    # Gewest
-    vespaPoints$GEWEST <- ifelse(vespaPoints$GEWEST == "Vlaanderen", "flanders", 
-      ifelse(vespaPoints$GEWEST == "Bruxelles", "brussels", 
-        ifelse(vespaPoints$GEWEST == "Wallonie", "wallonia", "")))
-    # Provincie
-    vespaPoints$provincie <- ifelse(vespaPoints$provincie == "Vlaams Brabant", "Vlaams-Brabant",
-      ifelse(vespaPoints$provincie == "Bruxelles", "HoofdstedelijkGewest", 
-        ifelse(vespaPoints$provincie == "Liège", "Luik", 
-          ifelse(vespaPoints$provincie == "Brabant Wallon", "Waals-Brabant",
-            ifelse(vespaPoints$provincie == "Hainaut", "Henegouwen", vespaPoints$provincie)))))
-    
-    summaryData <- createSummaryRegions(data = vespaPoints, shapeData = allShapes,
+    ## POINTS data
+    # Per municipality
+    summaryData <- createSummaryRegions(
+      data = vespaBoth[vespaBoth$type %in% "individual", ], 
+      shapeData = allShapes,
       regionLevel = "communes",
-      year = 2022,
-      unit = "absolute")
+      year = 2022)
     mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "communes")
     
-    
-    summaryData <- createSummaryRegions(data = vespaPoints, shapeData = allShapes,
+    # Per province
+    summaryData <- createSummaryRegions(
+      data = vespaBoth[vespaBoth$type %in% "individual", ], 
+      shapeData = allShapes,
       regionLevel = "provinces",
-      year = 2022,
-      unit = "absolute")
+      year = 2022)
     mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
     
-    ## Nesten data
-    vespaNesten <- Vespa_velutina_shape$nesten
-    vespaNesten$type <- "nest"
-    
-#    Vespa_velutina_shape$beheerde_nesten[!(Vespa_velutina_shape$beheerde_nesten$geometry %in% Vespa_velutina_shape$nesten$geometry), c("id", "comments", "NAAM", "geometry")]
-    vespaNesten$isBeheerd <- vespaNesten$geometry %in% Vespa_velutina_shape$beheerde_nesten$geometry
-    
-    
-    # Nesten and Points combined on 1 map
-    vespaPoints$nest_type <- "individual"
-    vespaPoints$isBeheerd <- FALSE
-    keepColumns <- c("year", "type", "nest_type", "NAAM", 
-      "provincie", "GEWEST", "isBeheerd",
-      "geometry")
-    vespaBoth <- rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
-    vespaBoth$nest_type[vespaBoth$nest_type %in% c("NA", "NULL")] <- NA 
+    ## POINTS and NESTEN data
     summaryData <- createSummaryRegions(
       data = vespaBoth, shapeData = allShapes,
       regionLevel = "provinces",
@@ -295,30 +270,25 @@ test_that("Map Trend", {
     mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
     
-    # data manipulation for nest linetypes
-    vespaBoth <- vespaBoth[!is.na(vespaBoth$nest_type), ]
-    vespaBoth$nest_group <- ifelse(vespaBoth$nest_type %in% "individual", 
-      "individual", "nest")    
     summaryData <- createSummaryRegions(
       data = vespaBoth, shapeData = allShapes,
       regionLevel = "provinces",
-      groupingVariable = "nest_group", 
+      groupingVariable = c("nest_type", "isBeheerd"), 
       year = 2018:2023,
-      unit = "absolute")
-    longData <- melt(summaryData[, c("region", "year", "individual", "nest")], 
-      id.vars = c("region", "year"),
-      measure.vars = c("individual", "nest"), variable.name = "group", value.name = "outcome")
-    attr(longData, "unit") <- attr(summaryData, "unit")
-    trendYearRegion(df = longData[longData$region != "", ])$plot
+      unit = NULL)
+     
+    trendYearRegion(df = summaryData)$plot
     
     # create popup with summary table in it
-    mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, unit = "absolute", bronMap = "nesten")
+    tmpText <- mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, 
+      unit = NULL, bronMap = "individual")
     
   })
   
 test_that("Management succes", {
     
-    plotData <- summarizeYearGroupData(df = Vespa_velutina_shape$nesten) 
+    plotData <- summarizeYearGroupData(df = Vespa_velutina_shape$nesten, 
+      gewest = "flanders") 
       
     countYearGroup(df = plotData, groupVar = "Behandeling")
     

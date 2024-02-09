@@ -121,12 +121,15 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
       output$filters <- renderUI({
           
           if (!is.null(filters)) 
-            lapply(filters, function(iFilter) {
-                checkboxInput(inputId = ns(iFilter), label = switch(iFilter,
-                    bias = translate(uiText(), "correctBias")$title,
-                    protected = translate(uiText(), "protectAreas")$title)
-                )
-              })
+            wellPanel(
+              lapply(filters, function(iFilter) {
+                  checkboxInput(inputId = ns(iFilter), label = switch(iFilter,
+                      bias = translate(uiText(), "correctBias")$title,
+                      protected = translate(uiText(), "protectAreas")$title)
+                  )
+                })
+            )
+          
         })
       
       
@@ -184,7 +187,7 @@ plotTriasUI <- function(id, outputType = c("plot", "table")) {
     conditionalPanel("input.linkPlotTrias % 2 == 1", ns = ns,
       
       uiOutput(ns("descriptionPlotTrias")),
-      wellPanel(uiOutput(ns("filters"))),
+      uiOutput(ns("filters")),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else

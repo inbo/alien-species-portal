@@ -10,6 +10,7 @@
 #' Create leaflet raster map for the climate risk maps
 #' 
 #' @param rasterInput SpatRaster object, as returned by \code{terra::rast}
+#' @param legendScale character, scale to be mentioned in the legend
 #' @inheritParams mapHeat
 #' 
 #' @return leaflet map
@@ -81,6 +82,7 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
 #' @importFrom webshot webshot
 #' @importFrom terra values rast
 #' @importFrom httr http_status GET
+#' @importFrom utils download.file
 #' @export
 mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
   

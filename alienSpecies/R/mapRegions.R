@@ -1,4 +1,49 @@
 
+
+#' Combine all nesten data for regions summary
+#' 
+#' Returned object can be used as `data` in \code{\link{createSummaryRegions}}
+#' @inheritParams combineNestenData
+#' @param nestenBeheerdData sf data.frame, beheerde nesten data 
+#' @return data.frame
+#' 
+#' @author mvarewyck
+#' @export
+combineVespaData <- function(pointsData, nestenData, nestenBeheerdData) {
+  
+  ## Individual data
+  pointsData$type <- "individual"
+  # Columns
+  regionVariables <- list(level3Name = "NAAM", level2Name = "provincie", level1Name = "GEWEST")
+  for (iName in names(regionVariables))
+    names(pointsData)[match(iName, names(pointsData))] <- regionVariables[[iName]]
+  # Gewest
+  pointsData$GEWEST <- ifelse(pointsData$GEWEST == "Vlaanderen", "flanders", 
+    ifelse(pointsData$GEWEST == "Bruxelles", "brussels", 
+      ifelse(pointsData$GEWEST == "Wallonie", "wallonia", "")))
+  # Provincie
+  pointsData$provincie <- ifelse(pointsData$provincie == "Vlaams Brabant", "Vlaams-Brabant",
+    ifelse(pointsData$provincie == "Bruxelles", "HoofdstedelijkGewest", 
+      ifelse(pointsData$provincie == "Liège", "Luik", 
+        ifelse(pointsData$provincie == "Brabant Wallon", "Waals-Brabant",
+          ifelse(pointsData$provincie == "Hainaut", "Henegouwen", pointsData$provincie)))))
+  pointsData$nest_type <- "individual"
+  pointsData$isBeheerd <- FALSE
+  
+  ## Nest data
+  nestenData$type <- "nest"
+  nestenData$isBeheerd <- nestenData$geometry %in% nestenBeheerdData$geometry
+  
+  keepColumns <- c("year", "type", "nest_type", "NAAM", "provincie", "GEWEST", "isBeheerd", "geometry")
+  vespaBoth <- rbind(pointsData[, keepColumns], nestenData[, keepColumns])
+  vespaBoth$nest_type[vespaBoth$nest_type %in% c("NA", "NULL")] <- NA 
+  
+  vespaBoth
+  
+}
+
+
+
 #' Create summary data per region
 #' @param data data.table with management data
 #' @param shapeData list, each object is \code{SpatialPolygonsDataFrame}. 
@@ -148,6 +193,7 @@ createSummaryRegions <- function(data, shapeData,
 #' @param managementData data.frame, management data
 #' @param occurrenceData data.frame, occurrence data
 #' @param shapeData list with spatial data (grid and regions)
+#' @inheritParams mapHeat
 #' @param uiText data.frame, for translations
 #' @param regionLevel character, region level to color polygons
 #' @param palette character, color palette to be used, see also \code{\link[leaflet]{colorFactor}}
@@ -158,7 +204,8 @@ createSummaryRegions <- function(data, shapeData,
 #' @author mvarewyck
 #' @import leaflet
 #' @export
-mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText = NULL, 
+mapRegions <- function(managementData, occurrenceData = NULL, shapeData, 
+  baseMap = addBaseMap(), uiText = NULL,
   regionLevel = c("communes", "provinces"), palette = "YlOrBr",
   legend = "topright", addGlobe = FALSE) {
   
@@ -169,9 +216,29 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
     reverse = (palette != "YlOrBr"))
   valuesPalette <- managementData$group[match(spatialData$NAAM, managementData$region)]
   
+  # Add borders
+  if (regionLevel == "communes") {
+    
+    # TODO include in addBaseMap()
+    myMap <- leaflet() %>% 
+      addPolylines(
+        data = shapeData$provinces, 
+        weight = 3,
+        color = "black",
+        opacity = 0.8,
+        group = "borderRegion"
+      ) 
+    
+  } else if (regionLevel == "provinces") {
+    
+    myMap <- baseMap
+    
+  }
   
-  myMap <- leaflet(spatialData) %>% 
+  
+  myMap <- myMap %>% 
     addPolygons(
+      data = spatialData,
       weight = 1,
       color = "gray",
       fillColor = ~ paletteFunction(valuesPalette),
@@ -192,23 +259,7 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
     
   }
   
-  # Add borders
-  if (regionLevel == "communes") {
-    
-    myMap <- myMap %>% 
-      addPolylines(
-        data = shapeData$provinces, 
-        weight = 3,
-        color = "black",
-        opacity = 0.8,
-        group = "borderRegion"
-      ) 
-    
-  } else if (regionLevel == "provinces") {
-    
-    myMap <- myMap %>% addBaseMap()
-    
-  }
+  
   
   # Add legend
   if (legend != "none") { 
@@ -431,11 +482,11 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           lapply(shapeData, function(iData) {
               if ("GEWEST" %in% colnames(iData)){
                 iData$GEWEST <- dplyr::recode(iData$GEWEST, "Brussels" = "brussels", "Vlaams"="flanders", "Waals" =  "wallonia")
-                iData[iData$GEWEST %in% gewest(), ]}else{
+                iData[iData$GEWEST %in% gewest(), ]
+              }else{
                 iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(gewest())), drop = FALSE]), 1, sum) > 0, ]
-          }
-                })
-          
+              }
+            })
           
         })
       
@@ -521,6 +572,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           
           mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
             shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel,
+            baseMap = addBaseMap(regions = gewest()),
             addGlobe = isolate(input$globe %% 2 == 1),
             palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr")
           
@@ -702,7 +754,9 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       finalMap <- reactive({
           
           newMap <- mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
-            shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel,
+            shapeData = subShape(), 
+            baseMap = addBaseMap(regions = gewest()),
+            uiText = uiText(), regionLevel = input$regionLevel,
             legend = input$legend, addGlobe = input$globe %% 2 == 1,
             palette = if (input$unit == "difference") "RdYlGn" else "YlOrBr")
           

@@ -18,7 +18,7 @@ test_that("Create climate risk map", {
     keyChoice <- 2479226
     
     climateChoice <- c("hist", "rcp26", "rcp45", "rcp85")[1]
-    mapChoice <- c("", "conf", "diff")[3]
+    mapChoice <- c("", "conf", "diff")[1]
     
     tiffPath <- "https://raw.githubusercontent.com/trias-project/risk-maps/main/public/geotiffs"
     tiffFile <- paste0(paste("be", keyChoice, climateChoice, sep = "_"),
