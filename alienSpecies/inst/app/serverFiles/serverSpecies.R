@@ -62,8 +62,7 @@ observe({
     if (input$tabs == "species_information")
       updateSelectInput(session = session, inputId = "species_gewest", 
       choices = choices,
-      selected = 
-        if (!is.null(urlSearch()$gewest)) 
+      selected = if (!is.null(urlSearch()$gewest)) 
           strsplit(urlSearch()$gewest, split = ",")[[1]] else 
           choices)
             
@@ -268,6 +267,7 @@ results$species_managementData <- reactive({
   })
 
 
+# TODO rmd per management type? https://stackoverflow.com/a/33500524
 observe({
     
     req(results$species_managementData())
@@ -339,19 +339,31 @@ observe({
       )
       
       # Trend region
+      combinedManaged <- combineVespaData(
+        pointsData = req(results$species_managementData()$points),
+        nestenData = req(results$species_managementData()$nesten),
+        nestenBeheerdData = results$species_managementData()$beheerde_nesten
+      )
       mapRegionsServer(
         id = "management2",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         gewest = reactive(req(input$species_gewest)),
-        df = reactive(combineVespaData(
-            pointsData = req(results$species_managementData()$points),
-            nestenData = req(results$species_managementData()$nesten),
-            nestenBeheerdData = results$species_managementData()$beheerde_nesten
-          )),
+        df = reactive(combinedManaged),
         occurrenceData = NULL,
         shapeData = allShapes,
         sourceChoices = c("individual", "nest")
+      )
+      
+      # Facet invasion
+      mapRegionsServer(id = "management2_facet",
+        uiText = reactive(results$translations),
+        species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
+        df = reactive(combinedManaged),
+        occurrenceData = NULL,
+        shapeData = allShapes,
+        facet = TRUE
       )
       
       # Aantal lente nesten
@@ -450,6 +462,7 @@ output$species_managementContent <- renderUI({
             ),
         mapHeatUI(id = "management2_observed"),
         mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
+        mapRegionsUI(id = "management2_facet", showUnit = FALSE, facet = TRUE),
         plotTriasUI(id = "management2_lente"),
         countNestenUI(id = "management2_province"),
         plotTriasUI(id = "management2_provinceTable", outputType = "table"),

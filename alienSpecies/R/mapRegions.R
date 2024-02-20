@@ -347,11 +347,11 @@ mapRegionsFacet <- function(managementData, shapeData, uiText = NULL,
   if (addGlobe)
     # Add background globe
     myPlot <- myPlot + ggspatial::annotation_map_tile(
-        zoom = 7, alpha = 0.5,
-        cachedir = tempdir()) +
+        zoom = 7, alpha = 0.5, forcedownload = FALSE,
+        cachedir = system.file("extdata", package = "alienSpecies")) +
       # redraw polygons
       geom_sf(data = plotData, aes(fill = group), size = 0.5) +
-      labs(caption = "Copyright OpenStreetMap contributors")
+      labs(caption = "\U00a9 OpenStreetMap contributors")
   
   if (regionLevel == "communes")
     # Add province borders

@@ -294,6 +294,42 @@ test_that("Management succes", {
     
   })  
 
+test_that("Map invasion", {
+    
+    # Combine all data
+    vespaBoth <- combineVespaData(
+      pointsData = Vespa_velutina_shape$points,
+      nestenData = Vespa_velutina_shape$nesten, 
+      nestenBeheerdData = Vespa_velutina_shape$beheerde_nesten)
+    
+    # User selection
+    regionLevel <- c("provinces", "communes")[2]
+    addGlobe <- c(FALSE, TRUE)[2]
+    legend <- c("none", "left", "right", "bottom", "top")[4]
+    currentYear <- 2023
+    
+    ## POINTS data
+    # Per province
+    summaryData <- createSummaryRegions(
+#      data = vespaBoth[vespaBoth$type %in% "nest", ], 
+      data = vespaBoth,
+      shapeData = allShapes,
+      regionLevel = regionLevel,
+      year = list(
+        c(currentYear-6, currentYear-4), 
+        c(currentYear-3, currentYear-1),
+        currentYear)
+    )
+    
+   myPlot <- mapRegionsFacet(managementData = summaryData,
+     shapeData = allShapes, regionLevel = regionLevel, uiText = uiText,
+     legend = legend, addGlobe = addGlobe)
+   # TODO globe layer slows down the graph
+    # Alternative: https://yutani.rbind.io/post/2018-06-09-plot-osm-tiles/
+
+   
+  })
+
 
 
 ## Muskusrat ##
