@@ -208,6 +208,7 @@ cubeSpecies <- c("Oxyura jamaicensis")
 # Species for which to show heatMap output
 heatSpecies <- c("Vespa velutina")
 # Other species will have mapRegions output
+# e.g. Ondatra zibethicus
 
 results$species_managementFile <- reactive({
     
@@ -422,6 +423,18 @@ observe({
         occurrenceData = occurrenceData,
         shapeData = allShapes
       )
+      
+      # Facet invasion
+      mapRegionsServer(id = "management3_facet",
+        uiText = reactive(results$translations),
+        species = reactive(input$species_choice),
+        gewest = reactive(req(input$species_gewest)),
+        df = results$species_managementData,
+        occurrenceData = NULL,
+        shapeData = allShapes,
+        facet = TRUE
+      )
+      
       countYearGroupServer(
         id = "management3", 
         uiText = reactive(results$translations), 
@@ -473,6 +486,7 @@ output$species_managementContent <- renderUI({
       
       tagList(
         mapRegionsUI(id = "management3", plotDetails = c("flanders", "region")),
+        mapRegionsUI(id = "management3_facet", showUnit = FALSE, facet = TRUE),
         countYearGroupUI(id = "management3")
       )
       

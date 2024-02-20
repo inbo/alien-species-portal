@@ -154,7 +154,24 @@ test_that("Trend for Bullfrogs", {
   })
 
 
-
+test_that("Map invasion", {
+    
+    summaryData <- createSummaryRegions(
+      data = managementData,
+      shapeData = allShapes,
+      regionLevel = "provinces",
+      year = list(
+        c(currentYear-6, currentYear-4), 
+        c(currentYear-3, currentYear-1),
+        currentYear)
+    )
+    
+    myPlot <- mapRegionsFacet(managementData = summaryData,
+      shapeData = allShapes, regionLevel = "provinces")
+    
+    expect_s3_class(myPlot, "ggplot")
+    
+  })
 
 
 ## Aziatische hoornaar ##
@@ -414,6 +431,28 @@ test_that("Trend for Muskrat", {
 #    trendYearRegion(df = summaryData[summaryData$region %in% c("flanders", "wallonia"), ])
     
   })
+
+
+test_that("Map invasion", {
+    
+    summaryData <- createSummaryRegions(
+      data = managementData,
+      shapeData = allShapes,
+      regionLevel = "provinces",
+      year = list(
+        c(currentYear-6, currentYear-4), 
+        c(currentYear-3, currentYear-1),
+        currentYear)
+    )
+    
+    myPlot <- mapRegionsFacet(managementData = summaryData,
+      shapeData = allShapes, regionLevel = "provinces")
+    
+    expect_s3_class(myPlot, "ggplot")
+    
+  })
+
+
 
 
 
