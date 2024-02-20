@@ -35,7 +35,7 @@ function(input, output, session) {
   
   results <- reactiveValues(
     # Default language is dutch
-    translations = loadMetaData(language = "en"),
+    translations = loadMetaData(language = "en", local = doDebug),
     searchId = "",
     exoten_timeNA = defaultTimeNA,
     exoten_time = defaultTime
@@ -43,9 +43,9 @@ function(input, output, session) {
   
   
   # Select language
-  observeEvent(input$translate_nl, results$translations <- loadMetaData(language = "nl"))
-  observeEvent(input$translate_fr, results$translations <- loadMetaData(language = "fr"))
-  observeEvent(input$translate_en, results$translations <- loadMetaData(language = "en"))
+  observeEvent(input$translate_nl, results$translations <- loadMetaData(language = "nl", local = doDebug))
+  observeEvent(input$translate_fr, results$translations <- loadMetaData(language = "fr", local = doDebug))
+  observeEvent(input$translate_en, results$translations <- loadMetaData(language = "en", local = doDebug))
   
   results$switchTranslation <- reactive(
     input$translate_nl + input$translate_fr + input$translate_en

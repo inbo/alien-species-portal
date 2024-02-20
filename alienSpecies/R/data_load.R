@@ -58,6 +58,8 @@ loadTabularData <- function(
 #' should be one of \code{c("ui","keys")}
 #' @param language character, which language data sheet should be loaded;
 #' should be one of \code{c("nl", "fr", "en")}
+#' @param local boolean, whether to use local translation file in
+#' \code{system.file("extdata", "translations.csv", package = "alienSpecies")}
 #' @return data.frame
 #' 
 #' @author mvarewyck
@@ -67,7 +69,8 @@ loadTabularData <- function(
 loadMetaData <- function(type = c("ui", "keys"),
   #dataDir = system.file("extdata", package = "alienSpecies"), 
   bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
-  language = c("nl", "fr", "en")) {
+  language = c("nl", "fr", "en"),
+  local = FALSE) {
   
   type <- match.arg(type)
   language <- match.arg(language)
@@ -83,8 +86,12 @@ loadMetaData <- function(type = c("ui", "keys"),
          keys = "keys.csv"
   )
   
- allData <- readS3(FUN = read.csv,  sep = if (type == "ui") ";" else ",",encoding = "UTF-8", 
- file = fileName)
+  allData <- if (local)
+      read.csv(system.file("extdata", fileName, package = "alienSpecies"),
+        sep = if (type == "ui") ";" else ",", encoding = "UTF-8") else
+      readS3(FUN = read.csv, sep = if (type == "ui") ";" else ",", encoding = "UTF-8", 
+        file = fileName)
+
   
   filterData <- switch(type, 
     ui = {

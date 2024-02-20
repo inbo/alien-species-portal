@@ -17,6 +17,7 @@ Imports:
     dplyr,
     DT,
     ggplot2,
+    ggspatial,
     htmltools,
     htmlwidgets,
     httr,
@@ -40,7 +41,7 @@ Imports:
 	  xtable
 Suggests:
     shinyjs
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Remotes: 
     inbo/INBOtheme@v0.5.9,
     trias-project/trias@v2.0.6
