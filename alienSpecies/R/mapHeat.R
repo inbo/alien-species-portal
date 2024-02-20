@@ -223,9 +223,20 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       
       output$titleMapHeat <- renderUI(h3(HTML(tmpTranslation()$title)))
       
+      # Hide output if no data
+      observe({
+          
+          # Wait until output is created
+          req(input$legend)
+          
+          shinyjs::toggle(id = "mapHeatUI", 
+            condition = (!is.null(combinedData()) && nrow(combinedData()) > 0))
+          
+        })
+      
       output$filters <- renderUI({
           
-          validate(need(nrow(combinedData()) > 0, noData()))
+          req(nrow(combinedData()))
           
           if (!is.null(filter()))
             lapply(names(filter()), function(filterName) {
@@ -489,25 +500,27 @@ mapHeatUI <- function(id, showLegend = TRUE, showGlobe = TRUE) {
     uiOutput(ns("titleMapHeat")),
     uiOutput(ns("descriptionMapHeat")),
     
-    wellPanel(
-      fixedRow(uiOutput(ns("filters")),
-        if (showLegend)
-          column(4, 
-            uiOutput(ns("legend"))
-          ),
-        if (showGlobe)
-          column(6, 
-            actionLink(inputId = ns("globe"), label = "Show globe",
-              icon = icon("globe"))
-          )
-      )
-    ),
-    withSpinner(leafletOutput(ns("spacePlot"), height = "600px")),
-    
-    tags$br(),
-    
-    tags$div(uiOutput(ns("downloadMapButton")), style = "display:inline-block;"),
+    tags$div(id = ns("mapHeatUI"),
+      wellPanel(
+        fixedRow(uiOutput(ns("filters")),
+          if (showLegend)
+            column(4, 
+              uiOutput(ns("legend"))
+            ),
+          if (showGlobe)
+            column(6, 
+              actionLink(inputId = ns("globe"), label = "Show globe",
+                icon = icon("globe"))
+            )
+        )
+      ),
+      withSpinner(leafletOutput(ns("spacePlot"), height = "600px")),
+      
+      tags$br(),
+      
+      tags$div(uiOutput(ns("downloadMapButton")), style = "display:inline-block;"),
 #    downloadButton(ns("downloadData"), label = "Download data", class = "downloadButton"),
+    ),
     
     tags$hr()
   

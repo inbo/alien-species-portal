@@ -147,7 +147,10 @@ countYearGroupServer <- function(id, uiText, data, groupChoices) {
       # Plot
       plotModuleServer(id = "countYearGroup",
         plotFunction = "countYearGroup", 
-        data = data,
+        data = reactive({
+            validate(need(nrow(data()) > 0, translate(uiText(), "noData")$title))
+            data()
+          }),
         groupChoices = groupChoices,
         uiText = uiText
         )
