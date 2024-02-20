@@ -156,13 +156,15 @@ test_that("Trend for Bullfrogs", {
 
 test_that("Map invasion", {
     
+    currentYear <- 2023
+    
     summaryData <- createSummaryRegions(
       data = managementData,
       shapeData = allShapes,
       regionLevel = "provinces",
       year = list(
-        c(currentYear-6, currentYear-4), 
-        c(currentYear-3, currentYear-1),
+        c(currentYear-8, currentYear-5), 
+        c(currentYear-4, currentYear-1),
         currentYear)
     )
     
@@ -333,8 +335,8 @@ test_that("Map invasion", {
       shapeData = allShapes,
       regionLevel = regionLevel,
       year = list(
-        c(currentYear-6, currentYear-4), 
-        c(currentYear-3, currentYear-1),
+        c(currentYear-8, currentYear-5), 
+        c(currentYear-4, currentYear-1),
         currentYear)
     )
     
@@ -344,6 +346,7 @@ test_that("Map invasion", {
    # TODO globe layer slows down the graph
     # Alternative: https://yutani.rbind.io/post/2018-06-09-plot-osm-tiles/
 
+    expect_s3_class(myPlot, "ggplot")
    
   })
 
@@ -435,13 +438,15 @@ test_that("Trend for Muskrat", {
 
 test_that("Map invasion", {
     
+    currentYear <- 2023
+    
     summaryData <- createSummaryRegions(
       data = managementData,
       shapeData = allShapes,
       regionLevel = "provinces",
       year = list(
-        c(currentYear-6, currentYear-4), 
-        c(currentYear-3, currentYear-1),
+        c(currentYear-8, currentYear-5), 
+        c(currentYear-4, currentYear-1),
         currentYear)
     )
     

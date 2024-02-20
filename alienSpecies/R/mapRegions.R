@@ -328,8 +328,11 @@ mapRegionsFacet <- function(managementData, shapeData, uiText = NULL,
   regionLevel = c("communes", "provinces"), palette = "YlOrBr",
   legend = "right", addGlobe = FALSE) {
   
-  plotData <- merge(allShapes[[regionLevel]], managementData,
-    by.x = "NAAM", by.y = "region")
+  # For R CMD check
+  group <- NULL
+  
+  plotData <- merge(shapeData[[regionLevel]], managementData,
+    by.x = "NAAM", by.y = "region", all.x = TRUE)
   
   # Facet plot
   myPlot <- ggplot() + 
@@ -351,12 +354,12 @@ mapRegionsFacet <- function(managementData, shapeData, uiText = NULL,
         cachedir = system.file("extdata", package = "alienSpecies")) +
       # redraw polygons
       geom_sf(data = plotData, aes(fill = group), size = 0.5) +
-      labs(caption = "\U00a9 OpenStreetMap contributors")
+      labs(caption = "\u00a9 OpenStreetMap contributors")
   
   if (regionLevel == "communes")
     # Add province borders
     myPlot <- myPlot +
-      geom_sf(data = allShapes$provinces, fill = NA, color = "black", size = 1)
+      geom_sf(data = shapeData$provinces, fill = NA, color = "black", size = 1)
   
   
   myPlot
@@ -625,8 +628,8 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
             regionLevel = req(input$regionLevel),
             year = if (facet)
               list(
-                c(input$year-6, input$year-4), 
-                c(input$year-3, input$year-1),
+                c(input$year-8, input$year-5), 
+                c(input$year-4, input$year-1),
                 input$year) else
                 input$year, 
             unit = input$unit,
