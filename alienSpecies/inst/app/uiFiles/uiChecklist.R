@@ -29,7 +29,8 @@ tagList(
         
       ),
       
-      actionLink("exoten_more", label = "More", icon = icon("angle-double-down")),
+      actionLink("exoten_more", label = "More", 
+        icon = icon("angle-double-down", class = "green-icon")),
       
       conditionalPanel("input.exoten_more % 2 == 1", 
         

@@ -55,10 +55,10 @@ observeEvent(exoten_triggerMore(), {
   if (input$exoten_more %% 2 == 1)
     updateActionLink(session = session, inputId = "exoten_more", 
       label = translate(results$translations, "less")$title,
-      icon = icon("angle-double-up")) else
+      icon = icon("angle-double-up", class = "green-icon")) else
     updateActionLink(session = session, inputId = "exoten_more", 
       label = translate(results$translations, "more")$title,
-      icon = icon("angle-double-down"))
+      icon = icon("angle-double-down", class = "green-icon"))
   
   })
 
@@ -77,10 +77,10 @@ observeEvent(input$tabs, {
         options = list(
           placeholder = translate(results$translations, "allTaxa")$title,
           render = I(
-            '{
+            "{
               option: function(item, escape) {
-              return "<div>" + item.html + "</div>"; }
-              }'
+              return '<div class=\"long-selectize\">' + item.html + '</div>'; }
+              }"
           ))
       )
 
@@ -331,7 +331,7 @@ output$exoten_legendLink <- renderUI({
     
     actionLink(inputId = "exoten_legend", 
       label = translate(results$translations, "tableLegend")$title, 
-      icon = icon("angle-double-down"))
+      icon = icon("angle-double-down", class = "green-icon"))
     
   })
 

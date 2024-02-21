@@ -46,7 +46,9 @@ observe({
     if (input$tabs == "species_information")
       updateSelectizeInput(session = session, inputId = "species_choice",
         choices = results$species_choices(),
-        selected = urlSearch()$species,
+        selected = if (!is.null(urlSearch()$species))
+          urlSearch()$species else 
+          as.character(results$species_choice),
         server = TRUE)    
     
   })

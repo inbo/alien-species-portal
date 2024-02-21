@@ -139,6 +139,10 @@ a, a:visited, a:hover, a:active, a:focus {
  color: #fff;
 }
 
+.green-icon {
+ color: #c1c443;
+}
+
 p, li, label {
  font-size: 16px
 }
@@ -155,6 +159,20 @@ p, li, label {
 	color: #E4E517
 }
 
+
+
+/*** Customize Global Indicators page ***/
+
 .jumbotron h1 {
-	font-size: 36px;
+ font-size: 36px;
 }
+
+.long-selectize {
+ padding: 5px;
+ padding-left: 10px;
+}
+
+.form-control {
+ font-size: 16px;
+}
+
