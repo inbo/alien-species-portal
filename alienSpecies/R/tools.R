@@ -190,13 +190,14 @@ simpleCap <- function(names, keepNames = TRUE) {
 #' \code{c("inbo", "trias")}
 #' @author mvarewyck
 #' @export
-getPathLogo <- function(type = c("inbo", "trias")) {
+getPathLogo <- function(type = c("inbo", "trias", "combined")) {
   
   type <- match.arg(type)
   
   system.file("app/www", switch(type,
       inbo = "logo.png",
-      trias = "logoTrias.png"
+      trias = "logoTrias.png",
+      combined = "logoCombined.png"
     ), package = "alienSpecies")
 
 }

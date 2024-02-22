@@ -592,8 +592,7 @@ observeEvent(input$species_createReport, {
             output_file = tempfile(fileext = ".pdf"),
             intermediates_dir = tempdir(),
             output_options = list(
-              bigLogo = getPathLogo(type = "inbo")
-#                getPathLogo(type = "trias")
+              bigLogo = getPathLogo(type = "combined")
             )
           )
         )
