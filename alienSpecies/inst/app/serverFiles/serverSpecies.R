@@ -10,6 +10,11 @@
 
 
 
+
+# Collect all results for the report
+dashReport <- reactiveValues()
+
+
 output$species_title <- renderUI({
     
     translate(data = results$translations, id = tabChoices[3])$title  
@@ -109,7 +114,7 @@ observe({
 
 
 ## Map + barplot
-mapCubeServer(id = "observations",
+dashReport$observations <- mapCubeServer(id = "observations",
   uiText = reactive(results$translations),
   species = reactive(input$species_choice),
   gewest = reactive(req(input$species_gewest)),
@@ -259,18 +264,23 @@ results$species_managementData <- reactive({
     } else {
       
       tmpData <- loadGbif(dataFile = results$species_managementFile())
-      if( ! "GEWEST" %in% colnames(tmpData) ){
-      tmpData$GEWEST <- allShapes$communes$GEWEST[
-        match(tmpData$NISCODE, allShapes$communes$NISCODE)]
+      
+      if (!"GEWEST" %in% colnames(tmpData) && "NISCODE" %in% colnames(tmpData)){
+        tmpData$GEWEST <- allShapes$communes$GEWEST[
+          match(tmpData$NISCODE, allShapes$communes$NISCODE)]
+        tmpData <- tmpData[tmpData$GEWEST %in% input$species_gewest, ]
       }
-      tmpData[tmpData$GEWEST %in% input$species_gewest, ]
+      
+      tmpData
       
     }
     
   })
 
 
-# TODO rmd per management type? https://stackoverflow.com/a/33500524
+# TODO rmd per management type? 
+# https://stackoverflow.com/a/33500524
+# https://bookdown.org/yihui/rmarkdown/shiny-args.html
 observe({
     
     req(results$species_managementData())
@@ -549,4 +559,60 @@ observe({
     )
     
   })
+
+
+
+## SUBMIT & DOWNLOAD report ##
+
+species_reportFile <- reactiveVal()
+
+observe({
+    
+    updateActionButton(inputId = "species_createReport", 
+      label = translate(data = results$translations, id = "createReport")$title)
+    
+  })
+
+observeEvent(input$species_createReport, {
+    
+    species_reportFile(NULL)  # reset on each button press
+    
+    withProgress(message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), value = 0, {
+        
+        oldDir <- getwd()
+        setwd(tempdir())
+        on.exit(setwd(oldDir))
+        
+        fromFiles <- system.file("app/www", c("reportSpecies.Rmd", "plotSpecies.Rmd"), package = "alienSpecies")
+        file.copy(from = fromFiles, to = file.path(tempdir(), basename(fromFiles)), overwrite = TRUE)
+        
+        species_reportFile(
+          rmarkdown::render(
+            input = file.path(tempdir(), basename(fromFiles[1])),
+            output_file = tempfile(fileext = ".pdf"),
+            intermediates_dir = tempdir(),
+            output_options = list(
+              bigLogo = getPathLogo(type = "inbo")
+#                getPathLogo(type = "trias")
+            )
+          )
+        )
+        
+        # report is ready, trigger download
+        setProgress(1)
+        
+        session$sendCustomMessage(type = "imageReady", 
+          message = list(id = "species_downloadReport"))
+        
+      })
+    
+  })
+
+
+output$species_downloadReport <- downloadHandler(
+  filename = function() 
+    nameFile(species = input$species_choice, content = "report", fileExt = "pdf"),
+  content = function(file) 
+    file.copy(species_reportFile(), file, overwrite = TRUE)
+)
 

@@ -1,0 +1,98 @@
+---
+title: "`r paste(translate(data = results$translations, id = 'species_information')$title, ':', input$species_choice)`" 
+author: "`r paste0('v', packageVersion('alienSpecies'))`"
+date: "`r format(Sys.Date(), '%d-%m-%Y')`"
+toc-title: "r paste(translate(data = results$translations, id = 'contents')$title"
+output: 
+   oaStyle::pdf_report:
+      logo: NULL
+      bigLogoSize: 15cm
+      always_allow_html: yes
+      latex_engine: pdflatex 
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r knitr, echo = FALSE, results = 'hide', warning = FALSE}
+library(knitr)
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE, 
+  message = FALSE,
+  fig.align = 'center',
+  fig.width = 10, 
+  fig.height = 8
+)
+
+gewestNames <- sapply(input$species_gewest, function(x)
+    translate(data = results$translations, id = x)$title) 
+```
+
+---
+subtitle: "`r toString(gewestNames)`"
+---
+
+
+```{r intro, results = "asis"}
+cat("*",  translate(data = results$translations, id = 'species')$title, ":", input$species_choice, "\n")
+cat("*",  translate(data = results$translations, id = 'region')$title, ":", toString(gewestNames), "\n")
+```
+
+
+
+```{r titleObservations, results = "asis"}
+observationTitle <- translate(results$translations, "observations")$title
+cat("#", observationTitle, "\n\n") 
+``` 
+
+```{r mapObservations}
+incProgress(amount = 0.1, detail = observationTitle)
+
+id <- "observations"
+
+webshot::webshot(url = dashReport[[id]]()$plot, vwidth = 1000, vheight = 500, cliprect = "viewport")
+```
+
+```{r mapParameters}
+params <- dashReport[[id]]()
+currentParams <- names(params)
+print(currentParams)
+```
+
+
+
+
+```{r titleIndicators, results = "asis"}
+cat("#", translate(results$translations, "indicators")$title, "\n\n") 
+``` 
+
+```{r titleReporting, results = "asis"}
+cat("#", translate(results$translations, "reporting")$title, "\n\n") 
+``` 
+
+```{r titleManagement, results = "asis"}
+cat("#", translate(results$translations, "management")$title, "\n\n") 
+``` 
+
+
+
+
+# TODO
+
+
+
+
+
+
+```{r popSection, eval = !is.null(results$dash_showPopulatie()), results = "asis", eval = FALSE}
+cat("\\newpage")
+cat("#", toupper("Populatie"), "\n\n")
+
+incProgress(amount = 0.2, detail = "Populatie")
+
+section <- "Populatie"
+childOutput <- lapply(setdiff(results$dash_showPopulatie(), "F18_8"), function(id) 
+  knitr::knit_child("plotDashboard.Rmd", quiet = TRUE, envir = environment())
+)
+cat(unlist(childOutput), sep = '\n')
+```

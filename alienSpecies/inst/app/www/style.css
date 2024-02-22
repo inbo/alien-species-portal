@@ -36,6 +36,9 @@ footer {
 	margin-top: 20px;
 }
 
+.loader {
+  min-height: 40px !important;
+}
 
 
 /*** For the fancy noButton but tiles - radiobuttons ***/
@@ -116,7 +119,6 @@ a, a:visited, a:hover, a:active, a:focus {
 
 .shiny-download-link {
   display: inline-block;
-  background-color: #356196;
   text-transform: uppercase;
   color: #fff;
   font-family: 'flanders_art_sansmedium',sans-serif;
@@ -131,7 +133,6 @@ a, a:visited, a:hover, a:active, a:focus {
 }
 
 .shiny-download-link:hover {
-  background-color: #264870;
   color: #fff; 
 }
 

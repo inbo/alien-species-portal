@@ -748,6 +748,19 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
         uiText = uiText
       )
       
+      
+      
+      return(reactive({
+            # Update when any of these change
+            finalMap()
+            input
+            # Return the static values
+            c(
+              list(plot = isolate(finalMap())),
+              isolate(reactiveValuesToList(input))
+            )
+          }))
+      
     })  
 } 
 

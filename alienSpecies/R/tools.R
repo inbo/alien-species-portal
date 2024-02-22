@@ -181,3 +181,22 @@ simpleCap <- function(names, keepNames = TRUE) {
     }, USE.NAMES = keepNames)
   
 }
+
+
+#' get path of INBO logo file
+#' 
+#' @return character, path of logo file
+#' @param type character, defines which logo is returned; should be one of 
+#' \code{c("inbo", "trias")}
+#' @author mvarewyck
+#' @export
+getPathLogo <- function(type = c("inbo", "trias")) {
+  
+  type <- match.arg(type)
+  
+  system.file("app/www", switch(type,
+      inbo = "logo.png",
+      trias = "logoTrias.png"
+    ), package = "alienSpecies")
+
+}

@@ -65,6 +65,19 @@ tagList(
           tabPanel(titleModuleUI(id = "species_images"), value = "species_images")
           )
       )
+    ),
+    
+    tags$div(style = "margin-bottom: 50px;"),
+    
+    tags$div(class = "footer",
+      tags$div(class = "footer-content",
+        singleton(
+          tags$head(tags$script(src = "triggerDownload.js"))
+        ),
+        actionButton(inputId = "species_createReport", label = "Create report", 
+          icon = icon("file-pdf")),
+        downloadLink("species_downloadReport", " ")
+      )
     )
   )
 )
