@@ -67,7 +67,7 @@ tagList(
       )
     ),
     
-    tags$div(style = "margin-bottom: 50px;"),
+    tags$div(style = "margin-bottom: 70px;"),
     
     tags$div(class = "footer",
       tags$div(class = "footer-content",
@@ -76,7 +76,7 @@ tagList(
         ),
         actionButton(inputId = "species_createReport", label = "Create report", 
           icon = icon("file-pdf")),
-        downloadLink("species_downloadReport", " ")
+        downloadLink("species_downloadReport", " ", class = "invisible")
       )
     )
   )

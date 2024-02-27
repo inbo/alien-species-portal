@@ -114,7 +114,7 @@ observe({
 
 
 ## Map + barplot
-dashReport$observations <- mapCubeServer(id = "observations",
+dashReport <- mapCubeServer(id = "observations",
   uiText = reactive(results$translations),
   species = reactive(input$species_choice),
   gewest = reactive(req(input$species_gewest)),
@@ -124,7 +124,8 @@ dashReport$observations <- mapCubeServer(id = "observations",
     }),
   groupVariable = "cell_code",
   shapeData = allShapes,
-  showPeriod = TRUE
+  showPeriod = TRUE,
+  dashReport = dashReport
 )
 
 
@@ -151,7 +152,7 @@ observe({
 
 
 ## Emergence status GAM - Observations
-plotTriasServer(id = "species_gam",
+dashReport <- plotTriasServer(id = "species_gam",
   uiText = reactive(results$translations),
   data = reactive({
       req(taxonKey())
@@ -168,7 +169,8 @@ plotTriasServer(id = "species_gam",
         y_label = translate(results$translations, "observations")$title
       )
     }),
-  filters = c("bias", "protected")
+  filters = c("bias", "protected"),
+  dashReport = dashReport
 )
 
 

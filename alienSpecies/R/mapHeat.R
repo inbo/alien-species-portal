@@ -212,10 +212,14 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       tmpTranslation <- reactive(translate(uiText(), ns("mapHeat")))
       
       output$descriptionMapHeat <- renderUI({
-
-          tmpDescription <- tmpTranslation()$description
-          tmpDescription <- gsub("\\{\\{maxDate\\}\\}", format(maxDate(), "%d/%m/%Y"), tmpDescription)
-          tmpDescription <- gsub("\\{\\{maxYear\\}\\}", format(Sys.Date(), "%Y"), tmpDescription)
+          
+          tmpDescription <- decodeText(
+            text = tmpTranslation()$description,
+            params = list(
+              maxDate = format(maxDate(), "%d/%m/%Y"),
+              maxYear = format(Sys.Date(), "%Y")
+            )
+          )
           
           HTML(tmpDescription)
           

@@ -224,8 +224,9 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           
         })
       
-      
-      output$plot <- renderPlotly({  
+      finalPlot <- reactive({
+          
+          req(resultFct())
           
           if (!is.null(triasFunction) && triasFunction == "apply_gam") {
             # remove title
@@ -237,7 +238,11 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           } else resultFct()$plot
         
         })
-
+      
+      
+      output$plot <- renderPlotly(finalPlot())
+      
+      
       if (!(plotFunction == "countOccupancy" |
           (!is.null(triasFunction) && triasFunction %in% c("barplotLenteNesten", "countNesten"))))
         outputOptions(output, "plot", suspendWhenHidden = FALSE)
@@ -283,6 +288,8 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
               pageLength = if (triasFunction == "tableNesten") -1 else 5))
           
         })
+      
+      return(finalPlot)
       
     })
   

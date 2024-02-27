@@ -403,11 +403,12 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' values define the choices in \code{selectInput}
 #' @inheritParams welcomeSectionServer
 #' @inheritParams createCubeData
-#' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @param species reactive character, readable name of the selected species
 #' @param gewest reactive character, name of the selected region(s)
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
+#' @param dashReport reactive value, contains all objects for creating the report;
+#' plot and parameters for current plot will be added with id \code{ns("mapOccurrence")}
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -418,7 +419,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @importFrom sf st_drop_geometry
 #' @export
 mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
-  filter = reactive(NULL), groupVariable, showPeriod = FALSE
+  filter = reactive(NULL), groupVariable, showPeriod = FALSE, dashReport = NULL
 ) {
   
   moduleServer(id,
@@ -439,14 +440,13 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           
           req(species())
           
-          tmpTitle <- tmpTranslation()$title
-          
-          myTitle <- if (showPeriod) {
-            req(input$period)
-            paste(tmpTitle, species(), yearToTitleString(req(input$period))) 
-          } else {
-            paste(tmpTitle, species())
-          }
+          myTitle <- decodeText(tmpTranslation()$title, 
+            params = c(
+              list(species = species()), 
+              if (showPeriod) 
+                list(period = req(input$period))
+            )
+          )
           
           h3(HTML(myTitle))
         
@@ -749,17 +749,30 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       )
       
       
+      ## Report Objects ##
+      ## -------------- ##
       
-      return(reactive({
-            # Update when any of these change
-            finalMap()
-            input
-            # Return the static values
-            c(
-              list(plot = isolate(finalMap())),
-              isolate(reactiveValuesToList(input))
-            )
-          }))
+      observe({
+          
+          req(dashReport)
+          
+          # Update when any of these change
+          finalMap()
+          input
+          
+          # Return the static values
+          dashReport[[ns("mapOccurrence")]] <- c(
+                list(
+                  plot = isolate(finalMap()),
+                  showPeriod = showPeriod
+                ),
+                isolate(reactiveValuesToList(input))
+              )
+          
+        })
+      
+      
+      return(dashReport)
       
     })  
 } 

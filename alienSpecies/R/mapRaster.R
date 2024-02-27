@@ -98,13 +98,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
       tmpTranslation <- reactive(translate(uiText(), ns("mapRaster")))
       
       output$titleMapRaster <- renderUI(h3(HTML(tmpTranslation()$title)))
-      output$descriptionMapRaster <- renderUI({
-          
-          tmpDescription <- tmpTranslation()$description
-          
-          HTML(tmpDescription)
-          
-        })
+      output$descriptionMapRaster <- renderUI(HTML(tmpTranslation()$description))
       
       
       output$filters <- renderUI({

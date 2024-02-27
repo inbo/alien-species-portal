@@ -461,11 +461,14 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       
       output$titleMapRegions <- renderUI({
           
-          period <- if (!is.null(input$period))
-              c(input$period, req(input$year)) else
-              req(input$year)
-          
-          h3(HTML(paste(tmpTranslation()$title, req(species()), yearToTitleString(period))))
+          h3(HTML(decodeText(text = tmpTranslation()$title, 
+                params = list(
+                  species = species(), 
+                  period = if (!is.null(input$period))
+                      c(input$period, req(input$year)) else
+                      req(input$year)
+                    ))
+                ))
           
         })
       

@@ -79,6 +79,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' Shiny module for creating the plot \code{\link{plotTrias}} - server side
 #' @inheritParams welcomeSectionServer
 #' @inheritParams plotTrias
+#' @inheritParams mapCubeServer
 #' @param data reactive object, data for \code{\link{plotTrias}}
 #' @param triasArgs reactive object, extra plot arguments to be passed to the 
 #' trias package
@@ -92,7 +93,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @import trias
 #' @export
 plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
-  filters = NULL, maxDate = reactive(NULL), outputType = c("plot", "table")) {
+  filters = NULL, maxDate = reactive(NULL), outputType = c("plot", "table"),
+  dashReport = NULL) {
   
   # For R CMD check
   protected <- NULL
@@ -110,10 +112,10 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
       
       output$descriptionPlotTrias <- renderUI({
           
-          tmpDescription <- tmpTranslation()$description
-          tmpDescription <- gsub("\\{\\{maxDate\\}\\}", format(maxDate(), "%d/%m/%Y"), tmpDescription)
-          
-          HTML(tmpDescription)
+          HTML(
+            decodeText(text = tmpTranslation()$description,
+              params = list(maxDate = format(maxDate(), "%d/%m/%Y")))
+          )
           
         })
       
@@ -144,7 +146,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
           
         })
       
-      plotModuleServer(id = "plotTrias",
+      plotResult <- plotModuleServer(id = "plotTrias",
         plotFunction = "plotTrias",
         triasFunction = triasFunction, 
         data = plotData,
@@ -162,6 +164,27 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
         outputType = outputType,
         uiText = uiText
       )
+      
+      
+      ## Report Objects ##
+      ## -------------- ##
+      
+      observe({
+          
+          # Update when any of these change
+          plotResult()
+          input
+          
+          # Return the static values
+          dashReport[[triasFunction]] <- c(
+            list(plot = isolate(plotResult())),
+            isolate(reactiveValuesToList(input))
+          )
+          
+        })
+      
+      
+      return(dashReport)
       
     })
   

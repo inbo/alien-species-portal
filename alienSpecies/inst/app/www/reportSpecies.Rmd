@@ -1,5 +1,5 @@
 ---
-title: "`r paste(translate(data = results$translations, id = 'species_information')$title, ':', input$species_choice)`" 
+title: "`r paste0(translate(data = results$translations, id = 'species_information')$title, ': ', input$species_choice)`" 
 author: "`r paste0('v', packageVersion('alienSpecies'))`"
 date: "`r format(Sys.Date(), '%d-%m-%Y')`"
 toc-title: "r paste(translate(data = results$translations, id = 'contents')$title"
@@ -40,59 +40,43 @@ cat("*",  translate(data = results$translations, id = 'region')$title, ":", toSt
 
 
 
-```{r titleObservations, results = "asis"}
-observationTitle <- translate(results$translations, "observations")$title
-cat("#", observationTitle, "\n\n") 
-``` 
+```{r sectionObservations, results = "asis"}
+myTitle <- translate(results$translations, "observations")$title
+cat("#", toupper(myTitle), "\n\n") 
+incProgress(amount = 0.1, detail = myTitle)
 
-```{r mapObservations}
-incProgress(amount = 0.1, detail = observationTitle)
-
-id <- "observations"
-
-webshot::webshot(url = dashReport[[id]]()$plot, vwidth = 1000, vheight = 500, cliprect = "viewport")
-```
-
-```{r mapParameters}
-params <- dashReport[[id]]()
-currentParams <- names(params)
-print(currentParams)
-```
-
-
-
-
-```{r titleIndicators, results = "asis"}
-cat("#", translate(results$translations, "indicators")$title, "\n\n") 
-``` 
-
-```{r titleReporting, results = "asis"}
-cat("#", translate(results$translations, "reporting")$title, "\n\n") 
-``` 
-
-```{r titleManagement, results = "asis"}
-cat("#", translate(results$translations, "management")$title, "\n\n") 
-``` 
-
-
-
-
-# TODO
-
-
-
-
-
-
-```{r popSection, eval = !is.null(results$dash_showPopulatie()), results = "asis", eval = FALSE}
-cat("\\newpage")
-cat("#", toupper("Populatie"), "\n\n")
-
-incProgress(amount = 0.2, detail = "Populatie")
-
-section <- "Populatie"
-childOutput <- lapply(setdiff(results$dash_showPopulatie(), "F18_8"), function(id) 
-  knitr::knit_child("plotDashboard.Rmd", quiet = TRUE, envir = environment())
+childOutput <- lapply(c("observations-mapOccurrence"), function(id) 
+  knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 cat(unlist(childOutput), sep = '\n')
-```
+``` 
+
+
+```{r sectionIndicators, results = "asis"}
+myTitle <- translate(results$translations, "indicators")$title
+cat("#", toupper(myTitle), "\n\n") 
+incProgress(amount = 0.1, detail = myTitle)
+
+childOutput <- lapply(c("apply_gam"), function(id) 
+  knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
+)
+cat(unlist(childOutput), sep = '\n')
+``` 
+
+
+```{r sectionReporting, results = "asis"}
+myTitle <- translate(results$translations, "reporting")$title
+cat("#", toupper(myTitle), "\n\n") 
+incProgress(amount = 0.1, detail = myTitle)
+
+``` 
+
+
+```{r sectionManagement, results = "asis"}
+myTitle <- translate(results$translations, "management")$title
+cat("#", toupper(myTitle), "\n\n") 
+incProgress(amount = 0.1, detail = myTitle)
+
+``` 
+
+

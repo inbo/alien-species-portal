@@ -74,11 +74,11 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data) {
       
       output$descriptionCountNesten <- renderUI({
           
-          tmpDescription <- tmpTranslation()$description
-          tmpDescription <- gsub("\\{\\{maxDate\\}\\}", format(maxDate(), "%d/%m/%Y"), tmpDescription)
-          
-          HTML(tmpDescription)
-          
+          HTML(
+            decodeText(text = tmpTranslation()$description,
+              params = list(maxDate = format(maxDate(), "%d/%m/%Y")))
+          )
+        
         })
       
       ## Periode (grafiek)

@@ -1,0 +1,57 @@
+```{r, echo = FALSE, results = "asis"}
+
+allParams <- c("period", "bias", "protected")
+
+params <- dashReport[[id]]
+currentParams <- names(params)
+
+tmpTranslation <- translate(results$translations, id)
+
+# Title
+myTitle <- decodeText(tmpTranslation$title, 
+            params = c(
+              list(species = input$species_choice),
+              if (!is.null(params$showPeriod) && params$showPeriod) 
+                list(period = params$period)
+            )
+          )
+cat("##", myTitle, "\n\n")
+
+# Description
+cat(tmpTranslation$description)
+
+
+# Parameters
+if (any(allParams %in% currentParams)) {
+  
+  cat(paste0("**", translate(results$translations, "parameters")$title, "**\n\n"))
+  if ("period" %in% currentParams)
+    cat(paste0("- ", translate(results$translations, "period")$title, ":"), 
+      paste(params$period, collapse = " - "), "\n\n")
+  if ("bias" %in% currentParams)
+    cat(paste0("- ", translate(results$translations, "correctBias")$title, ":"), 
+      if (params$bias) 
+          translate(results$translations, "yes")$title else 
+          translate(results$translations, "no")$title, "\n\n")
+  if ("protected" %in% currentParams)
+    cat(paste0("- ", translate(results$translations, "protectAreas")$title, ":"), 
+    if (params$protected) 
+          translate(results$translations, "yes")$title else 
+          translate(results$translations, "no")$title, "\n\n")
+  
+
+}
+  
+# Plot
+if (is(params$plot, "plotly")) {
+  # plotly
+  plotlyReport(params$plot)
+  
+} else {
+  # leaflet
+  webshot::webshot(url = dashReport[[id]]$plot, vwidth = 1000, vheight = 500, cliprect = "viewport")
+  
+}
+
+cat("\\newpage")
+```
