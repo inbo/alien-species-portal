@@ -199,7 +199,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @importFrom sf st_drop_geometry
 #' @export
 mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, colors, 
-  blur = NULL, maxDate
+  blur = NULL, maxDate, dashReport = NULL
 ) {
   
   moduleServer(id,
@@ -414,6 +414,10 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       
       # Create final map (for download)
       finalMap <- reactive({
+          
+          req(nrow(combinedDataPostFilter()) > 0)
+          req(input$legend)
+          req(input[[names(filter())[1]]])
      
           newMap <- mapHeat(
             combinedData = combinedDataPostFilter(),
@@ -478,6 +482,32 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
 #          
 #        })
       
+      ## Report Objects ##
+      ## -------------- ##
+      
+      observe({
+          
+          req(dashReport)
+          
+          # Update when any of these change
+          finalMap()
+          maxDate()
+          input
+          
+          # Return the static values
+          dashReport[[ns("mapHeat")]] <- c(
+            list(
+              plot = isolate(finalMap()),
+              maxDate = maxDate()
+            ),
+            isolate(reactiveValuesToList(input))
+          )
+          
+        })
+      
+      
+      return(dashReport)
+    
       
     })  
 } 
@@ -487,6 +517,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
 #' Shiny module for creating the plot \code{\link{mapCube}} - UI side
 #' @inheritParams welcomeSectionServer
 #' @inheritParams mapCubeUI
+#' 
 #' @return UI object
 #' 
 #' @author mvarewyck

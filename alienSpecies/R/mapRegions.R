@@ -440,7 +440,7 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
 #' @importFrom ggplot2 ggsave
 #' @export
 mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
-  sourceChoices = NULL, facet = FALSE) {
+  sourceChoices = NULL, facet = FALSE, dashReport = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -863,7 +863,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       # Create final map (for download)
       finalMap <- reactive({
           
-          req(summaryData())
+          req(nrow(summaryData()) > 0)
           
           if (facet) {
             
@@ -1017,6 +1017,31 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
         period = reactive(input$period),
         combine = reactive(input$combine)
       )
+      
+      
+      ## Report Objects ##
+      ## -------------- ##
+      
+      observe({
+          
+          req(dashReport)
+          
+          # Update when any of these change
+          finalMap()
+          input
+          
+          # Return the static values
+          dashReport[[if (!facet)
+                "management-mapOccurrence" else
+                "management-mapInvasion"]] <- c(
+            list(plot = isolate(finalMap())),
+            isolate(reactiveValuesToList(input))
+          )
+          
+        })
+      
+      
+      return(dashReport)
       
       
     })  

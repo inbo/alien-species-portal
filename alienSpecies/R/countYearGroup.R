@@ -121,12 +121,13 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
 #' Shiny module for creating the plot \code{\link{countYearGroup}} - server side
 #' @inheritParams countOccupancyServer
 #' @inheritParams plotModuleServer
+#' @inheritParams mapCubeServer
 #' @return no return value
 #' 
 #' @author mvarewyck
 #' @import shiny
 #' @export
-countYearGroupServer <- function(id, uiText, data, groupChoices) {
+countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -145,7 +146,7 @@ countYearGroupServer <- function(id, uiText, data, groupChoices) {
       
       
       # Plot
-      plotModuleServer(id = "countYearGroup",
+      plotResult <- plotModuleServer(id = "countYearGroup",
         plotFunction = "countYearGroup", 
         data = reactive({
             validate(need(nrow(data()) > 0, translate(uiText(), "noData")$title))
@@ -153,7 +154,28 @@ countYearGroupServer <- function(id, uiText, data, groupChoices) {
           }),
         groupChoices = groupChoices,
         uiText = uiText
-        )
+      )
+      
+      
+      ## Report Objects ##
+      ## -------------- ##
+      
+      observe({
+          
+          # Update when any of these change
+          plotResult()
+          input
+          
+          # Return the static values
+          dashReport[[ns("countYearGroup")]] <- c(
+            list(plot = isolate(plotResult())),
+            isolate(reactiveValuesToList(input))
+          )
+          
+        })
+      
+      
+      return(dashReport)
       
     })
   

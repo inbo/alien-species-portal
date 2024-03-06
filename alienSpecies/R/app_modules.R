@@ -289,7 +289,14 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           
         })
       
-      return(finalPlot)
+      
+      return(
+        reactive({
+            if (!is.null(outputType) && outputType == "table")
+              resultFct()$data else 
+              finalPlot()
+          })
+      )
       
     })
   

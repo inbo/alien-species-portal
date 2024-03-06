@@ -69,6 +69,10 @@ myTitle <- translate(results$translations, "reporting")$title
 cat("#", toupper(myTitle), "\n\n") 
 incProgress(amount = 0.1, detail = myTitle)
 
+childOutput <- lapply(c("reporting_t01-mapOccurrence"), function(id) 
+  knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
+)
+cat(unlist(childOutput), sep = '\n')
 ``` 
 
 

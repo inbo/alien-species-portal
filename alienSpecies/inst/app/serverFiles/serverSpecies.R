@@ -197,14 +197,15 @@ observe({
 
 
 # t0 and t1
-mapCubeServer(id = "reporting_t01",
+dashReport <- mapCubeServer(id = "reporting_t01",
   uiText = reactive(results$translations),
   species = reactive(input$species_choice),
   gewest = reactive(req(input$species_gewest)),
   df = reactive(dfCube[species %in% input$species_choice, ]),
   filter = reactive(list(source = unique(dfCube$source[dfCube$species %in% input$species_choice]))),
   groupVariable = "source",
-  shapeData = allShapes
+  shapeData = allShapes,
+  dashReport = dashReport
 )
 
 
@@ -290,7 +291,7 @@ observe({
     if (input$species_choice %in% cubeSpecies) {
       ## Map + slider barplot: Oxyura jamaicensis
       
-      mapCubeServer(id = "management",
+      dashReport <- mapCubeServer(id = "management",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         gewest = reactive(req(input$species_gewest)),
@@ -304,7 +305,8 @@ observe({
           }),
         groupVariable = NULL,
         shapeData = NULL,
-        showPeriod = TRUE
+        showPeriod = TRUE,
+        dashReport = dashReport
       )
       
     } else if (input$species_choice %in% heatSpecies) {
@@ -318,7 +320,7 @@ observe({
       colorsActive <- c("blue", "black")
       names(colorsActive) <- c("individual", "untreated nest")
       
-      mapHeatServer(id = "management2_active",
+      dashReport <- mapHeatServer(id = "management2_active",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         gewest = reactive(req(input$species_gewest)),
@@ -329,7 +331,8 @@ observe({
           )),
         colors = reactive(colorsActive),
         blur = "individual",
-        maxDate = reactive(max(results$species_managementData()$actieve_haarden$eventDate, na.rm = TRUE))      
+        maxDate = reactive(max(results$species_managementData()$actieve_haarden$eventDate, na.rm = TRUE)) ,
+        dashReport = dashReport
       )
       
       ## Alle observaties
@@ -343,14 +346,15 @@ observe({
       colorsObserved <- c("blue", "red")
       names(colorsObserved) <- c("individual", "nest")
       
-      mapHeatServer(id = "management2_observed",
+      dashReport <- mapHeatServer(id = "management2_observed",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         gewest = reactive(req(input$species_gewest)),
         combinedData = reactive(combinedObserved),
         filter = reactive(list(source = unique(combinedObserved$filter))),
         colors = reactive(colorsObserved),
-        maxDate = reactive(max(results$species_managementData()$points$eventDate, na.rm = TRUE))      
+        maxDate = reactive(max(results$species_managementData()$points$eventDate, na.rm = TRUE)),
+        dashReport = dashReport
       )
       
       # Trend region
@@ -359,7 +363,7 @@ observe({
         nestenData = req(results$species_managementData()$nesten),
         nestenBeheerdData = results$species_managementData()$beheerde_nesten
       )
-      mapRegionsServer(
+      dashReport <- mapRegionsServer(
         id = "management2",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
@@ -367,22 +371,24 @@ observe({
         df = reactive(combinedManaged),
         occurrenceData = NULL,
         shapeData = allShapes,
-        sourceChoices = c("individual", "nest")
+        sourceChoices = c("individual", "nest"),
+        dashReport = dashReport
       )
       
       # Facet invasion
-      mapRegionsServer(id = "management2_facet",
+      dashReport <- mapRegionsServer(id = "management2_facet",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         gewest = reactive(req(input$species_gewest)),
         df = reactive(combinedManaged),
         occurrenceData = NULL,
         shapeData = allShapes,
-        facet = TRUE
+        facet = TRUE,
+        dashReport = dashReport
       )
       
       # Aantal lente nesten
-      plotTriasServer(
+      dashReport <- plotTriasServer(
         id = "management2_lente",
         triasFunction = "barplotLenteNesten",
         data = reactive(aws.s3::s3read_using(FUN = read.csv, 
@@ -390,29 +396,32 @@ observe({
             bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
           )),
           #read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))
-        uiText = reactive(results$translations)
+        uiText = reactive(results$translations),
+        dashReport = dashReport
       )
       
      
       # Aantal nesten per provincie - figuur
-      countNestenServer(
+      dashReport <- countNestenServer(
         id = "management2_province",
         data = reactive(results$species_managementData()$nesten),
         uiText = reactive(results$translations),
-        maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE))
+        maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)),
+        dashReport = dashReport
       )
       
       # Aantal nesten per provincie - tabel
-      plotTriasServer(
+      dashReport <- plotTriasServer(
         id = "management2_provinceTable",
         triasFunction = "tableNesten",
         data = reactive(results$species_managementData()$nesten),
         uiText = reactive(results$translations),
         maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)),
-        outputType = "table"
+        outputType = "table",
+        dashReport = dashReport
       )
       
-      countYearGroupServer(
+      dashReport <- countYearGroupServer(
         id = "management2", 
         uiText = reactive(results$translations), 
         data = reactive(summarizeYearGroupData(
@@ -422,34 +431,37 @@ observe({
             choices <- c("", "Behandeling")
             names(choices) <- c("", translate(results$translations, choices[-1])$title)
             choices
-          })
+          }),
+        dashReport = dashReport
       )
       
     } else {
       ## Map + choices barplot: Lithobates catesbeianus
       
-      mapRegionsServer(
+      dashReport <- mapRegionsServer(
         id = "management3",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
         occurrenceData = occurrenceData,
-        shapeData = allShapes
+        shapeData = allShapes,
+        dashReport = dashReport
       )
       
       # Facet invasion
-      mapRegionsServer(id = "management3_facet",
+      dashReport <- mapRegionsServer(id = "management3_facet",
         uiText = reactive(results$translations),
         species = reactive(input$species_choice),
         gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
         occurrenceData = NULL,
         shapeData = allShapes,
-        facet = TRUE
+        facet = TRUE,
+        dashReport = dashReport
       )
       
-      countYearGroupServer(
+      dashReport <- countYearGroupServer(
         id = "management3", 
         uiText = reactive(results$translations), 
         data = results$species_managementData,
@@ -457,7 +469,8 @@ observe({
             choices <- c("", "lifeStage")
             names(choices) <- c("", translate(results$translations, choices[-1])$title)
             choices
-          })
+          }),
+        dashReport = dashReport
       )
     } 
     
