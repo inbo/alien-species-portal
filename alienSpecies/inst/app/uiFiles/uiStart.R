@@ -14,6 +14,5 @@ tagList(
     tags$div(class = "noButton",
       uiOutput("start_tiles")
     )
-  ),
-  uiOutput("start_disclaimer")
+  )
 )

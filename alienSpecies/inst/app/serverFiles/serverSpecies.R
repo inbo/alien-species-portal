@@ -14,13 +14,6 @@
 # Collect all results for the report
 dashReport <- reactiveValues()
 
-
-output$species_title <- renderUI({
-    
-    translate(data = results$translations, id = tabChoices[3])$title  
-    
-  })
-
 lapply(c("observations", "indicators", "reporting", "management", "more",
     "habitats", "risk_maps", "links", "risk_assessment", "images"), function(iName)
     titleModuleServer(
@@ -156,7 +149,9 @@ dashReport <- plotTriasServer(id = "species_gam",
   uiText = reactive(results$translations),
   data = reactive({
       req(taxonKey())
-      summarizeTimeSeries(rawData = timeseries[taxonKey %in% taxonKey(), ], 
+      # TODO summarize beforehand per taxonkey? 
+      timeseries <- loadTabularData(type = "timeseries")
+      summarizeTimeSeries(rawData = timeseries[taxonKey()], 
         region = input$species_gewest)
     }),
   triasFunction = "apply_gam",

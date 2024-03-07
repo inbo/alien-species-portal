@@ -23,22 +23,6 @@ output$start_tiles <- renderUI({
   })
 
 
-output$start_disclaimer <- renderUI({
-    
-    if (doDebug)
-      tagList(
-        tags$b("Disclaimer"),
-        tags$ul(
-          lapply(c(attr(exotenData, "warning"), attr(occurrenceData, "warning")), function(iText)
-              tags$li(iText)
-          )
-        ),
-        helpText("Only shown in debug mode")
-      )
-  
-  })
-
-
 observeEvent(input$start_navigate, {
     
     if (input$start_navigate == "early_warning")
@@ -50,5 +34,19 @@ observeEvent(input$start_navigate, {
 observeEvent(input$tabs, {
     
     updateRadioButtons(session = session, inputId = "start_navigate", selected = input$tabs)
+    
+  })
+
+
+# Titles for pages in navbar
+output$checklist_title <- renderUI({
+    
+    translate(results$translations, id = tabChoices[2])$title  
+    
+  })
+
+output$species_title <- renderUI({
+    
+    translate(data = results$translations, id = tabChoices[3])$title  
     
   })

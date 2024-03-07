@@ -63,9 +63,9 @@ tagList(
   
   tags$div(class = "container", style = "margin-bottom: 10px;",
     
-    tabsetPanel(
+    tabsetPanel(id = "exoten_tabs",
       
-      tabPanel(titleModuleUI(id = "checklist_taxa"), 
+      tabPanel(value = "checklist_taxa", titleModuleUI(id = "checklist_taxa"), 
         
         tags$div(style = "margin-top: 10px;",
           
@@ -81,13 +81,13 @@ tagList(
       
       ),
       
-      tabPanel(titleModuleUI(id = "checklist_trend"), 
+      tabPanel(value = "checklist_trend", titleModuleUI(id = "checklist_trend"), 
         plotTriasUI(id = "checklist-count"),
         plotTriasUI(id = "checklist-cum"),
         countOccupancyUI(id = "checklist")
       ),
       
-      tabPanel(titleModuleUI(id = "checklist_pathways"), 
+      tabPanel(value = "checklist_pathways", titleModuleUI(id = "checklist_pathways"), 
         
         plotTriasUI(id = "checklist_tablePathway", outputType = "table"),
         plotTriasUI(id = "checklist_pathway1"),
@@ -97,7 +97,7 @@ tagList(
       
       ),
       
-      tabPanel(titleModuleUI(id = "checklist_origin"),
+      tabPanel(value = "checklist_origin", titleModuleUI(id = "checklist_origin"),
         plotTriasUI(id = "checklist_yearNativeRange")
       )
     )

@@ -153,6 +153,7 @@ createKeyData <- function(
 #' @importFrom utils write.csv
 #' @importFrom data.table as.data.table
 #' @importFrom aws.s3 s3save s3load
+#' @importFrom arrow write_parquet
 #' @export
 #' 
 createTimeseries <- function(
@@ -177,10 +178,13 @@ createTimeseries <- function(
   timeseries <- merge(df_ts, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
                       by.x = "eea_cell_code", by.y = "CELLCODE")
   
-  # put time series data RData to the bucket to speed up reading process
   timeseries <- as.data.table(timeseries)
+  setkey(timeseries, taxonKey)
   
-  s3save(timeseries, object = "full_timeseries.RData", bucket = bucket, 
+  aws.s3::s3write_using(timeseries, 
+    FUN = arrow::write_parquet, 
+    bucket = bucket, 
+    object = "full_timeseries.parquet",
     opts = list(show_progress = TRUE, multipart = TRUE,
       region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
@@ -235,6 +239,54 @@ createShapeData <- function(
   
 } 
 
+
+#' Create taxa choices based on available exotenData
+#' @param exotenData data.frame, as read from \code{\link{loadTabularData}}
+#' @return data.frame all choices to be shown - for selectizeInput()
+#' 
+#' @author mvarewyck
+#' @export
+createTaxaChoices <- function(exotenData) {
+  
+  # For R CMD check
+  kingdom <- kingdomKey <- NULL
+  phylum <- phylumKey <- NULL
+  classKey <- NULL
+  orderKey <- NULL
+  family <- familyKey <- NULL
+  species <- key <- NULL
+  
+  subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
+      kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
+  subData <- subData[!duplicated(subData), ]
+  subData$speciesKey <- subData$key
+  
+  speciesLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
+  
+  choices <- do.call(rbind, lapply(seq_along(speciesLevels), function(i) {
+        
+        iLevel <- speciesLevels[i]
+        keyVar <- paste0(iLevel, "Key")
+        do.call(rbind, lapply(split(subData, subData[[keyVar]]), function(iData) {
+              iData <- iData[!duplicated(iData[[keyVar]]), ]
+              longName <- paste(iData[, speciesLevels[1:i], with = FALSE], collapse = " > ")
+              data.frame(
+                value = iData[[keyVar]], 
+                label = iData[[iLevel]],
+                long = longName,
+                html = paste0("<b>", iData[[iLevel]], "</b>", if (i != 1) paste0("</br>", longName))
+              ) 
+            }))
+        
+      }))
+  
+  choices <- choices[order(choices$label), ]
+  
+  choices
+  
+}
+
+
 #' Create tabular data
 #' 
 #' For indicator data:
@@ -253,6 +305,7 @@ createShapeData <- function(
 #' @importFrom data.table fread :=
 #' @importFrom utils tail
 #' @importFrom stats complete.cases
+#' @importFrom arrow write_parquet
 #' @export
 
 createTabularData <- function(
@@ -423,10 +476,19 @@ createTabularData <- function(
     warningMessage <- c(warningMessage,
                         paste0(type, " data: Voor ", length(ind), " observaties is de 'species' onbekend. 'canonicalName' wordt gebruikt in de plaats."))
     
-    
     attr(rawData, "habitats") <- currentHabitats
+                      
+    # Create taxa choices
+    taxaChoices <- createTaxaChoices(exotenData = rawData)
     
+    aws.s3::s3write_using(taxaChoices, 
+      FUN = arrow::write_parquet, 
+      bucket = bucket, 
+      object = "taxachoices_processed.parquet",
+      opts = list(multipart = TRUE,
+        region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
     
+                      
   } else if (type == "unionlist") {
     
     rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
@@ -463,11 +525,12 @@ createTabularData <- function(
   attr(rawData, "Date") <- file.mtime(dataFiles)
   attr(rawData, "warning") <- warningMessage 
   
-  s3save(rawData, bucket = bucket, 
-         object = paste0(basename(tools::file_path_sans_ext(dataFiles)), "_processed.RData"), 
-         opts = list(multipart = TRUE,
-           region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
-  
+  aws.s3::s3write_using(rawData, 
+    FUN = arrow::write_parquet, 
+    bucket = bucket, 
+    object = paste0(basename(tools::file_path_sans_ext(dataFiles)), "_processed.parquet"),
+    opts = list(multipart = TRUE,
+      region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)  
   

@@ -1,87 +1,42 @@
+#
+##' Create taxa choices based on available exotenData
+##' @param exotenData data.frame, as read from \code{\link{loadTabularData}}
+##' @return nested list with all choices to be shown - for comboTreeInput()
+##' 
+##' @author mvarewyck
+##' @export
+#createTaxaChoices <- function(exotenData) {
+#  
+#  # For R CMD check
+#  kingdom <- kingdomKey <- NULL
+#  phylum <- phylumKey <- NULL
+#  classKey <- NULL
+#  orderKey <- NULL
+#  family <- familyKey <- NULL
+#  species <- key <- NULL
+#  
+#  subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
+#      kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
+#  subData <- subData[!duplicated(subData), ]
+#  
+#  lapply(unname(split(subData, subData$kingdom, drop = TRUE)), function(kingdom)
+#      list(id = kingdom[1, kingdomKey], title = kingdom[1, kingdom], 
+#        subs = lapply(unname(split(kingdom, kingdom$phylum, drop = TRUE)), function(phylum)
+#            list(id = phylum[1, phylumKey], title = paste(phylum[1, .(kingdom, phylum)], collapse = " > "),
+#          subs = lapply(unname(split(phylum, phylum$class, drop = TRUE)), function(class)
+#              list(id = class[1, classKey], title = paste(class[1, .(kingdom, phylum, class)], collapse = " > "), 
+#              subs = lapply(unname(split(class, class$order, drop = TRUE)), function(order)
+#                  list(id = order[1, orderKey], title = paste(order[1, .(kingdom, phylum, class, order)], collapse = " > "), 
+#                  subs = lapply(unname(split(order, order$family, drop = TRUE)), function(family)
+#                      list(id = family[1, familyKey], title = paste(family[1, .(kingdom, phylum, class, order, family)], collapse = " > "),
+#                      subs = lapply(unname(split(family, family$species, drop = TRUE)), function(species) 
+#                          list(id = species[1, key], title = paste(species[1, .(kingdom, phylum, class, order, family, species)], collapse = " > ")))))
+#              ))))))))
+#
+#}
 
-#' Create taxa choices based on available exotenData
-#' @param exotenData data.frame, as read from \code{\link{loadTabularData}}
-#' @return nested list with all choices to be shown - for comboTreeInput()
-#' 
-#' @author mvarewyck
-#' @export
-createTaxaChoices <- function(exotenData) {
-  
-  # For R CMD check
-  kingdom <- kingdomKey <- NULL
-  phylum <- phylumKey <- NULL
-  classKey <- NULL
-  orderKey <- NULL
-  family <- familyKey <- NULL
-  species <- key <- NULL
-  
-  subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
-      kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
-  subData <- subData[!duplicated(subData), ]
-  
-  lapply(unname(split(subData, subData$kingdom, drop = TRUE)), function(kingdom)
-      list(id = kingdom[1, kingdomKey], title = kingdom[1, kingdom], 
-        subs = lapply(unname(split(kingdom, kingdom$phylum, drop = TRUE)), function(phylum)
-            list(id = phylum[1, phylumKey], title = paste(phylum[1, .(kingdom, phylum)], collapse = " > "),
-          subs = lapply(unname(split(phylum, phylum$class, drop = TRUE)), function(class)
-              list(id = class[1, classKey], title = paste(class[1, .(kingdom, phylum, class)], collapse = " > "), 
-              subs = lapply(unname(split(class, class$order, drop = TRUE)), function(order)
-                  list(id = order[1, orderKey], title = paste(order[1, .(kingdom, phylum, class, order)], collapse = " > "), 
-                  subs = lapply(unname(split(order, order$family, drop = TRUE)), function(family)
-                      list(id = family[1, familyKey], title = paste(family[1, .(kingdom, phylum, class, order, family)], collapse = " > "),
-                      subs = lapply(unname(split(family, family$species, drop = TRUE)), function(species) 
-                          list(id = species[1, key], title = paste(species[1, .(kingdom, phylum, class, order, family, species)], collapse = " > ")))))
-              ))))))))
-
-}
 
 
-
-#' Create taxa choices based on available exotenData
-#' @param exotenData data.frame, as read from \code{\link{loadTabularData}}
-#' @return data.frame all choices to be shown - for selectizeInput()
-#' 
-#' @author mvarewyck
-#' @export
-createTaxaChoices2 <- function(exotenData) {
-  
-  # For R CMD check
-  kingdom <- kingdomKey <- NULL
-  phylum <- phylumKey <- NULL
-  classKey <- NULL
-  orderKey <- NULL
-  family <- familyKey <- NULL
-  species <- key <- NULL
-  
-  subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
-      kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
-  subData <- subData[!duplicated(subData), ]
-  subData$speciesKey <- subData$key
-  
-  speciesLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
-  
-  choices <- do.call(rbind, lapply(seq_along(speciesLevels), function(i) {
-        
-        iLevel <- speciesLevels[i]
-        keyVar <- paste0(iLevel, "Key")
-        do.call(rbind, lapply(split(subData, subData[[keyVar]]), function(iData) {
-              iData <- iData[!duplicated(iData[[keyVar]]), ]
-              longName <- paste(iData[, speciesLevels[1:i], with = FALSE], collapse = " > ")
-              data.frame(
-                value = iData[[keyVar]], 
-                label = iData[[iLevel]],
-                long = longName,
-                html = paste0("<b>", iData[[iLevel]], "</b>", if (i != 1) paste0("</br>", longName))
-              ) 
-            }))
-        
-      }))
-  
-  choices <- choices[order(choices$label), ]
-  
-  choices
-  
-}
 
 #' Create pathway choices based on available exotenData
 #' @inheritParams createTaxaChoices

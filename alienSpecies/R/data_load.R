@@ -25,25 +25,25 @@ loadShapeData <- function(file,
 #' @inheritParams createTabularData
 #' @return data.frame, loaded data
 #' @author mvarewyck
+#' @importFrom arrow read_parquet
+#' @importFrom data.table as.data.table
 #' @export
 
 loadTabularData <- function(
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
-    type = c("indicators", "unionlist", "occurrence")) {
+    type = c("indicators", "unionlist", "occurrence", "timeseries", "taxachoices")) {
   
   type <- match.arg(type)
   
-  # For R CMD check
-  rawData <- NULL  
-  
   dataFile <-  switch(type,
-         "indicators" = "data_input_checklist_indicators_processed.RData",
-         "unionlist" = "eu_concern_species_processed.RData",
-         "occurrence" = "be_alientaxa_cube_processed.RData"
+         "indicators" = "data_input_checklist_indicators_processed.parquet",
+         "unionlist" = "eu_concern_species_processed.parquet",
+         "occurrence" = "be_alientaxa_cube_processed.parquet",
+         "timeseries" = "full_timeseries.parquet",
+         "taxachoices" = "taxachoices_processed.parquet"
   )
   
-  readS3(file = dataFile, bucket = bucket, envir = environment())
-  
+  rawData <- read_parquet(file = file.path("s3:/", bucket, dataFile))
   
   return(rawData)
   
@@ -205,6 +205,19 @@ translate <- function(data = loadMetaData(type = "ui"), id) {
   # id NA
   if (all(is.na(id)))
     return(data)
+  
+  
+  # Composite translations e.g. habitats
+  compositeIds <- grepl("|", id, fixed = TRUE)
+  if (any(compositeIds)) {
+    
+    newIds <- unique(id[compositeIds])
+    data <- rbind(data,
+      data.frame(id = newIds, t(as.data.frame(sapply(newIds, function(x)
+                apply(data[match(strsplit(x, split = "\\|")[[1]], data$id), c("title", "description")], 2, paste, collapse = "|")))))
+    )
+    
+  } 
   
   # Helpfull during development to see which are missing
   # can be turned of in production

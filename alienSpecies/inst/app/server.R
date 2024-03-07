@@ -37,6 +37,7 @@ function(input, output, session) {
     # Default language is dutch
     translations = loadMetaData(language = "en", local = doDebug),
     searchId = "",
+    renderedTabs = c("start", "checklist_taxa"),
     exoten_timeNA = defaultTimeNA,
     exoten_time = defaultTime
   )
@@ -145,29 +146,41 @@ function(input, output, session) {
   output$shareLink <- renderUI(
     actionLink(inputId = "showShare", label = translate(results$translations, "shareLink"))
   )
-
-  # Load code for all tabpages
-  for (serverFile in list.files("serverFiles", full.names = TRUE))
-    source(serverFile, local = TRUE)
   
-  
-  
-  # Tabpanels
+  # Landing page
+  source(file.path("serverFiles", "serverStart.R"), local = TRUE)
   output$start_page <- renderUI({
       
       source(file.path("uiFiles", "uiStart.R"), local = TRUE)$value
       
     })
   
-  output$indicators_content <- renderUI({
+  # Render tabpanel upon need
+  observeEvent(input$tabs, {
       
-      source(file.path("uiFiles", "uiChecklist.R"), local = TRUE)$value
+      # render only once
+      req(!input$tabs %in% results$renderedTabs)
       
-    })
-  
-  output$species_content <- renderUI({
-      
-      source(file.path("uiFiles", "uiSpecies.R"), local = TRUE)$value
+      switch(input$tabs,
+        global_indicators = {
+          
+          output$indicators_content <- renderUI({
+              source(file.path("uiFiles", "uiChecklist.R"), local = TRUE)$value
+            })
+          source(file.path("serverFiles", "serverChecklist.R"), local = TRUE)
+          results$renderedTabs <- c(results$renderedTabs, "global_indicators")
+          
+        },
+        species_information = {
+          
+          output$species_content <- renderUI({
+              source(file.path("uiFiles", "uiSpecies.R"), local = TRUE)$value
+            })
+          source(file.path("serverFiles", "serverSpecies.R"), local = TRUE)
+          results$renderedTabs <- c(results$renderedTabs, "species_information")
+          
+        } 
+      )
       
     })
   
