@@ -42,8 +42,8 @@ shinyUI(
             img(src = "logo.png", float = "top", height = "45px"),
             style = "margin-top: -13px; margin-bottom: -13px; margin-left: -150px; margin-right: 50px;",
             tags$script(HTML(paste("var header = $('.navbar > .container');",
-                  "header.append('<div style=\"float:right;\"><span class = \"version\">", 
-                  paste0("v", packageVersion("alienSpecies")),"</span></div>')"))
+                  "header.append('<div style=\"float:right;\">", 
+                  versionUI(id = "main"),"</div>')"))
             )),
           windowTitle = "Alien Species Portal",
           fluid = FALSE, 

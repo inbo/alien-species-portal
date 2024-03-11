@@ -73,3 +73,51 @@ decodeText <- function(text, params) {
   
 }
 
+#' Link with version info - UI side
+#' 
+#' @inherit welcomeSectionUI
+#' @importFrom utils packageVersion
+#' @export
+versionUI <- function(id) {
+  
+  actionLink(inputId = NS(id, "version"), 
+    label = paste0("v", packageVersion("alienSpecies")),
+    class = "version")
+  
+}
+
+
+#' Link with version info - server side
+#' @inherit welcomeSectionServer
+#' @importFrom utils packageVersion 
+#' @export
+versionServer <- function(id, uiText) {
+  
+  moduleServer(id,
+    function(input, output, session) {
+      
+      observeEvent(input$version, {
+          
+#          # For internal use
+#          Sys.setenv("GIT_SHA" = system("git rev-parse HEAD", intern = TRUE))
+          hashCode <- Sys.getenv("GIT_SHA")
+          
+          
+          showModal(
+            modalDialog(
+              fluidPage(
+                paste("R package:", packageVersion("alienSpecies")),
+                tags$br(),
+                "GIT:", if (hashCode == "") 
+                    translate(uiText(), "unknown")$title else 
+                    tags$a(id = "gitVersion", 
+                      href = paste0("https://github.com/inbo/alien-species-portal/commit/",hashCode), 
+                      target = "_blank", hashCode)
+              ), 
+              title = translate(uiText(), "version")$title,
+              easyClose = TRUE
+            ))
+          
+        })
+    })
+}

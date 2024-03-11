@@ -73,7 +73,7 @@ a, a:visited, a:hover, a:active, a:focus {
 }
 
 
-#showShare, #contact, #translate_en, #translate_fr, #translate_nl {
+#showShare, #contact, #translate_en, #translate_fr, #translate_nl, .version {
   font-size: 14px;
   line-height: 20px;
   color: #595959

@@ -54,6 +54,12 @@ function(input, output, session) {
   )
   
   
+  # Version
+  # -------
+  
+  versionServer(id = "main", uiText = reactive(results$translations))
+  
+  
   # URL Query
   # ----------
   

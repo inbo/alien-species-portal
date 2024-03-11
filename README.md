@@ -33,7 +33,7 @@ Then, to build the docker image with the latest dockerfile, run in bash
 
 ```
 cd git/alien-species-portal
-docker build -t inbo/alienspecies .
+docker build --build-arg GIT_SHA=$(git rev-parse HEAD) -t inbo/alienspecies .
 ```
 
 Run the new docker image from bash. You need to point docker to the .aws folder on your local system to retrieve the credentials.
