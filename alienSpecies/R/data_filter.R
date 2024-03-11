@@ -1,10 +1,3 @@
-#
-##' Create taxa choices based on available exotenData
-##' @param exotenData data.frame, as read from \code{\link{loadTabularData}}
-##' @return nested list with all choices to be shown - for comboTreeInput()
-##' 
-##' @author mvarewyck
-##' @export
 #createTaxaChoices <- function(exotenData) {
 #  
 #  # For R CMD check

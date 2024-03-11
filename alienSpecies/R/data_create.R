@@ -94,7 +94,6 @@ createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trend
 #' @importFrom data.table fread setnames as.data.table
 #' @importFrom rgbif name_usage
 #' @export
-
 createKeyData <- function(
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
     dataDir = "~/git/alien-species-portal/data"){
@@ -154,8 +153,7 @@ createKeyData <- function(
 #' @importFrom data.table as.data.table
 #' @importFrom aws.s3 s3save s3load
 #' @importFrom arrow write_parquet
-#' @export
-#' 
+#' @export 
 createTimeseries <- function(
   bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   shapeData = loadShapeData("grid.RData")$utm1_bel_with_regions) {
@@ -200,8 +198,9 @@ createTimeseries <- function(
 #' @return character, file name of created object in S3 bucket 
 #' 
 #' @author mvarewyck
+#' @importFrom aws.s3 s3save
+#' @importFrom sf st_read
 #' @export
-#' 
 createShapeData <- function(
     dataDir = "~/git/alien-species-portal/data/occurrenceCube",
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
@@ -289,8 +288,6 @@ createTaxaChoices <- function(exotenData) {
 
 #' Create tabular data
 #' 
-#' For indicator data:
-#' by default data for which \code{first_observed < 1950} is excluded.
 #' For unionlist data:
 #' only 'scientific name', 'english name' and 'kingdom' are retained
 #' @inheritParams readS3
@@ -307,7 +304,6 @@ createTaxaChoices <- function(exotenData) {
 #' @importFrom stats complete.cases
 #' @importFrom arrow write_parquet
 #' @export
-
 createTabularData <- function(
     dataDir = "~/git/alien-species-portal/dataS3",
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),

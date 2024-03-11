@@ -9,6 +9,7 @@ Description: INBO shiny application based on the TRIAS package.
 Encoding: UTF-8
 License: MIT + file LICENSE
 Imports: 
+    arrow,
     aws.ec2metadata,
     aws.s3,
     aws.signature,

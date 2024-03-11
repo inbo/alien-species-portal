@@ -33,8 +33,12 @@ results$species_choices <- reactive({
     # Reporting
     reportChoices <- dfCube[!duplicated(species) & !species %in% taxChoices, species]
     
-    sort(c(taxChoices, reportChoices))
-        
+    choiceNames <- sort(c(taxChoices, reportChoices))
+    choices <- dictionary$taxonKey[match(choiceNames, dictionary$scientificName)]
+    
+    names(choices) <- choiceNames
+    choices
+    
   })
 
 
@@ -44,10 +48,18 @@ observe({
     if (input$tabs == "species_information")
       updateSelectizeInput(session = session, inputId = "species_choice",
         choices = results$species_choices(),
-        selected = if (!is.null(urlSearch()$species))
-          urlSearch()$species else 
-          as.character(results$species_choice),
+        selected = if (results$species_choice == "" & !is.null(urlSearch()$taxonkey))
+          urlSearch()$taxonkey else
+          results$species_choice,
         server = TRUE)    
+    
+  })
+
+# Save choice when leaving this tab
+observeEvent(input$tabs, {
+    
+    req(input$tabs != "species_information")
+    results$species_choice <- input$species_choice
     
   })
 
@@ -72,7 +84,7 @@ observe({
 # Update search ID
 observe({
             
-    results$searchId <- paste0("&species=", input$species_choice, 
+    results$searchId <- paste0("&taxonkey=", input$species_choice, 
       "&gewest=", paste(input$species_gewest, collapse = ","))
             
   })
@@ -82,24 +94,26 @@ observe({
 ### Observations
 ### -----------------
 
-# Taxonkey of selected species
-taxonKey <- reactive({
+# Name corresponding with the selected taxonkey
+taxonName <- reactive({
     
     req(input$species_choice)
-    dictionary$taxonKey[match(input$species_choice, dictionary$scientificName)]
+    dictionary$scientificName[match(input$species_choice, dictionary$taxonKey)]
     
   })
 
 # Disable tab if no info
 observe({
     
+    req(!is.null(input$species_choice))
+    
     # https://stackoverflow.com/a/64324799
     shinyjs::toggleState(
       selector = '#species_tabs a[data-value="species_observations"', 
-      condition = !is.na(taxonKey())
+      condition = !is.na(input$species_choice)
     )
     
-    if (is.na(taxonKey()) & input$species_tabs == "species_observations")
+    if (is.na(input$species_choice) & input$species_tabs == "species_observations")
       updateTabsetPanel(session = session, inputId = "species_tabs", 
         selected = "species_reporting")
     
@@ -109,11 +123,11 @@ observe({
 ## Map + barplot
 dashReport <- mapCubeServer(id = "observations",
   uiText = reactive(results$translations),
-  species = reactive(input$species_choice),
+  species = taxonName,
   gewest = reactive(req(input$species_gewest)),
   df = reactive({
-      req(taxonKey())
-      occurrenceData[taxonKey %in% taxonKey(), ]      
+      req(input$species_choice)
+      occurrenceData[taxonKey %in% input$species_choice, ]      
     }),
   groupVariable = "cell_code",
   shapeData = allShapes,
@@ -131,35 +145,36 @@ dashReport <- mapCubeServer(id = "observations",
 # Disable tab if no info
 observe({
     
+    req(!is.null(input$species_choice))
+    
     # https://stackoverflow.com/a/64324799
     shinyjs::toggleState(
       selector = '#species_tabs a[data-value="species_indicators"', 
-      condition = !is.na(taxonKey())
+      condition = !is.na(input$species_choice)
     )
     
-    if (is.na(taxonKey()) & input$species_tabs == "species_indicators")
+    if (is.na(input$species_choice) & input$species_tabs == "species_indicators")
       updateTabsetPanel(session = session, inputId = "species_tabs", 
         selected = "species_reporting")
     
   })
 
+timeseries <- loadTabularData(type = "timeseries")
 
 ## Emergence status GAM - Observations
 dashReport <- plotTriasServer(id = "species_gam",
   uiText = reactive(results$translations),
   data = reactive({
-      req(taxonKey())
-      # TODO summarize beforehand per taxonkey? 
-      timeseries <- loadTabularData(type = "timeseries")
-      summarizeTimeSeries(rawData = timeseries[taxonKey()], 
+      req(input$species_choice)
+      summarizeTimeSeries(rawData = timeseries[taxonKey %in% input$species_choice], 
         region = input$species_gewest)
     }),
   triasFunction = "apply_gam",
   triasArgs = reactive({
       list(
         y_var = "obs", 
-        taxon_key = taxonKey(), 
-        name = input$species_choice,
+        taxon_key = input$species_choice, 
+        name = taxonName(),
         x_label = translate(results$translations, "year")$title,
         y_label = translate(results$translations, "observations")$title
       )
@@ -181,10 +196,10 @@ observe({
     # https://stackoverflow.com/a/64324799
     shinyjs::toggleState(
       selector = '#species_tabs a[data-value="species_reporting"', 
-      condition = input$species_choice %in% dfCube$species
+      condition = taxonName() %in% dfCube$species
     )
     
-    if (!(input$species_choice %in% dfCube$species) & input$species_tabs == "species_reporting")
+    if (!(taxonName() %in% dfCube$species) & input$species_tabs == "species_reporting")
       updateTabsetPanel(session = session, inputId = "species_tabs", 
         selected = "species_observations")
     
@@ -194,10 +209,10 @@ observe({
 # t0 and t1
 dashReport <- mapCubeServer(id = "reporting_t01",
   uiText = reactive(results$translations),
-  species = reactive(input$species_choice),
+  species = taxonName,
   gewest = reactive(req(input$species_gewest)),
-  df = reactive(dfCube[species %in% input$species_choice, ]),
-  filter = reactive(list(source = unique(dfCube$source[dfCube$species %in% input$species_choice]))),
+  df = reactive(dfCube[species %in% taxonName(), ]),
+  filter = reactive(list(source = unique(dfCube$source[dfCube$species %in% taxonName()]))),
   groupVariable = "source",
   shapeData = allShapes,
   dashReport = dashReport
@@ -217,10 +232,10 @@ heatSpecies <- c("Vespa velutina")
 
 results$species_managementFile <- reactive({
     
-    req(input$species_choice)
-    expectFile <- if (input$species_choice %in% heatSpecies)
-        paste0(gsub(" ", "_", input$species_choice), "_shape.RData") else 
-        gsub(" ", "_", paste0(input$species_choice, ".csv"))
+    req(taxonName())
+    expectFile <- if (taxonName() %in% heatSpecies)
+        paste0(gsub(" ", "_", taxonName()), "_shape.RData") else 
+        gsub(" ", "_", paste0(taxonName(), ".csv"))
     availableFiles <- aws.s3::get_bucket_df(
       bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")))$Key
     
@@ -233,7 +248,7 @@ results$species_managementFile <- reactive({
 # Disable tab if no info
 observe({
     
-    req(input$species_choice)
+    req(taxonName())
     
     # https://stackoverflow.com/a/64324799
     shinyjs::toggleState(
@@ -249,11 +264,11 @@ observe({
 
 results$species_managementData <- reactive({
     
-    req(input$species_choice)
+    req(taxonName())
     
     validate(need(results$species_managementFile(), translate(results$translations, "noData")$title))
     
-    if (input$species_choice %in% heatSpecies) {
+    if (taxonName() %in% heatSpecies) {
       
       readS3(file = results$species_managementFile())
             
@@ -283,12 +298,12 @@ observe({
     
     req(results$species_managementData())
     
-    if (input$species_choice %in% cubeSpecies) {
+    if (taxonName() %in% cubeSpecies) {
       ## Map + slider barplot: Oxyura jamaicensis
       
       dashReport <- mapCubeServer(id = "management",
         uiText = reactive(results$translations),
-        species = reactive(input$species_choice),
+        species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
         filter = reactive({
@@ -304,7 +319,7 @@ observe({
         dashReport = dashReport
       )
       
-    } else if (input$species_choice %in% heatSpecies) {
+    } else if (taxonName() %in% heatSpecies) {
       ## heatmap: Vespa velutina
       
       ## Actieve haarden
@@ -317,7 +332,7 @@ observe({
       
       dashReport <- mapHeatServer(id = "management2_active",
         uiText = reactive(results$translations),
-        species = reactive(input$species_choice),
+        species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         combinedData = reactive(combinedActive),
         filter = reactive(list(
@@ -343,7 +358,7 @@ observe({
       
       dashReport <- mapHeatServer(id = "management2_observed",
         uiText = reactive(results$translations),
-        species = reactive(input$species_choice),
+        species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         combinedData = reactive(combinedObserved),
         filter = reactive(list(source = unique(combinedObserved$filter))),
@@ -361,7 +376,7 @@ observe({
       dashReport <- mapRegionsServer(
         id = "management2",
         uiText = reactive(results$translations),
-        species = reactive(input$species_choice),
+        species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         df = reactive(combinedManaged),
         occurrenceData = NULL,
@@ -373,7 +388,7 @@ observe({
       # Facet invasion
       dashReport <- mapRegionsServer(id = "management2_facet",
         uiText = reactive(results$translations),
-        species = reactive(input$species_choice),
+        species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         df = reactive(combinedManaged),
         occurrenceData = NULL,
@@ -436,7 +451,7 @@ observe({
       dashReport <- mapRegionsServer(
         id = "management3",
         uiText = reactive(results$translations),
-        species = reactive(input$species_choice),
+        species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
         occurrenceData = occurrenceData,
@@ -447,7 +462,7 @@ observe({
       # Facet invasion
       dashReport <- mapRegionsServer(id = "management3_facet",
         uiText = reactive(results$translations),
-        species = reactive(input$species_choice),
+        species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
         occurrenceData = NULL,
@@ -477,11 +492,11 @@ output$species_managementContent <- renderUI({
     
     # Important: different ids needed, otherwise there is communication between both cases
     # e.g. input$legend exists for both
-    if (input$species_choice %in% cubeSpecies) {
+    if (taxonName() %in% cubeSpecies) {
       
       mapCubeUI(id = "management", showPeriod = TRUE, showLegend = FALSE)
       
-    } else if (input$species_choice %in% heatSpecies) {
+    } else if (taxonName() %in% heatSpecies) {
       
       isSeason <- Sys.Date() >= as.Date(paste0("01-04-", format(Sys.Date(), "%Y")), format = "%d-%m-%Y") &
         Sys.Date() < as.Date(paste0("01-12-", format(Sys.Date(), "%Y")), format = "%d-%m-%Y")
@@ -522,19 +537,19 @@ output$species_managementContent <- renderUI({
 # Disable tab if no info
 observe({
     
-    req(taxonKey())
+    req(input$species_choice)
     
     # https://stackoverflow.com/a/64324799
     
     # Conditionally enable 'More'
     shinyjs::toggleState(
       selector = '#species_tabs a[data-value="species_more"', 
-      condition = taxonKey() %in% keysRiskMap
+      condition = input$species_choice %in% keysRiskMap
     )
     # Risk maps
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_risk_maps"', 
-      condition = taxonKey() %in% keysRiskMap
+      condition = input$species_choice %in% keysRiskMap
     )
     # All other subpanels
     shinyjs::toggleState(
@@ -559,13 +574,13 @@ observe({
 
 observe({
     
-    req(taxonKey())
+    req(input$species_choice)
     
     mapRasterServer(
       id = "risk", 
       uiText = reactive(results$translations),
-      species = reactive(input$species_choice),
-      taxonKey = taxonKey
+      species = taxonName,
+      taxonKey = reactive(input$species_choice)
     )
     
   })
@@ -620,7 +635,7 @@ observeEvent(input$species_createReport, {
 
 output$species_downloadReport <- downloadHandler(
   filename = function() 
-    nameFile(species = input$species_choice, content = "report", fileExt = "pdf"),
+    nameFile(species = taxonName(), content = "report", fileExt = "pdf"),
   content = function(file) 
     file.copy(species_reportFile(), file, overwrite = TRUE)
 )

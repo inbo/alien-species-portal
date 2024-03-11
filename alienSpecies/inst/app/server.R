@@ -39,7 +39,8 @@ function(input, output, session) {
     searchId = "",
     renderedTabs = c("start", "checklist_taxa"),
     exoten_timeNA = defaultTimeNA,
-    exoten_time = defaultTime
+    exoten_time = defaultTime,
+    species_choice = ""
   )
   
   

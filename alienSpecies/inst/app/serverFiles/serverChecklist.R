@@ -365,13 +365,10 @@ observeEvent(tmpKey(), {
     gbifKey <- strsplit(tmpKey(), "_")[[1]][2]
     tabPage <- strsplit(tmpKey(), "_")[[1]][1]
     
-    # Lookup key for occurrence data
-    newSpecies <- dictionary$scientificName[match(gbifKey, dictionary$gbifKey)]
-    
     updateNavbarPage(session = session, inputId = "tabs", selected = "species_information")
     # 2nd update only works if the tabs already exist
     updateTabsetPanel(session = session, inputId = "species_tabs", selected = paste0("species_", tabPage))
-    results$species_choice <- newSpecies
+    results$species_choice <- dictionary$taxonKey[match(gbifKey, dictionary$gbifKey)]
     
   })
 

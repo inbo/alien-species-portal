@@ -89,7 +89,7 @@ test_that("Occurrence plots", {
 
 test_that("Emergence status GAM - Observations", {
 
-    readS3(file = "full_timeseries.RData")
+    timeseries <- loadTabularData(type = "timeseries")
     
     timeseries <- summarizeTimeSeries(
       rawData = timeseries, 

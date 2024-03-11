@@ -28,7 +28,7 @@ if (!doDebug | !exists("occurrenceData"))
 if (!doDebug | !exists("taxaChoices"))
   taxaChoices <- loadTabularData(type = "taxachoices")
 
-# Load occupancy data from createOccupancyCube()
+# Load occupancy data from createOccupancyCube() - also loads `dfCube`
 if (!doDebug | !exists("occupancy"))
   occupancy <- loadOccupancyData()
 
