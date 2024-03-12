@@ -1,5 +1,5 @@
 ---
-title: "`r paste0(translate(data = results$translations, id = 'species_information')$title, ': ', input$species_choice)`" 
+title: "`r paste0(translate(data = results$translations, id = 'species_information')$title, ': ', taxonName())`" 
 author: "`r paste0('v', packageVersion('alienSpecies'))`"
 date: "`r format(Sys.Date(), '%d-%m-%Y')`"
 toc-title: "r paste(translate(data = results$translations, id = 'contents')$title"
@@ -8,7 +8,11 @@ output:
       logo: NULL
       bigLogoSize: 15cm
       always_allow_html: yes
-      latex_engine: pdflatex 
+      latex_engine: pdflatex
+header-includes:
+- \usepackage{pdflscape}
+- \newcommand{\blandscape}{\begin{landscape}}
+- \newcommand{\elandscape}{\end{landscape}}
 editor_options: 
   chunk_output_type: console
 ---
@@ -34,7 +38,7 @@ subtitle: "`r toString(gewestNames)`"
 
 
 ```{r intro, results = "asis"}
-cat("*",  translate(data = results$translations, id = 'species')$title, ":", input$species_choice, "\n")
+cat("*",  translate(data = results$translations, id = 'species')$title, ":", taxonName(), "\n")
 cat("*",  translate(data = results$translations, id = 'region')$title, ":", toString(gewestNames), "\n")
 ```
 

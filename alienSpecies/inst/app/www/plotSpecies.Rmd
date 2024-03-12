@@ -1,6 +1,7 @@
 ```{r, echo = FALSE, results = "asis"}
 
 allParams <- c("period", "bias", "protected", "source")
+currentLandscape <- FALSE
 
 tryCatch({
     
@@ -8,22 +9,28 @@ tryCatch({
     currentParams <- names(params)
     
     tmpTranslation <- translate(results$translations, id)
-    
-# Title
+        
+    if (file.exists(dashReport[[id]]$plot)) {
+      # expects leaflet map
+      currentLandscape <- TRUE
+      cat("\n\n\\blandscape\n")
+    }
+          
+    # Title
     myTitle <- decodeText(tmpTranslation$title, 
       params = c(
-        list(species = input$species_choice),
+        list(species = taxonName()),
         if (!is.null(params$showPeriod) && params$showPeriod) 
           list(period = params$period)
       )
     )
     cat("##", myTitle, "\n\n")
     
-# Description
+    # Description
     cat(tmpTranslation$description)
     
     
-# Parameters
+    # Parameters
     if (any(allParams %in% currentParams)) {
       
       cat(paste0("**", translate(results$translations, "parameters")$title, "**\n\n"))
@@ -47,18 +54,29 @@ tryCatch({
       
     }
     
-# Plot
+    # Plot
     if (is(params$plot, "plotly")) {
       # plotly
       plotlyReport(params$plot)
       
     } else {
-      # leaflet
-      webshot::webshot(url = dashReport[[id]]$plot, vwidth = 1000, vheight = 500, cliprect = "viewport")
-      
+      # leaflet & landscape: not working directly
+      cat(knitr::knit_child("leafletLandscape.Rmd", quiet = TRUE, envir = environment()))
+      cat("\n\n\\elandscape\n")
     }
     
-  }, error = function(err) cat("No results for", translate(results$translations, id)$title, "\n\n"))
+  }, error = function(err) {
+    if (currentLandscape)
+    cat("\n\n\\elandscape\n")
+    
+    cat("No results for", 
+      decodeText(translate(results$translations, id)$title, 
+        params = c(
+          list(species = taxonName())
+        )
+      ), "\n\n")
+  
+  })
 
-cat("\\newpage")
+cat("\n\\newpage")
 ```

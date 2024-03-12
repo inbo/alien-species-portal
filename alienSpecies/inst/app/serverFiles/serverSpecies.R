@@ -608,7 +608,11 @@ observeEvent(input$species_createReport, {
         setwd(tempdir())
         on.exit(setwd(oldDir))
         
-        fromFiles <- system.file("app/www", c("reportSpecies.Rmd", "plotSpecies.Rmd"), package = "alienSpecies")
+        fromFiles <- system.file("app/www", c(
+            "reportSpecies.Rmd", 
+            "plotSpecies.Rmd",
+            "leafletLandscape.Rmd"
+          ), package = "alienSpecies")
         file.copy(from = fromFiles, to = file.path(tempdir(), basename(fromFiles)), overwrite = TRUE)
         
         species_reportFile(

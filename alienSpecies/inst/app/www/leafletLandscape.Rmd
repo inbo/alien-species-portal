@@ -1,0 +1,4 @@
+```{r}
+webshot::webshot(url = dashReport[[id]]$plot, 
+  vwidth = 1200, vheight = 600, cliprect = "viewport")
+```
