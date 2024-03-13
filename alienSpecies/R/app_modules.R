@@ -179,7 +179,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       
       argList <- reactive({
           
-          req(nrow(subData()) > 0)
+          validate(need(nrow(subData()) > 0, translate(uiText(), "noData")$title))
           
           argList <- c(
             list(
