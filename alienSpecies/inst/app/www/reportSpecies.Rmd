@@ -85,6 +85,11 @@ myTitle <- translate(results$translations, "management")$title
 cat("#", toupper(myTitle), "\n\n") 
 incProgress(amount = 0.1, detail = myTitle)
 
+managementIds <- grep("management", names(dashReport), value = TRUE)
+childOutput <- lapply(managementIds, function(id) 
+  knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
+)
+cat(unlist(childOutput), sep = '\n')
 ``` 
 
 

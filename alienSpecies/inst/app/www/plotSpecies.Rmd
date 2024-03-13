@@ -1,6 +1,7 @@
 ```{r, echo = FALSE, results = "asis"}
 
-allParams <- c("period", "bias", "protected", "source")
+allParams <- c("period", "correctBias", "protectAreas", "source",
+  "gender", "samplingProtocol", "lifeStage")
 currentLandscape <- FALSE
 
 tryCatch({
@@ -34,24 +35,19 @@ tryCatch({
     if (any(allParams %in% currentParams)) {
       
       cat(paste0("**", translate(results$translations, "parameters")$title, "**\n\n"))
-      if ("period" %in% currentParams)
-        cat(paste0("- ", translate(results$translations, "period")$title, ":"), 
-          paste(params$period, collapse = " - "), "\n\n")
-      if ("bias" %in% currentParams)
-        cat(paste0("- ", translate(results$translations, "correctBias")$title, ":"), 
-          if (params$bias) 
-              translate(results$translations, "yes")$title else 
-              translate(results$translations, "no")$title, "\n\n")
-      if ("protected" %in% currentParams)
-        cat(paste0("- ", translate(results$translations, "protectAreas")$title, ":"), 
-          if (params$protected) 
-              translate(results$translations, "yes")$title else 
-              translate(results$translations, "no")$title, "\n\n")
-      if ("source" %in% currentParams)
-        cat(paste0("- ", translate(results$translations, "source")$title, ":"), 
-          toString(params$source), "\n\n")
       
-      
+      for (iParam in currentParams[currentParams %in% allParams]) {
+        cat(paste0("- ", translate(results$translations, iParam)$title, ": "))
+        if (is.character(params[[iParam]]))
+          cat(toString(params[[iParam]]), "\n\n")
+        else if (is.numeric(params[[iParam]]))
+          cat(paste(params[[iParam]], collapse = " - "), "\n\n")
+        else if (is.logical(params[[iParam]]))
+          cat(if (params[[iParam]]) 
+                translate(results$translations, "yes")$title else 
+                translate(results$translations, "no")$title, "\n\n")
+        
+      }
     }
     
     # Plot

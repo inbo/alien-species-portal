@@ -125,10 +125,8 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
           if (!is.null(filters)) 
             wellPanel(
               lapply(filters, function(iFilter) {
-                  checkboxInput(inputId = ns(iFilter), label = switch(iFilter,
-                      bias = translate(uiText(), "correctBias")$title,
-                      protected = translate(uiText(), "protectAreas")$title)
-                  )
+                  checkboxInput(inputId = ns(iFilter), 
+                    label = translate(uiText(), iFilter)$title)
                 })
             )
           
@@ -139,8 +137,8 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
           
           subData <- data()
           
-          if (!is.null(input$protected))
-            subData <- subData[protected == input$protected, ]
+          if (!is.null(input$protectAreas))
+            subData <- subData[protected == input$protectAreas, ]
           
           subData
           
@@ -154,7 +152,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
             if (!is.null(triasArgs)) {
               initArgs <- triasArgs()
               initArgs$eval_years <- min(plotData()$year):max(plotData()$year)
-              if (!is.null(input$bias) && input$bias)
+              if (!is.null(input$correctBias) && input$correctBias)
                 initArgs$baseline_var <- "cobs"
               initArgs
             } else NULL
