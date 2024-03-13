@@ -512,8 +512,8 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           # Other filters
           if (!is.null(filter()))
             for (iFilter in names(filter())) {
-              req(input[[iFilter]])
-              filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
+              if (!is.null(input[[iFilter]]))
+                filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
             }
           
           filterData
@@ -649,8 +649,6 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       # Create final map (for download)
       finalMap <- reactive({
           
-          req(input$spacePlot_center)
-          
           if (is.null(shapeData)) {
             
             newMap <- mapOccurrence(
@@ -665,18 +663,19 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
               cubeShape = req(cubeShape()),
               groupVariable = groupVariable,
               baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
-              legend = input$legend,
-              addGlobe = input$globe %% 2 == 0
+              legend = if (is.null(input$legend)) "topright" else input$legend,
+              addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 0
             )
             
           }
           
           # save the zoom level and centering to the map object
-          newMap <- newMap %>% setView(
-            lng = input$spacePlot_center$lng,
-            lat = input$spacePlot_center$lat,
-            zoom = input$spacePlot_zoom
-          )
+          if (!is.null(input$spacePlot_center))
+            newMap <- newMap %>% setView(
+              lng = input$spacePlot_center$lng,
+              lat = input$spacePlot_center$lat,
+              zoom = input$spacePlot_zoom
+            )
           
           # write map to temp .html file
           htmlwidgets::saveWidget(newMap, file = tmpFile, selfcontained = FALSE)

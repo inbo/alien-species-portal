@@ -10,7 +10,7 @@ tryCatch({
     
     tmpTranslation <- translate(results$translations, id)
         
-    if (file.exists(dashReport[[id]]$plot)) {
+    if (is.character(dashReport[[id]]$plot) && file.exists(dashReport[[id]]$plot)) {
       # expects leaflet map
       currentLandscape <- TRUE
       cat("\n\n\\blandscape\n")

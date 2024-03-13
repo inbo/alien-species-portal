@@ -212,8 +212,11 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       
       resultFct <- reactive({
           
-          toReturn <- tryCatch(
-            do.call(plotFunction, args = argList()),
+          req(argList())
+          
+          toReturn <- tryCatch({
+              do.call(plotFunction, args = argList())
+            },
             error = function(err)
               validate(need(FALSE, err$message))
           )		
@@ -243,8 +246,8 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       output$plot <- renderPlotly(finalPlot())
       
       
-      if (!(plotFunction == "countOccupancy" |
-          (!is.null(triasFunction) && triasFunction %in% c("barplotLenteNesten", "countNesten"))))
+      if (plotFunction != "countOccupancy" & plotFunction != "countOccurrence" &
+          (!is.null(triasFunction) && !triasFunction %in% c("barplotLenteNesten", "countNesten")))
         outputOptions(output, "plot", suspendWhenHidden = FALSE)
       
       

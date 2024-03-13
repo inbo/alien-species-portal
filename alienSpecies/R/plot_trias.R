@@ -153,11 +153,9 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
         triasArgs = reactive({
             if (!is.null(triasArgs)) {
               initArgs <- triasArgs()
-              if (!is.null(input$bias)) {
-                initArgs$eval_years <- min(plotData()$year):max(plotData()$year)
-                if (input$bias)
-                  initArgs$baseline_var <- "cobs"
-              }
+              initArgs$eval_years <- min(plotData()$year):max(plotData()$year)
+              if (!is.null(input$bias) && input$bias)
+                initArgs$baseline_var <- "cobs"
               initArgs
             } else NULL
           }),
@@ -193,12 +191,14 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
 
 
 #' Shiny module for creating the plot \code{\link{plotTrias}} - UI side
+#' @param showPlotDefault boolean, whether to show the plot by default;
+#' default value is FALSE, i.e. plot hidden in conditionalPanel()
 #' @inheritParams plotModuleUI
 #' @inheritParams plotTrias
 #' @author mvarewyck
 #' @import shiny
 #' @export
-plotTriasUI <- function(id, outputType = c("plot", "table")) {
+plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = FALSE) {
   
   ns <- NS(id)
   outputType <- match.arg(outputType)
@@ -207,7 +207,8 @@ plotTriasUI <- function(id, outputType = c("plot", "table")) {
     
     actionLink(inputId = ns("linkPlotTrias"), 
       label = uiOutput(ns("titlePlotTrias"))),
-    conditionalPanel("input.linkPlotTrias % 2 == 1", ns = ns,
+    conditionalPanel(paste("input.linkPlotTrias % 2 ==", (as.numeric(showPlotDefault) + 1) %% 2), 
+      ns = ns,
       
       uiOutput(ns("descriptionPlotTrias")),
       uiOutput(ns("filters")),
