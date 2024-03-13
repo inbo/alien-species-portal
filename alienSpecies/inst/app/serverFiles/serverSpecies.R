@@ -166,7 +166,9 @@ dashReport <- plotTriasServer(id = "species_gam",
   uiText = reactive(results$translations),
   data = reactive({
       req(input$species_choice)
-      summarizeTimeSeries(rawData = timeseries[taxonKey %in% input$species_choice], 
+      summarizeTimeSeries(
+        timeseries = timeseries,
+        species = as.numeric(input$species_choice), 
         region = input$species_gewest)
     }),
   triasFunction = "apply_gam",

@@ -430,6 +430,8 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       currentYear <- as.numeric(format(Sys.Date(), "%Y"))
       
       ns <- session$ns
+      tmpFile <- tempfile(fileext = ".html")
+      
       
       noData <- reactive(translate(uiText(), "noData")$title)
       tmpTranslation <- reactive(translate(uiText(), ns("mapOccurrence")))
@@ -647,10 +649,12 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       # Create final map (for download)
       finalMap <- reactive({
           
+          req(input$spacePlot_center)
+          
           if (is.null(shapeData)) {
             
             newMap <- mapOccurrence(
-              occurrenceData = subData(), 
+              occurrenceData = req(subData()), 
               baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
               addGlobe = input$globe %% 2 == 0
             )
@@ -658,7 +662,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           } else {
             
             newMap <- mapCube(
-              cubeShape = cubeShape(),
+              cubeShape = req(cubeShape()),
               groupVariable = groupVariable,
               baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
               legend = input$legend,
@@ -673,8 +677,6 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
             lat = input$spacePlot_center$lat,
             zoom = input$spacePlot_zoom
           )
-          
-          tmpFile <- tempfile(fileext = ".html")
           
           # write map to temp .html file
           htmlwidgets::saveWidget(newMap, file = tmpFile, selfcontained = FALSE)

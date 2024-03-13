@@ -89,19 +89,19 @@ test_that("Occurrence plots", {
 
 test_that("Emergence status GAM - Observations", {
 
+    myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
+    
     timeseries <- loadTabularData(type = "timeseries")
     
-    timeseries <- summarizeTimeSeries(
-      rawData = timeseries, 
+    subData <- summarizeTimeSeries(
+      timeseries = timeseries,
+      species = myKey,
       region = c("flanders", "brussels")
     )
-    
-    myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     
     correctBias <- c(TRUE, FALSE)[1]
     isProtected <- c(TRUE, FALSE)[2]
     
-    subData <- timeseries[taxonKey %in% myKey, ]
     subData <- subData[protected == isProtected, ]
     
     tmpResult <- plotTrias(triasFunction = "apply_gam", 

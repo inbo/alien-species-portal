@@ -23,9 +23,11 @@ loadShapeData <- function(file,
 #' 
 #' Data is preprocessed by createTabularData()
 #' @inheritParams createTabularData
-#' @return data.frame, loaded data
+#' @return data.frame or data.table, loaded data; except for \code{code == 'timeseries'}
+#' it loads pointer to the data of which a subset can be loaded using 
+#' \code{dplyr::collect()}
 #' @author mvarewyck
-#' @importFrom arrow read_parquet
+#' @importFrom arrow read_parquet open_dataset
 #' @importFrom data.table as.data.table
 #' @export
 
@@ -43,7 +45,10 @@ loadTabularData <- function(
          "taxachoices" = "taxachoices_processed.parquet"
   )
   
-  rawData <- read_parquet(file = file.path("s3:/", bucket, dataFile))
+  rawData <- if (type == "timeseries")
+    open_dataset(file.path("s3:/", bucket, dataFile)) else
+    read_parquet(file = file.path("s3:/", bucket, dataFile))
+  
   
   return(rawData)
   

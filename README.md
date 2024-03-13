@@ -18,18 +18,7 @@ Enkele relevante URLS:
 # Build/Run docker image
 
 The dockerfile needs to be updated only when some of the **dependencies** for `alienSpecies` changed.
-This file is generated automatically by packamon: please do not edit by hand. 
-The following commands are run to update this dockerfile.
-
-```
-if (!require(packamon))
-  install.packages("packamon", repos = c(rdepot = "https://repos.openanalytics.eu/repo/public", getOption("repos")))
-library(packamon)
-writeDockerfile(sourceDir = ".", installSource = TRUE,
-overwrite = TRUE, shinyFunction = "alienSpecies::runShiny()")
-```
-
-Then, to build the docker image with the latest dockerfile, run in bash
+To build the docker image with the latest dockerfile, run in bash
 
 ```
 cd git/alien-species-portal
