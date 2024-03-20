@@ -110,14 +110,14 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
       
       output$titlePlotTrias <- renderUI(h3(HTML(tmpTranslation()$title)))
       
-      output$descriptionPlotTrias <- renderUI({
+      description <- reactive({
           
-          HTML(
-            decodeText(text = tmpTranslation()$description,
-              params = list(maxDate = format(maxDate(), "%d/%m/%Y")))
-          )
+          decodeText(text = tmpTranslation()$description,
+            params = list(maxDate = format(maxDate(), "%d/%m/%Y")))
           
         })
+      
+      output$descriptionPlotTrias <- renderUI(HTML(description()))
       
       
       output$filters <- renderUI({
@@ -168,12 +168,16 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
       observe({
           
           # Update when any of these change
-          plotResult()
+          req(plotResult())
           input
           
           # Return the static values
-          dashReport[[triasFunction]] <- c(
-            list(plot = isolate(plotResult())),
+          dashReport[[ns(triasFunction)]] <- c(
+            list(
+              plot = isolate(plotResult()$plot),
+              title = isolate(tmpTranslation()$title),
+              description = isolate(description())
+            ),
             isolate(reactiveValuesToList(input))
           )
           

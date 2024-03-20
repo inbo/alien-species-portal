@@ -1,0 +1,10 @@
+```{r eval = (tools::file_ext(dashReport[[id]]$plot) == "html")}
+webshot::webshot(url = dashReport[[id]]$plot, 
+  vwidth = 1200, vheight = 600, cliprect = "viewport")
+```
+
+```{r eval = (tools::file_ext(dashReport[[id]]$plot) == "png"), results = "asis"}
+knitr::include_graphics(dashReport[[id]]$plot)
+```
+
+

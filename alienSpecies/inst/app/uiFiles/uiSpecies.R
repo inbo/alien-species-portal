@@ -35,7 +35,7 @@ tagList(
       tabPanel(titleModuleUI(id = "species_indicators"),
         value = "species_indicators",
         tags$div(style = "margin-top: 10px;",
-          plotTriasUI(id = "species_gam", showPlotDefault = TRUE),
+          plotTriasUI(id = "indicators_gam", showPlotDefault = TRUE),
         )
       ),
       

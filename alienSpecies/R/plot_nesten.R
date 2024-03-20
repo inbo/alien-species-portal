@@ -73,14 +73,14 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
       
       output$titleCountNesten <- renderUI(h3(HTML(tmpTranslation()$title)))
       
-      output$descriptionCountNesten <- renderUI({
+      description <- reactive({
           
-          HTML(
-            decodeText(text = tmpTranslation()$description,
-              params = list(maxDate = format(maxDate(), "%d/%m/%Y")))
-          )
-        
+          decodeText(text = tmpTranslation()$description,
+            params = list(maxDate = format(maxDate(), "%d/%m/%Y")))
+          
         })
+      
+      output$descriptionCountNesten <- renderUI(HTML(description()))
       
       ## Periode (grafiek)
       output$period <- renderUI({
@@ -183,7 +183,11 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
           
           # Return the static values
           dashReport[["countNesten"]] <- c(
-            list(plot = isolate(plotResult())),
+            list(
+              plot = isolate(plotResult()),
+              title = isolate(tmpTranslation()$title),
+              description = isolate(description())
+            ),
             isolate(reactiveValuesToList(input))
           )
           

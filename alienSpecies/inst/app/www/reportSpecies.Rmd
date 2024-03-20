@@ -47,9 +47,9 @@ cat("*",  translate(data = results$translations, id = 'region')$title, ":", toSt
 ```{r sectionObservations, results = "asis"}
 myTitle <- translate(results$translations, "observations")$title
 cat("#", toupper(myTitle), "\n\n") 
-incProgress(amount = 0.1, detail = myTitle)
+incProgress(amount = 0.2, detail = myTitle)
 
-childOutput <- lapply(c("observations-mapOccurrence"), function(id) 
+childOutput <- lapply(grep("observations", names(dashReport), value = TRUE), function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 cat(unlist(childOutput), sep = '\n')
@@ -59,9 +59,9 @@ cat(unlist(childOutput), sep = '\n')
 ```{r sectionIndicators, results = "asis"}
 myTitle <- translate(results$translations, "indicators")$title
 cat("#", toupper(myTitle), "\n\n") 
-incProgress(amount = 0.1, detail = myTitle)
+incProgress(amount = 0.2, detail = myTitle)
 
-childOutput <- lapply(c("apply_gam"), function(id) 
+childOutput <- lapply(grep("indicators", names(dashReport), value = TRUE), function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 cat(unlist(childOutput), sep = '\n')
@@ -71,9 +71,9 @@ cat(unlist(childOutput), sep = '\n')
 ```{r sectionReporting, results = "asis"}
 myTitle <- translate(results$translations, "reporting")$title
 cat("#", toupper(myTitle), "\n\n") 
-incProgress(amount = 0.1, detail = myTitle)
+incProgress(amount = 0.2, detail = myTitle)
 
-childOutput <- lapply(c("reporting_t01-mapOccurrence"), function(id) 
+childOutput <- lapply(grep("reporting", names(dashReport), value = TRUE), function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 cat(unlist(childOutput), sep = '\n')
@@ -83,9 +83,15 @@ cat(unlist(childOutput), sep = '\n')
 ```{r sectionManagement, results = "asis"}
 myTitle <- translate(results$translations, "management")$title
 cat("#", toupper(myTitle), "\n\n") 
-incProgress(amount = 0.1, detail = myTitle)
+incProgress(amount = 0.2, detail = myTitle)
 
-managementIds <- grep("management", names(dashReport), value = TRUE)
+mgtKey <- if (taxonName() %in% cubeSpecies)
+    "management" else if (taxonName() %in% heatSpecies)
+    "management2" else
+    "management3"
+managementIds <- paste0(mgtKey, c("-mapOccurrence", "_facet-mapInvasion", "-countYearGroup"))
+managementIds <- managementIds[managementIds %in% names(dashReport)]
+
 childOutput <- lapply(managementIds, function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )

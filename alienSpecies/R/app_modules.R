@@ -143,7 +143,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           names(choices) <- translate(uiText(), choices)$title
           
           selectInput(inputId = ns("summarizeBy"), 
-            label = translate(uiText(), "summary")$title, choices = choices)
+            label = translate(uiText(), "summarizeBy")$title, choices = choices)
           
         })
       
@@ -293,13 +293,13 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
         })
       
       
-      return(
-        reactive({
-            if (!is.null(outputType) && outputType == "table")
-              resultFct()$data else 
-              finalPlot()
-          })
-      )
+      reactive(c(
+        list(plot = if (!is.null(outputType) && outputType == "table")
+                req(resultFct()$data) else 
+                req(finalPlot())
+            ),
+        reactiveValuesToList(input)
+      ))
       
     })
   

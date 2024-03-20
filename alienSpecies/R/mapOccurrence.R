@@ -263,7 +263,7 @@ addBaseMap <- function(map = leaflet(),
     shape = c("Vlaams", "Brussels", "Waals"))
   gewestbel <- subset(gewestbel, GEWEST %in% matchingRegions$shape[match(regions, matchingRegions$name)])
   
-  if (combine)
+  if (!is.null(combine) && combine)
     gewestbel <- sf::st_union(gewestbel)
     
   map %>% 
@@ -362,6 +362,9 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
   # For R CMD check
   count <- decimalLongitude <- decimalLatitude <- NULL
   
+  if (!all(c("count", "decimalLongitude", "decimalLatitude") %in% colnames(occurrenceData)))
+    return(NULL)
+  
   ## Sum counts over ID
   occurrenceData <- occurrenceData[, .(count = sum(count)),
     by = .(decimalLongitude, decimalLatitude)] 
@@ -431,28 +434,27 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       
       ns <- session$ns
       tmpFile <- tempfile(fileext = ".html")
-      
-      
+            
       noData <- reactive(translate(uiText(), "noData")$title)
       tmpTranslation <- reactive(translate(uiText(), ns("mapOccurrence")))
       
       output$descriptionMapOccurrence <- renderUI(tmpTranslation()$description)
       
-      output$titleMapOccurrence <- renderUI({
+      title <- reactive({
           
           req(species())
           
-          myTitle <- decodeText(tmpTranslation()$title, 
+          decodeText(tmpTranslation()$title, 
             params = c(
               list(species = species()), 
-              if (showPeriod) 
-                list(period = req(input$period))
+              if (showPeriod && !is.null(input$period)) 
+                list(period = input$period)
             )
           )
           
-          h3(HTML(myTitle))
-        
         })
+      
+      output$titleMapOccurrence <- renderUI(h3(HTML(title())))
       
       output$filters <- renderUI({
           
@@ -524,9 +526,8 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       subData <- reactive({
           
           # Filter on time
-          if (showPeriod) {
+          if (showPeriod && !is.null(input$period)) {
               
-              req(input$period)
               filterData()[year >= input$period[1] & year <= input$period[2], ]
               
             } else filterData()
@@ -644,7 +645,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           }
           
         })
-      
+          
       
       # Create final map (for download)
       finalMap <- reactive({
@@ -654,7 +655,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
             newMap <- mapOccurrence(
               occurrenceData = req(subData()), 
               baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
-              addGlobe = input$globe %% 2 == 0
+              addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 0
             )
             
           } else {
@@ -678,6 +679,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
             )
           
           # write map to temp .html file
+          req(newMap)
           htmlwidgets::saveWidget(newMap, file = tmpFile, selfcontained = FALSE)
           
           # output is path to temp .html file containing map
@@ -756,16 +758,17 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       observe({
           
           req(dashReport)
-          
           # Update when any of these change
-          finalMap()
+          req(finalMap())
           input
           
           # Return the static values
           dashReport[[ns("mapOccurrence")]] <- c(
                 list(
                   plot = isolate(finalMap()),
-                  showPeriod = showPeriod
+                  title = isolate(title()),
+                  description = isolate(tmpTranslation()$description),
+                  showPeriod = (showPeriod && !is.null(input$period))
                 ),
                 isolate(reactiveValuesToList(input))
               )

@@ -162,7 +162,7 @@ observe({
 timeseries <- loadTabularData(type = "timeseries")
 
 ## Emergence status GAM - Observations
-dashReport <- plotTriasServer(id = "species_gam",
+dashReport <- plotTriasServer(id = "indicators_gam",
   uiText = reactive(results$translations),
   data = reactive({
       req(input$species_choice)
@@ -518,7 +518,7 @@ output$species_managementContent <- renderUI({
         plotTriasUI(id = "management2_lente"),
         countNestenUI(id = "management2_province"),
         plotTriasUI(id = "management2_provinceTable", outputType = "table"),
-        countYearGroupUI(id = "management2")
+        countYearGroupUI(id = "management2", showPlotDefault = TRUE)
       )
       
     } else {
@@ -526,7 +526,7 @@ output$species_managementContent <- renderUI({
       tagList(
         mapRegionsUI(id = "management3", plotDetails = c("flanders", "region")),
         mapRegionsUI(id = "management3_facet", showUnit = FALSE, facet = TRUE),
-        countYearGroupUI(id = "management3")
+        countYearGroupUI(id = "management3", showPlotDefault = TRUE)
       )
       
     }
@@ -613,7 +613,7 @@ observeEvent(input$species_createReport, {
         fromFiles <- system.file("app/www", c(
             "reportSpecies.Rmd", 
             "plotSpecies.Rmd",
-            "leafletLandscape.Rmd"
+            "plotLandscape.Rmd"
           ), package = "alienSpecies")
         file.copy(from = fromFiles, to = file.path(tempdir(), basename(fromFiles)), overwrite = TRUE)
         

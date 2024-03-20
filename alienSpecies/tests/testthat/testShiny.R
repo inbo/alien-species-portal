@@ -139,6 +139,7 @@ test_that("Module plotModule", {
         plotFunction = "plotTrias", 
         triasFunction = "indicator_introduction_year",
         data = reactive(exotenData), 
+        uiText = reactive(translations),
         triasArgs = reactive(list(
             start_year_plot = 2002,
             x_lab = "Jaar",

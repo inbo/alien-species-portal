@@ -1,6 +1,8 @@
 ```{r, echo = FALSE, results = "asis"}
 
-allParams <- c("period", "correctBias", "protectAreas", "source",
+# Printed in this order in report
+allParams <- c("regionLevel", "region", "period", "year", 
+  "correctBias", "protectAreas", "source", "group", "summarizeBy",
   "gender", "samplingProtocol", "lifeStage")
 currentLandscape <- FALSE
 
@@ -9,26 +11,16 @@ tryCatch({
     params <- dashReport[[id]]
     currentParams <- names(params)
     
-    tmpTranslation <- translate(results$translations, id)
-        
-    if (is.character(dashReport[[id]]$plot) && file.exists(dashReport[[id]]$plot)) {
-      # expects leaflet map
+    if (is.character(params$plot) && file.exists(params$plot)) {
+      # expects path to map
       currentLandscape <- TRUE
       cat("\n\n\\blandscape\n")
     }
           
-    # Title
-    myTitle <- decodeText(tmpTranslation$title, 
-      params = c(
-        list(species = taxonName()),
-        if (!is.null(params$showPeriod) && params$showPeriod) 
-          list(period = params$period)
-      )
-    )
-    cat("##", myTitle, "\n\n")
+    cat("##", params$title, "\n\n")
     
     # Description
-    cat(tmpTranslation$description)
+    cat(params$description)
     
     
     # Parameters
@@ -39,7 +31,7 @@ tryCatch({
       for (iParam in currentParams[currentParams %in% allParams]) {
         cat(paste0("- ", translate(results$translations, iParam)$title, ": "))
         if (is.character(params[[iParam]]))
-          cat(toString(params[[iParam]]), "\n\n")
+          cat(toString(translate(results$translations, params[[iParam]])$title), "\n\n")
         else if (is.numeric(params[[iParam]]))
           cat(paste(params[[iParam]], collapse = " - "), "\n\n")
         else if (is.logical(params[[iParam]]))
@@ -48,22 +40,29 @@ tryCatch({
                 translate(results$translations, "no")$title, "\n\n")
         
       }
+    } else {
+      
+      cat(paste0("*", translate(results$translations, "noParameters")$title, "*\n\n"))
+    
     }
     
     # Plot
     if (is(params$plot, "plotly")) {
+      
       # plotly
       plotlyReport(params$plot)
-      
+        
     } else {
+      
       # leaflet & landscape: not working directly
-      cat(knitr::knit_child("leafletLandscape.Rmd", quiet = TRUE, envir = environment()))
+      cat(knitr::knit_child("plotLandscape.Rmd", quiet = TRUE, envir = environment()))
       cat("\n\n\\elandscape\n")
+      
     }
     
   }, error = function(err) {
     if (currentLandscape)
-    cat("\n\n\\elandscape\n")
+      cat("\n\n\\elandscape\n")
     
     cat("No results for", 
       decodeText(translate(results$translations, id)$title, 
@@ -73,6 +72,16 @@ tryCatch({
       ), "\n\n")
   
   })
-
-cat("\n\\newpage")
 ```
+
+```{r, echo = FALSE, results = "asis"}
+if (is(params$plotFlanders, "plotly"))
+  plotlyReport(params$plotFlanders)
+```
+
+```{r, echo = FALSE, results = "asis"}
+if (is(params$plotRegion, "plotly"))
+  plotlyReport(params$plotRegion)
+```
+
+\newpage

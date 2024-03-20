@@ -227,7 +227,7 @@ plotlyReport <- function(myPlot) {
     myPlot$x$layoutAttrs[[1]]$yaxis$showgrid <- FALSE
 #  myPlot$x$layoutAttrs[[1]]$yaxis$ticks <- "outside"
   
-  myPlot
+  myPlot %>% layout(autosize = FALSE, width = 1000, height = 400)
   
 }
 

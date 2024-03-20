@@ -211,9 +211,9 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       noData <- reactive(translate(uiText(), "noData")$title)
       tmpTranslation <- reactive(translate(uiText(), ns("mapHeat")))
       
-      output$descriptionMapHeat <- renderUI({
+      description <- reactive({
           
-          tmpDescription <- decodeText(
+          decodeText(
             text = tmpTranslation()$description,
             params = list(
               maxDate = format(maxDate(), "%d/%m/%Y"),
@@ -221,9 +221,9 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
             )
           )
           
-          HTML(tmpDescription)
-          
         })
+      
+      output$descriptionMapHeat <- renderUI(HTML(description()))
       
       output$titleMapHeat <- renderUI(h3(HTML(tmpTranslation()$title)))
       
@@ -440,6 +440,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
           tmpFile <- tempfile(fileext = ".html")
           
           # write map to temp .html file
+          req(newMap)
           htmlwidgets::saveWidget(newMap, file = tmpFile, selfcontained = FALSE)
           
           # output is path to temp .html file containing map
@@ -498,7 +499,8 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
           dashReport[[ns("mapHeat")]] <- c(
             list(
               plot = isolate(finalMap()),
-              maxDate = maxDate()
+              title = isolate(tmpTranslation()$title),
+              description = isolate(description()) 
             ),
             isolate(reactiveValuesToList(input))
           )

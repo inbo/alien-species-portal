@@ -283,6 +283,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
           tmpFile <- tempfile(fileext = ".html")
           
           # write map to temp .html file
+          req(newMap)
           htmlwidgets::saveWidget(newMap, file = tmpFile, selfcontained = FALSE)
           
           # output is path to temp .html file containing map

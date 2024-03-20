@@ -138,11 +138,7 @@ countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NU
       
       output$titleCountYearGroup <- renderUI(h3(HTML(tmpTranslation()$title)))
       
-      output$descriptionCountYearGroup <- renderUI({
-          
-          HTML(tmpTranslation()$description)
-          
-        })
+      output$descriptionCountYearGroup <- renderUI(HTML(tmpTranslation()$description))
       
       
       # Plot
@@ -163,14 +159,16 @@ countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NU
       observe({
           
           # Update when any of these change
-          plotResult()
-          input
+          req(plotResult())
           
           # Return the static values
-          dashReport[[ns("countYearGroup")]] <- c(
-            list(plot = isolate(plotResult())),
-            isolate(reactiveValuesToList(input))
-          )
+          dashReport[[ns("countYearGroup")]] <- isolate({
+              c(plotResult(), 
+                list(
+                  title = tmpTranslation()$title, 
+                  description = tmpTranslation()$description)
+              )
+            })
           
         })
       
@@ -185,10 +183,11 @@ countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NU
 
 #' Shiny module for creating the plot \code{\link{countYearGroup}} - UI side
 #' @inheritParams plotModuleUI
+#' @inheritParams plotTriasUI
 #' 
 #' @author mvarewyck
 #' @export
-countYearGroupUI <- function(id) {
+countYearGroupUI <- function(id, showPlotDefault = FALSE) {
   
   ns <- NS(id)
   
@@ -196,7 +195,8 @@ countYearGroupUI <- function(id) {
     
     actionLink(inputId = ns("linkCountYearGroup"), 
       label = uiOutput(ns("titleCountYearGroup"))),
-    conditionalPanel("input.linkCountYearGroup % 2 == 1", ns = ns,
+    conditionalPanel(paste("input.linkCountYearGroup % 2 ==",(as.numeric(showPlotDefault) + 1) %% 2), 
+      ns = ns,
       
       uiOutput(ns("descriptionCountYearGroup")),
       
