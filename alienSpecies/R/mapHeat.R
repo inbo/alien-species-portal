@@ -211,6 +211,8 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       noData <- reactive(translate(uiText(), "noData")$title)
       tmpTranslation <- reactive(translate(uiText(), ns("mapHeat")))
       
+      tmpFile <- tempfile(fileext = ".html")
+      
       description <- reactive({
           
           decodeText(
@@ -416,7 +418,6 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       finalMap <- reactive({
           
           req(nrow(combinedDataPostFilter()) > 0)
-          req(input$legend)
           req(input[[names(filter())[1]]])
      
           newMap <- mapHeat(
@@ -425,19 +426,18 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
             colors = colors(),
             selected = input[[names(filter())[1]]],
             blur = blur, 
-            legend = input$legend,
-            addGlobe = input$globe %% 2 == 1,
+            legend = if (is.null(input$legend)) "topright" else input$legend,
+            addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 1,
             uiText = uiText()
           )
           
           # save the zoom level and centering to the map object
-          newMap <- newMap %>% setView(
-            lng = input$spacePlot_center$lng,
-            lat = input$spacePlot_center$lat,
-            zoom = input$spacePlot_zoom
-          )
-          
-          tmpFile <- tempfile(fileext = ".html")
+          if (!is.null(input$spacePlot_center))
+            newMap <- newMap %>% setView(
+              lng = input$spacePlot_center$lng,
+              lat = input$spacePlot_center$lat,
+              zoom = input$spacePlot_zoom
+            )
           
           # write map to temp .html file
           req(newMap)

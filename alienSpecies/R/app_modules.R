@@ -63,8 +63,11 @@ plotModuleUI <- function(id, height = "600px") {
   
   ns <- NS(id)
   
-  withSpinner(plotlyOutput(ns("plot"), height = height))
-  
+  if (id == "management2_lente-plotTrias")
+    # dirty fix: this plot stays hidden when behind spinner
+    plotlyOutput(ns("plot"), height = height) else
+    withSpinner(plotlyOutput(ns("plot"), height = height))
+
 }
 
 
@@ -246,8 +249,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       output$plot <- renderPlotly(finalPlot())
       
       
-      if (plotFunction != "countOccupancy" & plotFunction != "countOccurrence" &
-          (!is.null(triasFunction) && !triasFunction %in% c("barplotLenteNesten", "countNesten")))
+      if (plotFunction != "countOccupancy" & plotFunction != "countOccurrence")
         outputOptions(output, "plot", suspendWhenHidden = FALSE)
       
       
@@ -295,7 +297,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       
       reactive(c(
         list(plot = if (!is.null(outputType) && outputType == "table")
-                req(resultFct()$data) else 
+                req(resultFct()) else 
                 req(finalPlot())
             ),
         reactiveValuesToList(input)

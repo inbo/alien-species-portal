@@ -20,7 +20,7 @@ tryCatch({
     cat("##", params$title, "\n\n")
     
     # Description
-    cat(params$description)
+    cat(params$description, "\n\n")
     
     
     # Parameters
@@ -51,15 +51,23 @@ tryCatch({
       
       # plotly
       plotlyReport(params$plot)
-        
-    } else {
+      
+    } else if (is.character(params$plot)) {
       
       # leaflet & landscape: not working directly
       cat(knitr::knit_child("plotLandscape.Rmd", quiet = TRUE, envir = environment()))
       cat("\n\n\\elandscape\n")
       
-    }
-    
+    } else {
+      
+      # DT table
+      DT::datatable(params$plot$data, rownames = FALSE,
+        colnames = params$plot$columnNames,
+        selection = "single",
+        options = list(dom = 'ftp', pageLength = -1))
+      
+    } 
+  
   }, error = function(err) {
     if (currentLandscape)
       cat("\n\n\\elandscape\n")

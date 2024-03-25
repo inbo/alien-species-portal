@@ -89,7 +89,10 @@ mgtKey <- if (taxonName() %in% cubeSpecies)
     "management" else if (taxonName() %in% heatSpecies)
     "management2" else
     "management3"
-managementIds <- paste0(mgtKey, c("-mapOccurrence", "_facet-mapInvasion", "-countYearGroup"))
+# Define order to be the same as in the app    
+managementIds <- paste0(mgtKey, c("-mapOccurrence", "_facet-mapInvasion",
+"_lente-barplotLenteNesten", "_province-countNesten", "_provinceTable-tableNesten", 
+"-countYearGroup"))
 managementIds <- managementIds[managementIds %in% names(dashReport)]
 
 childOutput <- lapply(managementIds, function(id) 

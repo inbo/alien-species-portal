@@ -182,9 +182,9 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
           input
           
           # Return the static values
-          dashReport[["countNesten"]] <- c(
+          dashReport[[ns("countNesten")]] <- c(
             list(
-              plot = isolate(plotResult()),
+              plot = isolate(plotResult()$plot),
               title = isolate(tmpTranslation()$title),
               description = isolate(description())
             ),
