@@ -551,28 +551,40 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           
         })
       
+      mapOccurrenceLeaflet <- reactive({
+          
+          req(is.null(shapeData))
+          
+          validate(need(nrow(subData()) > 0, noData()))
+          
+          mapOccurrence(occurrenceData = subData(),
+            # when switching species, need to create correct basemap
+            baseMap = addBaseMap(regions = gewest(), combine = input$combine),
+            addGlobe = isolate(input$globe %% 2 == 0))
+          
+        })
+      
+      mapCubeLeaflet <- reactive({
+          
+          req(!is.null(shapeData))
+          if (showPeriod)
+            req(input$period)
+          
+          validate(need(cubeShape(), noData()))
+          
+          mapCube(cubeShape = cubeShape(), groupVariable = groupVariable, 
+            # when switching species, need to create correct basemap
+            baseMap = addBaseMap(regions = isolate(gewest()), combine = isolate(input$combine)),
+            addGlobe = FALSE, legend = "topright")
+          
+        })
+      
       # Send map to the UI
       output$spacePlot <- renderLeaflet({
           
-          if (is.null(shapeData)) {
-            
-            validate(need(nrow(subData()) > 0, noData()))
-            
-            mapOccurrence(occurrenceData = subData(),
-              # when switching species, need to create correct basemap
-              baseMap = addBaseMap(regions = gewest(), combine = input$combine),
-              addGlobe = isolate(input$globe %% 2 == 0))
-            
-          } else {
-            
-            validate(need(cubeShape(), noData()))
-            
-            mapCube(cubeShape = cubeShape(), groupVariable = groupVariable, 
-              # when switching species, need to create correct basemap
-              baseMap = addBaseMap(regions = isolate(gewest()), combine = isolate(input$combine)),
-              addGlobe = FALSE, legend = "topright")
-            
-          }
+          if (is.null(shapeData))
+            mapOccurrenceLeaflet() else
+            mapCubeLeaflet()
           
         })
       
@@ -739,6 +751,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
         plotFunction = "countOccurrence", 
         data = reactive({
             validate(need(gewest(), noData()))
+            req(filterData())
             if (!is.null(shapeData))
               merge(filterData(), 
                 # attach regions for coloring
