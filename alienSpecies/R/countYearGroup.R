@@ -14,6 +14,9 @@ summarizeYearGroupData <- function(df, gewest) {
   # For R CMD check
   result <- GEWEST <- observation_time <- NULL
   
+  if (is.null(df))
+    return(NULL)
+  
   toReturn <- df %>%
     st_drop_geometry() %>%
     mutate(year = as.integer(format(observation_time, "%Y")),
@@ -145,6 +148,7 @@ countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NU
       plotResult <- plotModuleServer(id = "countYearGroup",
         plotFunction = "countYearGroup", 
         data = reactive({
+            req(data())
             validate(need(nrow(data()) > 0, translate(uiText(), "noData")$title))
             data()
           }),

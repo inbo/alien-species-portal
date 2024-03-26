@@ -154,7 +154,7 @@ loadGbif <- function(dataFile,
   ) {
     
   # For R CMD check
-  count <- NULL
+  count <- decimalLongitude <- decimalLatitude <- NULL
   
   rawData <- readS3(FUN = fread, stringsAsFactors = FALSE, na.strings = "", bucket = bucket, 
                     file = dataFile)

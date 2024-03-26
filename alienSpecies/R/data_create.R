@@ -160,7 +160,7 @@ createTimeseries <- function(
   
                              
   # For R CMD check
-  df_ts <- NULL
+  df_ts <- taxonKey <- NULL
   
   # created from https://github.com/inbo/aspbo/blob/uat/src/05_occurrence_indicators_preprocessing.Rmd
   ## Data at 1km x 1km grid level

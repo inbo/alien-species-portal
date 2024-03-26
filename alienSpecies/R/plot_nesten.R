@@ -149,6 +149,7 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
           # Temporary fix
           # https://github.com/inbo/alien-species-portal/issues/27#issuecomment-1801937223
           nestChoices <- nestChoices[!nestChoices %in% c('NA', 'NULL')]
+          req(length(nestChoices) > 0)
           names(nestChoices) <- sapply(nestChoices, function(x) 
               translate(uiText(), x)$title)
           

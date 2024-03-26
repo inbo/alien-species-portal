@@ -343,7 +343,10 @@ observe({
           )),
         colors = reactive(colorsActive),
         blur = "individual",
-        maxDate = reactive(max(results$species_managementData()$actieve_haarden$eventDate, na.rm = TRUE)) ,
+        maxDate = reactive({
+            req(results$species_managementData())
+            max(results$species_managementData()$actieve_haarden$eventDate, na.rm = TRUE)
+          }) ,
         dashReport = dashReport
       )
       
@@ -365,7 +368,10 @@ observe({
         combinedData = reactive(combinedObserved),
         filter = reactive(list(source = unique(combinedObserved$filter))),
         colors = reactive(colorsObserved),
-        maxDate = reactive(max(results$species_managementData()$points$eventDate, na.rm = TRUE)),
+        maxDate = reactive({
+            req(results$species_managementData()$points$eventDate)
+            max(results$species_managementData()$points$eventDate, na.rm = TRUE)
+          }),
         dashReport = dashReport
       )
       
@@ -418,7 +424,10 @@ observe({
         id = "management2_province",
         data = reactive(results$species_managementData()$nesten),
         uiText = reactive(results$translations),
-        maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)),
+        maxDate = reactive({
+            req(results$species_managementData())
+            max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)
+          }),
         dashReport = dashReport
       )
       
@@ -436,9 +445,12 @@ observe({
       dashReport <- countYearGroupServer(
         id = "management2", 
         uiText = reactive(results$translations), 
-        data = reactive(summarizeYearGroupData(
-            df = results$species_managementData()$nesten, 
-            gewest = input$species_gewest)),
+        data = reactive({
+            req(results$species_managementData())
+            summarizeYearGroupData(
+              df = results$species_managementData()$nesten, 
+              gewest = input$species_gewest)
+          }),
         groupChoices = reactive({
             choices <- c("", "Behandeling")
             names(choices) <- c("", translate(results$translations, choices[-1])$title)

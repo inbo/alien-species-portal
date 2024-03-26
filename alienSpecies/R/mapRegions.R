@@ -617,10 +617,8 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           
           subData <- df()
           
-          if (!is.null(sourceChoices)) {
-            req(input$bronMap)
+          if (!is.null(sourceChoices) && !is.null(input$bronMap))
             subData <- subData[subData$type %in% input$bronMap, ]
-          }
           
           subData
           
@@ -694,7 +692,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
             managementData = summaryData(),
             shapeData = subShape(), 
             uiText = uiText(), 
-            regionLevel = input$regionLevel,
+            regionLevel = req(input$regionLevel),
             legend = input$legend,
             addGlobe = input$globe,
             palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
