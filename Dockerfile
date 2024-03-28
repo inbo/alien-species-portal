@@ -1,4 +1,4 @@
-FROM openanalytics/r-ver:4.2.2
+FROM rocker/r-ver:4.2.2
 
 MAINTAINER Machteld Varewyck machteld.varewyck@openanalytics.eu
 
