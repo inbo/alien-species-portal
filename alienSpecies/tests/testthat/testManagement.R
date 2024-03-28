@@ -154,7 +154,26 @@ test_that("Trend for Bullfrogs", {
   })
 
 
-
+test_that("Map invasion", {
+    
+    currentYear <- 2023
+    
+    summaryData <- createSummaryRegions(
+      data = managementData,
+      shapeData = allShapes,
+      regionLevel = "provinces",
+      year = list(
+        c(currentYear-8, currentYear-5), 
+        c(currentYear-4, currentYear-1),
+        currentYear)
+    )
+    
+    myPlot <- mapRegionsFacet(managementData = summaryData,
+      shapeData = allShapes, regionLevel = "provinces")
+    
+    expect_s3_class(myPlot, "ggplot")
+    
+  })
 
 
 ## Aziatische hoornaar ##
@@ -167,14 +186,14 @@ test_that("Actieve haarden", {
     
     combinedData <- combineActiveData(
       activeData = Vespa_velutina_shape$actieve_haarden,
-      managedData = Vespa_velutina_shape$beheerde_nesten,
+#      managedData = Vespa_velutina_shape$beheerde_nesten,
       untreatedData = Vespa_velutina_shape$onbehandelde_nesten
     )
     myPlot <- mapHeat(
       combinedData = combinedData,
       colors = {
-        myColors <- c("blue", "black", "red")
-        names(myColors) <- c("individual", "managed nest", "untreated nest")
+        myColors <- c("blue", "black")
+        names(myColors) <- c("individual", "untreated nest")
         myColors
       },
       selected = unique(combinedData$filter),
@@ -190,7 +209,11 @@ test_that("Actieve haarden", {
 
 test_that("Alle observaties", {
     
-    combinedData <- combineNestenData(pointsData = Vespa_velutina_shape$points, nestenData = Vespa_velutina_shape$nesten)
+    combinedData <- combineNestenData(
+      pointsData = Vespa_velutina_shape$points, 
+      nestenData = Vespa_velutina_shape$nesten,
+      currentYear = 2024
+    )
     myPlot <- mapHeat(
       combinedData = combinedData,
       colors = {
@@ -217,7 +240,8 @@ test_that("Voorjaarsnesten", {
 
 test_that("Provincie nesten", {
     
-    df <- createSummaryNesten(data = Vespa_velutina_shape$nesten, regionLevel = "gewest",
+    df <- createSummaryNesten(data = Vespa_velutina_shape$nesten, 
+      regionLevel = "provinces",
       typeNesten = c("AE", "AP"))
     myPlot <- trendYearRegion(df = df)
     expect_s3_class(myPlot$plot, "plotly")
@@ -230,57 +254,32 @@ test_that("Provincie nesten", {
 
 test_that("Map Trend", {
     
-    ## Points data
-    vespaPoints <- Vespa_velutina_shape$points
-    vespaPoints$type <- "individual"
+    # Combine all data
+    vespaBoth <- combineVespaData(
+      pointsData = Vespa_velutina_shape$points,
+      nestenData = Vespa_velutina_shape$nesten, 
+      nestenBeheerdData = Vespa_velutina_shape$beheerde_nesten)
     
-    ## Refactor data
-    # Columns
-    regionVariables <- list(level3Name = "NAAM", level2Name = "provincie", level1Name = "GEWEST")
-    for (iName in names(regionVariables))
-      names(vespaPoints)[match(iName, names(vespaPoints))] <- regionVariables[[iName]]
-    # Gewest
-    vespaPoints$GEWEST <- ifelse(vespaPoints$GEWEST == "Vlaanderen", "flanders", 
-      ifelse(vespaPoints$GEWEST == "Bruxelles", "brussels", 
-        ifelse(vespaPoints$GEWEST == "Wallonie", "wallonia", "")))
-    # Provincie
-    vespaPoints$provincie <- ifelse(vespaPoints$provincie == "Vlaams Brabant", "Vlaams-Brabant",
-      ifelse(vespaPoints$provincie == "Bruxelles", "HoofdstedelijkGewest", 
-        ifelse(vespaPoints$provincie == "Liège", "Luik", 
-          ifelse(vespaPoints$provincie == "Brabant Wallon", "Waals-Brabant",
-            ifelse(vespaPoints$provincie == "Hainaut", "Henegouwen", vespaPoints$provincie)))))
-    
-    summaryData <- createSummaryRegions(data = vespaPoints, shapeData = allShapes,
+    ## POINTS data
+    # Per municipality
+    summaryData <- createSummaryRegions(
+      data = vespaBoth[vespaBoth$type %in% "individual", ], 
+      shapeData = allShapes,
       regionLevel = "communes",
-      year = 2022,
-      unit = "absolute")
+      year = 2022)
     mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "communes")
     
-    
-    summaryData <- createSummaryRegions(data = vespaPoints, shapeData = allShapes,
+    # Per province
+    summaryData <- createSummaryRegions(
+      data = vespaBoth[vespaBoth$type %in% "individual", ], 
+      shapeData = allShapes,
       regionLevel = "provinces",
-      year = 2022,
-      unit = "absolute")
+      year = 2022)
     mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
     
-    ## Nesten data
-    vespaNesten <- Vespa_velutina_shape$nesten
-    vespaNesten$type <- "nest"
-    
-#    Vespa_velutina_shape$beheerde_nesten[!(Vespa_velutina_shape$beheerde_nesten$geometry %in% Vespa_velutina_shape$nesten$geometry), c("id", "comments", "NAAM", "geometry")]
-    vespaNesten$isBeheerd <- vespaNesten$geometry %in% Vespa_velutina_shape$beheerde_nesten$geometry
-    
-    
-    # Nesten and Points combined on 1 map - test from here
-    vespaPoints$nest_type <- "individual"
-    vespaPoints$isBeheerd <- FALSE
-    keepColumns <- c("year", "type", "nest_type", "NAAM", 
-      "provincie", "GEWEST", "isBeheerd",
-      "geometry")
-    vespaBoth <- rbind(vespaPoints[, keepColumns], vespaNesten[, keepColumns])
-    vespaBoth$nest_type[vespaBoth$nest_type %in% c("NA", "NULL")] <- NA 
+    ## POINTS and NESTEN data
     summaryData <- createSummaryRegions(
       data = vespaBoth, shapeData = allShapes,
       regionLevel = "provinces",
@@ -290,9 +289,65 @@ test_that("Map Trend", {
     mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
     
-    # create popup with summary table in it
-    mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, unit = "absolute", bronMap = "nesten")
+    summaryData <- createSummaryRegions(
+      data = vespaBoth, shapeData = allShapes,
+      regionLevel = "provinces",
+      groupingVariable = c("nest_type", "isBeheerd"), 
+      year = 2018:2023,
+      unit = NULL)
+     
+    trendYearRegion(df = summaryData)$plot
     
+    # create popup with summary table in it
+    tmpText <- mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, 
+      unit = NULL, bronMap = "individual")
+    
+  })
+  
+test_that("Management succes", {
+    
+    plotData <- summarizeYearGroupData(df = Vespa_velutina_shape$nesten, 
+      gewest = "flanders") 
+      
+    countYearGroup(df = plotData, groupVar = "Behandeling")
+    
+  })  
+
+test_that("Map invasion", {
+    
+    # Combine all data
+    vespaBoth <- combineVespaData(
+      pointsData = Vespa_velutina_shape$points,
+      nestenData = Vespa_velutina_shape$nesten, 
+      nestenBeheerdData = Vespa_velutina_shape$beheerde_nesten)
+    
+    # User selection
+    regionLevel <- c("provinces", "communes")[2]
+    addGlobe <- c(FALSE, TRUE)[2]
+    legend <- c("none", "left", "right", "bottom", "top")[4]
+    currentYear <- 2023
+    
+    ## POINTS data
+    # Per province
+    summaryData <- createSummaryRegions(
+#      data = vespaBoth[vespaBoth$type %in% "nest", ], 
+      data = vespaBoth,
+      shapeData = allShapes,
+      regionLevel = regionLevel,
+      year = list(
+        c(currentYear-8, currentYear-5), 
+        c(currentYear-4, currentYear-1),
+        currentYear)
+    )
+    
+   myPlot <- mapRegionsFacet(managementData = summaryData,
+     shapeData = allShapes, regionLevel = regionLevel, uiText = uiText,
+     legend = legend, addGlobe = addGlobe)
+   # TODO globe layer slows down the graph
+    # Alternative: https://yutani.rbind.io/post/2018-06-09-plot-osm-tiles/
+
+    expect_s3_class(myPlot, "ggplot")
+   
   })
 
 
@@ -379,6 +434,30 @@ test_that("Trend for Muskrat", {
 #    trendYearRegion(df = summaryData[summaryData$region %in% c("flanders", "wallonia"), ])
     
   })
+
+
+test_that("Map invasion", {
+    
+    currentYear <- 2023
+    
+    summaryData <- createSummaryRegions(
+      data = managementData,
+      shapeData = allShapes,
+      regionLevel = "provinces",
+      year = list(
+        c(currentYear-8, currentYear-5), 
+        c(currentYear-4, currentYear-1),
+        currentYear)
+    )
+    
+    myPlot <- mapRegionsFacet(managementData = summaryData,
+      shapeData = allShapes, regionLevel = "provinces")
+    
+    expect_s3_class(myPlot, "ggplot")
+    
+  })
+
+
 
 
 

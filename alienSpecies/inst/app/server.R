@@ -35,31 +35,39 @@ function(input, output, session) {
   
   results <- reactiveValues(
     # Default language is dutch
-    translations = loadMetaData(language = "en"),
+    translations = loadMetaData(language = "en", local = doDebug),
     searchId = "",
+    renderedTabs = c("start", "checklist_taxa"),
     exoten_timeNA = defaultTimeNA,
     exoten_time = defaultTime,
-    species_choice = if (doDebug) c("Alopochen aegyptiaca", "Muntiacus reevesi",
-          "Lithobates catesbeianus", "Vespa velutina")[4] else NULL
+    species_choice = ""
   )
   
   
   # Select language
-  observeEvent(input$translate_nl, results$translations <- loadMetaData(language = "nl"))
-  observeEvent(input$translate_fr, results$translations <- loadMetaData(language = "fr"))
-  observeEvent(input$translate_en, results$translations <- loadMetaData(language = "en"))
+  observeEvent(input$translate_nl, results$translations <- loadMetaData(language = "nl", local = doDebug))
+  observeEvent(input$translate_fr, results$translations <- loadMetaData(language = "fr", local = doDebug))
+  observeEvent(input$translate_en, results$translations <- loadMetaData(language = "en", local = doDebug))
   
   results$switchTranslation <- reactive(
     input$translate_nl + input$translate_fr + input$translate_en
   )
   
   
+  # Version
+  # -------
+  
+  versionServer(id = "main", uiText = reactive(results$translations))
+  
+  
   # URL Query
   # ----------
   
+    
+  # Create URL for current session
   observeEvent(input$showShare, {
       
-      searchId <- if (input$tabs %in% c("global_indicators"))
+      searchId <- if (input$tabs != "start")
           results$searchId else 
           ""
       languageId <- paste0("&language=", attr(results$translations, "language"))
@@ -102,12 +110,14 @@ function(input, output, session) {
       
     })
     
+    # Resulting URL from previous session
+    urlSearch <- reactive(parseQueryString(session$clientData$url_search))
+    
+    
     # Update page
     observe({
         
-        # The url will be sth like: http://awsabiirl1118.jnj.com/?step=qc&id=16608
-        url <- parseQueryString(session$clientData$url_search)
-        results$urlPage <- url$page
+        results$urlPage <- urlSearch()$page
         
       })
     
@@ -115,17 +125,18 @@ function(input, output, session) {
         
         updateNavbarPage(session = session, inputId = "tabs", selected = results$urlPage)
         
-        url <- parseQueryString(session$clientData$url_search)
-        if (!is.null(url$habitat))
-          results$urlHabitat <- strsplit(url$habitat, split = ", ")[[1]]
+        # TODO necessary here?
+        if (!is.null(urlSearch()$habitat))
+          results$urlHabitat <- strsplit(urlSearch()$habitat, split = ", ")[[1]]
         
       })
+
+    
     
     # Update language
     observe({
         
-        url <- parseQueryString(session$clientData$url_search)
-        results$urlLanguage <- url$language
+        results$urlLanguage <- urlSearch()$language
         
       })
     
@@ -142,29 +153,41 @@ function(input, output, session) {
   output$shareLink <- renderUI(
     actionLink(inputId = "showShare", label = translate(results$translations, "shareLink"))
   )
-
-  # Load code for all tabpages
-  for (serverFile in list.files("serverFiles", full.names = TRUE))
-    source(serverFile, local = TRUE)
   
-  
-  
-  # Tabpanels
+  # Landing page
+  source(file.path("serverFiles", "serverStart.R"), local = TRUE)
   output$start_page <- renderUI({
       
       source(file.path("uiFiles", "uiStart.R"), local = TRUE)$value
       
     })
   
-  output$indicators_content <- renderUI({
+  # Render tabpanel upon need
+  observeEvent(input$tabs, {
       
-      source(file.path("uiFiles", "uiChecklist.R"), local = TRUE)$value
+      # render only once
+      req(!input$tabs %in% results$renderedTabs)
       
-    })
-  
-  output$species_content <- renderUI({
-      
-      source(file.path("uiFiles", "uiSpecies.R"), local = TRUE)$value
+      switch(input$tabs,
+        global_indicators = {
+          
+          output$indicators_content <- renderUI({
+              source(file.path("uiFiles", "uiChecklist.R"), local = TRUE)$value
+            })
+          source(file.path("serverFiles", "serverChecklist.R"), local = TRUE)
+          results$renderedTabs <- c(results$renderedTabs, "global_indicators")
+          
+        },
+        species_information = {
+          
+          output$species_content <- renderUI({
+              source(file.path("uiFiles", "uiSpecies.R"), local = TRUE)$value
+            })
+          source(file.path("serverFiles", "serverSpecies.R"), local = TRUE)
+          results$renderedTabs <- c(results$renderedTabs, "species_information")
+          
+        } 
+      )
       
     })
   

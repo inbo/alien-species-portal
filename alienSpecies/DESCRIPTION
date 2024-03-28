@@ -1,7 +1,7 @@
 Package: alienSpecies
 Type: Package
 Title: Portal for alien and invasive species indicators
-Version: 0.0.5
+Version: 1.0.0
 Date: 2023-11-30
 Author: Machteld Varewyck, Yingjie Zhang, Eva Adriaensen
 Maintainer: Machteld Varewyck <machteld.varewyck@openanalytics.eu>
@@ -9,6 +9,7 @@ Description: INBO shiny application based on the TRIAS package.
 Encoding: UTF-8
 License: MIT + file LICENSE
 Imports: 
+    arrow,
     aws.ec2metadata,
     aws.s3,
     aws.signature,
@@ -17,28 +18,31 @@ Imports:
     dplyr,
     DT,
     ggplot2,
+    ggspatial,
     htmltools,
     htmlwidgets,
+    httr,
     INBOtheme (<= 0.5.9),
     jsonlite,
-    leaflet,
+    leaflet (>= 2.2.0),
     leaflet.extras,
     methods,
     plotly,
     reshape2,
     rgbif,
-	shiny,
-	shinycssloaders,
-	sf,
-	testthat (>= 3.0.0),
+	  shiny,
+	  shinycssloaders,
+	  sf,
+    terra,
+	  testthat (>= 3.0.0),
     tidyr,
-	tidyverse,
-	trias (>= 2.0.3),
-	webshot,
-	xtable
+	  tidyverse,
+	  trias (>= 2.0.3),
+	  webshot,
+	  xtable
 Suggests:
     shinyjs
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Remotes: 
     inbo/INBOtheme@v0.5.9,
     trias-project/trias@v2.0.6

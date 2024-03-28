@@ -4,11 +4,6 @@
 ###############################################################################
 
 
-output$checklist_title <- renderUI({
-    
-    translate(results$translations, id = tabChoices[2])$title  
-    
-  })
 
 # Create titles
 lapply(c("taxa", "trend", "pathways", "origin"), function(iName)
@@ -25,15 +20,13 @@ results$filter_exotenDataTranslated <- reactive({
     
     exotenData[, pathway_level2_translate := translate(results$translations, do.call(paste, c(.SD, sep = "_")))$title,
       .SDcols = c("pathway_level1", "pathway_level2")]
-    exotenData$habitat_translate <- sapply(exotenData$habitat, function(x) 
-        paste(translate(results$translations, strsplit(x, split = "\\|")[[1]])$title, collapse = "|"))
     exotenData[, ':=' (
-        pathway_level1_translate = translate(results$translations, pathway_level1)$title,
-        native_continent_translate = translate(results$translations, native_continent)$title,
-        native_range_translate = translate(results$translations, native_range)$title,
-        degree_of_establishment_translate = translate(results$translations, degree_of_establishment)$title
-    )]
-  
+      pathway_level1_translate = translate(results$translations, pathway_level1)$title,
+      native_continent_translate = translate(results$translations, native_continent)$title,
+      native_range_translate = translate(results$translations, native_range)$title,
+      degree_of_establishment_translate = translate(results$translations, degree_of_establishment)$title,
+      habitat_translate = translate(results$translations, habitat)$title
+    )]    
   
   })
 
@@ -55,10 +48,10 @@ observeEvent(exoten_triggerMore(), {
   if (input$exoten_more %% 2 == 1)
     updateActionLink(session = session, inputId = "exoten_more", 
       label = translate(results$translations, "less")$title,
-      icon = icon("angle-double-up")) else
+      icon = icon("angle-double-up", class = "green-icon")) else
     updateActionLink(session = session, inputId = "exoten_more", 
       label = translate(results$translations, "more")$title,
-      icon = icon("angle-double-down"))
+      icon = icon("angle-double-down", class = "green-icon"))
   
   })
 
@@ -67,7 +60,6 @@ observeEvent(exoten_triggerMore(), {
 ### Filters for Data
 ### -----------------
 
-urlSearch <- reactive(parseQueryString(session$clientData$url_search))
 
 observeEvent(input$tabs, {
     
@@ -78,10 +70,10 @@ observeEvent(input$tabs, {
         options = list(
           placeholder = translate(results$translations, "allTaxa")$title,
           render = I(
-            '{
+            "{
               option: function(item, escape) {
-              return "<div>" + item.html + "</div>"; }
-              }'
+              return '<div class=\"long-selectize\">' + item.html + '</div>'; }
+              }"
           ))
       )
 
@@ -332,7 +324,7 @@ output$exoten_legendLink <- renderUI({
     
     actionLink(inputId = "exoten_legend", 
       label = translate(results$translations, "tableLegend")$title, 
-      icon = icon("angle-double-down"))
+      icon = icon("angle-double-down", class = "green-icon"))
     
   })
 
@@ -373,13 +365,10 @@ observeEvent(tmpKey(), {
     gbifKey <- strsplit(tmpKey(), "_")[[1]][2]
     tabPage <- strsplit(tmpKey(), "_")[[1]][1]
     
-    # Lookup key for occurrence data
-    newSpecies <- dictionary$scientificName[match(gbifKey, dictionary$gbifKey)]
-    
     updateNavbarPage(session = session, inputId = "tabs", selected = "species_information")
     # 2nd update only works if the tabs already exist
     updateTabsetPanel(session = session, inputId = "species_tabs", selected = paste0("species_", tabPage))
-    results$species_choice <- newSpecies
+    results$species_choice <- dictionary$taxonKey[match(gbifKey, dictionary$gbifKey)]
     
   })
 
@@ -389,143 +378,175 @@ observeEvent(tmpKey(), {
 ### -----------------
 
 
-## Plot number of species per year
-plotTriasServer(id = "checklist-count",
-  data = results$exoten_data,
-  uiText = reactive(results$translations),
-  triasFunction = "indicator_introduction_year",
-  triasArgs = reactive({
-      list(
-        start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
-        x_lab = translate(results$translations, "year")$title,
-        y_lab = translate(results$translations, "indicator_introduction_year")$title
-      )
-    })
-)
-
-
-## Plot cumulative number of species per year
-plotTriasServer(id = "checklist-cum",
-  data = results$exoten_data,
-  uiText = reactive(results$translations),
-  triasFunction = "indicator_total_year",
-  triasArgs = reactive({
-      list(
-        start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
-        x_lab = translate(results$translations, "year")$title,
-        y_lab = translate(results$translations, "indicator_total_year")$title
-      )
-    })
-)
-
-## Plot trend occupancy
-countOccupancyServer(id = "checklist",
-  data = reactive(occupancy),
-  uiText = reactive(results$translations)
-)
-
-
-## Plot number of species per year by native region
-plotTriasServer(id = "checklist_yearNativeRange",
-  uiText = reactive(results$translations),
-  data = results$exoten_data,
-  triasFunction = "indicator_native_range_year",
-  triasArgs = reactive({
-      list(
-        x_lab = translate(results$translations, "year")$title,
-        y_lab = translate(results$translations, "number")$title
-      )
-    })
-)
-
-
-plotTriasServer(id = "checklist_tablePathway",
-  uiText = reactive(results$translations),
-  data = results$exoten_data,
-  triasFunction = "get_table_pathways",
-  triasArgs = reactive(list(species_names = "species")),
-  outputType = "table"
-)
-
-
-results$checklist_levelsP1 <- reactive({
+# Checklist tab
+observeEvent(input$exoten_tabs, {
     
-    levelsP1 <- sort(unique(results$exoten_data()$pathway_level1))
-    c(grep(unknownValue(), levelsP1, value = TRUE, invert = TRUE), 
-      grep(unknownValue(), levelsP1, value = TRUE)
-    ) 
+    req(input$exoten_tabs == "checklist_trend")
+    req(!"checklist_trend" %in% results$renderedTabs)
+    results$renderedTabs <- c(results$renderedTabs, "checklist_trend")
+    print(input$exoten_tabs)
+    
+    ## Plot number of species per year
+    plotTriasServer(id = "checklist-count",
+      data = results$exoten_data,
+      uiText = reactive(results$translations),
+      triasFunction = "indicator_introduction_year",
+      triasArgs = reactive({
+          list(
+            start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
+            x_lab = translate(results$translations, "year")$title,
+            y_lab = translate(results$translations, "indicator_introduction_year")$title
+          )
+        })
+    )
+    
+    
+    ## Plot cumulative number of species per year
+    plotTriasServer(id = "checklist-cum",
+      data = results$exoten_data,
+      uiText = reactive(results$translations),
+      triasFunction = "indicator_total_year",
+      triasArgs = reactive({
+          list(
+            start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
+            x_lab = translate(results$translations, "year")$title,
+            y_lab = translate(results$translations, "indicator_total_year")$title
+          )
+        })
+    )
+    
+    ## Plot trend occupancy
+    countOccupancyServer(id = "checklist",
+      data = reactive(occupancy),
+      uiText = reactive(results$translations)
+    )
     
   })
 
-plotTriasServer(id = "checklist_pathway1",
-  uiText = reactive(results$translations),
-  data = results$exoten_data,
-  triasFunction = "visualize_pathways_level1",
-  triasArgs = reactive({
-      list(
-        x_lab = translate(results$translations, "numberTaxa")$title,
-        y_lab = translate(results$translations, "pathways")$title,
-        cbd_standard = FALSE,
-        pathways = results$checklist_levelsP1()
-      )
-    })
-)
-
-plotTriasServer(id = "checklist_pathway1Trend",
-  uiText = reactive(results$translations),
-  data = results$exoten_data,
-  triasFunction = "visualize_pathways_year_level1",
-  triasArgs = reactive({
-      list(
-        x_lab = translate(results$translations, "period")$title,
-        y_lab = translate(results$translations, "numberTaxa")$title,
-        cbd_standard = FALSE,
-        pathways = results$checklist_levelsP1()
-      )
-    })
-)
-
-plotTriasServer(id = "checklist_pathway2",
-  uiText = reactive(results$translations),
-  data = results$exoten_data,
-  triasFunction = "visualize_pathways_level2",
-  triasArgs = reactive({
-      validate(need(length(unique(results$exoten_data()$pathway_level1)) == 1, 
-          translate(results$translations, "singlePathway")$title))
-      list(
-        chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1),
-        x_lab = translate(results$translations, "numberTaxa")$title,
-        y_lab = translate(results$translations, "pathways")$title,
-        cbd_standard = FALSE,
-        pathways = {
-          levelsP2 <- sort(unique(results$exoten_data()$pathway_level2))
-          c(grep(unknownValue(), levelsP2, value = TRUE, invert = TRUE), 
-            grep(unknownValue(), levelsP2, value = TRUE)
-          )          
-        }
-      )
-    })
-)
 
 
-plotTriasServer(id = "checklist_pathway2Trend",
-  uiText = reactive(results$translations),
-  data = results$exoten_data,
-  triasFunction = "visualize_pathways_year_level2",
-  triasArgs = reactive({
-      validate(need(length(unique(results$exoten_data()$pathway_level1)) == 1, 
-          translate(results$translations, "singlePathway")$title))
-      list(
-        chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1),
-        x_lab = translate(results$translations, "period")$title,
-        y_lab = translate(results$translations, "numberTaxa")$title,
-        cbd_standard = FALSE,
-        pathways = {
-          levelsP2 <- sort(unique(results$exoten_data()$pathway_level2))
-          c(grep(unknownValue(), levelsP2, value = TRUE, invert = TRUE), 
-            grep(unknownValue(), levelsP2, value = TRUE)
-          )          
-        }
-      )
-    })
-)
+
+# Pathways tab
+observeEvent(input$exoten_tabs, {
+    
+    req(input$exoten_tabs == "checklist_pathways")
+    req(!"checklist_pathways" %in% results$renderedTabs)
+    results$renderedTabs <- c(results$renderedTabs, "checklist_pathways")
+    print(input$exoten_tabs)
+    
+    plotTriasServer(id = "checklist_tablePathway",
+      uiText = reactive(results$translations),
+      data = results$exoten_data,
+      triasFunction = "get_table_pathways",
+      triasArgs = reactive(list(species_names = "species")),
+      outputType = "table"
+    )
+    
+    
+    results$checklist_levelsP1 <- reactive({
+        
+        levelsP1 <- sort(unique(results$exoten_data()$pathway_level1))
+        c(grep(unknownValue(), levelsP1, value = TRUE, invert = TRUE), 
+          grep(unknownValue(), levelsP1, value = TRUE)
+        ) 
+        
+      })
+    
+    plotTriasServer(id = "checklist_pathway1",
+      uiText = reactive(results$translations),
+      data = results$exoten_data,
+      triasFunction = "visualize_pathways_level1",
+      triasArgs = reactive({
+          list(
+            x_lab = translate(results$translations, "numberTaxa")$title,
+            y_lab = translate(results$translations, "pathways")$title,
+            cbd_standard = FALSE,
+            pathways = results$checklist_levelsP1()
+          )
+        })
+    )
+    
+    plotTriasServer(id = "checklist_pathway1Trend",
+      uiText = reactive(results$translations),
+      data = results$exoten_data,
+      triasFunction = "visualize_pathways_year_level1",
+      triasArgs = reactive({
+          list(
+            x_lab = translate(results$translations, "period")$title,
+            y_lab = translate(results$translations, "numberTaxa")$title,
+            cbd_standard = FALSE,
+            pathways = results$checklist_levelsP1()
+          )
+        })
+    )
+    
+    plotTriasServer(id = "checklist_pathway2",
+      uiText = reactive(results$translations),
+      data = results$exoten_data,
+      triasFunction = "visualize_pathways_level2",
+      triasArgs = reactive({
+          validate(need(length(unique(results$exoten_data()$pathway_level1)) == 1, 
+              translate(results$translations, "singlePathway")$title))
+          list(
+            chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1),
+            x_lab = translate(results$translations, "numberTaxa")$title,
+            y_lab = translate(results$translations, "pathways")$title,
+            cbd_standard = FALSE,
+            pathways = {
+              levelsP2 <- sort(unique(results$exoten_data()$pathway_level2))
+              c(grep(unknownValue(), levelsP2, value = TRUE, invert = TRUE), 
+                grep(unknownValue(), levelsP2, value = TRUE)
+              )          
+            }
+          )
+        })
+    )
+    
+    plotTriasServer(id = "checklist_pathway2Trend",
+      uiText = reactive(results$translations),
+      data = results$exoten_data,
+      triasFunction = "visualize_pathways_year_level2",
+      triasArgs = reactive({
+          validate(need(length(unique(results$exoten_data()$pathway_level1)) == 1, 
+              translate(results$translations, "singlePathway")$title))
+          list(
+            chosen_pathway_level1 = unique(results$exoten_data()$pathway_level1),
+            x_lab = translate(results$translations, "period")$title,
+            y_lab = translate(results$translations, "numberTaxa")$title,
+            cbd_standard = FALSE,
+            pathways = {
+              levelsP2 <- sort(unique(results$exoten_data()$pathway_level2))
+              c(grep(unknownValue(), levelsP2, value = TRUE, invert = TRUE), 
+                grep(unknownValue(), levelsP2, value = TRUE)
+              )          
+            }
+          )
+        })
+    )
+    
+  })
+
+
+
+# Origin tab
+observeEvent(input$exoten_tabs, {
+    
+    req(input$exoten_tabs == "checklist_origin")
+    req(!"checklist_origin" %in% results$renderedTabs)
+    results$renderedTabs <- c(results$renderedTabs, "checklist_origin")
+    print(input$exoten_tabs)
+    
+    ## Plot number of species per year by native region
+    plotTriasServer(id = "checklist_yearNativeRange",
+      uiText = reactive(results$translations),
+      data = results$exoten_data,
+      triasFunction = "indicator_native_range_year",
+      triasArgs = reactive({
+          list(
+            x_lab = translate(results$translations, "year")$title,
+            y_lab = translate(results$translations, "number")$title
+          )
+        })
+    )
+    
+  })

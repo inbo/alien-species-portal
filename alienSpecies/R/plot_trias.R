@@ -79,12 +79,12 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' Shiny module for creating the plot \code{\link{plotTrias}} - server side
 #' @inheritParams welcomeSectionServer
 #' @inheritParams plotTrias
+#' @inheritParams mapCubeServer
 #' @param data reactive object, data for \code{\link{plotTrias}}
 #' @param triasArgs reactive object, extra plot arguments to be passed to the 
 #' trias package
 #' @param filters character vector, additional filters for the TRIAS plot to 
 #' be dipslayed
-#' @param filterRegion boolean, whether to show filter for region
 #' @param maxDate reactive date, maximum observation date for printing in description
 #' @return no return value
 #' 
@@ -93,7 +93,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @import trias
 #' @export
 plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
-  filters = NULL, filterRegion = FALSE, maxDate = reactive(NULL), outputType = c("plot", "table")) {
+  filters = NULL, maxDate = reactive(NULL), outputType = c("plot", "table"),
+  dashReport = NULL) {
   
   # For R CMD check
   protected <- NULL
@@ -109,83 +110,81 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
       
       output$titlePlotTrias <- renderUI(h3(HTML(tmpTranslation()$title)))
       
-      output$descriptionPlotTrias <- renderUI({
+      description <- reactive({
           
-          tmpDescription <- tmpTranslation()$description
-          tmpDescription <- gsub("\\{\\{maxDate\\}\\}", format(maxDate(), "%d/%m/%Y"), tmpDescription)
-          
-          HTML(tmpDescription)
+          decodeText(text = tmpTranslation()$description,
+            params = list(maxDate = format(maxDate(), "%d/%m/%Y")))
           
         })
+      
+      output$descriptionPlotTrias <- renderUI(HTML(description()))
       
       
       output$filters <- renderUI({
           
           if (!is.null(filters)) 
-            lapply(filters, function(iFilter) {
-                checkboxInput(inputId = ns(iFilter), label = switch(iFilter,
-                    bias = translate(uiText(), "correctBias")$title,
-                    protected = translate(uiText(), "protectAreas")$title)
-                )
-              })
-        })
-      
-      output$regionFilter <- renderUI({
-          
-          choices <- c("flanders", "wallonia", "brussels")
-          names(choices) <- translate(uiText(), choices)$title
-          
-          selectInput(inputId = ns("region"), label = translate(uiText(), "regions"),
-            choices = choices, multiple = TRUE, selected = choices)
-          
-        })
-      
-      output$filterPanel <- renderUI({
-          
-          if (!is.null(filters) | filterRegion)
             wellPanel(
-              fluidRow(
-                column(6, uiOutput(ns("filters"))),
-                if (filterRegion)
-                  column(6, uiOutput(ns("regionFilter")))
-              )
+              lapply(filters, function(iFilter) {
+                  checkboxInput(inputId = ns(iFilter), 
+                    label = translate(uiText(), iFilter)$title)
+                })
             )
-        
+          
         })
+      
       
       plotData <- reactive({
           
           subData <- data()
           
-          if (!is.null(input$region))
-            # only for GAM
-            subData <- summarizeTimeSeries(rawData = subData, region = input$region)
-          
-          if (!is.null(input$protected))
-            subData <- subData[protected == input$protected, ]
+          if (!is.null(input$protectAreas))
+            subData <- subData[protected == input$protectAreas, ]
           
           subData
           
         })
       
-      plotModuleServer(id = "plotTrias",
+      plotResult <- plotModuleServer(id = "plotTrias",
         plotFunction = "plotTrias",
         triasFunction = triasFunction, 
         data = plotData,
         triasArgs = reactive({
             if (!is.null(triasArgs)) {
               initArgs <- triasArgs()
-              if (!is.null(input$bias)) {
-                initArgs$eval_years <- min(plotData()$year):max(plotData()$year)
-                if (input$bias)
-                  initArgs$baseline_var <- "cobs"
-              }
+              initArgs$eval_years <- min(plotData()$year):max(plotData()$year)
+              if (!is.null(input$correctBias) && input$correctBias)
+                initArgs$baseline_var <- "cobs"
               initArgs
             } else NULL
           }),
         outputType = outputType,
         uiText = uiText
       )
+      
+      
+      ## Report Objects ##
+      ## -------------- ##
+      
+      observe({
+          
+          # Update when any of these change
+          req(plotResult())
+          input
+          
+          # Return the static values
+          dashReport[[ns(triasFunction)]] <- c(
+            list(
+              plot = isolate(plotResult()$plot),
+              title = isolate(tmpTranslation()$title),
+              description = isolate(description())
+            ),
+            isolate(reactiveValuesToList(input))
+          )
+          
+        })
+      
+      
+      return(dashReport)
       
     })
   
@@ -194,12 +193,14 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
 
 
 #' Shiny module for creating the plot \code{\link{plotTrias}} - UI side
+#' @param showPlotDefault boolean, whether to show the plot by default;
+#' default value is FALSE, i.e. plot hidden in conditionalPanel()
 #' @inheritParams plotModuleUI
 #' @inheritParams plotTrias
 #' @author mvarewyck
 #' @import shiny
 #' @export
-plotTriasUI <- function(id, outputType = c("plot", "table")) {
+plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = FALSE) {
   
   ns <- NS(id)
   outputType <- match.arg(outputType)
@@ -208,10 +209,11 @@ plotTriasUI <- function(id, outputType = c("plot", "table")) {
     
     actionLink(inputId = ns("linkPlotTrias"), 
       label = uiOutput(ns("titlePlotTrias"))),
-    conditionalPanel("input.linkPlotTrias % 2 == 1", ns = ns,
+    conditionalPanel(paste("input.linkPlotTrias % 2 ==", (as.numeric(showPlotDefault) + 1) %% 2), 
+      ns = ns,
       
       uiOutput(ns("descriptionPlotTrias")),
-      uiOutput(ns("filterPanel")),
+      uiOutput(ns("filters")),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else

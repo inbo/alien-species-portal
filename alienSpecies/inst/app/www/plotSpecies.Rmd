@@ -1,0 +1,95 @@
+```{r, echo = FALSE, results = "asis"}
+
+# Printed in this order in report
+allParams <- c("regionLevel", "region", "period", "year", 
+  "correctBias", "protectAreas", "source", "group", "summarizeBy",
+  "gender", "samplingProtocol", "lifeStage")
+currentLandscape <- FALSE
+
+tryCatch({
+    
+    params <- dashReport[[id]]
+    currentParams <- names(params)
+    
+    if (is.character(params$plot) && file.exists(params$plot)) {
+      # expects path to map
+      currentLandscape <- TRUE
+      cat("\n\n\\blandscape\n")
+    }
+          
+    cat("##", params$title, "\n\n")
+    
+    # Description
+    cat(params$description, "\n\n")
+    
+    
+    # Parameters
+    if (any(allParams %in% currentParams)) {
+      
+      cat(paste0("**", translate(results$translations, "parameters")$title, "**\n\n"))
+      
+      for (iParam in currentParams[currentParams %in% allParams]) {
+        cat(paste0("- ", translate(results$translations, iParam)$title, ": "))
+        if (is.character(params[[iParam]]))
+          cat(toString(translate(results$translations, params[[iParam]])$title), "\n\n")
+        else if (is.numeric(params[[iParam]]))
+          cat(paste(params[[iParam]], collapse = " - "), "\n\n")
+        else if (is.logical(params[[iParam]]))
+          cat(if (params[[iParam]]) 
+                translate(results$translations, "yes")$title else 
+                translate(results$translations, "no")$title, "\n\n")
+        
+      }
+    } else {
+      
+      cat(paste0("*", translate(results$translations, "noParameters")$title, "*\n\n"))
+    
+    }
+    
+    # Plot
+    if (is(params$plot, "plotly")) {
+      
+      # plotly
+      plotlyReport(params$plot)
+      
+    } else if (is.character(params$plot)) {
+      
+      # leaflet & landscape: not working directly
+      cat(knitr::knit_child("plotLandscape.Rmd", quiet = TRUE, envir = environment()))
+      cat("\n\n\\elandscape\n")
+      
+    } else {
+      
+      # DT table
+      DT::datatable(params$plot$data, rownames = FALSE,
+        colnames = params$plot$columnNames,
+        selection = "single",
+        options = list(dom = 'ftp', pageLength = -1))
+      
+    } 
+  
+  }, error = function(err) {
+    if (currentLandscape)
+      cat("\n\n\\elandscape\n")
+    
+    cat("No results for", 
+      decodeText(translate(results$translations, id)$title, 
+        params = c(
+          list(species = taxonName())
+        )
+      ), "\n\n")
+  
+  })
+```
+
+```{r, echo = FALSE, results = "asis"}
+if (is(params$plotFlanders, "plotly"))
+  plotlyReport(params$plotFlanders)
+```
+
+```{r, echo = FALSE, results = "asis"}
+if (is(params$plotRegion, "plotly"))
+  plotlyReport(params$plotRegion)
+```
+
+\newpage

@@ -1,18 +1,23 @@
 /* =============== select button with popup window =============== */
 
 /* caret on the right of the button*/
-button#exoten_timeButton .fa.fa-caret-down::before {
+button#exoten_timeButton .fa.fa-angle-down::after {
 	float: right;
 }
 button#exoten_timeButton .fa {
-	display: inline;
+  display: inline;
 } 
 
 /*button*/
 button#exoten_timeButton {
-margin-bottom: 15px;
-margin-left: 25px;
-margin-right: 25px;
+  margin-bottom: 15px;
+  margin-left: 25px;
+  margin-right: 25px;
+  color: #757575;
+  font-family: FlandersArtSans, sans-serif;
+  font-size: 16px;
+  text-align: left;
+  height: 34px;
 }
 
 div.selection-button {

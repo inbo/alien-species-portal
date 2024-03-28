@@ -36,6 +36,9 @@ footer {
 	margin-top: 20px;
 }
 
+.loader {
+  min-height: 40px !important;
+}
 
 
 /*** For the fancy noButton but tiles - radiobuttons ***/
@@ -70,7 +73,7 @@ a, a:visited, a:hover, a:active, a:focus {
 }
 
 
-#showShare, #contact, #translate_en, #translate_fr, #translate_nl {
+#showShare, #contact, #translate_en, #translate_fr, #translate_nl, .version {
   font-size: 14px;
   line-height: 20px;
   color: #595959
@@ -135,8 +138,20 @@ a, a:visited, a:hover, a:active, a:focus {
   color: #fff; 
 }
 
+.shiny-download-link .invisible {
+  background-color: white;
+}
+
+.shiny-download-link:hover .invisible {
+  background-color: white;
+}
+
 .fa-download {
  color: #fff;
+}
+
+.green-icon {
+ color: #c1c443;
 }
 
 p, li, label {
@@ -155,4 +170,20 @@ p, li, label {
 	color: #E4E517
 }
 
+
+
+/*** Customize Global Indicators page ***/
+
+.jumbotron h1 {
+ font-size: 36px;
+}
+
+.long-selectize {
+ padding: 5px;
+ padding-left: 10px;
+}
+
+.form-control {
+ font-size: 16px;
+}
 

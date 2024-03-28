@@ -263,7 +263,7 @@ addBaseMap <- function(map = leaflet(),
     shape = c("Vlaams", "Brussels", "Waals"))
   gewestbel <- subset(gewestbel, GEWEST %in% matchingRegions$shape[match(regions, matchingRegions$name)])
   
-  if (combine)
+  if (!is.null(combine) && combine)
     gewestbel <- sf::st_union(gewestbel)
     
   map %>% 
@@ -362,6 +362,9 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
   # For R CMD check
   count <- decimalLongitude <- decimalLatitude <- NULL
   
+  if (!all(c("count", "decimalLongitude", "decimalLatitude") %in% colnames(occurrenceData)))
+    return(NULL)
+  
   ## Sum counts over ID
   occurrenceData <- occurrenceData[, .(count = sum(count)),
     by = .(decimalLongitude, decimalLatitude)] 
@@ -403,10 +406,12 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' values define the choices in \code{selectInput}
 #' @inheritParams welcomeSectionServer
 #' @inheritParams createCubeData
-#' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @param species reactive character, readable name of the selected species
+#' @param gewest reactive character, name of the selected region(s)
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
+#' @param dashReport reactive value, contains all objects for creating the report;
+#' plot and parameters for current plot will be added with id \code{ns("mapOccurrence")}
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -416,8 +421,8 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapCubeServer <- function(id, uiText, species, df, shapeData,
-  filter = reactive(NULL), groupVariable, showPeriod = FALSE
+mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
+  filter = reactive(NULL), groupVariable, showPeriod = FALSE, dashReport = NULL
 ) {
   
   moduleServer(id,
@@ -428,28 +433,28 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
       currentYear <- as.numeric(format(Sys.Date(), "%Y"))
       
       ns <- session$ns
-      
+      tmpFile <- tempfile(fileext = ".html")
+            
       noData <- reactive(translate(uiText(), "noData")$title)
       tmpTranslation <- reactive(translate(uiText(), ns("mapOccurrence")))
       
       output$descriptionMapOccurrence <- renderUI(tmpTranslation()$description)
       
-      output$titleMapOccurrence <- renderUI({
+      title <- reactive({
           
           req(species())
           
-          tmpTitle <- tmpTranslation()$title
+          decodeText(tmpTranslation()$title, 
+            params = c(
+              list(species = species()), 
+              if (showPeriod && !is.null(input$period)) 
+                list(period = input$period)
+            )
+          )
           
-          myTitle <- if (showPeriod) {
-            req(input$period)
-            paste(tmpTitle, species(), yearToTitleString(req(input$period))) 
-          } else {
-            paste(tmpTitle, species())
-          }
-          
-          h3(HTML(myTitle))
-        
         })
+      
+      output$titleMapOccurrence <- renderUI(h3(HTML(title())))
       
       output$filters <- renderUI({
           
@@ -469,16 +474,6 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
           
         })
       
-      output$region <- renderUI({
-          
-          choices <- c("flanders", "wallonia", "brussels")
-          names(choices) <- translate(uiText(), choices)$title
-          
-          selectInput(inputId = ns("region"), label = translate(uiText(), "regions"),
-            choices = choices, multiple = TRUE, selected = choices)
-          
-        })
-           
       output$period <- renderUI({
           
           req(df())
@@ -519,8 +514,8 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
           # Other filters
           if (!is.null(filter()))
             for (iFilter in names(filter())) {
-              req(input[[iFilter]])
-              filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
+              if (!is.null(input[[iFilter]]))
+                filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
             }
           
           filterData
@@ -531,9 +526,8 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
       subData <- reactive({
           
           # Filter on time
-          if (showPeriod) {
+          if (showPeriod && !is.null(input$period)) {
               
-              req(input$period)
               filterData()[year >= input$period[1] & year <= input$period[2], ]
               
             } else filterData()
@@ -546,52 +540,62 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
       cubeShape <- reactive({
           
           validate(need(subData(), noData()),
-            need(nrow(subData()) > 0, noData()),
-            need(input$region, noData()))
+            need(nrow(subData()) > 0, noData()))
           
           createCubeData(
             df = subData(),
             shapeData = shapeData,
             groupVariable = groupVariable,
-            region = input$region
+            region = gewest()
           )
+          
+        })
+      
+      mapOccurrenceLeaflet <- reactive({
+          
+          req(is.null(shapeData))
+          
+          validate(need(nrow(subData()) > 0, noData()))
+          
+          mapOccurrence(occurrenceData = subData(),
+            # when switching species, need to create correct basemap
+            baseMap = addBaseMap(regions = gewest(), combine = input$combine),
+            addGlobe = isolate(input$globe %% 2 == 0))
+          
+        })
+      
+      mapCubeLeaflet <- reactive({
+          
+          req(!is.null(shapeData))
+          if (showPeriod)
+            req(input$period)
+          
+          validate(need(cubeShape(), noData()))
+          
+          mapCube(cubeShape = cubeShape(), groupVariable = groupVariable, 
+            # when switching species, need to create correct basemap
+            baseMap = addBaseMap(regions = isolate(gewest()), combine = isolate(input$combine)),
+            addGlobe = FALSE, legend = "topright")
           
         })
       
       # Send map to the UI
       output$spacePlot <- renderLeaflet({
           
-          if (is.null(shapeData)) {
-            
-            validate(need(nrow(subData()) > 0, noData()))
-            
-            mapOccurrence(occurrenceData = subData(),
-              # when switching species, need to create correct basemap
-              baseMap = addBaseMap(regions = input$region, combine = input$combine),
-              addGlobe = isolate(input$globe %% 2 == 0))
-            
-          } else {
-            
-            validate(need(cubeShape(), noData()))
-            
-            mapCube(cubeShape = cubeShape(), groupVariable = groupVariable, 
-              # when switching species, need to create correct basemap
-              baseMap = addBaseMap(regions = isolate(input$region), combine = isolate(input$combine)),
-              addGlobe = FALSE, legend = "topright")
-            
-          }
+          if (is.null(shapeData))
+            mapOccurrenceLeaflet() else
+            mapCubeLeaflet()
           
         })
       
       # Add border region
       observe({
           
-          validate(need(input$region, noData()),
-            need(!is.null(input$combine), noData()))
+          validate(need(!is.null(input$combine), noData()))
           
           proxy <- leafletProxy("spacePlot")
           
-          addBaseMap(map = proxy, regions = input$region, combine = input$combine)
+          addBaseMap(map = proxy, regions = gewest(), combine = input$combine)
           
         })
       
@@ -653,7 +657,7 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
           }
           
         })
-      
+          
       
       # Create final map (for download)
       finalMap <- reactive({
@@ -661,33 +665,33 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
           if (is.null(shapeData)) {
             
             newMap <- mapOccurrence(
-              occurrenceData = subData(), 
-              baseMap = addBaseMap(regions = req(input$region), combine = input$combine),
-              addGlobe = input$globe %% 2 == 0
+              occurrenceData = req(subData()), 
+              baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
+              addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 0
             )
             
           } else {
             
             newMap <- mapCube(
-              cubeShape = cubeShape(),
+              cubeShape = req(cubeShape()),
               groupVariable = groupVariable,
-              baseMap = addBaseMap(regions = req(input$region), combine = input$combine),
-              legend = input$legend,
-              addGlobe = input$globe %% 2 == 0
+              baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
+              legend = if (is.null(input$legend)) "topright" else input$legend,
+              addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 0
             )
             
           }
           
           # save the zoom level and centering to the map object
-          newMap <- newMap %>% setView(
-            lng = input$spacePlot_center$lng,
-            lat = input$spacePlot_center$lat,
-            zoom = input$spacePlot_zoom
-          )
-          
-          tmpFile <- tempfile(fileext = ".html")
+          if (!is.null(input$spacePlot_center))
+            newMap <- newMap %>% setView(
+              lng = input$spacePlot_center$lng,
+              lat = input$spacePlot_center$lat,
+              zoom = input$spacePlot_zoom
+            )
           
           # write map to temp .html file
+          req(newMap)
           htmlwidgets::saveWidget(newMap, file = tmpFile, selfcontained = FALSE)
           
           # output is path to temp .html file containing map
@@ -746,11 +750,12 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
       plotModuleServer(id = "countOccurrence",
         plotFunction = "countOccurrence", 
         data = reactive({
-            validate(need(input$region, noData()))
+            validate(need(gewest(), noData()))
+            req(filterData())
             if (!is.null(shapeData))
               merge(filterData(), 
                 # attach regions for coloring
-                sf::st_drop_geometry(shapeData$utm1_bel_with_regions)[, c("CELLCODE", paste0("is", simpleCap(input$region)))], 
+                sf::st_drop_geometry(shapeData$utm1_bel_with_regions)[, c("CELLCODE", paste0("is", simpleCap(gewest())))], 
                 by.x = "cell_code1", by.y = "CELLCODE", all.x = TRUE) else
               filterData()
           }),
@@ -758,6 +763,33 @@ mapCubeServer <- function(id, uiText, species, df, shapeData,
         combine = reactive(input$combine),
         uiText = uiText
       )
+      
+      
+      ## Report Objects ##
+      ## -------------- ##
+      
+      observe({
+          
+          req(dashReport)
+          # Update when any of these change
+          req(finalMap())
+          input
+          
+          # Return the static values
+          dashReport[[ns("mapOccurrence")]] <- c(
+                list(
+                  plot = isolate(finalMap()),
+                  title = isolate(title()),
+                  description = isolate(tmpTranslation()$description),
+                  showPeriod = (showPeriod && !is.null(input$period))
+                ),
+                isolate(reactiveValuesToList(input))
+              )
+          
+        })
+      
+      
+      return(dashReport)
       
     })  
 } 
@@ -788,7 +820,6 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
     
     wellPanel(
       fixedRow(uiOutput(ns("filters")),
-        column(6, uiOutput(ns("region"))),
         if (showLegend)
           column(6, 
             uiOutput(ns("legend"))

@@ -54,7 +54,8 @@ trendYearRegion <- function(df, uiText = NULL,
     
   # Create plot
   pl <- plot_ly(data = plotData, x = ~year, y = ~outcome,
-      color = ~region, colors = colorList$colors, 
+      color = ~region, colors = colorList$colors,
+#      line = list(dash = ~group),
       hoverinfo = "x+y+name",
       type = "scatter", mode = "lines+markers") %>%
     layout(title = title,

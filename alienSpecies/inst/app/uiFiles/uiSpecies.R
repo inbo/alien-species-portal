@@ -5,12 +5,24 @@
 
 
 tagList(
+
+  tags$div(class = "container",
+    tags$div(class = "jumbotron",
+      
+      welcomeSectionUI(id = "species"),
+      fixedRow(
+        column(6,
+          selectInput(inputId = "species_choice", label = NULL, choices = NULL,
+            width = "100%")),
+        column(6,
+          selectInput(inputId = "species_gewest", label = NULL,
+            choices = NULL, multiple = TRUE, width = "100%"))
+      )
+    )
+  ),
   
   tags$div(class = "container",
-    
-    selectInput(inputId = "species_choice", label = NULL, 
-      choices = NULL, width = "100%"),    
-    
+
     tabsetPanel(id = "species_tabs",
       
       tabPanel(titleModuleUI(id = "species_observations"),
@@ -23,7 +35,7 @@ tagList(
       tabPanel(titleModuleUI(id = "species_indicators"),
         value = "species_indicators",
         tags$div(style = "margin-top: 10px;",
-          plotTriasUI(id = "species_gam"),
+          plotTriasUI(id = "indicators_gam", showPlotDefault = TRUE),
         )
       ),
       
@@ -43,13 +55,28 @@ tagList(
       
       tabPanel(titleModuleUI(id = "species_more"), 
         value = "species_more",
-        tabsetPanel(
+        tabsetPanel(id = "species_more",
           tabPanel(titleModuleUI(id = "species_habitats"), value = "species_habitats"),
-          tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps"),
+          tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps",
+            mapRasterUI("risk")
+          ),
           tabPanel(titleModuleUI(id = "species_links"), value = "species_links"),
           tabPanel(titleModuleUI(id = "species_risk_assessment"), value = "species_risk_management"),
           tabPanel(titleModuleUI(id = "species_images"), value = "species_images")
           )
+      )
+    ),
+    
+    tags$div(style = "margin-bottom: 70px;"),
+    
+    tags$div(class = "footer",
+      tags$div(class = "footer-content",
+        singleton(
+          tags$head(tags$script(src = "triggerDownload.js"))
+        ),
+        actionButton(inputId = "species_createReport", label = "Create report", 
+          icon = icon("file-pdf")),
+        downloadLink("species_downloadReport", " ", class = "invisible")
       )
     )
   )

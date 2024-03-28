@@ -77,8 +77,6 @@ test_that("Module mapCube", {
     
     mySpecies <- "Oxyura jamaicensis"
 
-    
-    
     dictionary <- loadMetaData(type = "keys")
     myKey <- dictionary$taxonKey[match(mySpecies, dictionary$scientificName)]
     
@@ -86,14 +84,16 @@ test_that("Module mapCube", {
       args = list(
         uiText = reactive(translations),
         species = reactive(mySpecies),
+        gewest = reactive("flanders"),
         df = reactive(occurrenceData[taxonKey %in% myKey, ]),
         groupVariable = "cell_code",
         shapeData = allShapes,
         showPeriod = TRUE
       ), {        
         session$setInputs(period = c(2002, 2020))
-        expect_true(!is.null(output$region))        
+        expect_true(!is.null(output$legend))        
       })
+  
   })
 
 
@@ -139,6 +139,7 @@ test_that("Module plotModule", {
         plotFunction = "plotTrias", 
         triasFunction = "indicator_introduction_year",
         data = reactive(exotenData), 
+        uiText = reactive(translations),
         triasArgs = reactive(list(
             start_year_plot = 2002,
             x_lab = "Jaar",
@@ -216,6 +217,7 @@ test_that("Module mapHeat",{
                     args = list(
                       uiText = reactive(translationsEn),
                       species = reactive(  "Vespa velutina"),
+                      gewest = reactive("flanders"),
                       combinedData = reactive(combinedActive),
                       filter = reactive(list(nest = unique(combinedActive$filter), radius = na.omit(unique(combinedActive$radius)))),
                       colors = reactive(colorsActive),
@@ -303,7 +305,7 @@ test_that("Module countNesten",{
                     ), {
                       session$setInputs(linkCountNesten = 1)
                       #session$setInputs(linkPlotTrias = 1)
-                      session$setInputs(period = c(2017,2023))
+                      session$setInputs(period = c(2020,2023))
                       session$setInputs(regionLevel = "communes")
                       session$setInputs( typeNesten = "individual")
                       expect_true(!is.null(output$descriptionCountNesten ))

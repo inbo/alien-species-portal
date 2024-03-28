@@ -58,3 +58,6 @@ alienSpecies/alienSpecies-tests/
 
 # aws secret 
 /script/
+
+# temporary translations file
+/alienSpecies/inst/extdata/translations.csv

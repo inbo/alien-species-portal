@@ -6,19 +6,23 @@
 
 #' Summarize time series data over the 1kmx1km grids for selected regions
 #' 
-#' @param rawData data.table, as created by \code{\link{createTimeseries}}
+#' @param timeseries connection to data.table, as created by \code{loadTabularData(type = "timeseries")}
+#' @param species numeric, taxonKey for the species select
 #' @inheritParams createCubeData 
 #' @return data.table
 #' 
 #' @author mvarewyck
+#' @importFrom dplyr filter collect
 #' @export
-summarizeTimeSeries <- function(rawData, region = c("flanders", "wallonia", "brussels")) {
+summarizeTimeSeries <- function(timeseries, species, region = c("flanders", "wallonia", "brussels")) {
   
   # For R CMD check
   obs <- cobs <- pa_obs <- pa_cobs <- classKey <- taxonKey <- year <- protected <- NULL
   natura2000 <- NULL
   
-  # Filter on region
+  # Filter data and collect
+  rawData <- dplyr::filter(timeseries, taxonKey == species) %>% dplyr::collect()
+  
   regionCols <- paste0("is", simpleCap(region))
   rawData <- rawData[rowSums(rawData[, regionCols, with = FALSE]) > 0, ]
   

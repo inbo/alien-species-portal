@@ -182,34 +182,26 @@ test_that("Load shape data", {
 
 test_that("Load exotenData", {
   exotenData <- loadTabularData(type = "indicators")
-  expect_s3_class(   exotenData, "data.table")
+  expect_s3_class(exotenData, "data.table")
 })
-
 
 test_that("Load unionlistData", {
   unionlistData <- loadTabularData(type = "unionlist")
-  
-  expect_s3_class( unionlistData, "data.table")
-  
+  expect_s3_class(unionlistData, "data.table")
 })
 
 test_that("Load occurrenceData", {
   occurrenceData <- loadTabularData(type = "occurrence")
-  expect_s3_class( occurrenceData, "data.table")
-
+  expect_s3_class(occurrenceData, "data.table")
 })
 
-
-
 test_that("Load full_timeseries", {
-  readS3(file = "full_timeseries.RData")
-  expect_true(exists("timeseries"))
+  timeseries <- loadTabularData(type = "timeseries")
   expect_s3_class(timeseries, "data.table")
 })
 
 
 test_that("Load cube data", {
-
   occupancy <- loadOccupancyData()
   expect_true(exists("dfCube"))
   expect_s3_class(occupancy, "data.table")

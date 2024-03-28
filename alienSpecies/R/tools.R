@@ -181,3 +181,53 @@ simpleCap <- function(names, keepNames = TRUE) {
     }, USE.NAMES = keepNames)
   
 }
+
+
+#' get path of INBO logo file
+#' 
+#' @return character, path of logo file
+#' @param type character, defines which logo is returned; should be one of 
+#' \code{c("inbo", "trias")}
+#' @author mvarewyck
+#' @export
+getPathLogo <- function(type = c("inbo", "trias", "combined")) {
+  
+  type <- match.arg(type)
+  
+  system.file("app/www", switch(type,
+      inbo = "logo.png",
+      trias = "logoTrias.png",
+      combined = "logoCombined.png"
+    ), package = "alienSpecies")
+
+}
+
+
+
+#' Style plotly object for Rmd report
+#' 
+#' @param myPlot plotly object
+#' @return plotly object
+#' 
+#' @author mvarewyck
+#' @import plotly
+#' @export
+plotlyReport <- function(myPlot) {
+  
+  myPlot <- myPlot %>% config(displayModeBar = FALSE)
+  
+  # remove gridlines
+  if (is.null(myPlot$x$layoutAttrs[[1]]$xaxis))
+    myPlot$x$layoutAttrs[[1]]$xaxis <- list(showgrid = FALSE) else
+    myPlot$x$layoutAttrs[[1]]$xaxis$showgrid <- FALSE
+#  myPlot$x$layoutAttrs[[1]]$xaxis$ticks <- "outside"
+  
+  if (is.null(myPlot$x$layoutAttrs[[1]]$yaxis))
+    myPlot$x$layoutAttrs[[1]]$yaxis <- list(showgrid = FALSE) else
+    myPlot$x$layoutAttrs[[1]]$yaxis$showgrid <- FALSE
+#  myPlot$x$layoutAttrs[[1]]$yaxis$ticks <- "outside"
+  
+  myPlot %>% layout(autosize = FALSE, width = 1000, height = 400)
+  
+}
+

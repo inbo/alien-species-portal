@@ -51,6 +51,31 @@ test_that("Trigger errors data filtering" , {
         inputLevels = NULL))
   })
 
+test_that("Translate exoten data", {
+    
+#    exotenData <- loadTabularData(type = "indicators")
+    translations <- loadMetaData(language = "nl")
+    
+    time1 <- Sys.time()
+    exotenData[, pathway_level2_translate := translate(translations, do.call(paste, c(.SD, sep = "_")))$title,
+      .SDcols = c("pathway_level1", "pathway_level2")]
+    print(Sys.time() - time1)
+#    exotenData$habitat_translate <- sapply(exotenData$habitat, function(x) 
+#        paste(translate(translations, strsplit(x, split = "\\|")[[1]])$title, collapse = "|"))
+#    print(Sys.time() - time1)
+    exotenData[, ':=' (
+        pathway_level1_translate = translate(translations, pathway_level1)$title,
+        native_continent_translate = translate(translations, native_continent)$title,
+        native_range_translate = translate(translations, native_range)$title,
+        degree_of_establishment_translate = translate(translations, degree_of_establishment)$title,
+        habitat_translate = translate(translations, habitat)$title
+      )]    
+    print(Sys.time() - time1)
+    
+    expect_is(exotenData, "data.table")
+    
+  })
+
 test_that("Define user choices and filter data", {
     
     # choices

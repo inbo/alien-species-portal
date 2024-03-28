@@ -3,28 +3,35 @@
 #' Used on Management page for Vespa Velutina
 #' 
 #' @param activeData sf, points data with actieve haarden
-#' @param managedData sf, points data with beheerde nesten
 #' @param untreatedData sf, points data with onbehandelde nesten
+#' @param managedData sf, points data with beheerde nesten; default is NULL
 #' @return sf data.frame, combining all data sources
 #' 
 #' @author mvarewyck
 #' @importFrom dplyr select filter mutate group_by summarise
 #' @export
-combineActiveData <- function(activeData, managedData, untreatedData) {
+combineActiveData <- function(activeData, untreatedData, managedData = NULL) {
   
   activeData$type <- "individual"
-  managedData$type <- "managed nest"
   untreatedData$type <- "untreated nest"
   
   # for intermediate data (no radius yet)
-  if(is.null(managedData$radius)) managedData$radius <- NA
-  if(is.null( activeData$radius))  activeData$radius <- NA
-  if(is.null( untreatedData$radius))  untreatedData$radius <- NA
+  if (is.null(activeData$radius))
+    activeData$radius <- NA
+  if (is.null(untreatedData$radius))
+    untreatedData$radius <- NA
+  
+  if (!is.null(managedData)) {
+    managedData$type <- "managed nest"
+    if (is.null(managedData$radius))
+      managedData$radius <- NA
+  }
   
 
   toReturn <- rbind(
     activeData[, c("type", "popup", "radius")],
-    managedData[, c("type", "popup", "radius")],
+    if (!is.null(managedData))
+      managedData[, c("type", "popup", "radius")],
     untreatedData[, c("type", "popup", "radius")]
   )
   
@@ -41,31 +48,46 @@ combineActiveData <- function(activeData, managedData, untreatedData) {
 #' 
 #' @param pointsData sf data.frame, points observations for individuals
 #' @param nestenData sf data.frame, points observations for nests
+#' @param currentYear integer, current year for selecting nest data
+#' @inheritParams mapHeat
 #' @return sf data.frame, combining both data sources
 #' 
 #' @author mvarewyck
-#' @importFrom dplyr select filter mutate group_by summarise rename
+#' @importFrom dplyr select filter mutate group_by summarise rename case_when
+#' @importFrom data.table year
 #' @export
-combineNestenData <- function(pointsData, nestenData) {
+combineNestenData <- function(pointsData, nestenData, 
+  currentYear = data.table::year(Sys.Date()),
+  uiText = NULL) {
   
   # For R CMD check
   type <- eventDate <- popup <- institutionCode <- id <- observation_time <- NULL
-  geometry <- NULL
+  geometry <- nest_type <- result <- NULL
   
   points_redux <- pointsData %>% 
-    dplyr::filter(year == year(Sys.Date())) %>%
+    dplyr::filter(year == currentYear) %>%
+    # Only retain individual data, see https://github.com/inbo/alien-species-portal/issues/63#issuecomment-1918810526
+    dplyr::filter(dplyr::case_when(eventDate >= as.Date("31/12/2028", format = "%d/%m/%Y") ~ type == "Individu", TRUE ~ TRUE)) %>%
     dplyr::select(type, eventDate, popup, institutionCode, year) %>%
-    mutate(type = "individual")
+    mutate(type = ifelse(type == "Individu", "individual", "nest"))
   
   # punten laag van gemelde nesten
   nesten <- nestenData %>% 
-    dplyr::filter(year == year(Sys.Date())) %>% 
+    dplyr::filter(year == currentYear) 
+  
+  if (nrow(nesten) == 0)
+    return(NULL)
+  
+  nesten <- nesten %>% 
     mutate(type = "nest",
-      popup = paste0("Vespawatch rij ", id),
+      popup = paste(
+        translate(uiText, "nest")$title, ":", translate(uiText, nest_type)$title,
+        "</br>", translate(uiText, "management")$title, ":", translate(uiText, result)$title,
+        "</br>Vespawatch", translate(uiText, "row")$title, id), 
       institutionCode = "Vespawatch")
   
   nesten_redux <- nesten %>% 
-    dplyr::filter(year == year(Sys.Date())) %>% 
+    dplyr::filter(year == currentYear) %>% 
     dplyr::select(type, eventDate = observation_time, popup, institutionCode, year) 
   
   # Recombine points
@@ -104,8 +126,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
   
   
   # Base map
-  ah_map <- baseMap %>%
-    addScaleBar(position = "bottomleft")
+  ah_map <- baseMap
   
   if (addGlobe)
     ah_map <- addTiles(ah_map)
@@ -126,7 +147,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
   # Filter data
   plotData <- combinedData[combinedData$filter %in% selected, ]
  
-  if (nrow(plotData) == 0)
+  if (is.null(plotData) || nrow(plotData) == 0)
     return(ah_map)
   
   
@@ -163,7 +184,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' 
 #' @inheritParams welcomeSectionServer
 #' @inheritParams mapHeat
-#' @param species reactive character, readable name of the selected species
+#' @inheritParams mapCubeServer
 #' @param filter reactive list with filters to be shown in the app;
 #' names should match a plotFunction in \code{uiText}; 
 #' values define the choices in \code{selectInput}
@@ -177,8 +198,8 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapHeatServer <- function(id, uiText, species, combinedData, filter, colors, 
-  blur = NULL, maxDate
+mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, colors, 
+  blur = NULL, maxDate, dashReport = NULL
 ) {
   
   moduleServer(id,
@@ -190,19 +211,38 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
       noData <- reactive(translate(uiText(), "noData")$title)
       tmpTranslation <- reactive(translate(uiText(), ns("mapHeat")))
       
-      output$descriptionMapHeat <- renderUI({
-
-          tmpDescription <- tmpTranslation()$description
-          tmpDescription <- gsub("\\{\\{maxDate\\}\\}", format(maxDate(), "%d/%m/%Y"), tmpDescription)
-          tmpDescription <- gsub("\\{\\{maxYear\\}\\}", format(maxDate(), "%Y"), tmpDescription)
+      tmpFile <- tempfile(fileext = ".html")
+      
+      description <- reactive({
           
-          HTML(tmpDescription)
+          decodeText(
+            text = tmpTranslation()$description,
+            params = list(
+              maxDate = format(maxDate(), "%d/%m/%Y"),
+              maxYear = format(Sys.Date(), "%Y")
+            )
+          )
           
         })
       
+      output$descriptionMapHeat <- renderUI(HTML(description()))
+      
       output$titleMapHeat <- renderUI(h3(HTML(tmpTranslation()$title)))
       
+      # Hide output if no data
+      observe({
+          
+          # Wait until output is created
+          req(input$legend)
+          
+          shinyjs::toggle(id = "mapHeatUI", 
+            condition = (!is.null(combinedData()) && nrow(combinedData()) > 0))
+          
+        })
+      
       output$filters <- renderUI({
+          
+          req(nrow(combinedData()))
           
           if (!is.null(filter()))
             lapply(names(filter()), function(filterName) {
@@ -259,27 +299,33 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
           input[["global"]]
 
 
-          temp <- combinedData()
+          tmpData <- combinedData()
 
-          for(iFilter in names(filter())[-1]){
+          for (iFilter in names(filter())[-1]){
 
             if (!is.null(input[[iFilter]]) && input[[iFilter]] != "<none>"){
-              index <- !is.na(temp[[iFilter]]) & (temp[[iFilter]] == input[[iFilter]])
-              temp <- temp[index,]
+              index <- !is.na(tmpData[[iFilter]]) & (tmpData[[iFilter]] == input[[iFilter]])
+              tmpData <- tmpData[index,]
             }
           }
-          temp
+          
+          tmpData
+          
         })
       
       # Send map to the UI
       output$spacePlot <- renderLeaflet({
           
+          validate(need(nrow(combinedDataPostFilter()) > 0, noData()))
+          
           myMap <- mapHeat(
             combinedData =  combinedDataPostFilter(),
+            baseMap = addBaseMap(regions = gewest()),
             colors = colors(),
             selected = unique(combinedDataPostFilter()$filter),
             addGlobe = isolate(input$globe %% 2 == 1),
-            blur = blur
+            blur = blur,
+            uiText = uiText()
           )
           
           myMap
@@ -370,29 +416,31 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
       
       # Create final map (for download)
       finalMap <- reactive({
+          
+          req(nrow(combinedDataPostFilter()) > 0)
+          req(input[[names(filter())[1]]])
      
-        input[[ names(filter())[2] ]]
-        
           newMap <- mapHeat(
-            combinedData =combinedDataPostFilter(),
+            combinedData = combinedDataPostFilter(),
+            baseMap = addBaseMap(regions = gewest()),
             colors = colors(),
             selected = input[[names(filter())[1]]],
             blur = blur, 
-            legend = input$legend,
-            addGlobe = input$globe %% 2 == 1,
+            legend = if (is.null(input$legend)) "topright" else input$legend,
+            addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 1,
             uiText = uiText()
           )
           
           # save the zoom level and centering to the map object
-          newMap <- newMap %>% setView(
-            lng = input$spacePlot_center$lng,
-            lat = input$spacePlot_center$lat,
-            zoom = input$spacePlot_zoom
-          )
-          
-          tmpFile <- tempfile(fileext = ".html")
+          if (!is.null(input$spacePlot_center))
+            newMap <- newMap %>% setView(
+              lng = input$spacePlot_center$lng,
+              lat = input$spacePlot_center$lat,
+              zoom = input$spacePlot_zoom
+            )
           
           # write map to temp .html file
+          req(newMap)
           htmlwidgets::saveWidget(newMap, file = tmpFile, selfcontained = FALSE)
           
           # output is path to temp .html file containing map
@@ -435,6 +483,33 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
 #          
 #        })
       
+      ## Report Objects ##
+      ## -------------- ##
+      
+      observe({
+          
+          req(dashReport)
+          
+          # Update when any of these change
+          finalMap()
+          maxDate()
+          input
+          
+          # Return the static values
+          dashReport[[ns("mapHeat")]] <- c(
+            list(
+              plot = isolate(finalMap()),
+              title = isolate(tmpTranslation()$title),
+              description = isolate(description()) 
+            ),
+            isolate(reactiveValuesToList(input))
+          )
+          
+        })
+      
+      
+      return(dashReport)
+    
       
     })  
 } 
@@ -444,6 +519,7 @@ mapHeatServer <- function(id, uiText, species, combinedData, filter, colors,
 #' Shiny module for creating the plot \code{\link{mapCube}} - UI side
 #' @inheritParams welcomeSectionServer
 #' @inheritParams mapCubeUI
+#' 
 #' @return UI object
 #' 
 #' @author mvarewyck
@@ -461,25 +537,27 @@ mapHeatUI <- function(id, showLegend = TRUE, showGlobe = TRUE) {
     uiOutput(ns("titleMapHeat")),
     uiOutput(ns("descriptionMapHeat")),
     
-    wellPanel(
-      fixedRow(uiOutput(ns("filters")),
-        if (showLegend)
-          column(4, 
-            uiOutput(ns("legend"))
-          ),
-        if (showGlobe)
-          column(6, 
-            actionLink(inputId = ns("globe"), label = "Show globe",
-              icon = icon("globe"))
-          )
-      )
-    ),
-    withSpinner(leafletOutput(ns("spacePlot"), height = "600px")),
-    
-    tags$br(),
-    
-    tags$div(uiOutput(ns("downloadMapButton")), style = "display:inline-block;"),
+    tags$div(id = ns("mapHeatUI"),
+      wellPanel(
+        fixedRow(uiOutput(ns("filters")),
+          if (showLegend)
+            column(4, 
+              uiOutput(ns("legend"))
+            ),
+          if (showGlobe)
+            column(6, 
+              actionLink(inputId = ns("globe"), label = "Show globe",
+                icon = icon("globe"))
+            )
+        )
+      ),
+      withSpinner(leafletOutput(ns("spacePlot"), height = "600px")),
+      
+      tags$br(),
+      
+      tags$div(uiOutput(ns("downloadMapButton")), style = "display:inline-block;"),
 #    downloadButton(ns("downloadData"), label = "Download data", class = "downloadButton"),
+    ),
     
     tags$hr()
   
