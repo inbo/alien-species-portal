@@ -3,7 +3,10 @@ FROM rocker/r-ver:4.3.2
 MAINTAINER Machteld Varewyck machteld.varewyck@openanalytics.eu
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    gdal-bin \
+    libgdal-dev \
+    libudunits2-dev \ 
+    libharfbuzz-dev \
+    libfribidi-dev \
     libproj22 \
     libgeos3.10.2 libgeos-c1v5  \
     libcurl4-openssl-dev \
@@ -11,7 +14,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     imagemagick \
     lbzip2 \
     pandoc \
-    libudunits2-0 \
     libmagick++-dev \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
