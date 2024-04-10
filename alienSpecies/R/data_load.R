@@ -103,7 +103,8 @@ loadMetaData <- function(type = c("ui", "keys"),
       
       uiText <- allData[, c("title_id", paste0(c("title_", "description_"), language))]
       colnames(uiText) <- c("id", "title", "description")
-      uiText <- uiText[uiText$id != "", ]
+      uiText <- uiText[!uiText$id %in% c(NA, ""), ]
+      uiText[is.na(uiText)] <- ""
       
       if (any(duplicated(uiText$id)))
         stop("Following translations occur multiple times, please clean the file: ",
