@@ -12,12 +12,18 @@
 #' @export
 combineActiveData <- function(activeData, untreatedData, managedData = NULL) {
   
-  activeData$type <- "individual"
-  untreatedData$type <- "untreated nest"
   
+  if (nrow(activeData) != 0) {
+    
+    activeData$type <- "individual"
+    # for intermediate data (no radius yet)
+    if (is.null(activeData$radius))
+      activeData$radius <- NA
+    
+  }
+    
+  untreatedData$type <- "untreated nest"
   # for intermediate data (no radius yet)
-  if (is.null(activeData$radius))
-    activeData$radius <- NA
   if (is.null(untreatedData$radius))
     untreatedData$radius <- NA
   
@@ -29,7 +35,8 @@ combineActiveData <- function(activeData, untreatedData, managedData = NULL) {
   
 
   toReturn <- rbind(
-    activeData[, c("type", "popup", "radius")],
+    if (nrow(activeData) != 0)
+      activeData[, c("type", "popup", "radius")],
     if (!is.null(managedData))
       managedData[, c("type", "popup", "radius")],
     untreatedData[, c("type", "popup", "radius")]
@@ -218,7 +225,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
           decodeText(
             text = tmpTranslation()$description,
             params = list(
-              maxDate = format(maxDate(), "%d/%m/%Y"),
+              maxDate = tryCatch(format(maxDate(), "%d/%m/%Y"), error = function(e) NA),
               maxYear = format(Sys.Date(), "%Y")
             )
           )
