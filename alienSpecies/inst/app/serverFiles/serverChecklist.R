@@ -384,7 +384,6 @@ observeEvent(input$exoten_tabs, {
     req(input$exoten_tabs == "checklist_trend")
     req(!"checklist_trend" %in% results$renderedTabs)
     results$renderedTabs <- c(results$renderedTabs, "checklist_trend")
-    print(input$exoten_tabs)
     
     ## Plot number of species per year
     plotTriasServer(id = "checklist-count",
@@ -432,7 +431,6 @@ observeEvent(input$exoten_tabs, {
     req(input$exoten_tabs == "checklist_pathways")
     req(!"checklist_pathways" %in% results$renderedTabs)
     results$renderedTabs <- c(results$renderedTabs, "checklist_pathways")
-    print(input$exoten_tabs)
     
     plotTriasServer(id = "checklist_tablePathway",
       uiText = reactive(results$translations),
@@ -534,7 +532,6 @@ observeEvent(input$exoten_tabs, {
     req(input$exoten_tabs == "checklist_origin")
     req(!"checklist_origin" %in% results$renderedTabs)
     results$renderedTabs <- c(results$renderedTabs, "checklist_origin")
-    print(input$exoten_tabs)
     
     ## Plot number of species per year by native region
     plotTriasServer(id = "checklist_yearNativeRange",
@@ -546,7 +543,9 @@ observeEvent(input$exoten_tabs, {
             x_lab = translate(results$translations, "year")$title,
             y_lab = translate(results$translations, "number")$title
           )
-        })
+        }),
+      filters = list(
+        regionLevel = c("native_continent", "native_range"))
     )
     
   })

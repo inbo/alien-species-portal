@@ -124,9 +124,17 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
           
           if (!is.null(filters)) 
             wellPanel(
-              lapply(filters, function(iFilter) {
-                  checkboxInput(inputId = ns(iFilter), 
-                    label = translate(uiText(), iFilter)$title)
+              lapply(names(filters), function(iFilter) {
+                  if (all(filters[[iFilter]] == "checkbox")) {
+                    checkboxInput(inputId = ns(iFilter), 
+                      label = translate(uiText(), iFilter)$title) 
+                  } else {
+                    choices <- filters[[iFilter]]
+                    names(choices) <- translate(uiText(), choices)$title
+                    fluidRow(column(4, selectInput(inputId = ns(iFilter),
+                      label = translate(uiText(), iFilter)$title,
+                      choices = choices)))
+                  }
                 })
             )
           
@@ -151,9 +159,13 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
         triasArgs = reactive({
             if (!is.null(triasArgs)) {
               initArgs <- triasArgs()
-              initArgs$eval_years <- min(plotData()$year):max(plotData()$year)
-              if (!is.null(input$correctBias) && input$correctBias)
-                initArgs$baseline_var <- "cobs"
+              if (!is.null(input$correctBias)) {
+                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):max(plotData()$year, na.rm = TRUE)
+                if (input$correctBias)
+                  initArgs$baseline_var <- "cobs"
+              }
+              if (!is.null(input$regionLevel))
+                initArgs$type <- input$regionLevel
               initArgs
             } else NULL
           }),

@@ -181,7 +181,10 @@ dashReport <- plotTriasServer(id = "indicators_gam",
         y_label = translate(results$translations, "observations")$title
       )
     }),
-  filters = c("correctBias", "protectAreas"),
+  filters = list(
+    correctBias = "checkbox", 
+    protectAreas = "checkbox"
+  ),
   dashReport = dashReport
 )
 
