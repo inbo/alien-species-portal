@@ -378,13 +378,8 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
         lapply(split(summaryData, summaryData$region), function(iData) {
             tmpData <- suppressWarnings(reshape2::melt(iData, id.vars = colnames(iData)[1:2]))
             tmpData$nest <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[1])
-            tmpData$isBeheerd <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) { 
-                if (length(x) > 1) {
-                  if (x[2] == "TRUE")
-                    "managed nest" else if (x[2] == "FALSE")
-                    "untreated nest"
-                } else NA
-              })
+            tmpData$isBeheerd <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[2])
+            
             tmpData <- tmpData[!is.na(tmpData$isBeheerd), ]
             formattedTable <- reshape2::dcast(tmpData[, c("nest", "isBeheerd", "value")], nest ~ isBeheerd, value.var = "value")
             formattedTable$nest[formattedTable$nest == "NA"] <- "unknown"

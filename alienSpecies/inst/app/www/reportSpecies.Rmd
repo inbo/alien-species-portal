@@ -54,7 +54,9 @@ incProgress(amount = 0.2, detail = myTitle)
 childOutput <- lapply(grep("observations", reportNames, value = TRUE), function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
-cat(unlist(childOutput), sep = '\n')
+if (length(childOutput) == 0)
+  cat(translate(results$translations, "noData")$title) else
+  cat(unlist(childOutput), sep = '\n')
 ``` 
 
 
@@ -66,7 +68,9 @@ incProgress(amount = 0.2, detail = myTitle)
 childOutput <- lapply(grep("indicators", reportNames, value = TRUE), function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
-cat(unlist(childOutput), sep = '\n')
+if (length(childOutput) == 0)
+  cat(translate(results$translations, "noData")$title) else
+  cat(unlist(childOutput), sep = '\n')
 ``` 
 
 
@@ -78,7 +82,9 @@ incProgress(amount = 0.2, detail = myTitle)
 childOutput <- lapply(grep("reporting", reportNames, value = TRUE), function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
-cat(unlist(childOutput), sep = '\n')
+if (length(childOutput) == 0)
+  cat(translate(results$translations, "noData")$title) else
+  cat(unlist(childOutput), sep = '\n')
 ``` 
 
 
@@ -100,7 +106,9 @@ managementIds <- managementIds[managementIds %in% reportNames]
 childOutput <- lapply(managementIds, function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
-cat(unlist(childOutput), sep = '\n')
+if (length(childOutput) == 0)
+  cat(translate(results$translations, "noData")$title) else
+  cat(unlist(childOutput), sep = '\n')
 ``` 
 
 

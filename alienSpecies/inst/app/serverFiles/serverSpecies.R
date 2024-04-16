@@ -133,7 +133,7 @@ dashReport <- mapCubeServer(id = "observations",
   shapeData = allShapes,
   showPeriod = TRUE,
   dashReport = dashReport,
-  triggerReport = reactive(input$species_createReport)
+  triggerReport = species_createReport
 )
 
 
@@ -164,7 +164,6 @@ results$species_gamData <- reactive({
     
     req(input$species_choice)
     summarizeTimeSeries(
-      timeseries = timeseries,
       species = as.numeric(input$species_choice), 
       region = input$species_gewest)
     
@@ -191,7 +190,7 @@ dashReport <- plotTriasServer(id = "indicators_gamObservations",
     protectAreas = list(type = "checkbox")
   ),
   dashReport = dashReport,
-  triggerReport = reactive(input$species_createReport)
+  triggerReport = species_createReport
 )
 
 
@@ -216,7 +215,7 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
     protectAreas = list(type = "checkbox")
   ),
   dashReport = dashReport,
-  triggerReport = reactive(input$species_createReport)
+  triggerReport = species_createReport
 )
 
 
@@ -252,7 +251,7 @@ dashReport <- mapCubeServer(id = "reporting_t01",
   groupVariable = "source",
   shapeData = allShapes,
   dashReport = dashReport,
-  triggerReport = reactive(input$species_createReport)
+  triggerReport = species_createReport
 )
 
 
@@ -354,7 +353,7 @@ observe({
         shapeData = NULL,
         showPeriod = TRUE,
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
     } else if (taxonName() %in% heatSpecies) {
@@ -384,7 +383,7 @@ observe({
             max(results$species_managementData()$actieve_haarden$eventDate, na.rm = TRUE)
           }) ,
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       ## Alle observaties
@@ -410,7 +409,7 @@ observe({
             max(results$species_managementData()$points$eventDate, na.rm = TRUE)
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       # Trend region
@@ -435,7 +434,7 @@ observe({
               simplify = FALSE)
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       # Facet invasion
@@ -448,7 +447,7 @@ observe({
         shapeData = allShapes,
         facet = TRUE,
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       # Aantal lente nesten
@@ -462,7 +461,7 @@ observe({
           #read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))
         uiText = reactive(results$translations),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
      
@@ -476,7 +475,7 @@ observe({
             max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       # Aantal nesten per provincie - tabel
@@ -488,7 +487,7 @@ observe({
         maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)),
         outputType = "table",
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       dashReport <- countYearGroupServer(
@@ -506,7 +505,7 @@ observe({
             choices
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
     } else {
@@ -521,7 +520,7 @@ observe({
         occurrenceData = occurrenceData,
         shapeData = allShapes,
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       # Facet invasion
@@ -534,7 +533,7 @@ observe({
         shapeData = allShapes,
         facet = TRUE,
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       dashReport <- countYearGroupServer(
@@ -547,7 +546,7 @@ observe({
             choices
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
     } 
     
@@ -662,53 +661,62 @@ species_reportFile <- reactiveVal()
 observeEvent(species_createReport(), {
     
     showNotification(translate(data = results$translations, id = "createReport")$title,
-      id = "reportWait", type = "message")
+      id = "reportWait", type = "message", duration = NULL)
     
     species_reportFile(NULL)  # reset on each button press
     
-    withProgress(
-      message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), 
-      value = 0, {
-        
-        oldDir <- getwd()
-        setwd(tempdir())
-        on.exit(setwd(oldDir))
-        
-        fromFiles <- system.file("app/www", c(
-            "reportSpecies.Rmd", 
-            "plotSpecies.Rmd",
-            "plotLandscape.Rmd"
-          ), package = "alienSpecies")
-        file.copy(from = fromFiles, to = file.path(tempdir(), basename(fromFiles)), overwrite = TRUE)
-        
-        species_reportFile(
-          rmarkdown::render(
-            input = file.path(tempdir(), basename(fromFiles[1])),
-            output_file = tempfile(fileext = ".pdf"),
-            intermediates_dir = tempdir(),
-            output_options = list(
-              bigLogo = getPathLogo(type = "combined")
-            )
-          )
+  })
+
+species_readyForDownload <- reactive({
+    
+    req(is.null(species_reportFile()))
+    
+    # Wait for mgt output to be ready
+    if (!is.null(results$species_managementFile()))
+      validate(need(any(grepl("management", names(dashReport))), "Please wait"))
+    
+    return(species_createReport())
+    
+  })
+
+observeEvent(species_readyForDownload(), {
+    
+    oldDir <- getwd()
+    setwd(tempdir())
+    on.exit(setwd(oldDir))
+    
+    fromFiles <- system.file("app/www", c(
+        "reportSpecies.Rmd", 
+        "plotSpecies.Rmd",
+        "plotLandscape.Rmd"
+      ), package = "alienSpecies")
+    file.copy(from = fromFiles, to = file.path(tempdir(), basename(fromFiles)), overwrite = TRUE)
+    
+    species_reportFile(
+      rmarkdown::render(
+        input = file.path(tempdir(), basename(fromFiles[1])),
+        output_file = tempfile(fileext = ".pdf"),
+        intermediates_dir = tempdir(),
+        output_options = list(
+          bigLogo = getPathLogo(type = "combined")
         )
-        
-        # report is ready, trigger download
-        setProgress(1)
-        
-        session$sendCustomMessage(type = "imageReady", 
-          message = list(id = "species-downloadReport"))
-        
-        # Reset report content - if switching species
-        for (iName in names(dashReport))
-          dashReport[[iName]] <- NULL
-        
-      })
+      )
+    )
+    
+    session$sendCustomMessage(type = "imageReady", 
+      message = list(id = "species-downloadReport"))
+    
+    # Reset report content - if switching species
+    for (iName in names(dashReport))
+      dashReport[[iName]] <- NULL
+    
+    removeNotification(id = "reportWait")   
     
   })
 
 
 # Specific id for JS trigger in shiny module footerSectionUI()
-output$species-downloadReport <- downloadHandler(
+output$`species-downloadReport` <- downloadHandler(
   filename = function() 
     nameFile(species = taxonName(), content = "report", fileExt = "pdf"),
   content = function(file) 
