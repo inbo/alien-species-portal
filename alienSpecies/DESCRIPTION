@@ -37,7 +37,7 @@ Imports:
 	  testthat (>= 3.0.0),
     tidyr,
 	  tidyverse,
-	  trias (>= 2.0.3),
+	  trias (>= 2.0.8),
 	  webshot,
 	  xtable
 Suggests:

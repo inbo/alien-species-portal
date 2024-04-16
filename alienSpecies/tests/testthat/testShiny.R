@@ -207,7 +207,6 @@ test_that("Module mapHeat",{
   
   combinedActive <- combineActiveData(
     activeData = Vespa_velutina_shape$actieve_haarden,
-    managedData = Vespa_velutina_shape$beheerde_nesten,
     untreatedData = Vespa_velutina_shape$onbehandelde_nesten
   )
   colorsActive <- c("blue", "black", "red")
@@ -222,7 +221,7 @@ test_that("Module mapHeat",{
                       filter = reactive(list(nest = unique(combinedActive$filter), radius = na.omit(unique(combinedActive$radius)))),
                       colors = reactive(colorsActive),
                       blur = "individual",
-                      maxDate = reactive(max( Vespa_velutina_shape$actieve_haarden$eventDate, na.rm = TRUE))
+                      maxDate = reactive(max(Vespa_velutina_shape$actieve_haarden$eventDate, na.rm = TRUE))
                       
                     ), {
                       session$setInputs(globe = 2)

@@ -81,6 +81,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @inheritParams plotTrias
 #' @inheritParams mapCubeServer
 #' @param data reactive object, data for \code{\link{plotTrias}}
+#' @param translationId character, identifier for the translation file provided 
+#' in \code{uiText}; by default this is same as \code{triasFunction}
 #' @param triasArgs reactive object, extra plot arguments to be passed to the 
 #' trias package
 #' @param filters character vector, additional filters for the TRIAS plot to 
@@ -92,7 +94,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @import shiny
 #' @import trias
 #' @export
-plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
+plotTriasServer <- function(id, uiText, data, triasFunction, 
+  translationId = triasFunction, triasArgs = NULL,
   filters = NULL, maxDate = reactive(NULL), outputType = c("plot", "table"),
   dashReport = NULL) {
   
@@ -106,7 +109,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
       
       ns <- session$ns
       
-      tmpTranslation <- reactive(translate(uiText(), triasFunction))
+      tmpTranslation <- reactive(translate(uiText(), translationId))
       
       output$titlePlotTrias <- renderUI(h3(HTML(tmpTranslation()$title)))
       
@@ -162,7 +165,9 @@ plotTriasServer <- function(id, uiText, data, triasFunction, triasArgs = NULL,
               if (!is.null(input$correctBias)) {
                 initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):max(plotData()$year, na.rm = TRUE)
                 if (input$correctBias)
-                  initArgs$baseline_var <- "cobs"
+                  if (initArgs$y_var == "obs")
+                    initArgs$baseline_var <- "cobs" else
+                    initArgs$baseline_var <- "c_ncells"
               }
               if (!is.null(input$regionLevel))
                 initArgs$type <- input$regionLevel

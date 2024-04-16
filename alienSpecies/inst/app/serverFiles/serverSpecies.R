@@ -161,17 +161,22 @@ observe({
 
 timeseries <- loadTabularData(type = "timeseries")
 
+results$species_gamData <- reactive({
+    
+    req(input$species_choice)
+        summarizeTimeSeries(
+          timeseries = timeseries,
+          species = as.numeric(input$species_choice), 
+          region = input$species_gewest)
+    
+  })
+
 ## Emergence status GAM - Observations
-dashReport <- plotTriasServer(id = "indicators_gam",
+dashReport <- plotTriasServer(id = "indicators_gamObservations",
   uiText = reactive(results$translations),
-  data = reactive({
-      req(input$species_choice)
-      summarizeTimeSeries(
-        timeseries = timeseries,
-        species = as.numeric(input$species_choice), 
-        region = input$species_gewest)
-    }),
+  data = results$species_gamData,
   triasFunction = "apply_gam",
+  translationId = "apply_gamObservations",
   triasArgs = reactive({
       list(
         y_var = "obs", 
@@ -179,6 +184,29 @@ dashReport <- plotTriasServer(id = "indicators_gam",
         name = taxonName(),
         x_label = translate(results$translations, "year")$title,
         y_label = translate(results$translations, "observations")$title
+      )
+    }),
+  filters = list(
+    correctBias = "checkbox", 
+    protectAreas = "checkbox"
+  ),
+  dashReport = dashReport
+)
+
+
+## Emergence status GAM - Occupancy
+dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
+  uiText = reactive(results$translations),
+  data = results$species_gamData,
+  triasFunction = "apply_gam",
+  translationId = "apply_gamOccupancy",
+  triasArgs = reactive({
+      list(
+        y_var = "ncells", 
+        taxon_key = input$species_choice, 
+        name = taxonName(),
+        x_label = translate(results$translations, "year")$title,
+        y_label = translate(results$translations, "occupancy")$title
       )
     }),
   filters = list(

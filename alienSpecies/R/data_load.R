@@ -49,6 +49,8 @@ loadTabularData <- function(
     open_dataset(file.path("s3:/", bucket, dataFile)) else
     read_parquet(file = file.path("s3:/", bucket, dataFile))
   
+  if (type == "indicators")
+    attr(rawData, "habitats") <- c("marine", "freshwater", "terrestrial")
   
   return(rawData)
   
