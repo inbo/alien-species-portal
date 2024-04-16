@@ -129,6 +129,9 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   
   # Filter & color by regions
   regions <- c("flanders", "brussels", "wallonia")
+  allColors <- c(inbo_lichtgrijs, inbo_palette(n = 4))
+  names(allColors) <- c("not selected", if (combine) "selected", 
+    regions, if (!combine) "multipleRegions")
   regionCols <- paste0("is", simpleCap(regions))
   if (any(regionCols %in% colnames(df))) {
     
@@ -157,6 +160,7 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
     # Rename
     newLevels <- as.list(levels(droplevels(df$region)))
     names(newLevels) <- translate(uiText, unlist(newLevels))$title
+    names(allColors) <- translate(uiText, names(allColors))$title
     levels(df$region) <- newLevels
     
   }
@@ -187,7 +191,7 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
       color = if (!is.null(nOccurred$region)) ~region, 
       text = if (!is.null(nOccurred$region)) ~region, 
       textposition = "none",
-      colors = inbo_palette(n = max(1, nlevels(df$region))), 
+      colors = allColors, 
       hoverinfo = "x+y+text") %>%
     add_trace(data = nOccurred[!nOccurred$selected, ], 
         x = ~year, y = ~count, showlegend = FALSE,
