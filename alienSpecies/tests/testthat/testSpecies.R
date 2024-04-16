@@ -80,7 +80,7 @@ test_that("Occurrence plots", {
     expect_s3_class(myResult$data, "data.frame")
     
     # Color bars when full range selected
-    myResult <- countOccurrence(df = df, period = c(1950, 2021),
+    countOccurrence(df = df, period = c(1950, 2021),
       uiText = loadMetaData(type = "ui"))$plot
         
   })
