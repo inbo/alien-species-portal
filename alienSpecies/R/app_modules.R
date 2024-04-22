@@ -111,7 +111,6 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @import shiny
 #' @importFrom utils write.table tail
 #' @importFrom DT datatable formatRound renderDT
-#' @importFrom plotly ggplotly layout
 #' @export
 plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
   outputType = NULL, triasFunction = NULL, triasArgs = NULL, groupChoices = NULL,
@@ -156,12 +155,10 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           
           timeRange <- range(data()$first_observed, na.rm = TRUE) 
           
-          div(class = "sliderBlank", 
-            sliderInput(inputId = ns("period"), 
+          sliderInput(inputId = ns("period"), 
               label = translate(uiText(), "period")$title,
               min = timeRange[1], max = timeRange[2], value = timeRange,
               step = 1, sep = "", width = "100%")
-          )
         
         })
       

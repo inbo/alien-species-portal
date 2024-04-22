@@ -14,7 +14,7 @@
 #' }
 #' 
 #' @author mvarewyck
-#' @importFrom plotly ggplotly
+#' @importFrom plotly ggplotly layout
 #' @importFrom INBOtheme theme_inbo
 #' @export
 plotTrias <- function(triasFunction, df, triasArgs = NULL,
@@ -68,6 +68,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
             translate(uiText, "Belgi\u00EB")$title else
             paste(translate(uiText, selectedRegions)$title, collapse = ", ")
           ))
+
         # move annotation to the left
         if (any(grepl("The status cannot", myPlot$x$data[[2]]$text))) {
           myPlot$x$data[[2]]$x <- tail(sort(myPlot$x$data[[1]]$x), n = 3)
@@ -142,6 +143,10 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
   
   outputType <- match.arg(outputType)
   
+  results <- reactiveValues(
+    referencePeriod = config::get("defaultYear") - c(3,1)
+  )
+  
   moduleServer(id,
     function(input, output, session) {
       
@@ -164,20 +169,18 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
       output$filters <- renderUI({
           
           if (!is.null(filters)) 
-            wellPanel(
-              lapply(names(filters), function(iFilter) {
-                  if (all(filters[[iFilter]] == "checkbox")) {
+            lapply(names(filters), function(iFilter) {
+                  if (filters[[iFilter]]$type == "checkbox") {
                     checkboxInput(inputId = ns(iFilter), 
                       label = translate(uiText(), iFilter)$title) 
-                  } else {
-                    choices <- filters[[iFilter]]
+                  } else if (filters[[iFilter]]$type == "select") {
+                    choices <- filters[[iFilter]]$choices
                     names(choices) <- translate(uiText(), choices)$title
                     fluidRow(column(4, selectInput(inputId = ns(iFilter),
                       label = translate(uiText(), iFilter)$title,
                       choices = choices)))
                   }
                 })
-            )
           
         })
       
@@ -193,11 +196,44 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
           
         })
       
+      
+      # Filters created after subsetting data
+      output$filters2 <- renderUI({
+          
+          req(plotData())
+          
+          if (!is.null(filters)) 
+              lapply(names(filters), function(iFilter) {
+                  if (filters[[iFilter]]$type == "slider") {
+                    sliderInput(inputId = ns(iFilter), 
+                      label = translate(uiText(), iFilter)$title,
+                      value = results$referencePeriod,
+                      min = min(plotData()[[iFilter]], na.rm = TRUE),
+                      max = max(plotData()[[iFilter]], na.rm = TRUE),
+                      step = 1, sep = "", width = "100%")
+                  }
+                })
+          
+        })
+      
+      observe({
+          
+          req(!is.null(filters)) 
+          req(input$referencePeriod)
+          results$referencePeriod <- input$referencePeriod
+          
+        })
+      
+      
+      
       plotResult <- plotModuleServer(id = "plotTrias",
         plotFunction = "plotTrias",
         triasFunction = triasFunction, 
         data = plotData,
         triasArgs = reactive({
+            
+            req(plotData())
+            
             if (!is.null(triasArgs)) {
               initArgs <- triasArgs()
               if (triasFunction == "apply_gam")
@@ -210,6 +246,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
               if (!is.null(input$regionLevel))
                 initArgs$type <- input$regionLevel
               initArgs
+              
             } else NULL
           }),
         outputType = outputType,
@@ -268,7 +305,10 @@ plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = F
       ns = ns,
       
       uiOutput(ns("descriptionPlotTrias")),
-      uiOutput(ns("filters")),
+      wellPanel(
+        uiOutput(ns("filters")),
+        uiOutput(ns("filters2"))
+      ),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else

@@ -546,7 +546,8 @@ observeEvent(input$exoten_tabs, {
           )
         }),
       filters = list(
-        regionLevel = c("native_continent", "native_range"))
+        regionLevel = list(type = "select", choices = c("native_continent", "native_range"))
+      )
     )
     
   })
