@@ -140,7 +140,7 @@ test_that("Emergence status GAM - Observations", {
         eval_years = 2020,
         type_indicator = "observations",
         baseline_var = if (correctBias) "cobs"),
-      uiText = uiText
+        uiText = uiText
     )
     
     expect_true(all(is.na(tmpResult$data$ucl)), label = "GAM cannot be assessed")
