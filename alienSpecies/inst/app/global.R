@@ -8,6 +8,8 @@ library(shiny)
 
 `%<>%` <- magrittr::`%<>%`
 
+# overwrite config::get as default
+get <- base::get
 
 if (!exists("doDebug"))
   doDebug <- FALSE
