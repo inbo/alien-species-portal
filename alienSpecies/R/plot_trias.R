@@ -143,6 +143,10 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
   
   outputType <- match.arg(outputType)
   
+  results <- reactiveValues(
+    referencePeriod = config::get("defaultYear") - c(3,1)
+  )
+  
   moduleServer(id,
     function(input, output, session) {
       
