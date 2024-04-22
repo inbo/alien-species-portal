@@ -163,9 +163,10 @@ observe({
 results$species_gamData <- reactive({
     
     req(input$species_choice)
-        summarizeTimeSeries(
-          species = as.numeric(input$species_choice), 
-          region = input$species_gewest)
+    summarizeTimeSeries(
+      timeseries = timeseries,
+      species = as.numeric(input$species_choice), 
+      region = input$species_gewest)
     
   })
 
@@ -186,8 +187,9 @@ dashReport <- plotTriasServer(id = "indicators_gamObservations",
       )
     }),
   filters = list(
-    correctBias = "checkbox", 
-    protectAreas = "checkbox"
+    correctBias = list(type = "checkbox"), 
+    protectAreas = list(type = "checkbox"),
+    referencePeriod = list(type = "slider")
   ),
   dashReport = dashReport,
   triggerReport = reactive(input$species_createReport)
@@ -211,8 +213,9 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
       )
     }),
   filters = list(
-    correctBias = "checkbox", 
-    protectAreas = "checkbox"
+    correctBias = list(type = "checkbox"), 
+    protectAreas = list(type = "checkbox"),
+    year = list(type = "slider")
   ),
   dashReport = dashReport,
   triggerReport = reactive(input$species_createReport)
