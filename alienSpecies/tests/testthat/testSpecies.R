@@ -92,8 +92,7 @@ test_that("Emergence status GAM - Observations", {
     ## Note: fitting GAM model only works when loading the R-package using library(alienSpecies)
     ## When loading via devtools::load_all() there is a conflict with config::get()
     ## which can be resolved by
-    ## library(config)
-    ## conflicted::conflict_prefer("get", "base", "config")
+    ## get <- base::get
 
     myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     
@@ -110,24 +109,45 @@ test_that("Emergence status GAM - Observations", {
     
     subData <- subData[protected == isProtected, ]
     
+    # Gam model can be fitted
     tmpResult <- plotTrias(triasFunction = "apply_gam", 
       df = subData,
       triasArgs = list(
         y_var = "obs",
-        # not restricting the data?
-        eval_years = 2008,
-#        eval_years = min(subData$year):max(subData$year),
         taxon_key = myKey, 
-        name = allSpecies[2],
+        name = allSpecies[1],
+        x_label = "Year",
+        y_label = "Observations",
+        eval_years = 2020,
         type_indicator = "observations",
         
-        baseline_var = if (correctBias) "cobs",
-        verbose = TRUE)
+        baseline_var = if (correctBias) "cobs"
+        ),
+        uiText = uiText
     )
  
     expect_type(tmpResult, "list")
     expect_s3_class(tmpResult$plot, "plotly")
     expect_s3_class(tmpResult$data, "data.frame")
+    expect_true(!any(is.na(tmpResult$data$ucl)), label = "GAM can be assessed")
+    
+    # Gam model cannot be fitted
+    tmpResult <- plotTrias(triasFunction = "apply_gam", 
+      df = subData[subData$year %in% 2020:2022, ],
+      triasArgs = list(
+        y_var = "obs",
+        taxon_key = myKey, 
+        name = allSpecies[1],
+        x_label = "Year",
+        y_label = "Observations",
+        eval_years = 2020,
+        type_indicator = "observations",
+        
+        baseline_var = if (correctBias) "cobs"
+      )
+    )
+    
+    expect_true(all(is.na(tmpResult$data$ucl)), label = "GAM cannot be assessed")
     
   })
 

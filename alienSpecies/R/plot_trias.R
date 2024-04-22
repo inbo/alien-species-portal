@@ -14,7 +14,7 @@
 #' }
 #' 
 #' @author mvarewyck
-#' @importFrom plotly ggplotly
+#' @importFrom plotly ggplotly layout
 #' @importFrom INBOtheme theme_inbo
 #' @export
 plotTrias <- function(triasFunction, df, triasArgs = NULL,
@@ -42,8 +42,30 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
       
     } else if (all(c("plot", "output") %in% names(resultFct))) {
       
+      myPlot <- ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE))
+      
+      if (triasFunction == "apply_gam") {
+        
+        newLabels <- sapply(3:0, function(i)
+          uiText$title[uiText$id == paste0("gam_", i)])
+        names(newLabels) <- as.character(3:0)
+        
+        # remove title
+        myPlot <- myPlot %>% plotly::layout(title = "")
+        # move annotation to the left
+        if (any(grepl("The status cannot", myPlot$x$data[[2]]$text))) {
+          myPlot$x$data[[2]]$x <- tail(sort(myPlot$x$data[[1]]$x), n = 3)
+          myPlot$x$data[[2]]$hovertext <- NULL
+        } else {
+          for (i in seq_along(plotly_build(myPlot)$x$data))
+            if (!is.null(myPlot$x$data[[i]]$name))
+              myPlot$x$data[[i]]$name <- newLabels[match(myPlot$x$data[[i]]$name, names(newLabels))]
+        }
+        
+      }
+      
       list(
-        plot = ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE)), 
+        plot = myPlot, 
         data = resultFct$output
       )
       
@@ -104,6 +126,10 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
   
   outputType <- match.arg(outputType)
   
+  results <- reactiveValues(
+    referencePeriod = config::get("defaultYear") - c(3,1)
+  )
+  
   moduleServer(id,
     function(input, output, session) {
       
@@ -126,20 +152,18 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
       output$filters <- renderUI({
           
           if (!is.null(filters)) 
-            wellPanel(
-              lapply(names(filters), function(iFilter) {
-                  if (all(filters[[iFilter]] == "checkbox")) {
+            lapply(names(filters), function(iFilter) {
+                  if (filters[[iFilter]]$type == "checkbox") {
                     checkboxInput(inputId = ns(iFilter), 
                       label = translate(uiText(), iFilter)$title) 
-                  } else {
-                    choices <- filters[[iFilter]]
+                  } else if (filters[[iFilter]]$type == "select") {
+                    choices <- filters[[iFilter]]$choices
                     names(choices) <- translate(uiText(), choices)$title
                     fluidRow(column(4, selectInput(inputId = ns(iFilter),
                       label = translate(uiText(), iFilter)$title,
                       choices = choices)))
                   }
                 })
-            )
           
         })
       
@@ -155,15 +179,50 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
           
         })
       
+      
+      # Filters created after subsetting data
+      output$filters2 <- renderUI({
+          
+          req(plotData())
+          
+          if (!is.null(filters)) 
+              lapply(names(filters), function(iFilter) {
+                  if (filters[[iFilter]]$type == "slider") {
+                    sliderInput(inputId = ns(iFilter), 
+                      label = translate(uiText(), iFilter)$title,
+                      value = results$referencePeriod,
+                      min = min(plotData()[[iFilter]], na.rm = TRUE),
+                      max = max(plotData()[[iFilter]], na.rm = TRUE),
+                      step = 1, sep = "", width = "100%")
+                  }
+                })
+          
+        })
+      
+      observe({
+          
+          req(!is.null(filters)) 
+          req(input$referencePeriod)
+          results$referencePeriod <- input$referencePeriod
+          
+        })
+      
+      
+      
       plotResult <- plotModuleServer(id = "plotTrias",
         plotFunction = "plotTrias",
         triasFunction = triasFunction, 
         data = plotData,
         triasArgs = reactive({
+            
+            req(plotData())
+            
             if (!is.null(triasArgs)) {
+              
               initArgs <- triasArgs()
               if (!is.null(input$correctBias)) {
-                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):max(plotData()$year, na.rm = TRUE)
+                req(input$referencePeriod)
+                initArgs$eval_years <- input$referencePeriod
                 if (input$correctBias)
                   if (initArgs$y_var == "obs")
                     initArgs$baseline_var <- "cobs" else
@@ -171,7 +230,9 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
               }
               if (!is.null(input$regionLevel))
                 initArgs$type <- input$regionLevel
+              
               initArgs
+              
             } else NULL
           }),
         outputType = outputType,
@@ -230,7 +291,10 @@ plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = F
       ns = ns,
       
       uiOutput(ns("descriptionPlotTrias")),
-      uiOutput(ns("filters")),
+      wellPanel(
+        uiOutput(ns("filters")),
+        uiOutput(ns("filters2"))
+      ),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else
