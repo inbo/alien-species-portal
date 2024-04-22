@@ -235,6 +235,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
             req(plotData())
             
             if (!is.null(triasArgs)) {
+              
               initArgs <- triasArgs()
               if (triasFunction == "apply_gam")
                 initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):max(plotData()$year, na.rm = TRUE)
@@ -245,6 +246,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
               }
               if (!is.null(input$regionLevel))
                 initArgs$type <- input$regionLevel
+              
               initArgs
               
             } else NULL
