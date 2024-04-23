@@ -1,3 +1,5 @@
+Automated deployment to UAT: [![.github/workflows/deployment_uat.yml](https://github.com/inbo/alien-species-portal/actions/workflows/deployment_uat.yml/badge.svg?branch=uat)](https://github.com/inbo/alien-species-portal/actions/workflows/deployment_uat.yml)
+
 # alien-species-portal
 Portal for alien and invasive species indicators
 
