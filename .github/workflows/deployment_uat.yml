@@ -28,6 +28,8 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
+          UAT_TAG: uat
         run: |
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:$UAT_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker push $REGISTRY/$REPOSITORY:$UAT_TAG
