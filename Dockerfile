@@ -24,7 +24,7 @@ RUN R -q -e "install.packages('remotes')"
 RUN R -q -e "options(warn = 2); remotes::install_cran(c('shiny', 'data.table', 'dplyr', 'DT', 'ggplot2', 'ggspatial', 'htmlwidgets', 'httr', 'jsonlite', 'leaflet', 'leaflet.extras', 'plotly', 'reshape2', 'rgbif', 'sf', 'shinyjs', 'terra', 'testthat', 'tidyr', 'tidyverse', 'webshot', 'xtable'))"
 
 # Specific data format + access to S3 on UAT
-RUN R -q -e "options(warn = 2); remotes::install_cran(c('arrow', 'config', 'aws.ec2metadata', 'aws.s3', 'aws.signature'))"
+RUN R -q -e "options(warn = 2); Sys.setenv(LIBARROW_MINIMAL=FALSE); remotes::install_cran(c('arrow', 'config', 'aws.ec2metadata', 'aws.s3', 'aws.signature'))"
 
 # INBO packages
 RUN R -q -e "options(warn = 2); remotes::install_github(c('inbo/INBOtheme@v0.5.9', 'trias-project/trias', 'daattali/shinycssloaders'))"
