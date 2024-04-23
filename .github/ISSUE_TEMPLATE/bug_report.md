@@ -1,11 +1,18 @@
 ---
 name: Bug report
 about: Create a report to help us improve
-title: ''
-labels: ''
+title: "[BUG]"
+labels: bug
 assignees: ''
 
 ---
+
+**Location of the bug**
+Provide a location of where the bug occured.
+Tab>SubTab>Graph/Table/Map
+
+In case of an issue with the user interface please use `UI`
+In case of an issue with the landing page please use `MAIN`
 
 **Describe the bug**
 A clear and concise description of what the bug is.
