@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     pandoc \
     libmagick++-dev \
     libssl-dev \
+    texlive-latex-extra \
+    lmodern \
     && rm -rf /var/lib/apt/lists/*
 
 # Use the remotes package instead of devtools as it is much lighter
@@ -30,7 +32,8 @@ RUN R -q -e "options(warn = 2); Sys.setenv(LIBARROW_MINIMAL=FALSE); remotes::ins
 RUN R -q -e "options(warn = 2); remotes::install_cran('tibble')"
 RUN R -q -e "options(warn = 2); remotes::install_github(c('inbo/INBOtheme@v0.5.9', 'gavinsimpson/gratia@v0.9.0', 'trias-project/trias', 'daattali/shinycssloaders'))"
 
-## For the rmarkdown pdf report
+# For the rmarkdown pdf report
+RUN R -q -e "install.packages('oaStyle', repos = c(rdepot = 'https://repos.openanalytics.eu/repo/public', getOption('repos')))"
 #RUN R -e "tinytex::install_tinytex()" 
 #ENV PATH="/root/bin:${PATH}" 
 #RUN R -e "tinytex::tlmgr_install(pkgs = c('fancyhdr', 'sectsty', 'titling', 'grffile'))" 
