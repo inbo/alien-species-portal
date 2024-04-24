@@ -238,8 +238,10 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
             # remove title
             myPlot <- resultFct()$plot %>% layout(title = "")
             # move annotation to the left
-            myPlot$x$data[[2]]$x <- tail(sort(myPlot$x$data[[1]]$x), n = 3)
-            myPlot$x$data[[2]]$hovertext <- NULL
+            if (any(grepl("The status cannot", myPlot$x$data[[2]]$text))) {
+              myPlot$x$data[[2]]$x <- tail(sort(myPlot$x$data[[1]]$x), n = 3)
+              myPlot$x$data[[2]]$hovertext <- NULL
+            }
             myPlot
           } else resultFct()$plot
         

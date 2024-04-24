@@ -26,8 +26,9 @@ RUN R -q -e "options(warn = 2); remotes::install_cran(c('shiny', 'data.table', '
 # Specific data format + access to S3 on UAT
 RUN R -q -e "options(warn = 2); Sys.setenv(LIBARROW_MINIMAL=FALSE); remotes::install_cran(c('arrow', 'config', 'aws.ec2metadata', 'aws.s3', 'aws.signature'))"
 
-# INBO packages
-RUN R -q -e "options(warn = 2); remotes::install_github(c('inbo/INBOtheme@v0.5.9', 'trias-project/trias', 'daattali/shinycssloaders'))"
+# INBO packages & dependencies
+RUN R -q -e "options(warn = 2); remotes::install_cran('tibble')"
+RUN R -q -e "options(warn = 2); remotes::install_github(c('inbo/INBOtheme@v0.5.9', 'gavinsimpson/gratia@v0.9.0', 'trias-project/trias', 'daattali/shinycssloaders'))"
 
 ## For the rmarkdown pdf report
 #RUN R -e "tinytex::install_tinytex()" 
