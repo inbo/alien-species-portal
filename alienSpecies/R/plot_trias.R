@@ -68,7 +68,6 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
             translate(uiText, "Belgi\u00EB")$title else
             paste(translate(uiText, selectedRegions)$title, collapse = ", ")
           ))
-
         # move annotation to the left
         if (any(grepl("The status cannot", myPlot$x$data[[2]]$text))) {
           myPlot$x$data[[2]]$x <- tail(sort(myPlot$x$data[[1]]$x), n = 3)
