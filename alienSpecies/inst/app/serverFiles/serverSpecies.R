@@ -189,8 +189,7 @@ dashReport <- plotTriasServer(id = "indicators_gamObservations",
     }),
   filters = list(
     correctBias = list(type = "checkbox"), 
-    protectAreas = list(type = "checkbox"),
-    referencePeriod = list(type = "slider")
+    protectAreas = list(type = "checkbox")
   ),
   dashReport = dashReport
 )
@@ -214,8 +213,7 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
     }),
   filters = list(
     correctBias = list(type = "checkbox"), 
-    protectAreas = list(type = "checkbox"),
-    year = list(type = "slider")
+    protectAreas = list(type = "checkbox")
   ),
   dashReport = dashReport
 )

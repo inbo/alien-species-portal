@@ -142,9 +142,6 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
   
   outputType <- match.arg(outputType)
   
-  results <- reactiveValues(
-    referencePeriod = config::get("defaultYear") - c(3,1)
-  )
   
   moduleServer(id,
     function(input, output, session) {
@@ -193,35 +190,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
           
           subData
           
-        })
-      
-      
-      # Filters created after subsetting data
-      output$filters2 <- renderUI({
-          
-          req(plotData())
-          
-          if (!is.null(filters)) 
-              lapply(names(filters), function(iFilter) {
-                  if (filters[[iFilter]]$type == "slider") {
-                    sliderInput(inputId = ns(iFilter), 
-                      label = translate(uiText(), iFilter)$title,
-                      value = results$referencePeriod,
-                      min = min(plotData()[[iFilter]], na.rm = TRUE),
-                      max = max(plotData()[[iFilter]], na.rm = TRUE),
-                      step = 1, sep = "", width = "100%")
-                  }
-                })
-          
-        })
-      
-      observe({
-          
-          req(!is.null(filters)) 
-          req(input$referencePeriod)
-          results$referencePeriod <- input$referencePeriod
-          
-        })
+        })      
       
       
       
@@ -237,7 +206,8 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
               
               initArgs <- triasArgs()
               if (triasFunction == "apply_gam") {
-                initArgs$eval_years <- results$referencePeriod[1]:results$referencePeriod[2]
+                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):
+                  max(plotData()$year, na.rm = TRUE)
                 if (!is.null(input$correctBias) && input$correctBias) {
                   if (initArgs$y_var == "obs")
                     initArgs$baseline_var <- "cobs" else
@@ -308,8 +278,7 @@ plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = F
       
       uiOutput(ns("descriptionPlotTrias")),
       wellPanel(
-        uiOutput(ns("filters")),
-        uiOutput(ns("filters2"))
+        uiOutput(ns("filters"))
       ),
       
       if (outputType == "plot")
