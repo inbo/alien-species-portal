@@ -220,16 +220,9 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
             if (!is.null(triasArgs)) {
               
               initArgs <- triasArgs()
-<<<<<<< Upstream, based on origin/fix_v1.0.0
               if (triasFunction == "apply_gam")
-                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):max(plotData()$year, na.rm = TRUE)
+                initArgs$eval_years <- results$referencePeriod
               if (!is.null(input$correctBias) && input$correctBias) {
-=======
-              if (!is.null(input$correctBias)) {
-                req(input$referencePeriod)
-                initArgs$eval_years <- input$referencePeriod
-                if (input$correctBias)
->>>>>>> 70483ab fix #87 - include descriptive legend gam
                   if (initArgs$y_var == "obs")
                     initArgs$baseline_var <- "cobs" else
                     initArgs$baseline_var <- "c_ncells"
