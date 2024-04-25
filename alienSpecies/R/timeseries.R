@@ -41,8 +41,6 @@ summarizeTimeSeries <- function(timeseries, species, region = c("flanders", "wal
   
   combinedData <- do.call(rbindlist, list(list(nonProtectedData, protectedData), fill = TRUE))
   
-  # Copy of year column for easy filtering later
-  combinedData <- combinedData[, referencePeriod := year]
   
   return(combinedData)
   
