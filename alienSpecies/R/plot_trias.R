@@ -142,9 +142,6 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
   
   outputType <- match.arg(outputType)
   
-  results <- reactiveValues(
-    referencePeriod = config::get("defaultYear") - c(3,1)
-  )
   
   moduleServer(id,
     function(input, output, session) {
@@ -194,38 +191,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
           subData
           
         })      
-      
-      
-      
-      
-      # Filters created after subsetting data
-      output$filters2 <- renderUI({
-          
-          req(plotData())
-          
-          if (!is.null(filters)) 
-              lapply(names(filters), function(iFilter) {
-                  if (filters[[iFilter]]$type == "slider") {
-                    sliderInput(inputId = ns(iFilter), 
-                      label = translate(uiText(), iFilter)$title,
-                      value = results$referencePeriod,
-                      min = min(plotData()[[iFilter]], na.rm = TRUE),
-                      max = max(plotData()[[iFilter]], na.rm = TRUE),
-                      step = 1, sep = "", width = "100%")
-                  }
-                })
-          
-        })
-      
-      observe({
-          
-          req(!is.null(filters)) 
-          req(input$referencePeriod)
-          results$referencePeriod <- input$referencePeriod
-          
-        })
-      
-      
+    
       
       plotResult <- plotModuleServer(id = "plotTrias",
         plotFunction = "plotTrias",
