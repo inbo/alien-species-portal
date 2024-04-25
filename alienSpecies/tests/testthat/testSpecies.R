@@ -11,7 +11,7 @@ taxData <- loadTabularData(type = "occurrence")
 # many versus few occurrences
 allSpecies <- c("Alopochen aegyptiaca", "Muntiacus reevesi")
 period <- c(2000, 2018)
-
+uiText <- loadMetaData(type = "ui")
 
 
 test_that("Check summary data", {
@@ -98,16 +98,14 @@ test_that("Emergence status GAM - Observations", {
     
     timeseries <- loadTabularData(type = "timeseries")
     
+    correctBias <- c(TRUE, FALSE)[1]
+    isProtected <- c(TRUE, FALSE)[2]
+    
     subData <- summarizeTimeSeries(
       timeseries = timeseries,
       species = myKey,
       region = c("flanders", "brussels")
-    )
-    
-    correctBias <- c(TRUE, FALSE)[1]
-    isProtected <- c(TRUE, FALSE)[2]
-    
-    subData <- subData[protected == isProtected, ]
+    )[protected == isProtected, ]
     
     # Gam model can be fitted
     tmpResult <- plotTrias(triasFunction = "apply_gam", 
@@ -118,7 +116,7 @@ test_that("Emergence status GAM - Observations", {
         name = allSpecies[1],
         x_label = "Year",
         y_label = "Observations",
-        eval_years = 2020,
+        eval_years = 2010 - c(3,1),
         type_indicator = "observations",
         
         baseline_var = if (correctBias) "cobs"
@@ -142,9 +140,8 @@ test_that("Emergence status GAM - Observations", {
         y_label = "Observations",
         eval_years = 2020,
         type_indicator = "observations",
-        
-        baseline_var = if (correctBias) "cobs"
-      )
+        baseline_var = if (correctBias) "cobs"),
+      uiText = uiText
     )
     
     expect_true(all(is.na(tmpResult$data$ucl)), label = "GAM cannot be assessed")
