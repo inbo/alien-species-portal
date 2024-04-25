@@ -28,6 +28,10 @@ knitr::opts_chunk$set(
   fig.height = 8
 )
 
+# Needed for phantomjs no longer supported in Ubuntu22
+# https://github.com/wch/webshot/issues/115#issuecomment-1506488784 
+Sys.setenv(OPENSSL_CONF='/dev/null')
+
 gewestNames <- sapply(input$species_gewest, function(x)
     translate(data = results$translations, id = x)$title) 
 ```

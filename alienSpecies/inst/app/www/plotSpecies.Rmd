@@ -69,15 +69,16 @@ tryCatch({
     } 
   
   }, error = function(err) {
-    if (currentLandscape)
-      cat("\n\n\\elandscape\n")
-    
+      
     cat("No results for", 
       decodeText(translate(results$translations, id)$title, 
         params = c(
           list(species = taxonName())
         )
       ), "\n\n")
+      
+    if (currentLandscape)
+      cat("\n\n\\elandscape\n")
   
   })
 ```

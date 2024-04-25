@@ -40,7 +40,7 @@ RUN R -q -e "install.packages('oaStyle', repos = c(rdepot = 'https://repos.opena
 
 # For downloading the maps
 # Attention: do not install phantomjs directly, will not work then!
-RUN R -q -e "options(warn = 2); remotes::install_cran('webshot'); webshot::install_phantomjs()"
+RUN R -q -e "options(warn = 2); webshot::install_phantomjs()"
 
 # Git sha
 ARG GIT_SHA

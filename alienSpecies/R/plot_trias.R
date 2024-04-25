@@ -162,9 +162,9 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
         triasArgs = reactive({
             if (!is.null(triasArgs)) {
               initArgs <- triasArgs()
-              if (!is.null(input$correctBias)) {
+              if (triasFunction == "apply_gam")
                 initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):max(plotData()$year, na.rm = TRUE)
-                if (input$correctBias)
+              if (!is.null(input$correctBias) && input$correctBias) {
                   if (initArgs$y_var == "obs")
                     initArgs$baseline_var <- "cobs" else
                     initArgs$baseline_var <- "c_ncells"
