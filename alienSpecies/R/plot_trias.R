@@ -25,8 +25,13 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
   
   plotArgs <- list(df = df)
   
-  if (!is.null(triasArgs))
+  if (!is.null(triasArgs)) {
+    if ("region" %in% names(triasArgs)) {
+      selectedRegions <- triasArgs$region
+      triasArgs$region <- NULL
+    }
     plotArgs <- c(plotArgs, triasArgs)
+  }
   
   resultFct <- suppressWarnings(do.call(triasFunction, plotArgs))
   
@@ -50,8 +55,19 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
           uiText$title[uiText$id == paste0("gam_", i)])
         names(newLabels) <- as.character(3:0)
         
-        # remove title
-        myPlot <- myPlot %>% plotly::layout(title = "")
+        # update title
+        myPlot <- myPlot %>% plotly::layout(title = paste0(
+            triasArgs$y_label, " GAM - ", triasArgs$name, " (", triasArgs$taxon_key, ") - ",
+            paste(c(if (!is.null(triasArgs$baseline_var))
+              translate(uiText, "correctBias")$title,
+            if (all(resultFct$output$protected))
+              translate(uiText, "protectAreas")$title), collapse = " & "),
+          " from ", min(df$year, na.rm = TRUE), " to ", max(df$year, na.rm = TRUE),
+          " in ",
+          if (all(c("flanders", "wallonia", "brussels") %in% selectedRegions))
+            translate(uiText, "belgium")$title else
+            paste(translate(uiText, selectedRegions)$title, collapse = ", ")
+          ))
         # move annotation to the left
         if (any(grepl("The status cannot", myPlot$x$data[[2]]$text))) {
           myPlot$x$data[[2]]$x <- tail(sort(myPlot$x$data[[1]]$x), n = 3)
@@ -220,12 +236,13 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
             if (!is.null(triasArgs)) {
               
               initArgs <- triasArgs()
-              if (triasFunction == "apply_gam")
-                initArgs$eval_years <- results$referencePeriod
-              if (!is.null(input$correctBias) && input$correctBias) {
+              if (triasFunction == "apply_gam") {
+                initArgs$eval_years <- results$referencePeriod[1]:results$referencePeriod[2]
+                if (!is.null(input$correctBias) && input$correctBias) {
                   if (initArgs$y_var == "obs")
                     initArgs$baseline_var <- "cobs" else
                     initArgs$baseline_var <- "c_ncells"
+                }
               }
               if (!is.null(input$regionLevel))
                 initArgs$type <- input$regionLevel
