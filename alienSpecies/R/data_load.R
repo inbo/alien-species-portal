@@ -74,35 +74,47 @@ loadTabularData <- function(
 #' @export
 
 loadMetaData <- function(type = c("ui", "keys"),
-  #dataDir = system.file("extdata", package = "alienSpecies"), 
   bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   language = c("nl", "fr", "en"),
   local = FALSE) {
   
   type <- match.arg(type)
   language <- match.arg(language)
-  # 
-  # allData <- read.csv(file.path(dataDir, switch(type, 
-  #       ui = "translations.csv",
-  #       keys = "keys.csv"
-  #     )), sep = if (type == "ui") ";" else ",", 
-  #   encoding = "UTF-8") 
-  # 
- fileName <- switch(type, 
-         ui = "translations.csv",
-         keys = "keys.csv"
+   
+  fileNames <- switch(type, 
+    ui = paste0("translations", c("", "_simple", "_regions")),
+    keys = "keys"
   )
   
-  allData <- if (local)
-      read.csv(system.file("extdata", fileName, package = "alienSpecies"),
-        sep = if (type == "ui") ";" else ",", encoding = "UTF-8") else
-      readS3(FUN = read.csv, sep = if (type == "ui") ";" else ",", encoding = "UTF-8", 
-        file = fileName)
+  allData <- sapply(fileNames, function(iFile) { 
+      iFile <- paste0(iFile, ".csv")
+      tryCatch({
+          if (local)
+            read.csv(system.file("extdata", iFile, package = "alienSpecies"),
+              sep = if (type == "ui") ";" else ",", encoding = "UTF-8") else
+            readS3(FUN = read.csv, sep = if (type == "ui") ";" else ",", encoding = "UTF-8", 
+              file = iFile)
+        }, error = function(err) NULL)
+    }, simplify = FALSE)
+  
 
   
   filterData <- switch(type, 
     ui = {
       
+      allData <- allData[!sapply(allData, is.null)]
+      
+      # Fill out missing regions - nl always filled out
+      if ("translations_regions" %in% names(allData)) {
+        missingFr <- is.na(allData$translations_regions$title_fr)
+        missingEn <- is.na(allData$translations_regions$title_en)
+        allData$translations_regions$title_fr[missingFr] <- allData$translations_regions$title_nl[missingFr]
+        allData$translations_regions$title_en[missingEn] <- allData$translations_regions$title_nl[missingEn]
+      }
+      
+      # Merge all sources
+      allData <- Reduce(function(x, y) merge(x, y, all = TRUE), allData)
+      # Filter language
       uiText <- allData[, c("title_id", paste0(c("title_", "description_"), language))]
       colnames(uiText) <- c("id", "title", "description")
       uiText <- uiText[!uiText$id %in% c(NA, ""), ]
@@ -115,7 +127,7 @@ loadMetaData <- function(type = c("ui", "keys"),
       uiText
       
     },
-    keys = allData
+    keys = allData$keys
   )
   
   if (type == "ui")

@@ -534,3 +534,38 @@ createTabularData <- function(
 
 
 
+#' Helper function to create translation file based on all regions in the shape files
+#' @param allShapes named list, with sf objects for which to extract region names
+#' @return no return value; result written to file in git aspbo
+#' 
+#' @author mvarewyck
+#' @export
+createTranslations <- function(allShapes) {
+  
+  title_id <- c()
+  title_nl <- c()
+  
+  for (iName in c("gewestbel", "provinces", "communes")) {
+    if (iName == "gewestbel") {
+      title_id <- c(title_id, allShapes[[iName]]$GEWEST)
+      title_nl <- c(title_nl, allShapes[[iName]]$Naam)
+    } else {
+      title_id <- c(title_id, allShapes[[iName]]$NAAM)
+      title_nl <- c(title_nl, allShapes[[iName]]$NAAM)
+    }
+  }
+  
+  translations_regions <- data.frame(
+    title_id = title_id,
+    title_nl = title_nl,
+    title_fr = NA,
+    title_en = NA
+  )
+  
+  translations_regions <- translations_regions[!duplicated(translations_regions$title_id), ]
+  
+  write.table(translations_regions,
+    file = "~/git/aspbo/data/output/UAT_direct/translations_regions.csv", 
+    quote = FALSE, sep = ";", row.names = FALSE)
+    
+}

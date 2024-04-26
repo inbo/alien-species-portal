@@ -183,7 +183,8 @@ dashReport <- plotTriasServer(id = "indicators_gamObservations",
         taxon_key = input$species_choice, 
         name = taxonName(),
         x_label = translate(results$translations, "year")$title,
-        y_label = translate(results$translations, "observations")$title
+        y_label = translate(results$translations, "observations")$title,
+        region = input$species_gewest
       )
     }),
   filters = list(
@@ -206,7 +207,8 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
         taxon_key = input$species_choice, 
         name = taxonName(),
         x_label = translate(results$translations, "year")$title,
-        y_label = translate(results$translations, "occupancy")$title
+        y_label = translate(results$translations, "occupancy")$title,
+        region = input$species_gewest
       )
     }),
   filters = list(

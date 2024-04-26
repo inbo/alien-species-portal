@@ -234,16 +234,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           
           req(resultFct())
           
-          if (!is.null(triasFunction) && triasFunction == "apply_gam") {
-            # remove title
-            myPlot <- resultFct()$plot %>% layout(title = "")
-            # move annotation to the left
-            if (any(grepl("The status cannot", myPlot$x$data[[2]]$text))) {
-              myPlot$x$data[[2]]$x <- tail(sort(myPlot$x$data[[1]]$x), n = 3)
-              myPlot$x$data[[2]]$hovertext <- NULL
-            }
-            myPlot
-          } else resultFct()$plot
+          resultFct()$plot
         
         })
       

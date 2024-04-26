@@ -25,8 +25,13 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
   
   plotArgs <- list(df = df)
   
-  if (!is.null(triasArgs))
+  if (!is.null(triasArgs)) {
+    if ("region" %in% names(triasArgs)) {
+      selectedRegions <- triasArgs$region
+      triasArgs$region <- NULL
+    }
     plotArgs <- c(plotArgs, triasArgs)
+  }
   
   resultFct <- suppressWarnings(do.call(triasFunction, plotArgs))
   
@@ -42,8 +47,41 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
       
     } else if (all(c("plot", "output") %in% names(resultFct))) {
       
+      myPlot <- ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE))
+      
+      if (triasFunction == "apply_gam") {
+        
+        newLabels <- sapply(3:0, function(i)
+          uiText$title[uiText$id == paste0("gam_", i)])
+        names(newLabels) <- as.character(3:0)
+        
+        # update title
+        myPlot <- myPlot %>% plotly::layout(title = paste0(
+            triasArgs$y_label, " GAM - ", triasArgs$name, " (", triasArgs$taxon_key, ") - ",
+            paste(c(if (!is.null(triasArgs$baseline_var))
+              translate(uiText, "correctBias")$title,
+            if (all(resultFct$output$protected))
+              translate(uiText, "protectAreas")$title), collapse = " & "),
+          " from ", min(df$year, na.rm = TRUE), " to ", max(df$year, na.rm = TRUE),
+          " in ",
+          if (all(c("flanders", "wallonia", "brussels") %in% selectedRegions))
+            translate(uiText, "Belgi\u00EB")$title else
+            paste(translate(uiText, selectedRegions)$title, collapse = ", ")
+          ))
+        # move annotation to the left
+        if (any(grepl("The status cannot", myPlot$x$data[[2]]$text))) {
+          myPlot$x$data[[2]]$x <- tail(sort(myPlot$x$data[[1]]$x), n = 3)
+          myPlot$x$data[[2]]$hovertext <- NULL
+        } else {
+          for (i in seq_along(plotly_build(myPlot)$x$data))
+            if (!is.null(myPlot$x$data[[i]]$name))
+              myPlot$x$data[[i]]$name <- newLabels[match(myPlot$x$data[[i]]$name, names(newLabels))]
+        }
+        
+      }
+      
       list(
-        plot = ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE)), 
+        plot = myPlot, 
         data = resultFct$output
       )
       
