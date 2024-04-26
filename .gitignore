@@ -60,4 +60,4 @@ alienSpecies/alienSpecies-tests/
 /script/
 
 # temporary translations file
-/alienSpecies/inst/extdata/translations.csv
+/alienSpecies/inst/extdata/translations*.csv

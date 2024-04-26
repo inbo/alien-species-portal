@@ -65,7 +65,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
           " from ", min(df$year, na.rm = TRUE), " to ", max(df$year, na.rm = TRUE),
           " in ",
           if (all(c("flanders", "wallonia", "brussels") %in% selectedRegions))
-            translate(uiText, "belgium")$title else
+            translate(uiText, "Belgi\u00EB")$title else
             paste(translate(uiText, selectedRegions)$title, collapse = ", ")
           ))
         # move annotation to the left
