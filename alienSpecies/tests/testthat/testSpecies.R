@@ -96,14 +96,11 @@ test_that("Emergence status GAM - Observations", {
 
     myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     
-<<<<<<< Upstream, based on origin/uat
-=======
     timeseries <- loadTabularData(type = "timeseries")
     
     correctBias <- c(TRUE, FALSE)[1]
     isProtected <- c(TRUE, FALSE)[2]
     
->>>>>>> a020589 fix #87 - run R CMD check
     subData <- summarizeTimeSeries(
       species = myKey,
       region = c("flanders", "brussels")

@@ -63,20 +63,25 @@ function(input, output, session) {
   # URL Query
   # ----------
   
-    
-  # Create URL for current session
-  observeEvent(input$showShare, {
+  shareLink <- reactive({
       
       searchId <- if (input$tabs != "start")
           results$searchId else 
           ""
       languageId <- paste0("&language=", attr(results$translations, "language"))
       
+      paste0("http://alienspecies.inbo.be/?page=", input$tabs, languageId, searchId)
+      
+    })
+    
+  # Create URL for current session
+  observeEvent(input$showShare, {
+      
       showModal(
         modalDialog(title = "Application link",
           tags$textarea(class = "form-control", rows = "1", style = "resize:none;",
             readonly = "readonly",
-            paste0("http://alienspecies.inbo.be/?page=", input$tabs, languageId, searchId)
+            shareLink()
           ),
           tagList(
             br(),
@@ -103,7 +108,7 @@ function(input, output, session) {
               }
               });
               "),
-          footer = modalButton("Close"),
+          footer = modalButton(label = NULL, icon = icon("xmark")),
           easyClose = TRUE
         )
       )
