@@ -635,21 +635,17 @@ observe({
 
 
 ## SUBMIT & DOWNLOAD report ##
+species_createReport <- footerSectionServer(id = "species", uiText = results$translations)
 
 species_reportFile <- reactiveVal()
 
-observe({
-    
-    updateActionButton(inputId = "species_createReport", 
-      label = translate(data = results$translations, id = "createReport")$title)
-    
-  })
-
-observeEvent(input$species_createReport, {
+observeEvent(species_createReport(), {
     
     species_reportFile(NULL)  # reset on each button press
     
-    withProgress(message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), value = 0, {
+    withProgress(
+      message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), 
+      value = 0, {
         
         oldDir <- getwd()
         setwd(tempdir())
@@ -677,14 +673,15 @@ observeEvent(input$species_createReport, {
         setProgress(1)
         
         session$sendCustomMessage(type = "imageReady", 
-          message = list(id = "species_downloadReport"))
+          message = list(id = "species-downloadReport"))
         
       })
     
   })
 
 
-output$species_downloadReport <- downloadHandler(
+# Specific id for JS trigger in shiny module footerSectionUI()
+output$`species-downloadReport` <- downloadHandler(
   filename = function() 
     nameFile(species = taxonName(), content = "report", fileExt = "pdf"),
   content = function(file) 

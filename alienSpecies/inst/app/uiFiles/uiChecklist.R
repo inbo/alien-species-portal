@@ -101,6 +101,8 @@ tagList(
         plotTriasUI(id = "checklist_yearNativeRange")
       )
     )
-  )
+  ),
+  
+  footerSectionUI(id = "checklist")
 
 )

@@ -68,17 +68,7 @@ tagList(
       )
     ),
     
-    tags$div(style = "margin-bottom: 70px;"),
-    
-    tags$div(class = "footer",
-      tags$div(class = "footer-content",
-        singleton(
-          tags$head(tags$script(src = "triggerDownload.js"))
-        ),
-        actionButton(inputId = "species_createReport", label = "Create report", 
-          icon = icon("file-pdf")),
-        downloadLink("species_downloadReport", " ", class = "invisible")
-      )
-    )
+    footerSectionUI(id = "species", showReport = TRUE)
+
   )
 )
