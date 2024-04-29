@@ -660,7 +660,7 @@ species_reportFile <- reactiveVal()
 
 observeEvent(species_createReport(), {
     
-    showNotification(translate(data = results$translations, id = "createReport")$title,
+    showNotification(paste(translate(data = results$translations, id = "createReport")$title, '...\n'),
       id = "reportWait", type = "message", duration = NULL)
     
     species_reportFile(NULL)  # reset on each button press

@@ -65,7 +65,6 @@ shinyUI(
             uiOutput("indicators_content")),
           tabPanel(title = uiOutput("species_title"), value = "species_information",
             uiOutput("species_content"))
-
         )
       
       )
