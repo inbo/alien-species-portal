@@ -379,7 +379,7 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
             tmpData <- suppressWarnings(reshape2::melt(iData, id.vars = colnames(iData)[1:2]))
             tmpData$nest <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[1])
             tmpData$isBeheerd <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[2])
-            
+
             tmpData <- tmpData[!is.na(tmpData$isBeheerd), ]
             formattedTable <- reshape2::dcast(tmpData[, c("nest", "isBeheerd", "value")], nest ~ isBeheerd, value.var = "value")
             formattedTable$nest[formattedTable$nest == "NA"] <- "unknown"
@@ -725,6 +725,237 @@ createBinsServer <- function(id, uiText, data) {
   
 }
 
+#' Create bins
+#' @param data data.frame, as returned by \code{\link{createSummaryRegions()}} 
+#' @param nBins integer, number of bins
+#' @param binType character, type of bins; should be one of \code{c("userDefined", "quantiles", "uniform")}
+#' @return data.frame as in \code{data} but with additional column "group"
+#' 
+#' @author mvarewyck
+#' @export
+createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uniform"), 
+  cutValues = NULL, customLabels = NULL) {
+  
+  
+  binType <- match.arg(binType)
+  unit <- attr(data, "unit")
+  
+  if (unit == "cpue")
+    responseVariable <- "effort" else
+    responseVariable <- "n"
+  
+  labelValues <- function(values, minValue = NA, maxValue = NA, newLabels = customLabels) {
+    
+    if (!is.null(newLabels))
+      return(newLabels)
+    
+    if (!is.na(minValue))
+      values[1] <- minValue
+    if (!is.na(maxValue))
+      values[length(values)] <- maxValue
+    
+    paste0(values[-length(values)] + c(0, rep(1, length(values)-2)), "-", values[-1])
+    
+  }
+  
+  if (binType == "uniform") {
+    
+    dataRange <- range(data[[responseVariable]], na.rm = TRUE)
+    cutValues <- round(dataRange[1] + c(0, (dataRange[2] - dataRange[1])/nBins*(1:nBins)))
+    data$group <- cut(x = data[[responseVariable]], breaks = cutValues, 
+      labels = labelValues(cutValues))
+    
+  } else if (binType == "quantiles") {
+    
+    cutValues <- round(quantile(data[[responseVariable]], probs = seq(0, 1, length.out = nBins+1), na.rm = TRUE))
+    data$group <- cut(x = data[[responseVariable]], breaks = cutValues, 
+      labels = labelValues(cutValues))
+    
+  } else {
+    
+    if (unit == "cpue") {
+      
+      if (is.null(cutValues))
+        cutValues <- c(0, 10, 100, 200, 300, 400, Inf)
+      data$group <- cut(x = data[[responseVariable]], 
+        breaks = cutValues,
+        labels = labelValues(cutValues, maxValue = ceiling(max(data[[responseVariable]], na.rm = TRUE)))
+      )
+      
+    } else if (unit == "difference") {
+      
+      if (is.null(cutValues))
+        cutValues <- c(-Inf, -20, -10, 0, 10, 20, Inf)
+      
+      data$group <- cut(x = data[[responseVariable]], 
+        breaks = cutValues,
+        labels = labelValues(cutValues, 
+          minValue = min(-50, min(data[[responseVariable]], na.rm = TRUE)),
+          maxValue = max(50, max(data[[responseVariable]], na.rm = TRUE)))
+      )
+      
+    } else {
+      
+      if (is.null(cutValues))
+        cutValues <- c(0, 1000, 5000, 10000, Inf)
+      data$group <- cut(x = data[[responseVariable]], 
+        breaks = cutValues,
+        labels = labelValues(cutValues, 
+          maxValue = max(50000, max(data[[responseVariable]], na.rm = TRUE)))
+      )
+      
+    }
+    
+  }
+  
+  data
+  
+}
+
+
+
+#' Create user input for defining cutoff bins - server side
+#' @param id 
+#' @param uiText 
+#' @return 
+#' 
+#' @author mvarewyck
+#' @export
+createBinsUI <- function(id) {
+  
+  ns <- NS(id)
+  
+  fixedRow(
+    column(4, 
+      sliderInput(inputId = ns("nBins"), label = "nBins", 
+        min = 3, max = 8, value = 5),
+      selectInput(inputId = ns("binType"), label = "binType", 
+        choices = c("userDefined", "uniform", "quantiles")),
+      uiOutput(ns("binChoices"))
+    ),
+    column(6, 
+      plotOutput(ns("binDescriptives"))
+    )
+  )
+  
+}
+
+
+#' Create user input for defining cutoff bins - server side
+#' @param id 
+#' @return 
+#' 
+#' @author mvarewyck
+#' @export
+createBinsServer <- function(id, uiText, data) {
+  
+  moduleServer(id,
+    function(input, output, session) {
+      
+      ns <- session$ns
+      
+      observe({
+          
+          updateSliderInput(session, inputId = "nBins",
+            label = translate(uiText(), "nBins")$title,
+            value = length(levels(data()$group)))
+          
+        })
+      
+      observe({
+          
+          binTypes <- c("userDefined", "uniform", "quantiles")
+          names(binTypes) <- translate(uiText(), binTypes)$title
+          
+          updateSelectInput(session, inputId = "binType",
+            label = translate(uiText(), "binType")$title, 
+            choices = binTypes)
+          
+        }) 
+      
+      binnedData <- reactive({
+          
+          createBins(
+            data = data(), 
+            nBins = req(input$nBins), 
+            binType = req(input$binType)
+          )
+          
+        })
+      
+      colorBins <- reactive({
+          
+          palette <- if (attr(binnedData(), "unit") == "difference") "RdYlGn" else "YlOrBr"
+          paletteFunction <- colorFactor(palette = palette, levels = levels(binnedData()$group), 
+            na.color = "transparent", reverse = (palette != "YlOrBr"))
+          
+          paletteFunction(levels(binnedData()$group))
+          
+        })
+      
+      output$binChoices <- renderUI({
+          
+          req(input$nBins)
+          
+          currentGroups <- levels(binnedData()$group)
+          
+          lapply(1:input$nBins, function(i) {
+              
+              if (input$binType == "userDefined") {
+                
+                fluidRow(
+                  column(6, 
+                    textInput(ns(paste0("classLabel", i)), 
+                      label = if (i == 1) translate(uiText(), "name")$title else "", 
+                      value = currentGroups[i]),
+                    tags$style(paste0("#", ns(paste0("classLabel", i)), "{background-color:", colorBins()[i], ";}"))),
+                  column(6, numericInput(ns(paste0("classBound", i)), 
+                      label = if (i == 1) translate(uiText(), "upperBound")$title else "",
+                      value = tail(strsplit(currentGroups[i], split = "-")[[1]], n = 1)))
+                )
+                
+              } else {
+                
+                tagList(
+                  textInput(ns(paste0("classLabel", i)), 
+                    label = if (i == 1) translate(uiText(), "name")$title else "", 
+                    value = currentGroups[i]),
+                  tags$style(paste0("#", ns(paste0("classLabel", i)), "{background-color:", colorBins()[i], ";}"))
+                )
+                
+              }
+              
+            })
+          
+        })
+      
+      binnedDataAfter <- reactive({
+          
+          createBins(data = data(),
+            nBins = input$nBins, 
+            binType = input$binType, 
+            cutValues = if (input$binType == "userDefined")
+              sapply(1:input$nBins, function(i) input[[paste0("classBound", i)]]),
+            customLabels = sapply(1:input$nBins, function(i)
+                input[[paste0("classLabel", i)]]))
+                    
+        })
+      
+      output$binDescriptives <- renderPlot({
+          
+          classTable <- table(binnedDataAfter()$group)
+          
+          barplot(classTable, las = 1, ylab = translate(uiText(), "number")$title,
+            col = colorBins())
+          
+        })
+      
+      return(binnedDataAfter)
+    
+    })
+  
+}
+
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
 #' 
 #' @inheritParams welcomeSectionServer
@@ -949,6 +1180,8 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       
       binnedData <- reactiveVal()
       
+      binnedData <- reactiveVal()
+      
       summaryData <- reactive({
           
           req(nrow(subData()) > 0)
@@ -1038,7 +1271,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           req(facet)
           validate(need(nrow(req(summaryData())) > 0, noData()),
             need(nrow(req(binnedData())) > 0, noData()))
-          
+
           mapRegionsFacet(
             managementData = binnedData(),
             shapeData = subShape(), 
