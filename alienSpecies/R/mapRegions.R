@@ -458,7 +458,9 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
         cutValues <- c(0, 10, 100, 200, 300, 400, Inf)
       data$group <- cut(x = data[[responseVariable]], 
         breaks = cutValues,
-        labels = labelValues(cutValues, maxValue = ceiling(max(data[[responseVariable]], na.rm = TRUE)))
+        labels = labelValues(cutValues, 
+          minValue = 0,
+          maxValue = ceiling(max(data[[responseVariable]], na.rm = TRUE)))
       )
       
     } else if (unit == "difference") {
@@ -480,6 +482,7 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
       data$group <- cut(x = data[[responseVariable]], 
         breaks = cutValues,
         labels = labelValues(cutValues, 
+          minValue = 0,
           maxValue = max(50000, max(data[[responseVariable]], na.rm = TRUE)))
       )
       
@@ -614,9 +617,9 @@ createBinsServer <- function(id, uiText, data) {
             nBins = input$nBins, 
             binType = input$binType, 
             cutValues = if (input$binType == "userDefined")
-              sapply(1:input$nBins, function(i) input[[paste0("classBound", i)]]),
-            customLabels = sapply(1:input$nBins, function(i)
-                input[[paste0("classLabel", i)]]))
+              c(-Inf, sapply(1:input$nBins, function(i) input[[paste0("classBound", i)]])),
+            customLabels = sapply(1:input$nBins, function(i) input[[paste0("classLabel", i)]])
+          )
                     
         })
       
