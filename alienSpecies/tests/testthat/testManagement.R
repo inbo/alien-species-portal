@@ -98,10 +98,18 @@ test_that("Map & trend for Bullfrogs", {
     # Map - gemeente
     summaryData <- createSummaryRegions(data = managementData, 
       shapeData = allShapes, regionLevel = "communes", 
-      year = 2018, unit = "cpue")
+      year = 2023, unit = "cpue")
     myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
       shapeData = allShapes, regionLevel = "communes")
     expect_s3_class(myPlot, "leaflet")
+    
+    # Visualize bins
+    classTable <- table(summaryData$group)
+    palette <- if (attr(summaryData, "unit") == "difference") "RdYlGn" else "YlOrBr"
+    paletteFunction <- colorFactor(palette = palette, levels = levels(summaryData$group), 
+      na.color = "transparent", reverse = (palette != "YlOrBr"))
+    barplot(classTable, las = 1, ylab = translate(uiText, "number")$title,
+      col = paletteFunction(levels(summaryData$group)))
     
     # Map - provinces
     summaryData <- createSummaryRegions(data = managementData, 

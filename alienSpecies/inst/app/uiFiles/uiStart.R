@@ -1,7 +1,7 @@
 
 tagList(
   tags$div(class = "container",
-    tags$div(align = "right",
+    tags$div(align = "right", style= "padding-right: 15px;",
       tags$p(
         actionLink(inputId = "translate_en", label = "EN"),
         "-",

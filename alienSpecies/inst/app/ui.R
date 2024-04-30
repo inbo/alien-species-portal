@@ -45,6 +45,14 @@ shinyUI(
                   "header.append('<div style=\"float:right;\">", 
                   versionUI(id = "main"),"</div>')"))
             )),
+          
+          # Shape data source + contact e-mail
+          header = tags$header(tags$div(align = "right", style = "margin-top: 60px; padding-right: 15px;",
+              tags$p(
+                tags$div(uiOutput("shareLink"), style = "display: inline-block;"))
+            )
+          ),
+          
           windowTitle = "Alien Species Portal",
           fluid = FALSE, 
           id = "tabs",
@@ -56,14 +64,8 @@ shinyUI(
           tabPanel(title = uiOutput("checklist_title"), value = "checklist_indicators",
             uiOutput("indicators_content")),
           tabPanel(title = uiOutput("species_title"), value = "species_information",
-            uiOutput("species_content")),
-          
-          # Shape data source + contact e-mail
-          header = tags$header(tags$div(align = "right", style = "margin-top: 60px;",
-              tags$p(
-                tags$div(uiOutput("shareLink"), style = "display: inline-block;"))
-            )
-          )
+            uiOutput("species_content"))
+
         )
       
       )
