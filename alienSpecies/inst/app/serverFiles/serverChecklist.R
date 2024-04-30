@@ -553,4 +553,4 @@ observeEvent(input$exoten_tabs, {
 
 
 # Contact button
-footerSectionServer(id = "checklist", uiText = results$translations, share = shareLink())
+footerSectionServer(id = "checklist", uiText = results$translations)
