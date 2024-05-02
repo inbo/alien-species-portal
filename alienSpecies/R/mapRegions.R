@@ -762,7 +762,7 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
     
     dataRange <- range(data[[responseVariable]], na.rm = TRUE)
     cutValues <- round(dataRange[1] + c(0, (dataRange[2] - dataRange[1])/nBins*(1:nBins)))
-    data$group <- cut(x = data[[responseVariable]], breaks = cutValues, 
+    data$group <- cut(x = data[[responseVariable]], breaks = cutValues, include.lowest = TRUE,
       labels = labelValues(cutValues))
     
   } else if (binType == "quantiles") {
@@ -878,10 +878,27 @@ createBinsServer <- function(id, uiText, data) {
       
       binnedData <- reactive({
           
+          isolate(currentValues <- sapply(1:input$nBins, function(i) 
+                if (is.null(input[[paste0("classBound", i)]]))
+                  NA else
+                  input[[paste0("classBound", i)]]
+            ))
+          isolate(currentLabels <- sapply(1:input$nBins, function(i) 
+                if (is.null(input[[paste0("classLabel", i)]])) 
+                  NA else
+                  input[[paste0("classLabel", i)]]
+            ))
+          
+          print("prior")
           createBins(
             data = data(), 
             nBins = req(input$nBins), 
-            binType = req(input$binType)
+            binType = req(input$binType),
+            cutValues = if (input$binType == "userDefined") 
+              if (!all(is.na(currentValues)))
+                currentValues else
+                sapply(levels(data()$group), function(x) as.numeric(tail(strsplit(x, split = "-")[[1]], n = 1))),
+            customLabels = if (!all(is.na(currentLabels))) currentLabels
           )
           
         })
@@ -901,6 +918,8 @@ createBinsServer <- function(id, uiText, data) {
           req(input$nBins)
           
           currentGroups <- levels(binnedData()$group)
+          print("before")
+          print(currentGroups)
           
           lapply(1:input$nBins, function(i) {
               
@@ -934,12 +953,15 @@ createBinsServer <- function(id, uiText, data) {
       
       binnedDataAfter <- reactive({
           
+          req(input$binType)
+          
+          print("posterior")
           createBins(data = data(),
             nBins = input$nBins, 
             binType = input$binType, 
             cutValues = if (input$binType == "userDefined")
-              c(-Inf, sapply(1:input$nBins, function(i) input[[paste0("classBound", i)]])),
-            customLabels = sapply(1:input$nBins, function(i) input[[paste0("classLabel", i)]])
+              c(-Inf, sapply(1:input$nBins, function(i) req(input[[paste0("classBound", i)]]))),
+            customLabels = sapply(1:input$nBins, function(i) req(input[[paste0("classLabel", i)]]))
           )
                     
         })
@@ -947,6 +969,8 @@ createBinsServer <- function(id, uiText, data) {
       output$binDescriptives <- renderPlot({
           
           classTable <- table(binnedDataAfter()$group)
+          print("after")
+          print(levels(binnedDataAfter()$group))
           
           barplot(classTable, las = 1, ylab = translate(uiText(), "number")$title,
             col = colorBins())
@@ -1207,6 +1231,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           )
           
           isolate(binnedData(toReturn))
+          print("summary")
           
           toReturn
           
@@ -1229,7 +1254,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
         })
       
       observeEvent(input$binConfirm, {
-          
+
           isolate(binnedData(results$tmpBinnedData()))
           
         })
