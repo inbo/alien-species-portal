@@ -25,7 +25,8 @@ results$filter_exotenDataTranslated <- reactive({
       native_continent_translate = translate(results$translations, native_continent)$title,
       native_range_translate = translate(results$translations, native_range)$title,
       degree_of_establishment_translate = translate(results$translations, degree_of_establishment)$title,
-      habitat_translate = translate(results$translations, habitat)$title
+      habitat_translate = translate(results$translations, habitat)$title,
+      locality_translate = translate(results$translations, locality)$title
     )]    
   
   })
@@ -298,9 +299,9 @@ results$exoten_data <- reactive({
     }
     
     # use translations after subsetting
-    data.table::setnames(subData[, c("pathway_level1", "pathway_level2", "habitat", "degree_of_establishment") := NULL], 
-      old = c("pathway_level1_translate", "pathway_level2_translate", "habitat_translate", "degree_of_establishment_translate"), 
-      new = c("pathway_level1", "pathway_level2", "habitat", "degree_of_establishment"))
+    data.table::setnames(subData[, c("pathway_level1", "pathway_level2", "habitat", "degree_of_establishment", "locality") := NULL], 
+      old = c("pathway_level1_translate", "pathway_level2_translate", "habitat_translate", "degree_of_establishment_translate", "locality_translate"), 
+      new = c("pathway_level1", "pathway_level2", "habitat", "degree_of_establishment", "locality"))
     
     results$searchId <- searchId
     

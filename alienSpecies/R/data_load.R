@@ -165,30 +165,25 @@ loadOccupancyData <- function() {
   
 }
 
-#' List Dutch names to replace English names for exoten
+#' List region names as can be recognized by the translation file
 #' 
-#' Will not return NA, but rather the original English name in case
+#' Will not return NA, but rather the original name in case
 #' no match could be found.
 #' 
 #' @param x character, what to transform
-#' @param type character, defines how to transform short to full names
 #' @return named character vector, names are the original values
 #' 
 #' @author eadriaensen
 #' @export
 #' 
-getDutchNames <- function(x, type = c("regio")) {
+getRegionNames <- function(x) {
   
-  type <- match.arg(type)
-  
-  new <- switch(type,
-    regio = c(
+  new <- c(
       "Belgi\u00EB" 	    = "Belgium",
-      "Brussels Hoofdstedelijk Gewest" 	= "Brussels-Capital Region",
-      "Vlaanderen" 	= "Flemish Region",
-      "Walloni\u00EB"	= "Walloon Region"
+      "brussels" 	= "Brussels-Capital Region",
+      "flanders" 	= "Flemish Region",
+      "wallonia"	= "Walloon Region"
     )
-  )
   
   toReturn <- names(new)
   names(toReturn) <- new

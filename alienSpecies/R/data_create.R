@@ -367,8 +367,8 @@ createTabularData <- function(
       "species", "canonicalName"
     )]
     
-    ## convert english to dutch names for region
-    rawData$locality <- getDutchNames(rawData$locality, type = "regio")
+    ## convert english names to names recognized by the translation file
+    rawData$locality <- getRegionNames(rawData$locality)
     
     ## Extract hyperlinks 
     
@@ -449,9 +449,9 @@ createTabularData <- function(
     timeseries$isBelgium <- apply(timeseries[, c("isFlanders", "isWallonia", "isBrussels")], 1, sum) > 0
     # wide to long format
     setnames(timeseries, c("isFlanders", "isWallonia", "isBrussels", "isBelgium"),
-      c("Vlaanderen", "Wallonië", "Brussels Hoofdstedelijk Gewest", "België"))
+      c("flanders", "wallonia", "brussels", "Belgi\u00EB"))
     timeseries <- melt.data.table(timeseries, id.vars = c("taxonKey", "year"),
-      measure.vars = c("Vlaanderen", "Wallonië", "Brussels Hoofdstedelijk Gewest", "België"))
+      measure.vars = c("flanders", "wallonia", "brussels", "Belgi\u00EB"))
     # select last year per region
     timeseries <- timeseries[timeseries[, .I[which.max(year)], by = .(variable, taxonKey)]$V1]
     timeseries <- timeseries[timeseries$value, ]
