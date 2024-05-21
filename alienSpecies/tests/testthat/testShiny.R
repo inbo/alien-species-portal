@@ -318,6 +318,70 @@ test_that("Module countNesten",{
 
 
 
+uiText <- loadMetaData()
+
+test_that("Custom bins in shiny", {
+    
+    ui <- fluidPage(
+      
+      shinyjs::useShinyjs(),
+      
+      createBinsUI(id = "mapRegions"),
+      actionButton(inputId = "binConfirm", label = "binConfirm"),
+      verbatimTextOutput("printOriginal"),
+      verbatimTextOutput("printBinned")
+    )
+    
+    server <- function(input, output, session) {
+      
+      results <- reactiveValues()
+      binnedData <- reactiveVal()
+      
+      originalData <- reactive({
+          
+          tmpData <- cars
+          attr(tmpData, "unit") <- "aantal"
+          tmpData$n <- tmpData$speed
+          tmpData <- createBins(data = tmpData, cutValues = c(0, 10, 20, 30, Inf))
+          
+          isolate(binnedData(tmpData))
+          tmpData
+          
+        })
+      
+      observe({
+          
+          results$tmpBinnedData <- createBinsServer(id = "mapRegions", 
+            uiText = reactive(uiText), data = binnedData)
+          
+        })
+      
+      observeEvent(input$binConfirm, {
+          
+          isolate(binnedData(results$tmpBinnedData()))
+          
+        })
+      
+      
+      output$printOriginal <- renderPrint({
+          
+          table(originalData()$group)
+          
+        })
+      
+      output$printBinned <- renderPrint({
+          
+          table(binnedData()$group)
+          
+        })
+      
+    }
+    
+    # Test app
+    app <- shinyApp(ui, server)
+#   app
+   
+  })
 
 
 
