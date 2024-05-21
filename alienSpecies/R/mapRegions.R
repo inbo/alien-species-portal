@@ -800,6 +800,7 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
       
       if (is.null(cutValues))
         cutValues <- c(0, 1000, 5000, 10000, Inf)
+            
       data$group <- cut(x = data[[responseVariable]], 
         breaks = cutValues,
         labels = labelValues(cutValues, 
@@ -810,6 +811,8 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
     }
     
   }
+  
+  attr(data, "breaks") <- cutValues
   
   data
   
@@ -834,7 +837,10 @@ createBinsUI <- function(id) {
         min = 3, max = 8, value = 5),
       selectInput(inputId = ns("binType"), label = "binType", 
         choices = c("userDefined", "uniform", "quantiles")),
-      uiOutput(ns("binChoices"))
+      fluidRow(
+        column(6, uiOutput(ns("binNames"))),
+        column(6, uiOutput(ns("binBreaks")))
+      )
     ),
     column(6, 
       plotOutput(ns("binDescriptives"))
@@ -857,6 +863,8 @@ createBinsServer <- function(id, uiText, data) {
       
       ns <- session$ns
       
+      previousType <- reactiveVal("userDefined")
+      
       observe({
           
           updateSliderInput(session, inputId = "nBins",
@@ -876,6 +884,19 @@ createBinsServer <- function(id, uiText, data) {
           
         }) 
       
+      lowestValue <- reactive({
+          
+          unit <- attr(data(), "unit")
+          
+          if (unit == "cpue")
+            responseVariable <- "effort" else
+            responseVariable <- "n"
+          
+          min(c(0, data()[[responseVariable]], na.rm = TRUE))
+          
+        })
+      
+      
       binnedData <- reactive({
           
           isolate(currentValues <- sapply(1:input$nBins, function(i) 
@@ -889,15 +910,28 @@ createBinsServer <- function(id, uiText, data) {
                   input[[paste0("classLabel", i)]]
             ))
           
-          print("prior")
+          if (input$binType != previousType()) {
+          
+            previousType(input$binType)
+            currentLabels <- NA
+            
+          }
+                   
           createBins(
             data = data(), 
             nBins = req(input$nBins), 
             binType = req(input$binType),
             cutValues = if (input$binType == "userDefined") 
-              if (!all(is.na(currentValues)))
-                currentValues else
-                sapply(levels(data()$group), function(x) as.numeric(tail(strsplit(x, split = "-")[[1]], n = 1))),
+              c(
+                # start value
+                lowestValue(), 
+                # other values = last of each group
+                if (!all(is.na(currentValues))) {
+                    currentValues[length(currentValues)] <- Inf
+                    currentValues 
+                  } else
+                    sapply(levels(data()$group), function(x) as.numeric(tail(strsplit(x, split = "-")[[1]], n = 1)))
+              ),
             customLabels = if (!all(is.na(currentLabels))) currentLabels
           )
           
@@ -913,41 +947,59 @@ createBinsServer <- function(id, uiText, data) {
           
         })
       
-      output$binChoices <- renderUI({
+      output$binNames <- renderUI({
           
           req(input$nBins)
           
           currentGroups <- levels(binnedData()$group)
-          print("before")
-          print(currentGroups)
           
           lapply(1:input$nBins, function(i) {
               
-              if (input$binType == "userDefined") {
-                
-                fluidRow(
-                  column(6, 
-                    textInput(ns(paste0("classLabel", i)), 
-                      label = if (i == 1) translate(uiText(), "name")$title else "", 
-                      value = currentGroups[i]),
-                    tags$style(paste0("#", ns(paste0("classLabel", i)), "{background-color:", colorBins()[i], ";}"))),
-                  column(6, numericInput(ns(paste0("classBound", i)), 
-                      label = if (i == 1) translate(uiText(), "upperBound")$title else "",
-                      value = tail(strsplit(currentGroups[i], split = "-")[[1]], n = 1)))
-                )
-                
-              } else {
-                
-                tagList(
-                  textInput(ns(paste0("classLabel", i)), 
-                    label = if (i == 1) translate(uiText(), "name")$title else "", 
-                    value = currentGroups[i]),
-                  tags$style(paste0("#", ns(paste0("classLabel", i)), "{background-color:", colorBins()[i], ";}"))
-                )
-                
-              }
+              tagList(
+                textInput(ns(paste0("classLabel", i)), 
+                  label = if (i == 1) translate(uiText(), "name")$title else "", 
+                  value = currentGroups[i]),
+                tags$style(paste0("#", ns(paste0("classLabel", i)), " {background-color: ", colorBins()[i], ";}"))
+              )
               
             })
+          
+        })
+      
+      output$binBreaks <- renderUI({
+          
+          req(input$nBins)
+          
+          currentGroups <- levels(binnedData()$group)
+          currentBounds <- sapply(1:input$nBins, function(i) 
+              if (i == input$nBins)
+                Inf else if (!is.null(input[[paste0("classBound", i)]]))
+                input[[paste0("classBound", i)]] else
+                tail(strsplit(currentGroups[i], split = "-")[[1]], n = 1)
+          )
+          
+          if (input$binType == "userDefined") {
+            
+            lapply(1:input$nBins, function(i) {
+                
+                if (i != input$nBins) numericInput(ns(paste0("classBound", i)), 
+                    label = if (i == 1) translate(uiText(), "break")$title else "",
+                    value = currentBounds[i])
+                
+              })
+            
+          } else {
+            
+            lapply(1:input$nBins, function(i) {
+                
+                if (i != input$nBins) shinyjs::disabled(numericInput(ns(paste0("classBound", i)), 
+                    label = if (i == 1) translate(uiText(), "break")$title else "",
+                    value = attr(binnedData(), "breaks")[i]))
+                
+            })
+            
+          }
+        
           
         })
       
@@ -955,22 +1007,27 @@ createBinsServer <- function(id, uiText, data) {
           
           req(input$binType)
           
-          print("posterior")
           createBins(data = data(),
             nBins = input$nBins, 
             binType = input$binType, 
             cutValues = if (input$binType == "userDefined")
-              c(-Inf, sapply(1:input$nBins, function(i) req(input[[paste0("classBound", i)]]))),
+              c(lowestValue(), 
+                sapply(1:input$nBins, function(i) 
+                    if (i == input$nBins)
+                      Inf else 
+                      req(input[[paste0("classBound", i)]]))),
             customLabels = sapply(1:input$nBins, function(i) req(input[[paste0("classLabel", i)]]))
           )
-                    
+        
         })
       
       output$binDescriptives <- renderPlot({
           
+          validate(need(class(tryCatch(binnedDataAfter(), 
+                  error = function(err) err$message)) == "data.frame",
+              translate(uiText(), "noData")$title))
+          
           classTable <- table(binnedDataAfter()$group)
-          print("after")
-          print(levels(binnedDataAfter()$group))
           
           barplot(classTable, las = 1, ylab = translate(uiText(), "number")$title,
             col = colorBins())
@@ -1231,7 +1288,6 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           )
           
           isolate(binnedData(toReturn))
-          print("summary")
           
           toReturn
           

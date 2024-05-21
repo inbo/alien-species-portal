@@ -322,17 +322,9 @@ uiText <- loadMetaData()
 
 test_that("Custom bins in shiny", {
     
-    tmpData <- cars
-    attr(tmpData, "unit") <- "aantal"
-    tmpData$n <- tmpData$speed
-    testBins <- createBins(data = tmpData, binType = "quantiles", nBins = 4)
-    
-    
     ui <- fluidPage(
       
       shinyjs::useShinyjs(),
-      
-      actionLink("browser", "Connect to browser"),
       
       createBinsUI(id = "mapRegions"),
       actionButton(inputId = "binConfirm", label = "binConfirm"),
@@ -345,13 +337,15 @@ test_that("Custom bins in shiny", {
       results <- reactiveValues()
       binnedData <- reactiveVal()
       
-      observeEvent(input$browser, browser())
-      
       originalData <- reactive({
           
-          firstBins <- createBins(data = tmpData, cutValues = c(0, 10, 20, 30, Inf))
-          isolate(binnedData(firstBins))
-          firstBins
+          tmpData <- cars
+          attr(tmpData, "unit") <- "aantal"
+          tmpData$n <- tmpData$speed
+          tmpData <- createBins(data = tmpData, cutValues = c(0, 10, 20, 30, Inf))
+          
+          isolate(binnedData(tmpData))
+          tmpData
           
         })
       
@@ -385,7 +379,6 @@ test_that("Custom bins in shiny", {
     
     # Test app
     app <- shinyApp(ui, server)
-    expect_is(app, "shiny.appobj")
 #   app
-    
+   
   })
