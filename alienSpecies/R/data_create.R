@@ -299,10 +299,11 @@ createTaxaChoices <- function(exotenData) {
 #' }
 #' @return data.table, loaded indicator/unionlist data; 
 #' and attribute 'Date', the date that this data file was created
-#' @importFrom data.table fread :=
+#' @importFrom data.table fread := as.data.table
 #' @importFrom utils tail
 #' @importFrom stats complete.cases
 #' @importFrom arrow write_parquet
+#' @importFrom dplyr filter
 #' @export
 createTabularData <- function(
     dataDir = "~/git/alien-species-portal/dataS3",
@@ -439,9 +440,9 @@ createTabularData <- function(
                                !is.na(rawData$native_range)] <- "undefined"
     
     ## update last_observed with info from timeseries
-    readS3(file = "full_timeseries.RData", bucket = bucket)
+    timeseries <- loadTabularData(type = "timeseries")
     # exclude rows without observation
-    timeseries <- timeseries[timeseries$obs > 0, ]
+    timeseries <- as.data.table(dplyr::filter(timeseries, obs > 0))
     # exclude unknown regions
     timeseries <- timeseries[complete.cases(timeseries[, c("isFlanders", "isWallonia", "isBrussels")])]
     # select last_year per cube
@@ -458,7 +459,7 @@ createTabularData <- function(
     timeseries$value <- NULL
   
 #    head(rawData[, c("locality", "last_observed", "nubKey")])
-    rawData <- merge(rawData, timeseries, by.x = c("locality", "nubKey"), 
+    rawData <- base::merge(rawData, timeseries, by.x = c("locality", "nubKey"), 
       by.y = c("variable", "taxonKey"), all.x = TRUE)
     rawData$last_observed <- apply(rawData[, c("last_observed", "year")], 1, 
       function(x) if (all(is.na(x))) NA else max(x, na.rm = TRUE))
