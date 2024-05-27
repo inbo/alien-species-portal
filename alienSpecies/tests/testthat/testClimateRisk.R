@@ -37,15 +37,11 @@ test_that("Create climate risk map", {
     download.file(file.path(tiffPath, tiffFile), 
       destfile = file.path(tempdir(), tiffFile), method = "curl")
     
-    library(terra)
     rasterInput <- terra::rast(x = file.path(tempdir(), tiffFile))
-    #plot(r)
-    # Error: external pointer is not valid
-    # Ignore, doesn't limit plotting and only in Eclipse
-    # See also: https://www.eclipse.org/lists/statet-users/msg00142.html
     
     # Need leaflet >= 2.2.0 (https://github.com/rstudio/leaflet/issues/865)
     myPlot <- mapRaster(rasterInput = rasterInput, addGlobe = FALSE)
+    expect_is(myPlot, "leaflet")
     
     myPlot %>% addTiles(options = tileOptions(zIndex = -10))
     

@@ -275,8 +275,9 @@ test_that("Map Trend", {
       shapeData = allShapes,
       regionLevel = "communes",
       year = 2022)
-    mapRegions(managementData = summaryData, shapeData = allShapes,
+    plotPoints <- mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "communes")
+    expect_s3_class(plotPoints, "leaflet")
     
     # Per province
     summaryData <- createSummaryRegions(
@@ -284,8 +285,9 @@ test_that("Map Trend", {
       shapeData = allShapes,
       regionLevel = "provinces",
       year = 2022)
-    mapRegions(managementData = summaryData, shapeData = allShapes,
+    plotPoints2 <- mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
+    expect_s3_class(plotPoints2, "leaflet")
     
     ## POINTS and NESTEN data
     summaryData <- createSummaryRegions(
@@ -294,8 +296,9 @@ test_that("Map Trend", {
       year = 2023,
       unit = "absolute",
       groupingVariable = c("nest_type", "isBeheerd"))
-    mapRegions(managementData = summaryData, shapeData = allShapes,
+    plotNesten <- mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
+    expect_s3_class(plotNesten, "leaflet")
     
     summaryData <- createSummaryRegions(
       data = vespaBoth, shapeData = allShapes,
@@ -309,6 +312,7 @@ test_that("Map Trend", {
     # create popup with summary table in it
     tmpText <- mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, 
       unit = NULL, bronMap = "individual")
+    expect_is(tmpText, "character")
     
   })
   
@@ -317,7 +321,8 @@ test_that("Management succes", {
     plotData <- summarizeYearGroupData(df = Vespa_velutina_shape$nesten, 
       gewest = "flanders") 
       
-    countYearGroup(df = plotData, groupVar = "Behandeling")
+    plotSuccess <- countYearGroup(df = plotData, groupVar = "Behandeling")
+    expect_s3_class(plotSuccess$plot, "plotly")
     
   })  
 
