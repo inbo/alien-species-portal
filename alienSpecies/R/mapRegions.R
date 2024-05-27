@@ -409,6 +409,7 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
 #' @return data.frame as in \code{data} but with additional column "group"
 #' 
 #' @author mvarewyck
+#' @importFrom stats quantile
 #' @export
 createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uniform"), 
   cutValues = NULL, customLabels = NULL) {
@@ -435,17 +436,22 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
     
   }
   
-  if (binType == "uniform") {
+  if (binType %in% c("uniform", "quantiles")) {
     
-    dataRange <- range(data[[responseVariable]], na.rm = TRUE)
-    cutValues <- round(dataRange[1] + c(0, (dataRange[2] - dataRange[1])/nBins*(1:nBins)))
-    data$group <- cut(x = data[[responseVariable]], breaks = cutValues, include.lowest = TRUE,
-      labels = labelValues(cutValues))
-    
-  } else if (binType == "quantiles") {
-    
-    cutValues <- round(quantile(data[[responseVariable]], probs = seq(0, 1, length.out = nBins+1), na.rm = TRUE))
-    data$group <- cut(x = data[[responseVariable]], breaks = cutValues, 
+    if (binType == "uniform") {
+      
+      dataRange <- range(data[[responseVariable]], na.rm = TRUE) 
+      cutValues <- round(dataRange[1] + c(0, (dataRange[2] - dataRange[1])/nBins*(1:nBins)))
+      
+    } else {
+      
+      cutValues <- round(quantile(data[[responseVariable]], probs = seq(0, 1, length.out = nBins+1), na.rm = TRUE))
+      
+    }
+          
+    breakValues <- cutValues
+    breakValues[length(breakValues)] <- Inf
+    data$group <- cut(x = data[[responseVariable]], breaks = breakValues, include.lowest = TRUE,
       labels = labelValues(cutValues))
     
   } else {
@@ -489,7 +495,7 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
     
   }
   
-  attr(data, "breaks") <- cutValues
+  attr(data, "breaks") <- cutValues[-1]
   
   data
   
@@ -500,7 +506,7 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
 #' Create user input for defining cutoff bins - server side
 #' @param id 
 #' @param uiText 
-#' @return 
+#' @return ui object
 #' 
 #' @author mvarewyck
 #' @export
@@ -529,9 +535,10 @@ createBinsUI <- function(id) {
 
 #' Create user input for defining cutoff bins - server side
 #' @param id 
-#' @return 
+#' @return reactive data.frame, binned data
 #' 
 #' @author mvarewyck
+#' @importFrom graphics barplot
 #' @export
 createBinsServer <- function(id, uiText, data) {
   
@@ -569,7 +576,7 @@ createBinsServer <- function(id, uiText, data) {
             responseVariable <- "effort" else
             responseVariable <- "n"
           
-          min(c(0, data()[[responseVariable]], na.rm = TRUE))
+          min(c(0, data()[[responseVariable]]), na.rm = TRUE)
           
         })
       
@@ -587,12 +594,16 @@ createBinsServer <- function(id, uiText, data) {
                   input[[paste0("classLabel", i)]]
             ))
           
-          if (input$binType != previousType()) {
-          
-            previousType(input$binType)
-            currentLabels <- NA
-            
-          }
+          isolate({
+              
+              if (input$binType != previousType()) {
+                
+                previousType(input$binType)
+                currentLabels <- NA
+                
+              }
+              
+            })
                    
           createBins(
             data = data(), 
@@ -647,15 +658,15 @@ createBinsServer <- function(id, uiText, data) {
           
           req(input$nBins)
           
-          currentGroups <- levels(binnedData()$group)
-          currentBounds <- sapply(1:input$nBins, function(i) 
-              if (i == input$nBins)
-                Inf else if (!is.null(input[[paste0("classBound", i)]]))
-                input[[paste0("classBound", i)]] else
-                tail(strsplit(currentGroups[i], split = "-")[[1]], n = 1)
-          )
-          
           if (input$binType == "userDefined") {
+            
+            currentGroups <- levels(binnedData()$group)
+            currentBounds <- sapply(1:input$nBins, function(i) 
+                if (i == input$nBins)
+                  Inf else if (!is.null(input[[paste0("classBound", i)]]))
+                  input[[paste0("classBound", i)]] else
+                  attr(binnedData(), "breaks")[i]
+            )
             
             lapply(1:input$nBins, function(i) {
                 
@@ -966,7 +977,8 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       observe({
           
           req(binnedData())
-          results$tmpBinnedData <- createBinsServer(id = "mapRegions", uiText = uiText, data = binnedData)
+          results$tmpBinnedData <- createBinsServer(id = "mapRegions", uiText = uiText, 
+            data = binnedData)
           
         })
       
@@ -1014,7 +1026,8 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       output$regionsPlotFacet <- renderPlot({
           
           req(facet)
-          validate(need(nrow(req(binnedData())) > 0, noData()))
+          validate(need(nrow(req(summaryData())) > 0, noData()),
+            need(nrow(req(binnedData())) > 0, noData()))
           
           mapRegionsFacet(
             managementData = binnedData(),
