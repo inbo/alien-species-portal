@@ -403,9 +403,11 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
 }
 
 #' Create bins
-#' @param data data.frame, as returned by \code{\link{createSummaryRegions()}} 
+#' @param data data.frame, as returned by \code{\link{createSummaryRegions}} 
 #' @param nBins integer, number of bins
 #' @param binType character, type of bins; should be one of \code{c("userDefined", "quantiles", "uniform")}
+#' @param cutValues numeric vector, optional break values
+#' @param customLabels character vector, optional labels for the groups
 #' @return data.frame as in \code{data} but with additional column "group"
 #' 
 #' @author mvarewyck
@@ -504,8 +506,7 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
 
 
 #' Create user input for defining cutoff bins - server side
-#' @param id 
-#' @param uiText 
+#' @param id unique identifier
 #' @return ui object
 #' 
 #' @author mvarewyck
@@ -534,7 +535,9 @@ createBinsUI <- function(id) {
 
 
 #' Create user input for defining cutoff bins - server side
-#' @param id 
+#' @inheritParams mapRegionsServer
+#' @param data reactive data.frame as provided by \code{\link{createSummaryRegions}}
+#'  
 #' @return reactive data.frame, binned data
 #' 
 #' @author mvarewyck

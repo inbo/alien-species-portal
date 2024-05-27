@@ -85,20 +85,18 @@ test_that("Occurrence plots", {
         
   })
 
-
+## Note: fitting GAM model only works when loading the R-package using library(alienSpecies)
+## When loading via devtools::load_all() there is a conflict with config::get()
+## which can be resolved by
+get <- base::get
 
 test_that("Emergence status GAM - Observations", {
     
-    ## Note: fitting GAM model only works when loading the R-package using library(alienSpecies)
-    ## When loading via devtools::load_all() there is a conflict with config::get()
-    ## which can be resolved by
-    ## get <- base::get
-
     myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     
     timeseries <- loadTabularData(type = "timeseries")
     
-    correctBias <- c(TRUE, FALSE)[1]
+    correctBias <- c(TRUE, FALSE)[2]
     isProtected <- c(TRUE, FALSE)[2]
     
     subData <- summarizeTimeSeries(
@@ -118,8 +116,8 @@ test_that("Emergence status GAM - Observations", {
         y_label = "Observations",
         eval_years = 2010 - c(3,1),
         type_indicator = "observations",
-        
-        baseline_var = if (correctBias) "cobs"
+        baseline_var = if (correctBias) "cobs",
+        region = "flanders"
         ),
         uiText = uiText
     )
@@ -140,7 +138,9 @@ test_that("Emergence status GAM - Observations", {
         y_label = "Observations",
         eval_years = 2020,
         type_indicator = "observations",
-        baseline_var = if (correctBias) "cobs"),
+        baseline_var = if (correctBias) "cobs",
+        region = "flanders"
+      ),
       uiText = uiText
     )
     
@@ -173,7 +173,9 @@ test_that("Emergence status GAM - Occupancy", {
         eval_years = min(subData$year):max(subData$year),
         taxon_key = myKey, name = allSpecies[2],
         baseline_var = if (correctBias) "c_ncells",
-        verbose = TRUE)
+        region = "flanders",
+        verbose = TRUE),
+      uiText = uiText
     )
     
     expect_type(tmpResult, "list")

@@ -316,6 +316,7 @@ createTabularData <- function(
   i.scientificName <- NULL
   i.classKey <- NULL
   taxonKey <- variable <- eea_cell_code <- NULL
+  obs <- NULL
   
   warningMessage <- NULL
   
