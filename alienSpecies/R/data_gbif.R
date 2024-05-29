@@ -159,11 +159,11 @@ loadGbif <- function(dataFile,
   rawData <- readS3(FUN = fread, stringsAsFactors = FALSE, na.strings = "", bucket = bucket, 
                     file = dataFile)
   
-  # Rename
-  if ("individualCount" %in% colnames(rawData) & !"count" %in% colnames(rawData)) {
+  # Rename & convert
+  if ("individualCount" %in% colnames(rawData) & !"count" %in% colnames(rawData))
     data.table::setnames(rawData, "individualCount", "count")
+  if ("count" %in% colnames(rawData))
     rawData[, count := as.numeric(count)]
-  }
   if ("decimalLongitude" %in% colnames(rawData))
     rawData[, decimalLongitude := as.numeric(decimalLongitude)]
   if ("decimalLatitude" %in% colnames(rawData))
