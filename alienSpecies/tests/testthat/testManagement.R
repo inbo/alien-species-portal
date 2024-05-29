@@ -283,7 +283,7 @@ test_that("Map Trend", {
     summaryData <- createSummaryRegions(
       data = vespaBoth, shapeData = allShapes,
       regionLevel = "provinces",
-      year = 2023,
+      year = 2024,
       unit = "absolute",
       groupingVariable = c("nest_type", "isBeheerd"))
     mapRegions(managementData = summaryData, shapeData = allShapes,
@@ -300,7 +300,7 @@ test_that("Map Trend", {
     
     # create popup with summary table in it
     tmpText <- mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, 
-      unit = NULL, bronMap = "individual")
+      unit = NULL, showBron = TRUE)
     
   })
   

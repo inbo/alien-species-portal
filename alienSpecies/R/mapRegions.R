@@ -28,11 +28,13 @@ combineVespaData <- function(pointsData, nestenData, nestenBeheerdData) {
         ifelse(pointsData$provincie == "Brabant Wallon", "Waals-Brabant",
           ifelse(pointsData$provincie == "Hainaut", "Henegouwen", pointsData$provincie)))))
   pointsData$nest_type <- "individual"
-  pointsData$isBeheerd <- FALSE
+  pointsData$isBeheerd <- "untreated nest"
   
   ## Nest data
   nestenData$type <- "nest"
-  nestenData$isBeheerd <- nestenData$geometry %in% nestenBeheerdData$geometry
+  currentYear <- as.numeric(format(Sys.Date(), "%Y"))
+  nestenData$isBeheerd <- nestenData$geometry %in% nestenBeheerdData$geometry & nestenData$year == currentYear
+  nestenData$isBeheerd <- ifelse(nestenData$isBeheerd, "managed nest", "untreated nest")
   
   keepColumns <- c("year", "type", "nest_type", "NAAM", "provincie", "GEWEST", "isBeheerd", "geometry")
   vespaBoth <- rbind(pointsData[, keepColumns], nestenData[, keepColumns])
@@ -372,31 +374,26 @@ mapRegionsFacet <- function(managementData, shapeData, uiText = NULL,
 #' @param summaryData data.frame, as returned by \code{\link{createSummaryRegions}}
 #' @inheritParams mapRegionsServer 
 #' @inheritParams createSummaryRegions
-#' @param bronMap character vector, sources to be shown in the popup
+#' @param showBron boolean whether to print info on bron
 #' @return character vector with popup text for each row in \code{summaryData}
 #' 
 #' @author mvarewyck
 #' @importFrom xtable xtable
 #' @importFrom reshape2 melt dcast
 #' @export
-mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
+mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
   
   
   paste0("<h4>", summaryData$region, "</h4>",
     "<strong>", translate(uiText, "year")$title, "</strong>: ", year, "<br>",
     if (!is.null(unit)) 
       paste0("<strong>", translate(uiText, unit)$title, "</strong>: "), 
-    if (!is.null(bronMap)) {
-      lapply(split(summaryData, summaryData$region), function(iData) {
+    if (showBron) {
+        lapply(split(summaryData, summaryData$region), function(iData) {
             tmpData <- suppressWarnings(reshape2::melt(iData, id.vars = colnames(iData)[1:2]))
             tmpData$nest <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[1])
-            tmpData$isBeheerd <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) { 
-                if (length(x) > 1) {
-                  if (x[2] == "TRUE")
-                  "managed nest" else if (x[2] == "FALSE")
-                  "untreated nest"
-              } else NA
-              })
+            tmpData$isBeheerd <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[2])
+            
             tmpData <- tmpData[!is.na(tmpData$isBeheerd), ]
             formattedTable <- reshape2::dcast(tmpData[, c("nest", "isBeheerd", "value")], nest ~ isBeheerd, value.var = "value")
             formattedTable$nest[formattedTable$nest == "NA"] <- "unknown"
@@ -407,13 +404,13 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
             as.character(print(xtable::xtable(formattedTable), 
                 include.rownames = FALSE, type = "html", print.results = FALSE))
           })
-    } else {
-    if (!is.null(unit) && unit == "cpue") 
-        round(summaryData$effort, 2) else
-        round(summaryData$n, 2)
-    }
+      } else {
+        if (!is.null(unit) && unit == "cpue") 
+          round(summaryData$effort, 2) else
+          round(summaryData$n, 2)
+      }
   )
-  
+
 }
 
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
@@ -425,8 +422,9 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
 #' @inheritParams createSummaryRegions
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param occurrenceData data.table, as obtained by \code{loadTabularData(type = "occurrence")}
-#' @param sourceChoices character vector, choices for the data source;
-#' default value is NULL then no choices are shown
+#' @param filter reactive list with filters to be shown in the app;
+#' names should match a plotFunction in \code{uiText}; 
+#' values define the choices in \code{selectInput}
 #' @param facet boolean, if TRUE a static facet plot is created; if FALSE an
 #' interactive leaflet map is created
 #' 
@@ -441,7 +439,7 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
 #' @importFrom ggplot2 ggsave
 #' @export
 mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
-  sourceChoices = NULL, facet = FALSE, dashReport = NULL) {
+  filter = reactive(NULL), facet = FALSE, dashReport = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -548,14 +546,21 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           
         })
       
-      output$bronMap <- renderUI({
+      output$filters <- renderUI({
           
-          req(sourceChoices)
-          
-          selectInput(inputId = ns("bronMap"),
-            label = translate(uiText(), "source")$title,
-            choices = sourceChoices, selected = sourceChoices,
-            multiple = TRUE)
+          if (!is.null(filter()))
+            fixedRow(lapply(names(filter()), function(filterName) {
+                
+                choices <- filter()[[filterName]]
+                names(choices) <- translate(uiText(), choices)$title
+                
+                column(6, 
+                  selectInput(inputId = ns(filterName), 
+                    label = translate(uiText(), filterName)$title,
+                    choices = choices,
+                    multiple = TRUE, selected = filter()[[filterName]])
+                )
+              }))
           
         })
             
@@ -615,15 +620,19 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           
           req(inherits(df(), "data.frame"))
           
-          subData <- df()
+          filterData <- df()
           
-          if (!is.null(sourceChoices) && !is.null(input$bronMap))
-            subData <- subData[subData$type %in% input$bronMap, ]
+          # Other filters
+          if (!is.null(filter()))
+            for (iFilter in names(filter())) {
+              if (!is.null(input[[iFilter]]))
+                filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
+            }
           
-          subData
+          filterData
           
         })
-      
+           
       
       summaryData <- reactive({
           
@@ -643,7 +652,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
                 selectedYear) else
                 selectedYear, 
             unit = if (is.null(input$unit)) "absolute" else input$unit,
-            groupingVariable = if (!is.null(sourceChoices)) c("nest_type", "isBeheerd")
+            groupingVariable = if (!is.null(filter())) c("nest_type", "isBeheerd")
           )
           
         })
@@ -713,7 +722,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           validate(need(nrow(req(summaryData())) > 0, noData()))
           
           mapPopup(summaryData = summaryData(), uiText = uiText(), year = input$year,
-            unit = input$unit, bronMap = input$bronMap)
+            unit = input$unit, showBron = !is.null(filter()))
                               
         })
       
@@ -1111,11 +1120,11 @@ mapRegionsUI <- function(id, plotDetails = NULL, showUnit = TRUE, facet = FALSE)
         if (!facet)
           column(6, uiOutput(ns("period")))
       ),
+      uiOutput(ns("filters")),
       fixedRow(
         column(6, uiOutput(ns("legend"))),
         if (showUnit)
           column(6, uiOutput(ns("unit"))),
-        column(6, uiOutput(ns("bronMap")))
       ),
       if ("region" %in% plotDetails)
         checkboxInput(inputId = ns("combine"), 

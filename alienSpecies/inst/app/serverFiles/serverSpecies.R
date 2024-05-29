@@ -422,7 +422,13 @@ observe({
         df = reactive(combinedManaged),
         occurrenceData = NULL,
         shapeData = allShapes,
-        sourceChoices = c("individual", "nest"),
+        filter = reactive({
+            filterCandidates <- c("isBeheerd", "nest_type")
+            filters <- filterCandidates[filterCandidates %in% colnames(combinedManaged)]
+            sapply(filters, function(iFilter)
+                sort(unique(combinedManaged[[iFilter]])),
+              simplify = FALSE)
+          }),
         dashReport = dashReport
       )
       
