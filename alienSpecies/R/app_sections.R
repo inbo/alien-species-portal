@@ -112,12 +112,20 @@ versionServer <- function(id, uiText) {
                     translate(uiText(), "unknown")$title else 
                     tags$a(id = "gitVersion", 
                       href = paste0("https://github.com/inbo/alien-species-portal/commit/",hashCode), 
-                      target = "_blank", hashCode)
+                      target = "_blank", hashCode),
+                tags$br(),
+                actionLink(inputId = session$ns("showInfo"), label = "R Session Info"),
+                conditionalPanel("input.showInfo % 2 == 1", ns = session$ns,
+                  verbatimTextOutput(session$ns("sessionInfo"))
+                )
               ), 
               title = translate(uiText(), "version")$title,
-              easyClose = TRUE
+              size = "l", easyClose = TRUE
             ))
           
         })
+      
+      output$sessionInfo <- renderPrint(sessionInfo())
+      
     })
 }
