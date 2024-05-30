@@ -217,3 +217,45 @@ versionServer <- function(id, uiText) {
       
     })
 }
+
+
+#' Shiny module for including html file - server side
+#' @param id character, unique identifier
+#' @param species reactive object, taxonkey for the selected species
+#' @return no return value
+#' 
+#' @author mvarewyck
+#' @importFrom htmltools includeHTML
+#' @export
+htmlSectionServer <- function(id, species) {
+  
+  moduleServer(id, function(input, output, session) {
+      
+      output$addLinks <- renderUI({
+          
+          dataFile <- paste0("links_", species(), ".html")
+          
+          if (file.exists(file.path("www", dataFile)))
+            includeHTML(file.path("www", dataFile))
+          
+        })
+      
+    })
+}
+
+
+#' Shiny module for including html file - UI side
+#' @template moduleUI 
+#' 
+#' @author mvarewyck
+#' @export
+htmlSectionUI <- function(id) {
+  
+  ns <- NS(id)
+  
+  tags$div(style = "margin-top: 20px;",
+    uiOutput(ns("addLinks"))
+  )
+  
+}
+

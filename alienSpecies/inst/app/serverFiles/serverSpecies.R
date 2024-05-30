@@ -652,6 +652,15 @@ observe({
   })
 
 
+observe({
+    
+    req(input$species_choice)
+    
+    htmlSectionServer(id = "links", species = reactive(input$species_choice))
+    
+  })
+
+
 
 ## SUBMIT & DOWNLOAD report ##
 species_createReport <- footerSectionServer(id = "species", uiText = results$translations)
