@@ -162,27 +162,6 @@ test_that("Trend for Bullfrogs", {
   })
 
 
-test_that("Map invasion", {
-    
-    currentYear <- 2023
-    
-    summaryData <- createSummaryRegions(
-      data = managementData,
-      shapeData = allShapes,
-      regionLevel = "provinces",
-      year = list(
-        c(currentYear-8, currentYear-5), 
-        c(currentYear-4, currentYear-1),
-        currentYear)
-    )
-    
-    myPlot <- mapRegionsFacet(managementData = summaryData,
-      shapeData = allShapes, regionLevel = "provinces")
-    
-    expect_s3_class(myPlot, "ggplot")
-    
-  })
-
 
 ## Aziatische hoornaar ##
 ## Vespa velutina

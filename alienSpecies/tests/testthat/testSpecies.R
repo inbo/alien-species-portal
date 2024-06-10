@@ -84,6 +84,30 @@ test_that("Occurrence plots", {
       uiText = loadMetaData(type = "ui"))$plot
         
   })
+    
+  
+  test_that("Map invasion", {
+      
+      myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
+      currentYear <- 2023
+      
+      summaryData <- createSummaryRegions(
+        data = taxData[taxonKey %in% myKey, ],
+        shapeData = allShapes,
+        regionLevel = "provinces",
+        year = list(
+          c(currentYear-8, currentYear-5), 
+          c(currentYear-4, currentYear-1),
+          currentYear)
+      )
+      
+      myPlot <- mapRegionsFacet(managementData = summaryData,
+        shapeData = allShapes, regionLevel = "provinces")
+      
+      expect_s3_class(myPlot, "ggplot")
+      
+    })
+  
 
 
 
