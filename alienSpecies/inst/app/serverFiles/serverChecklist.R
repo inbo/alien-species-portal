@@ -64,7 +64,7 @@ observeEvent(exoten_triggerMore(), {
 
 observeEvent(input$tabs, {
     
-    if (input$tabs == "global_indicators")
+    if (input$tabs == "checklist_indicators")
       updateSelectizeInput(session, inputId = "exoten_taxa", choices = taxaChoices,
         selected = urlSearch()$taxa,
         server = TRUE,

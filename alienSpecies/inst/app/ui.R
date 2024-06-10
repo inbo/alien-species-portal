@@ -53,7 +53,7 @@ shinyUI(
           # Main content
           tabPanel(title = uiOutput("start_title"), value = "start",
             uiOutput("start_page")),
-          tabPanel(title = uiOutput("checklist_title"), value = "global_indicators",
+          tabPanel(title = uiOutput("checklist_title"), value = "checklist_indicators",
             uiOutput("indicators_content")),
           tabPanel(title = uiOutput("species_title"), value = "species_information",
             uiOutput("species_content")),

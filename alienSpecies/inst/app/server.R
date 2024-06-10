@@ -169,13 +169,13 @@ function(input, output, session) {
       req(!input$tabs %in% results$renderedTabs)
       
       switch(input$tabs,
-        global_indicators = {
+        checklist_indicators = {
           
           output$indicators_content <- renderUI({
               source(file.path("uiFiles", "uiChecklist.R"), local = TRUE)$value
             })
           source(file.path("serverFiles", "serverChecklist.R"), local = TRUE)
-          results$renderedTabs <- c(results$renderedTabs, "global_indicators")
+          results$renderedTabs <- c(results$renderedTabs, "checklist_indicators")
           
         },
         species_information = {

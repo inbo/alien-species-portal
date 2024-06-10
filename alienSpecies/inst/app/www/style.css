@@ -80,7 +80,7 @@ a, a:visited, a:hover, a:active, a:focus {
 }
 
 
-#global_indicatorsFoto {
+#checklist_indicatorsFoto {
   width: 360px; 
   height: 236px;
   background-image: url("global_indicators.png");

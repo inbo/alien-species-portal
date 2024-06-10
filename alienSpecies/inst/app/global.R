@@ -18,7 +18,7 @@ if (!exists("doDebug"))
 ### Data
 ### -----------
 
-tabChoices <- c("start", "global_indicators", "species_information", 
+tabChoices <- c("start", "checklist_indicators", "species_information", 
   "early_warning", "management")[1:4]
 
 if (!doDebug | !exists("exotenData"))
