@@ -99,8 +99,8 @@ versionServer <- function(id, uiText) {
       observeEvent(input$version, {
           
 #          # For internal use
-#          Sys.setenv("IMAGE_TAG" = system("git rev-parse HEAD", intern = TRUE))
-          hashCode <- Sys.getenv("IMAGE_TAG")
+#          Sys.setenv("GIT_SHA" = system("git rev-parse HEAD", intern = TRUE))
+          hashCode <- Sys.getenv("GIT_SHA")
           
           
           showModal(
