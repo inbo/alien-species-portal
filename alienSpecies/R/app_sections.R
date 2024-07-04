@@ -227,16 +227,17 @@ versionServer <- function(id, uiText) {
 #' @author mvarewyck
 #' @importFrom htmltools includeHTML
 #' @export
-htmlSectionServer <- function(id, species) {
+htmlSectionServer <- function(id, species, language) {
   
   moduleServer(id, function(input, output, session) {
       
       output$addLinks <- renderUI({
           
-          dataFile <- paste0("links_", species(), ".html")
+          dataPath <- "https://raw.githubusercontent.com/inbo/aspbo/uat/HTML_pages/HTML"
+          dataFile <- file.path(dataPath, paste0(species(), "_", language(), ".html"))
           
-          if (file.exists(file.path("www", dataFile)))
-            includeHTML(file.path("www", dataFile))
+          if (httr::http_status(httr::GET(dataFile))$category != "Client error")
+            includeHTML(dataFile)
           
         })
       

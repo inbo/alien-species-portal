@@ -610,7 +610,7 @@ observe({
     # Conditionally enable 'More'
     shinyjs::toggleState(
       selector = '#species_tabs a[data-value="species_more"', 
-      condition = input$species_choice %in% keysRiskMap
+      condition = input$species_choice %in% c(keysRiskMap, keysLinks)
     )
     # Risk maps
     shinyjs::toggleState(
@@ -624,7 +624,7 @@ observe({
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_links"', 
-      condition = FALSE
+      condition = input$species_choice %in% keysLinks
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_risk_management"', 
@@ -656,7 +656,8 @@ observe({
     
     req(input$species_choice)
     
-    htmlSectionServer(id = "links", species = reactive(input$species_choice))
+    htmlSectionServer(id = "links", species = reactive(input$species_choice),
+      language = reactive(attr(results$translations, "language")))
     
   })
 
