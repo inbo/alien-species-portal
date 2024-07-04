@@ -72,3 +72,7 @@ request <- httr::GET("https://api.github.com/repos/trias-project/risk-maps/conte
 keysRiskMap <- unique(sapply(httr::content(request), function(x) 
       strsplit(gsub("public/geotiffs/be_", "", x$path), split = "_")[[1]][1]))
 
+# Available species for links (Species > More > Links)
+request <- httr::GET("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML")
+keysLinks <- unique(sapply(httr::content(request), function(x) 
+      strsplit(gsub("HTML_pages/HTML/", "", x$path), split = "_")[[1]][1]))
