@@ -225,7 +225,9 @@ htmlSectionServer <- function(id, species, language) {
       
       output$addLinks <- renderUI({
           
-          dataPath <- "https://raw.githubusercontent.com/inbo/aspbo/uat/HTML_pages/HTML"
+          dataPath <- file.path("https://raw.githubusercontent.com/inbo/aspbo",
+            if (Sys.getenv("R_CONFIG_ACTIVE") == "production") "main" else "uat",
+            "HTML_pages/HTML")
           dataFile <- file.path(dataPath, paste0(species(), "_", language(), ".html"))
           
           if (httr::http_status(httr::GET(dataFile))$category != "Client error")
