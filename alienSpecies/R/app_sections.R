@@ -214,12 +214,13 @@ versionServer <- function(id, uiText) {
 #' Shiny module for including html file - server side
 #' @param id character, unique identifier
 #' @param species reactive object, taxonkey for the selected species
+#' @param url character, url to be displayed
 #' @return no return value
 #' 
 #' @author mvarewyck
 #' @importFrom htmltools includeHTML
 #' @export
-htmlSectionServer <- function(id, species, language) {
+htmlSectionServer <- function(id, species, language, url) {
   
   moduleServer(id, function(input, output, session) {
       
@@ -230,8 +231,12 @@ htmlSectionServer <- function(id, species, language) {
             "HTML_pages/HTML")
           dataFile <- file.path(dataPath, paste0(species(), "_", language(), ".html"))
           
-          if (httr::http_status(httr::GET(dataFile))$category != "Client error")
-            includeHTML(dataFile)
+          tagList(
+            if (!is.na(url))
+              tags$a(href = url, target = "_blank", url),
+            if (httr::http_status(httr::GET(dataFile))$category != "Client error")
+              includeHTML(dataFile)
+          )
           
         })
       

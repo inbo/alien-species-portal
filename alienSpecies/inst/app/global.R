@@ -76,3 +76,6 @@ keysRiskMap <- unique(sapply(httr::content(request), function(x)
 request <- httr::GET("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML")
 keysLinks <- unique(sapply(httr::content(request), function(x) 
       strsplit(gsub("HTML_pages/HTML/", "", x$path), split = "_")[[1]][1]))
+
+# Available species for Harmonia+ DB (Species > More > Risk assessment)
+harmoniaData <- loadMetaData(type = "harmonia")

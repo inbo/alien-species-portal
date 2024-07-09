@@ -591,7 +591,7 @@ observe({
     # Conditionally enable 'More'
     shinyjs::toggleState(
       selector = '#species_tabs a[data-value="species_more"', 
-      condition = input$species_choice %in% c(keysRiskMap, keysLinks)
+      condition = input$species_choice %in% c(keysRiskMap, keysLinks, harmoniaData$gbif_taxonkey)
     )
     # Risk maps
     shinyjs::toggleState(
@@ -605,7 +605,7 @@ observe({
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_links"', 
-      condition = input$species_choice %in% keysLinks
+      condition = input$species_choice %in% c(keysLinks, harmoniaData$gbif_taxonkey)
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_risk_management"', 
@@ -618,7 +618,7 @@ observe({
     
   })
 
-
+# Risk maps
 observe({
     
     req(input$species_choice)
@@ -633,15 +633,26 @@ observe({
   })
 
 
+# Links
 observe({
     
     req(input$species_choice)
     
     htmlSectionServer(id = "links", species = reactive(input$species_choice),
-      language = reactive(attr(results$translations, "language")))
+      language = reactive(attr(results$translations, "language")),
+      url = harmoniaData$harmonia_url[match(input$species_choice, harmoniaData$gbif_taxonkey)])
     
   })
 
+
+## Risk management
+#output$species_riskManagement <- renderUI({
+#    
+#    req(input$species_choice)
+#    # Refused to frame 'https://ias.biodiversity.be/' because an ancestor violates the following Content Security Policy directive: "frame-ancestors 'self'"
+#    tags$iframe(src = harmoniaData$harmonia_url[match(input$species_choice, harmoniaData$gbif_taxonkey)])
+#    
+#  })
 
 
 ## SUBMIT & DOWNLOAD report ##
