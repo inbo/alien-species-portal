@@ -172,11 +172,19 @@ createTimeseries <- function(
   # pa_cobs: presence of class in protected areas (1 = yes, 0 = no)
   
   # Merge with shapeData for region indicators
-  regions <- c("flanders", "wallonia", "brussels")
-  timeseries <- merge(df_ts, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
-                      by.x = "eea_cell_code", by.y = "CELLCODE")
+  df_ts <- as.data.table(df_ts)
+  setkey(df_ts, eea_cell_code)
   
-  timeseries <- as.data.table(timeseries)
+  regions <- c("flanders", "wallonia", "brussels")
+  simpleShape <- as.data.table(sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))])
+  setnames(simpleShape, "CELLCODE", "eea_cell_code")
+  setkey(simpleShape, eea_cell_code)
+  # Avoid extra rows when merging for cells without occupancy
+  simpleShape <- simpleShape[simpleShape$eea_cell_code %in% unique(df_ts$eea_cell_code), ]
+  
+  timeseries <- df_ts[simpleShape, on = "eea_cell_code"]
+  if (nrow(timeseries) != nrow(df_ts))
+    warning("Difference in number of rows after enriching data: ", nrow(timeseries) - nrow(df_ts))
   setkey(timeseries, taxonKey)
   
   aws.s3::s3write_using(timeseries, 
