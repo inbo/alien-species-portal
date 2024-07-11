@@ -5,7 +5,18 @@
 
 
 ## Load data
-allShapes <- loadShapeData("grid.RData")
+allShapes <- allShapes <- c(
+  # Grid data
+  #readShapeData(),
+  loadShapeData("grid.RData"),
+  ## be_1km and be_10km data have neither is nor GEWEST attribute to indicate region.
+  #loadShapeData("occurrenceCube.RData"),
+  # gemeentes & provinces
+  "provinces" = list(loadShapeData("provinces.RData")),
+  "communes" = list(loadShapeData("communes.RData"))
+#readShapeData(extension = ".geojson")
+)
+
 taxData <- loadTabularData(type = "occurrence")
 ## Settings
 # many versus few occurrences
@@ -86,15 +97,33 @@ test_that("Occurrence plots", {
   })
     
   
-  test_that("Map invasion", {
+test_that("Map invasion", {
+    
+    # TODO temporary fix until data is created with alienSpecies >= v1.0.0
+    if (TRUE) {
       
-      myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
-      currentYear <- 2023
+      readS3(
+        file = "be_alientaxa_cube_processed.RData", 
+        bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
+      )
+      taxData <- rawData[, c("year", "cell_code1", "taxonKey", "n",
+          "isFlanders", "isWallonia", "isBrussels", "gemeente", "provincie", "gewest",           
+          "scientificName", "classKey", "cell_code10")]
+      
+      setnames(taxData, "gemeente", "NAAM")
+      setnames(taxData, "gewest", "GEWEST")
+      
+    }
+    
+    myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
+    currentYear <- 2023
+    
+    for (regionLevel in c("communes", "provinces", "cell_code1", "cell_code10")) {
       
       summaryData <- createSummaryRegions(
         data = taxData[taxonKey %in% myKey, ],
         shapeData = allShapes,
-        regionLevel = "provinces",
+        regionLevel = regionLevel,
         year = list(
           c(currentYear-8, currentYear-5), 
           c(currentYear-4, currentYear-1),
@@ -102,11 +131,14 @@ test_that("Occurrence plots", {
       )
       
       myPlot <- mapRegionsFacet(managementData = summaryData,
-        shapeData = allShapes, regionLevel = "provinces")
+        shapeData = allShapes, regionLevel = regionLevel, addGlobe = TRUE)
       
       expect_s3_class(myPlot, "ggplot")
+      # ggsave(filename = file.path(tempdir(), paste0("example_", regionLevel, ".png")), plot = myPlot)
       
-    })
+    }
+    
+  })
   
 
 ## Note: fitting GAM model only works when loading the R-package using library(alienSpecies)

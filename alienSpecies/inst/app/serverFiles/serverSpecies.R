@@ -218,6 +218,33 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
   dashReport = dashReport
 )
 
+# TODO tmp fix for reading latest data
+if (TRUE) {
+  readS3(
+    file = "be_alientaxa_cube_processed.RData", 
+    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
+  )
+  facet_df <- rawData[, c("year", "cell_code1", "taxonKey", "n",
+      "isFlanders", "isWallonia", "isBrussels", "gemeente", "provincie", "gewest",           
+      "scientificName", "classKey", "cell_code10")]
+  setnames(facet_df, "gemeente", "NAAM")
+  setnames(facet_df, "gewest", "GEWEST")
+}
+
+## Invasion history
+dashReport <- mapRegionsServer(id = "indicators_facet",
+  uiText = reactive(results$translations),
+  species = taxonName,
+  gewest = reactive(req(input$species_gewest)),
+  regionLevels = c("communes", "provinces", "cell_code1", "cell_code10"),
+  df = reactive({
+      facet_df[taxonKey %in% input$species_choice, ]
+    }),
+  occurrenceData = NULL,
+  shapeData = allShapes,
+  facet = TRUE,
+  dashReport = dashReport
+)
 
 ### Reporting
 ### -----------------
@@ -426,18 +453,6 @@ observe({
         dashReport = dashReport
       )
       
-      # Facet invasion
-      dashReport <- mapRegionsServer(id = "management2_facet",
-        uiText = reactive(results$translations),
-        species = taxonName,
-        gewest = reactive(req(input$species_gewest)),
-        df = reactive(combinedManaged),
-        occurrenceData = NULL,
-        shapeData = allShapes,
-        facet = TRUE,
-        dashReport = dashReport
-      )
-      
       # Aantal lente nesten
       dashReport <- plotTriasServer(
         id = "management2_lente",
@@ -506,18 +521,6 @@ observe({
         dashReport = dashReport
       )
       
-      # Facet invasion
-      dashReport <- mapRegionsServer(id = "management3_facet",
-        uiText = reactive(results$translations),
-        species = taxonName,
-        gewest = reactive(req(input$species_gewest)),
-        df = results$species_managementData,
-        occurrenceData = NULL,
-        shapeData = allShapes,
-        facet = TRUE,
-        dashReport = dashReport
-      )
-      
       dashReport <- countYearGroupServer(
         id = "management3", 
         uiText = reactive(results$translations), 
@@ -559,7 +562,6 @@ output$species_managementContent <- renderUI({
             ),
         mapHeatUI(id = "management2_observed"),
         mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
-        mapRegionsUI(id = "management2_facet", showUnit = FALSE, facet = TRUE),
         plotTriasUI(id = "management2_lente"),
         countNestenUI(id = "management2_province"),
         plotTriasUI(id = "management2_provinceTable", outputType = "table"),
@@ -570,7 +572,6 @@ output$species_managementContent <- renderUI({
       
       tagList(
         mapRegionsUI(id = "management3", plotDetails = c("flanders", "region")),
-        mapRegionsUI(id = "management3_facet", showUnit = FALSE, facet = TRUE),
         countYearGroupUI(id = "management3", showPlotDefault = TRUE)
       )
       

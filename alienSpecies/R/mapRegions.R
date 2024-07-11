@@ -48,7 +48,8 @@ combineVespaData <- function(pointsData, nestenData, nestenBeheerdData) {
 #' @param data data.table with management data
 #' @param shapeData list, each object is \code{SpatialPolygonsDataFrame}. 
 #' Needed for the \code{regionLevel} specified
-#' @param regionLevel character, should be one of \code{c("communes", "provinces")}
+#' @param regionLevel character, should be one of 
+#' \code{c("communes", "provinces", "gewest", "cell_code1", "cell_code10")}
 #' @param year integer, year of interest
 #' @param unit character, should be one of \code{c("cpue", "absolute")},
 #' catch per unit of effort or absolute count
@@ -63,7 +64,7 @@ combineVespaData <- function(pointsData, nestenData, nestenBeheerdData) {
 #' @importFrom stats as.formula
 #' @export
 createSummaryRegions <- function(data, shapeData, 
-  regionLevel = c("communes", "provinces", "gewest"),
+  regionLevel = c("communes", "provinces", "gewest", "cell_code1", "cell_code10"),
   year = NULL, unit = c("absolute", "cpue", "difference"), groupingVariable = NULL) {
   
   # For R CMD check
@@ -104,7 +105,8 @@ createSummaryRegions <- function(data, shapeData,
   regionVariable <- switch(regionLevel,
     communes = "NAAM",
     provinces = "provincie",
-    gewest = "GEWEST"
+    gewest = "GEWEST",
+    regionLevel
   )
   
   if (!regionVariable %in% colnames(data))
@@ -172,15 +174,18 @@ createSummaryRegions <- function(data, shapeData,
     
   }
   
-  # Add names & times with 0 observations
-  fullData <- cbind(expand.grid(
-      year = myYear,
-      region = if (regionLevel == "flanders") 
-          "flanders" else if (regionLevel == "gewest")
-          unique(shapeData$communes$GEWEST) else
-          unique(shapeData[[regionLevel]]$NAAM)))
-  allData <- merge(summaryData, fullData, all.x = TRUE, all.y = TRUE)
-  allData$outcome[is.na(allData$outcome)] <- 0
+  # Add names & times with 0 observations -> not for UTM
+  if (regionLevel %in% c("gewest", "provinces", "communes")) {
+    fullData <- cbind(expand.grid(
+        year = myYear,
+        region = if (regionLevel == "gewest")
+            unique(shapeData$communes$GEWEST) else
+            unique(shapeData[[regionLevel]]$NAAM)
+      ))
+    allData <- merge(summaryData, fullData, all.x = TRUE, all.y = TRUE)
+    allData$outcome[is.na(allData$outcome)] <- 0
+  } else allData <- summaryData
+
   
   attr(allData, "unit") <- unit
   
@@ -312,14 +317,23 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData,
 #' @importFrom ggspatial annotation_map_tile
 #' @export
 mapRegionsFacet <- function(managementData, shapeData, uiText = NULL,
-  regionLevel = c("communes", "provinces"), palette = "YlOrBr",
-  legend = "right", addGlobe = FALSE) {
+  regionLevel = c("communes", "provinces", "cell_code1", "cell_code10"), 
+  palette = "YlOrBr", legend = "right", addGlobe = FALSE) {
   
   # For R CMD check
   group <- NULL
   
-  plotData <- merge(shapeData[[regionLevel]], managementData,
-    by.x = "NAAM", by.y = "region", all.x = TRUE)
+  subShape <- if (regionLevel %in% c("communes", "provinces"))
+      shapeData[[regionLevel]] else
+      shapeData[[paste0("utm", gsub("cell_code", "", regionLevel), "_bel_with_regions")]]
+  
+  plotData <- merge(subShape, managementData,
+    by.x = if (regionLevel %in% c("communes", "provinces")) "NAAM" else "CELLCODE", 
+    by.y = "region", 
+    all.x = if (regionLevel %in% c("communes", "provinces")) TRUE else FALSE)
+  
+  if (nrow(plotData) == 0)
+    return(NULL)
   
   # Facet plot
   myPlot <- ggplot() + 
@@ -343,11 +357,15 @@ mapRegionsFacet <- function(managementData, shapeData, uiText = NULL,
       geom_sf(data = plotData, aes(fill = group), size = 0.5) +
       labs(caption = "\u00a9 OpenStreetMap contributors")
   
-  if (regionLevel == "communes")
+  if (regionLevel == "communes") {
     # Add province borders
     myPlot <- myPlot +
       geom_sf(data = shapeData$provinces, fill = NA, color = "black", size = 1)
-  
+  } else if (regionLevel %in% c("cell_code1", "cell_code10")) {
+    # Add gewest borders
+    myPlot <- myPlot +
+      geom_sf(data = shapeData$gewestbel, fill = NA, color = "black", size = 1)
+  }
   
   myPlot
   
@@ -738,6 +756,8 @@ createBinsServer <- function(id, uiText, data) {
 #' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @inheritParams createSummaryRegions
+#' @param regionLevels character vector, lists options for regionlevel
+#' choices
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param occurrenceData data.table, as obtained by \code{loadTabularData(type = "occurrence")}
 #' @param sourceChoices character vector, choices for the data source;
@@ -755,8 +775,10 @@ createBinsServer <- function(id, uiText, data) {
 #' @importFrom sf st_drop_geometry
 #' @importFrom ggplot2 ggsave
 #' @export
-mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
-  sourceChoices = NULL, facet = FALSE, dashReport = NULL) {
+mapRegionsServer <- function(id, uiText, species, gewest, 
+  regionLevels = c("communes", "provinces"), df, 
+  occurrenceData, shapeData, sourceChoices = NULL, facet = FALSE, 
+  dashReport = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -891,7 +913,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       
       output$regionLevel <- renderUI({
           
-          choices <- c("communes", "provinces")
+          choices <- regionLevels
           names(choices) <- translate(uiText(), choices)$title
           
           selectInput(inputId = ns("regionLevel"), label = translate(uiText(), "regionLevel")$title,
