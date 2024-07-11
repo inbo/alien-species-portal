@@ -36,7 +36,8 @@ tagList(
         value = "species_indicators",
         tags$div(style = "margin-top: 10px;",
           plotTriasUI(id = "indicators_gamObservations", showPlotDefault = TRUE),
-          plotTriasUI(id = "indicators_gamOccupancy", showPlotDefault = TRUE)
+          plotTriasUI(id = "indicators_gamOccupancy", showPlotDefault = TRUE),
+          mapRegionsUI(id = "indicators_facet", showUnit = FALSE, facet = TRUE)
         )
       ),
       
