@@ -59,7 +59,8 @@ createSummaryNesten <- function(data,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data) {
+countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
+  dashReport = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -72,14 +73,14 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data) {
       
       output$titleCountNesten <- renderUI(h3(HTML(tmpTranslation()$title)))
       
-      output$descriptionCountNesten <- renderUI({
+      description <- reactive({
           
-          tmpDescription <- tmpTranslation()$description
-          tmpDescription <- gsub("\\{\\{maxDate\\}\\}", format(maxDate(), "%d/%m/%Y"), tmpDescription)
-          
-          HTML(tmpDescription)
+          decodeText(text = tmpTranslation()$description,
+            params = list(maxDate = format(maxDate(), "%d/%m/%Y")))
           
         })
+      
+      output$descriptionCountNesten <- renderUI(HTML(description()))
       
       ## Periode (grafiek)
       output$period <- renderUI({
@@ -148,6 +149,7 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data) {
           # Temporary fix
           # https://github.com/inbo/alien-species-portal/issues/27#issuecomment-1801937223
           nestChoices <- nestChoices[!nestChoices %in% c('NA', 'NULL')]
+          req(length(nestChoices) > 0)
           names(nestChoices) <- sapply(nestChoices, function(x) 
               translate(uiText(), x)$title)
           
@@ -164,12 +166,36 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data) {
           
         })
       
-      plotModuleServer(id = "countNesten",
+      plotResult <- plotModuleServer(id = "countNesten",
         plotFunction = "trendYearRegion",
         data = reactive(plotData()[plotData()$region %in% req(input$region), ]),
         uiText = uiText,
         combine = reactive(input$combine)
       )
+      
+      ## Report Objects ##
+      ## -------------- ##
+      
+      observe({
+          
+          # Update when any of these change
+          plotResult()
+          input
+          
+          # Return the static values
+          dashReport[[ns("countNesten")]] <- c(
+            list(
+              plot = isolate(plotResult()$plot),
+              title = isolate(tmpTranslation()$title),
+              description = isolate(description())
+            ),
+            isolate(reactiveValuesToList(input))
+          )
+          
+        })
+      
+      
+      return(dashReport)
       
     })
   

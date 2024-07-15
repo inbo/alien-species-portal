@@ -23,27 +23,34 @@ loadShapeData <- function(file,
 #' 
 #' Data is preprocessed by createTabularData()
 #' @inheritParams createTabularData
-#' @return data.frame, loaded data
+#' @return data.frame or data.table, loaded data; except for \code{code == 'timeseries'}
+#' it loads pointer to the data of which a subset can be loaded using 
+#' \code{dplyr::collect()}
 #' @author mvarewyck
+#' @importFrom arrow read_parquet open_dataset
+#' @importFrom data.table as.data.table
 #' @export
 
 loadTabularData <- function(
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
-    type = c("indicators", "unionlist", "occurrence")) {
+    type = c("indicators", "unionlist", "occurrence", "timeseries", "taxachoices")) {
   
   type <- match.arg(type)
   
-  # For R CMD check
-  rawData <- NULL  
-  
   dataFile <-  switch(type,
-         "indicators" = "data_input_checklist_indicators_processed.RData",
-         "unionlist" = "eu_concern_species_processed.RData",
-         "occurrence" = "be_alientaxa_cube_processed.RData"
+         "indicators" = "data_input_checklist_indicators_processed.parquet",
+         "unionlist" = "eu_concern_species_processed.parquet",
+         "occurrence" = "be_alientaxa_cube_processed.parquet",
+         "timeseries" = "full_timeseries.parquet",
+         "taxachoices" = "taxachoices_processed.parquet"
   )
   
-  readS3(file = dataFile, bucket = bucket, envir = environment())
+  rawData <- if (type == "timeseries")
+    open_dataset(file.path("s3:/", bucket, dataFile)) else
+    read_parquet(file = file.path("s3:/", bucket, dataFile))
   
+  if (type == "indicators")
+    attr(rawData, "habitats") <- c("marine", "freshwater", "terrestrial")
   
   return(rawData)
   
@@ -58,6 +65,8 @@ loadTabularData <- function(
 #' should be one of \code{c("ui","keys")}
 #' @param language character, which language data sheet should be loaded;
 #' should be one of \code{c("nl", "fr", "en")}
+#' @param local boolean, whether to use local translation file in
+#' \code{system.file("extdata", "translations.csv", package = "alienSpecies")}
 #' @return data.frame
 #' 
 #' @author mvarewyck
@@ -65,33 +74,51 @@ loadTabularData <- function(
 #' @export
 
 loadMetaData <- function(type = c("ui", "keys"),
-  #dataDir = system.file("extdata", package = "alienSpecies"), 
   bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
-  language = c("nl", "fr", "en")) {
+  language = c("nl", "fr", "en"),
+  local = FALSE) {
   
   type <- match.arg(type)
   language <- match.arg(language)
-  # 
-  # allData <- read.csv(file.path(dataDir, switch(type, 
-  #       ui = "translations.csv",
-  #       keys = "keys.csv"
-  #     )), sep = if (type == "ui") ";" else ",", 
-  #   encoding = "UTF-8") 
-  # 
- fileName <- switch(type, 
-         ui = "translations.csv",
-         keys = "keys.csv"
+   
+  fileNames <- switch(type, 
+    ui = paste0("translations", c("", "_simple", "_regions")),
+    keys = "keys"
   )
   
- allData <- readS3(FUN = read.csv,  sep = if (type == "ui") ";" else ",",encoding = "UTF-8", 
- file = fileName)
+  allData <- sapply(fileNames, function(iFile) { 
+      iFile <- paste0(iFile, ".csv")
+      tryCatch({
+          if (local)
+            read.csv(system.file("extdata", iFile, package = "alienSpecies"),
+              sep = if (type == "ui") ";" else ",", encoding = "UTF-8") else
+            readS3(FUN = read.csv, sep = if (type == "ui") ";" else ",", encoding = "UTF-8", 
+              file = iFile)
+        }, error = function(err) NULL)
+    }, simplify = FALSE)
+  
+
   
   filterData <- switch(type, 
     ui = {
       
+      allData <- allData[!sapply(allData, is.null)]
+      
+      # Fill out missing regions - nl always filled out
+      if ("translations_regions" %in% names(allData)) {
+        missingFr <- is.na(allData$translations_regions$title_fr)
+        missingEn <- is.na(allData$translations_regions$title_en)
+        allData$translations_regions$title_fr[missingFr] <- allData$translations_regions$title_nl[missingFr]
+        allData$translations_regions$title_en[missingEn] <- allData$translations_regions$title_nl[missingEn]
+      }
+      
+      # Merge all sources
+      allData <- Reduce(function(x, y) merge(x, y, all = TRUE), allData)
+      # Filter language
       uiText <- allData[, c("title_id", paste0(c("title_", "description_"), language))]
       colnames(uiText) <- c("id", "title", "description")
-      uiText <- uiText[uiText$id != "", ]
+      uiText <- uiText[!uiText$id %in% c(NA, ""), ]
+      uiText[is.na(uiText)] <- ""
       
       if (any(duplicated(uiText$id)))
         stop("Following translations occur multiple times, please clean the file: ",
@@ -100,7 +127,7 @@ loadMetaData <- function(type = c("ui", "keys"),
       uiText
       
     },
-    keys = allData
+    keys = allData$keys
   )
   
   if (type == "ui")
@@ -138,30 +165,25 @@ loadOccupancyData <- function() {
   
 }
 
-#' List Dutch names to replace English names for exoten
+#' List region names as can be recognized by the translation file
 #' 
-#' Will not return NA, but rather the original English name in case
+#' Will not return NA, but rather the original name in case
 #' no match could be found.
 #' 
 #' @param x character, what to transform
-#' @param type character, defines how to transform short to full names
 #' @return named character vector, names are the original values
 #' 
 #' @author eadriaensen
 #' @export
 #' 
-getDutchNames <- function(x, type = c("regio")) {
+getRegionNames <- function(x) {
   
-  type <- match.arg(type)
-  
-  new <- switch(type,
-    regio = c(
+  new <- c(
       "Belgi\u00EB" 	    = "Belgium",
-      "Brussels Hoofdstedelijk Gewest" 	= "Brussels-Capital Region",
-      "Vlaanderen" 	= "Flemish Region",
-      "Walloni\u00EB"	= "Walloon Region"
+      "brussels" 	= "Brussels-Capital Region",
+      "flanders" 	= "Flemish Region",
+      "wallonia"	= "Walloon Region"
     )
-  )
   
   toReturn <- names(new)
   names(toReturn) <- new
@@ -199,11 +221,24 @@ translate <- function(data = loadMetaData(type = "ui"), id) {
   if (all(is.na(id)))
     return(data)
   
+  
+  # Composite translations e.g. habitats
+  compositeIds <- grepl("|", id, fixed = TRUE)
+  if (any(compositeIds)) {
+    
+    newIds <- unique(id[compositeIds])
+    data <- rbind(data,
+      data.frame(id = newIds, t(as.data.frame(sapply(newIds, function(x)
+                apply(data[match(strsplit(x, split = "\\|")[[1]], data$id), c("title", "description")], 2, paste, collapse = "|")))))
+    )
+    
+  } 
+  
   # Helpfull during development to see which are missing
   # can be turned of in production
   if (!is.null(data) & !all(id %in% data$id)) {
     if (!all(is.na(id[!id %in% data$id])))
-      warning("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
+      message("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
   }
   
   data <- rbind(

@@ -1,0 +1,9 @@
+```{r eval = (tools::file_ext(params$plot) == "html")}
+webshot::webshot(url = params$plot, vwidth = 1200, vheight = 600, cliprect = "viewport")
+```
+
+```{r eval = (tools::file_ext(params$plot) == "png"), results = "asis"}
+knitr::include_graphics(params$plot)
+```
+
+

@@ -88,32 +88,77 @@ test_that("Occurrence plots", {
 
 
 test_that("Emergence status GAM - Observations", {
-
-    readS3(file = "full_timeseries.RData")
     
-    timeseries <- summarizeTimeSeries(
-      rawData = timeseries, 
+    ## Note: fitting GAM model only works when loading the R-package using library(alienSpecies)
+    ## When loading via devtools::load_all() there is a conflict with config::get()
+    ## which can be resolved by
+    ## library(config)
+    ## conflicted::conflict_prefer("get", "base", "config")
+
+    myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
+    
+    timeseries <- loadTabularData(type = "timeseries")
+    
+    subData <- summarizeTimeSeries(
+      timeseries = timeseries,
+      species = myKey,
       region = c("flanders", "brussels")
     )
-    
-    myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     
     correctBias <- c(TRUE, FALSE)[1]
     isProtected <- c(TRUE, FALSE)[2]
     
-    subData <- timeseries[taxonKey %in% myKey, ]
     subData <- subData[protected == isProtected, ]
     
     tmpResult <- plotTrias(triasFunction = "apply_gam", 
       df = subData,
       triasArgs = list(
         y_var = "obs",
-        eval_years = min(subData$year):max(subData$year),
-        taxon_key = myKey, name = allSpecies[2],
+        # not restricting the data?
+        eval_years = 2008,
+#        eval_years = min(subData$year):max(subData$year),
+        taxon_key = myKey, 
+        name = allSpecies[2],
+        type_indicator = "observations",
+        
         baseline_var = if (correctBias) "cobs",
         verbose = TRUE)
     )
  
+    expect_type(tmpResult, "list")
+    expect_s3_class(tmpResult$plot, "plotly")
+    expect_s3_class(tmpResult$data, "data.frame")
+    
+  })
+
+
+test_that("Emergence status GAM - Occupancy", {
+    
+    myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
+    
+    timeseries <- loadTabularData(type = "timeseries")
+    
+    subData <- summarizeTimeSeries(
+      timeseries = timeseries,
+      species = myKey,
+      region = c("flanders", "brussels")
+    )
+    
+    correctBias <- c(TRUE, FALSE)[2]
+    isProtected <- c(TRUE, FALSE)[2]
+    
+    subData <- subData[protected == isProtected, ]
+    
+    tmpResult <- plotTrias(triasFunction = "apply_gam", 
+      df = subData,
+      triasArgs = list(
+        y_var = "ncells",
+        eval_years = min(subData$year):max(subData$year),
+        taxon_key = myKey, name = allSpecies[2],
+        baseline_var = if (correctBias) "c_ncells",
+        verbose = TRUE)
+    )
+    
     expect_type(tmpResult, "list")
     expect_s3_class(tmpResult$plot, "plotly")
     expect_s3_class(tmpResult$data, "data.frame")

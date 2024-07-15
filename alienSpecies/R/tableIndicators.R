@@ -50,10 +50,12 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
     tableData <- merge(tableData, combinedData[[iName]], by = "key", all.x = TRUE)
   }
   
-  managementSpecies <- sapply(strsplit(list.files(system.file("extdata/management", package = "alienSpecies")), split = "\\."),
-    function(x) x[1])
-  managementSpecies <- gsub("_", " ", managementSpecies)
-  colorCode <- ifelse(tableData$species %in% managementSpecies, "green", "black")
+  expectedFiles <- gsub(" ", "_", tableData$species)
+  availableFiles <- aws.s3::get_bucket_df(
+    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")))$Key
+  
+  colorCode <- sapply(expectedFiles, function(iSpecies) if (any(grepl(iSpecies, availableFiles)))
+        "green" else "black")
   # Add unionlist info
   tableData$unionColor <- ifelse(tableData$nubKey %in% unionlistData$taxonKey, colorCode, NA)
   # Add occurrence info
@@ -107,7 +109,7 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
           
           # More column
           tableData$more <- paste0('
-              <div class="btn-group" role="group">
+              <div class="btn-group" style="display:inline-flex" role="group">
               ',
             # Button to union
             ifelse(!is.na(tableData$unionColor), 

@@ -11,12 +11,12 @@
     --ct-bg: #fff;
     --ct-btn-hover: #e8e8e8;
     --ct-btn-active: #ddd;
-    --ct-btn-color: #555;
-    --ct-border-color: #e1e1e1;
-    --ct-border-radius: 5px;
+    --ct-btn-color: #ccc;
+    --ct-border-color: #ccc;
+    --ct-border-radius: 4px;
     --ct-tree-hover: #efefef;
     --ct-selection: #418EFF;
-    --ct-padding: 8px;
+    --ct-padding: 12px;
 }
 
 
@@ -133,6 +133,7 @@ span.comboTreeItemTitle{
     width: 100%;
     box-sizing: border-box;
     padding-right: 24px;
+    height: 34px;
 }
 .comboTreeInputBox:focus {
     border: 1px solid var(--ct-selection);

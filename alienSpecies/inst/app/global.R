@@ -8,6 +8,8 @@ library(shiny)
 
 `%<>%` <- magrittr::`%<>%`
 
+# overwrite config::get as default
+get <- base::get
 
 if (!exists("doDebug"))
   doDebug <- FALSE
@@ -16,7 +18,7 @@ if (!exists("doDebug"))
 ### Data
 ### -----------
 
-tabChoices <- c("start", "global_indicators", "species_information", 
+tabChoices <- c("start", "checklist_indicators", "species_information", 
   "early_warning", "management")[1:4]
 
 if (!doDebug | !exists("exotenData"))
@@ -25,19 +27,19 @@ if (!doDebug | !exists("unionlistData"))
   unionlistData <- loadTabularData(type = "unionlist")
 if (!doDebug | !exists("occurrenceData"))
   occurrenceData <- loadTabularData(type = "occurrence")
-if (!doDebug | !exists("timeseries"))
-  readS3(file = "full_timeseries.RData")
+if (!doDebug | !exists("taxaChoices"))
+  taxaChoices <- loadTabularData(type = "taxachoices")
+
+# Load occupancy data from createOccupancyCube() - also loads `dfCube`
+if (!doDebug | !exists("occupancy"))
+  occupancy <- loadOccupancyData()
 
 
 # Specify default year to show (and default max to show in time ranges)
 defaultYear <- max(exotenData$first_observed, na.rm = TRUE)
 defaultTimeNA <- TRUE
 defaultTime <- c(min(exotenData$first_observed, na.rm = TRUE), defaultYear)
-# Load occupancy data from createOccupancyCube()
 
-if (!doDebug | !exists("occupancy")){
-occupancy <- loadOccupancyData()
-}
 
 # Load cube data
 if (!doDebug | !exists("allShapes"))
@@ -59,13 +61,14 @@ dictionary <- loadMetaData(type = "keys")
 # Initial exoten filter choices
 # e.g. search for Stylommatophora
 taxaLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
-#taxaChoices <- createTaxaChoices(exotenData = exotenData)
-#longTaxaChoices <- unlist(taxaChoices)  # for matching id and title in search query
-taxaChoices <- createTaxaChoices2(exotenData = exotenData)
-
 habitatChoices <- attr(exotenData, "habitats")
 doeChoices <- sort(unique(exotenData$degree_of_establishment))
 regionChoices <- sort(unique(exotenData$locality))
 bronChoices <- sort(levels(exotenData$source))
 
+
+# Available species for risk maps (Species > More > Risk maps)
+request <- httr::GET("https://api.github.com/repos/trias-project/risk-maps/contents/public/geotiffs")
+keysRiskMap <- unique(sapply(httr::content(request), function(x) 
+      strsplit(gsub("public/geotiffs/be_", "", x$path), split = "_")[[1]][1]))
 

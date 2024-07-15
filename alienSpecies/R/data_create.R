@@ -94,7 +94,6 @@ createOccupancyCube <- function(dataDir = "~/git/alien-species-portal/data/trend
 #' @importFrom data.table fread setnames as.data.table
 #' @importFrom rgbif name_usage
 #' @export
-
 createKeyData <- function(
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
     dataDir = "~/git/alien-species-portal/data"){
@@ -153,15 +152,15 @@ createKeyData <- function(
 #' @importFrom utils write.csv
 #' @importFrom data.table as.data.table
 #' @importFrom aws.s3 s3save s3load
-#' @export
-#' 
+#' @importFrom arrow write_parquet
+#' @export 
 createTimeseries <- function(
   bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   shapeData = loadShapeData("grid.RData")$utm1_bel_with_regions) {
   
                              
   # For R CMD check
-  df_ts <- NULL
+  df_ts <- taxonKey <- NULL
   
   # created from https://github.com/inbo/aspbo/blob/uat/src/05_occurrence_indicators_preprocessing.Rmd
   ## Data at 1km x 1km grid level
@@ -173,14 +172,25 @@ createTimeseries <- function(
   # pa_cobs: presence of class in protected areas (1 = yes, 0 = no)
   
   # Merge with shapeData for region indicators
+  df_ts <- as.data.table(df_ts)
+  setkey(df_ts, eea_cell_code)
+  
   regions <- c("flanders", "wallonia", "brussels")
-  timeseries <- merge(df_ts, sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))],
-                      by.x = "eea_cell_code", by.y = "CELLCODE")
+  simpleShape <- as.data.table(sf::st_drop_geometry(shapeData)[, c("CELLCODE", paste0("is", simpleCap(regions)))])
+  setnames(simpleShape, "CELLCODE", "eea_cell_code")
+  setkey(simpleShape, eea_cell_code)
+  # Avoid extra rows when merging for cells without occupancy
+  simpleShape <- simpleShape[simpleShape$eea_cell_code %in% unique(df_ts$eea_cell_code), ]
   
-  # put time series data RData to the bucket to speed up reading process
-  timeseries <- as.data.table(timeseries)
+  timeseries <- df_ts[simpleShape, on = "eea_cell_code"]
+  if (nrow(timeseries) != nrow(df_ts))
+    warning("Difference in number of rows after enriching data: ", nrow(timeseries) - nrow(df_ts))
+  setkey(timeseries, taxonKey)
   
-  s3save(timeseries, object = "full_timeseries.RData", bucket = bucket, 
+  aws.s3::s3write_using(timeseries, 
+    FUN = arrow::write_parquet, 
+    bucket = bucket, 
+    object = "full_timeseries.parquet",
     opts = list(show_progress = TRUE, multipart = TRUE,
       region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
@@ -196,8 +206,9 @@ createTimeseries <- function(
 #' @return character, file name of created object in S3 bucket 
 #' 
 #' @author mvarewyck
+#' @importFrom aws.s3 s3save
+#' @importFrom sf st_read
 #' @export
-#' 
 createShapeData <- function(
     dataDir = "~/git/alien-species-portal/data/occurrenceCube",
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
@@ -235,10 +246,56 @@ createShapeData <- function(
   
 } 
 
+
+#' Create taxa choices based on available exotenData
+#' @param exotenData data.frame, as read from \code{\link{loadTabularData}}
+#' @return data.frame all choices to be shown - for selectizeInput()
+#' 
+#' @author mvarewyck
+#' @export
+createTaxaChoices <- function(exotenData) {
+  
+  # For R CMD check
+  kingdom <- kingdomKey <- NULL
+  phylum <- phylumKey <- NULL
+  classKey <- NULL
+  orderKey <- NULL
+  family <- familyKey <- NULL
+  species <- key <- NULL
+  
+  subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
+      kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
+  subData <- subData[!duplicated(subData), ]
+  subData$speciesKey <- subData$key
+  
+  speciesLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
+  
+  choices <- do.call(rbind, lapply(seq_along(speciesLevels), function(i) {
+        
+        iLevel <- speciesLevels[i]
+        keyVar <- paste0(iLevel, "Key")
+        do.call(rbind, lapply(split(subData, subData[[keyVar]]), function(iData) {
+              iData <- iData[!duplicated(iData[[keyVar]]), ]
+              longName <- paste(iData[, speciesLevels[1:i], with = FALSE], collapse = " > ")
+              data.frame(
+                value = iData[[keyVar]], 
+                label = iData[[iLevel]],
+                long = longName,
+                html = paste0("<b>", iData[[iLevel]], "</b>", if (i != 1) paste0("</br>", longName))
+              ) 
+            }))
+        
+      }))
+  
+  choices <- choices[order(choices$label), ]
+  
+  choices
+  
+}
+
+
 #' Create tabular data
 #' 
-#' For indicator data:
-#' by default data for which \code{first_observed < 1950} is excluded.
 #' For unionlist data:
 #' only 'scientific name', 'english name' and 'kingdom' are retained
 #' @inheritParams readS3
@@ -250,10 +307,12 @@ createShapeData <- function(
 #' }
 #' @return data.table, loaded indicator/unionlist data; 
 #' and attribute 'Date', the date that this data file was created
-#' @importFrom data.table fread :=
+#' @importFrom data.table fread := as.data.table
 #' @importFrom utils tail
+#' @importFrom stats complete.cases
+#' @importFrom arrow write_parquet
+#' @importFrom dplyr filter
 #' @export
-
 createTabularData <- function(
     dataDir = "~/git/alien-species-portal/dataS3",
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
@@ -264,6 +323,7 @@ createTabularData <- function(
   scientificName <- NULL
   i.scientificName <- NULL
   i.classKey <- NULL
+  taxonKey <- variable <- eea_cell_code <- NULL
   
   warningMessage <- NULL
   
@@ -316,8 +376,8 @@ createTabularData <- function(
       "species", "canonicalName"
     )]
     
-    ## convert english to dutch names for region
-    rawData$locality <- getDutchNames(rawData$locality, type = "regio")
+    ## convert english names to names recognized by the translation file
+    rawData$locality <- getRegionNames(rawData$locality)
     
     ## Extract hyperlinks 
     
@@ -387,6 +447,32 @@ createTabularData <- function(
                                                            oceania, tolower(oceania))) & 
                                !is.na(rawData$native_range)] <- "undefined"
     
+    ## update last_observed with info from timeseries
+    timeseries <- loadTabularData(type = "timeseries")
+    # exclude rows without observation
+    timeseries <- as.data.table(dplyr::filter(timeseries, obs > 0))
+    # exclude unknown regions
+    timeseries <- timeseries[complete.cases(timeseries[, c("isFlanders", "isWallonia", "isBrussels")])]
+    # select last_year per cube
+    timeseries <- timeseries[timeseries[, .I[which.max(year)], by = .(eea_cell_code, taxonKey)]$V1]
+    timeseries$isBelgium <- apply(timeseries[, c("isFlanders", "isWallonia", "isBrussels")], 1, sum) > 0
+    # wide to long format
+    setnames(timeseries, c("isFlanders", "isWallonia", "isBrussels", "isBelgium"),
+      c("flanders", "wallonia", "brussels", "Belgi\u00EB"))
+    timeseries <- melt.data.table(timeseries, id.vars = c("taxonKey", "year"),
+      measure.vars = c("flanders", "wallonia", "brussels", "Belgi\u00EB"))
+    # select last year per region
+    timeseries <- timeseries[timeseries[, .I[which.max(year)], by = .(variable, taxonKey)]$V1]
+    timeseries <- timeseries[timeseries$value, ]
+    timeseries$value <- NULL
+  
+#    head(rawData[, c("locality", "last_observed", "nubKey")])
+    rawData <- base::merge(rawData, timeseries, by.x = c("locality", "nubKey"), 
+      by.y = c("variable", "taxonKey"), all.x = TRUE)
+    rawData$last_observed <- apply(rawData[, c("last_observed", "year")], 1, 
+      function(x) if (all(is.na(x))) NA else max(x, na.rm = TRUE))
+      
+                           
     ## replace missing "species" with "canonicalName" if available
     # then drop "canonicalName"
     ind <- which(is.na(rawData$species) & !is.na(rawData$canonicalName))
@@ -395,10 +481,19 @@ createTabularData <- function(
     warningMessage <- c(warningMessage,
                         paste0(type, " data: Voor ", length(ind), " observaties is de 'species' onbekend. 'canonicalName' wordt gebruikt in de plaats."))
     
-    
     attr(rawData, "habitats") <- currentHabitats
+                      
+    # Create taxa choices
+    taxaChoices <- createTaxaChoices(exotenData = rawData)
     
+    aws.s3::s3write_using(taxaChoices, 
+      FUN = arrow::write_parquet, 
+      bucket = bucket, 
+      object = "taxachoices_processed.parquet",
+      opts = list(multipart = TRUE,
+        region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
     
+                      
   } else if (type == "unionlist") {
     
     rawData <- fread(dataFiles, stringsAsFactors = FALSE, na.strings = "",
@@ -435,11 +530,12 @@ createTabularData <- function(
   attr(rawData, "Date") <- file.mtime(dataFiles)
   attr(rawData, "warning") <- warningMessage 
   
-  s3save(rawData, bucket = bucket, 
-         object = paste0(basename(tools::file_path_sans_ext(dataFiles)), "_processed.RData"), 
-         opts = list(multipart = TRUE,
-           region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
-  
+  aws.s3::s3write_using(rawData, 
+    FUN = arrow::write_parquet, 
+    bucket = bucket, 
+    object = paste0(basename(tools::file_path_sans_ext(dataFiles)), "_processed.parquet"),
+    opts = list(multipart = TRUE,
+      region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
   
   return(TRUE)  
   
@@ -447,3 +543,38 @@ createTabularData <- function(
 
 
 
+#' Helper function to create translation file based on all regions in the shape files
+#' @param allShapes named list, with sf objects for which to extract region names
+#' @return no return value; result written to file in git aspbo
+#' 
+#' @author mvarewyck
+#' @export
+createTranslations <- function(allShapes) {
+  
+  title_id <- c()
+  title_nl <- c()
+  
+  for (iName in c("gewestbel", "provinces", "communes")) {
+    if (iName == "gewestbel") {
+      title_id <- c(title_id, allShapes[[iName]]$GEWEST)
+      title_nl <- c(title_nl, allShapes[[iName]]$Naam)
+    } else {
+      title_id <- c(title_id, allShapes[[iName]]$NAAM)
+      title_nl <- c(title_nl, allShapes[[iName]]$NAAM)
+    }
+  }
+  
+  translations_regions <- data.frame(
+    title_id = title_id,
+    title_nl = title_nl,
+    title_fr = NA,
+    title_en = NA
+  )
+  
+  translations_regions <- translations_regions[!duplicated(translations_regions$title_id), ]
+  
+  write.table(translations_regions,
+    file = "~/git/aspbo/data/output/UAT_direct/translations_regions.csv", 
+    quote = FALSE, sep = ";", row.names = FALSE)
+    
+}

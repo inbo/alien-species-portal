@@ -1,4 +1,51 @@
 
+
+#' Combine all nesten data for regions summary
+#' 
+#' Returned object can be used as `data` in \code{\link{createSummaryRegions}}
+#' @inheritParams combineNestenData
+#' @param nestenBeheerdData sf data.frame, beheerde nesten data 
+#' @return data.frame
+#' 
+#' @author mvarewyck
+#' @export
+combineVespaData <- function(pointsData, nestenData, nestenBeheerdData) {
+  
+  ## Individual data
+  pointsData$type <- "individual"
+  # Columns
+  regionVariables <- list(level3Name = "NAAM", level2Name = "provincie", level1Name = "GEWEST")
+  for (iName in names(regionVariables))
+    names(pointsData)[match(iName, names(pointsData))] <- regionVariables[[iName]]
+  # Gewest
+  pointsData$GEWEST <- ifelse(pointsData$GEWEST == "Vlaanderen", "flanders", 
+    ifelse(pointsData$GEWEST == "Bruxelles", "brussels", 
+      ifelse(pointsData$GEWEST == "Wallonie", "wallonia", "")))
+  # Provincie
+  pointsData$provincie <- ifelse(pointsData$provincie == "Vlaams Brabant", "Vlaams-Brabant",
+    ifelse(pointsData$provincie == "Bruxelles", "HoofdstedelijkGewest", 
+      ifelse(pointsData$provincie == "Liège", "Luik", 
+        ifelse(pointsData$provincie == "Brabant Wallon", "Waals-Brabant",
+          ifelse(pointsData$provincie == "Hainaut", "Henegouwen", pointsData$provincie)))))
+  pointsData$nest_type <- "individual"
+  pointsData$isBeheerd <- "untreated nest"
+  
+  ## Nest data
+  nestenData$type <- "nest"
+  currentYear <- as.numeric(format(Sys.Date(), "%Y"))
+  nestenData$isBeheerd <- nestenData$geometry %in% nestenBeheerdData$geometry & nestenData$year == currentYear
+  nestenData$isBeheerd <- ifelse(nestenData$isBeheerd, "managed nest", "untreated nest")
+  
+  keepColumns <- c("year", "type", "nest_type", "NAAM", "provincie", "GEWEST", "isBeheerd", "geometry")
+  vespaBoth <- rbind(pointsData[, keepColumns], nestenData[, keepColumns])
+  vespaBoth$nest_type[vespaBoth$nest_type %in% c("NA", "NULL")] <- NA 
+  
+  vespaBoth
+  
+}
+
+
+
 #' Create summary data per region
 #' @param data data.table with management data
 #' @param shapeData list, each object is \code{SpatialPolygonsDataFrame}. 
@@ -30,12 +77,30 @@ createSummaryRegions <- function(data, shapeData,
   n <- NULL
   
   unit <- match.arg(unit)
+  regionLevel <- match.arg(regionLevel)
   
   data <- as.data.frame(data)
   
-  if (is.null(year))
-    myYear <- unique(data$year) else 
+  
+  if (is.null(year)) {
+    
+    myYear <- unique(data$year)
+    
+  } else if (is.list(year)) { 
+    
+    # create periods
+    data$year <- cut(data$year, 
+      breaks = c(year[[1]][1], sapply(year, function(x) tail(x, n = 1))), 
+      include.lowest = TRUE,
+      labels = sapply(year, function(x) if (length(x) == 1) x else paste(x[1], "-", tail(x, n = 1)))
+    )
+    myYear <- levels(data$year)
+    
+  } else {
+    
     myYear <- year  # rename for tidyverse filtering
+    
+  }
   
   
   regionVariable <- switch(regionLevel,
@@ -145,9 +210,11 @@ createSummaryRegions <- function(data, shapeData,
 
 
 #' Map with occurrence and management for single species
-#' @param managementData data.frame, management data
+#' @param managementData data.frame, management data; 
+#' as returned by \code{\link{createSummaryRegions}}
 #' @param occurrenceData data.frame, occurrence data
 #' @param shapeData list with spatial data (grid and regions)
+#' @inheritParams mapHeat
 #' @param uiText data.frame, for translations
 #' @param regionLevel character, region level to color polygons
 #' @param palette character, color palette to be used, see also \code{\link[leaflet]{colorFactor}}
@@ -158,7 +225,8 @@ createSummaryRegions <- function(data, shapeData,
 #' @author mvarewyck
 #' @import leaflet
 #' @export
-mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText = NULL, 
+mapRegions <- function(managementData, occurrenceData = NULL, shapeData, 
+  baseMap = addBaseMap(), uiText = NULL,
   regionLevel = c("communes", "provinces"), palette = "YlOrBr",
   legend = "topright", addGlobe = FALSE) {
   
@@ -169,9 +237,29 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
     reverse = (palette != "YlOrBr"))
   valuesPalette <- managementData$group[match(spatialData$NAAM, managementData$region)]
   
+  # Add borders
+  if (regionLevel == "communes") {
+    
+    # TODO include in addBaseMap()
+    myMap <- leaflet() %>% 
+      addPolylines(
+        data = shapeData$provinces, 
+        weight = 3,
+        color = "black",
+        opacity = 0.8,
+        group = "borderRegion"
+      ) 
+    
+  } else if (regionLevel == "provinces") {
+    
+    myMap <- baseMap
+    
+  }
   
-  myMap <- leaflet(spatialData) %>% 
+  
+  myMap <- myMap %>% 
     addPolygons(
+      data = spatialData,
       weight = 1,
       color = "gray",
       fillColor = ~ paletteFunction(valuesPalette),
@@ -192,23 +280,7 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
     
   }
   
-  # Add borders
-  if (regionLevel == "communes") {
-    
-    myMap <- myMap %>% 
-      addPolylines(
-        data = shapeData$provinces, 
-        weight = 3,
-        color = "black",
-        opacity = 0.8,
-        group = "borderRegion"
-      ) 
-    
-  } else if (regionLevel == "provinces") {
-    
-    myMap <- myMap %>% addBaseMap()
-    
-  }
+  
   
   # Add legend
   if (legend != "none") { 
@@ -247,36 +319,81 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData, uiText 
 }
 
 
+#' Map with management for single species
+#' @inheritParams mapRegions 
+#' @return ggplot object
+#' 
+#' @author mvarewyck
+#' @import ggplot2
+#' @importFrom ggspatial annotation_map_tile
+#' @export
+mapRegionsFacet <- function(managementData, shapeData, uiText = NULL,
+  regionLevel = c("communes", "provinces"), palette = "YlOrBr",
+  legend = "right", addGlobe = FALSE) {
+  
+  # For R CMD check
+  group <- NULL
+  
+  plotData <- merge(shapeData[[regionLevel]], managementData,
+    by.x = "NAAM", by.y = "region", all.x = TRUE)
+  
+  # Facet plot
+  myPlot <- ggplot() + 
+    geom_sf(data = plotData, aes(fill = group), size = 0.5) + 
+    facet_wrap(~ year, ncol = 3) +
+    scale_fill_brewer(palette = palette) +
+    theme_inbo(transparent = TRUE) + 
+    theme(
+      legend.position = legend,
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank()) +
+    guides(fill = guide_legend(title = translate(uiText, "legend")$title))
+  
+  if (addGlobe)
+    # Add background globe
+    myPlot <- myPlot + ggspatial::annotation_map_tile(
+        zoom = 7, alpha = 0.5, forcedownload = FALSE,
+        cachedir = system.file("extdata", package = "alienSpecies")) +
+      # redraw polygons
+      geom_sf(data = plotData, aes(fill = group), size = 0.5) +
+      labs(caption = "\u00a9 OpenStreetMap contributors")
+  
+  if (regionLevel == "communes")
+    # Add province borders
+    myPlot <- myPlot +
+      geom_sf(data = shapeData$provinces, fill = NA, color = "black", size = 1)
+  
+  
+  myPlot
+  
+}
+
 
 #' Create popup text to display in \code{\link{mapRegions}}
 #' @param summaryData data.frame, as returned by \code{\link{createSummaryRegions}}
 #' @inheritParams mapRegionsServer 
 #' @inheritParams createSummaryRegions
-#' @param bronMap character vector, sources to be shown in the popup
+#' @param showBron boolean whether to print info on bron
 #' @return character vector with popup text for each row in \code{summaryData}
 #' 
 #' @author mvarewyck
 #' @importFrom xtable xtable
 #' @importFrom reshape2 melt dcast
 #' @export
-mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
+mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
   
   
   paste0("<h4>", summaryData$region, "</h4>",
     "<strong>", translate(uiText, "year")$title, "</strong>: ", year, "<br>",
     if (!is.null(unit)) 
       paste0("<strong>", translate(uiText, unit)$title, "</strong>: "), 
-    if (!is.null(bronMap)) {
-      lapply(split(summaryData, summaryData$region), function(iData) {
+    if (showBron) {
+        lapply(split(summaryData, summaryData$region), function(iData) {
             tmpData <- suppressWarnings(reshape2::melt(iData, id.vars = colnames(iData)[1:2]))
             tmpData$nest <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[1])
-            tmpData$isBeheerd <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) { 
-                if (length(x) > 1) {
-                  if (x[2] == "TRUE")
-                  "managed nest" else if (x[2] == "FALSE")
-                  "untreated nest"
-              } else NA
-              })
+            tmpData$isBeheerd <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[2])
+            
             tmpData <- tmpData[!is.na(tmpData$isBeheerd), ]
             formattedTable <- reshape2::dcast(tmpData[, c("nest", "isBeheerd", "value")], nest ~ isBeheerd, value.var = "value")
             formattedTable$nest[formattedTable$nest == "NA"] <- "unknown"
@@ -287,13 +404,13 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
             as.character(print(xtable::xtable(formattedTable), 
                 include.rownames = FALSE, type = "html", print.results = FALSE))
           })
-    } else {
-    if (!is.null(unit) && unit == "cpue") 
-        round(summaryData$effort, 2) else
-        round(summaryData$n, 2)
-    }
+      } else {
+        if (!is.null(unit) && unit == "cpue") 
+          round(summaryData$effort, 2) else
+          round(summaryData$n, 2)
+      }
   )
-  
+
 }
 
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
@@ -303,11 +420,13 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
 #' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @inheritParams createSummaryRegions
-#' @param species reactive character, readable name of the selected species
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param occurrenceData data.table, as obtained by \code{loadTabularData(type = "occurrence")}
-#' @param sourceChoices character vector, choices for the data source;
-#' default value is NULL then no choices are shown
+#' @param filter reactive list with filters to be shown in the app;
+#' names should match a plotFunction in \code{uiText}; 
+#' values define the choices in \code{selectInput}
+#' @param facet boolean, if TRUE a static facet plot is created; if FALSE an
+#' interactive leaflet map is created
 #' 
 #' @return no return value
 #' 
@@ -317,9 +436,10 @@ mapPopup <- function(summaryData, uiText, year, unit, bronMap) {
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
+#' @importFrom ggplot2 ggsave
 #' @export
-mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
-  sourceChoices = NULL) {
+mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
+  filter = reactive(NULL), facet = FALSE, dashReport = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -329,21 +449,32 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       currentYear <- as.numeric(format(Sys.Date(), "%Y")) - 1
       
       ns <- session$ns
+      htmlFile <- tempfile(fileext = ".html")
+      pngFile <- tempfile(fileext = ".png")
       
       results <- reactiveValues()
       
       noData <- reactive(translate(uiText(), "noData"))
-      tmpTranslation <- reactive(translate(uiText(), "management-mapOccurrence"))
+      tmpTranslation <- reactive(translate(uiText(), 
+          if (!facet)
+              "management-mapOccurrence" else
+              "management-mapInvasion"))
       
-      output$titleMapRegions <- renderUI({
+      title <- reactive({
           
-          period <- if (!is.null(input$period))
-              c(input$period, req(input$year)) else
-              req(input$year)
-          
-          h3(HTML(paste(tmpTranslation()$title, req(species()), yearToTitleString(period))))
-          
+          decodeText(text = tmpTranslation()$title, 
+            params = c(
+              list(species = species()), 
+              if (!is.null(input$year)) 
+                list(period = if (!is.null(input$period))
+                      c(input$period, input$year) else
+                      input$year
+                ))
+          )
+        
         })
+      
+      output$titleMapRegions <- renderUI(h3(HTML(title())))
       
       output$descriptionMapRegions <- renderUI(HTML(tmpTranslation()$description))
       
@@ -360,10 +491,11 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
               inputId = ns("year"), 
               label = paste0(
                 translate(uiText(), "year")$title,
-                " (", translate(uiText(), "map")$title, ")"),
+                if (!facet)
+                  paste0(" (", translate(uiText(), "map")$title, ")")),
               min = choices[1],
               max = choices[2],
-              value = 2018,
+              value = currentYear,
               step = 1,
               sep = "", 
               width = "100%"
@@ -414,40 +546,36 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           
         })
       
-      output$bronMap <- renderUI({
+      output$filters <- renderUI({
           
-          req(sourceChoices)
-          
-          selectInput(inputId = ns("bronMap"),
-            label = translate(uiText(), "source")$title,
-            choices = sourceChoices, selected = sourceChoices,
-            multiple = TRUE)
-          
-        })
-      
-      # Filter on gewest
-      output$gewest <- renderUI({
-          
-          choices <- c("flanders", "brussels", "wallonia")
-          names(choices) <- translate(uiText(), choices)$title
-          
-          selectInput(inputId = ns("gewestLevel"), label = translate(uiText(), "gewest")$title,
-            choices = choices, selected = choices, multiple = TRUE)
+          if (!is.null(filter()))
+            fixedRow(lapply(names(filter()), function(filterName) {
+                
+                choices <- filter()[[filterName]]
+                names(choices) <- translate(uiText(), choices)$title
+                
+                column(6, 
+                  selectInput(inputId = ns(filterName), 
+                    label = translate(uiText(), filterName)$title,
+                    choices = choices,
+                    multiple = TRUE, selected = filter()[[filterName]])
+                )
+              }))
           
         })
-      
+            
       subShape <- reactive({
           
-          req(input$gewestLevel)
+          req(gewest())
           # Subset for GEWEST
           lapply(shapeData, function(iData) {
               if ("GEWEST" %in% colnames(iData)){
                 iData$GEWEST <- dplyr::recode(iData$GEWEST, "Brussels" = "brussels", "Vlaams"="flanders", "Waals" =  "wallonia")
-                iData[iData$GEWEST %in% input$gewestLevel, ]}else{
-                iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(input$gewestLevel)), drop = FALSE]), 1, sum) > 0, ]
-          }
-                })
-          
+                iData[iData$GEWEST %in% gewest(), ]
+              }else{
+                iData[apply(sf::st_drop_geometry(iData[, paste0("is", simpleCap(gewest())), drop = FALSE]), 1, sum) > 0, ]
+              }
+            })
           
         })
       
@@ -475,7 +603,9 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       # Map attributes
       output$legend <- renderUI({
           
-          legendChoices <- c("topright", "bottomright", "topleft", "bottomleft", "none")
+          legendChoices <- if (facet)
+              c("bottom", "top", "right", "left", "none") else
+              c("topright", "bottomright", "topleft", "bottomleft", "none")
           names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x)$title)
           
           selectInput(inputId = ns("legend"), 
@@ -490,28 +620,39 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           
           req(inherits(df(), "data.frame"))
           
-          subData <- df()
+          filterData <- df()
           
-          if (!is.null(sourceChoices)) {
-            req(input$bronMap)
-            subData <- subData[subData$type %in% input$bronMap, ]
-          }
+          # Other filters
+          if (!is.null(filter()))
+            for (iFilter in names(filter())) {
+              if (!is.null(input[[iFilter]]))
+                filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
+            }
           
-          subData
+          filterData
           
         })
-      
+           
       
       summaryData <- reactive({
           
           req(nrow(subData()) > 0)
           
+          selectedYear <- if (is.null(input$year))
+              currentYear else 
+              input$year
+          
           createSummaryRegions(data = subData(), 
             shapeData = shapeData,
-            regionLevel = req(input$regionLevel),
-            year = req(input$year), 
-            unit = input$unit,
-            groupingVariable = if (!is.null(sourceChoices)) c("nest_type", "isBeheerd")
+            regionLevel = if (is.null(input$regionLevel)) "communes" else input$regionLevel,
+            year = if (facet)
+              list(
+                c(selectedYear-8, selectedYear-5), 
+                c(selectedYear-4, selectedYear-1),
+                selectedYear) else
+                selectedYear, 
+            unit = if (is.null(input$unit)) "absolute" else input$unit,
+            groupingVariable = if (!is.null(filter())) c("nest_type", "isBeheerd")
           )
           
         })
@@ -520,8 +661,14 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       # Filter Occurrence data
       subOccurrence <- reactive({
           
+          selectedYear <- if (is.null(input$year))
+              currentYear else 
+              input$year
+          
           # Filter on taxonKey and year
-          occurrenceData <- occurrenceData[occurrenceData$scientificName == species() & occurrenceData$year == req(input$year), ]
+          occurrenceData[
+            occurrenceData$scientificName == species() & 
+              occurrenceData$year == selectedYear, ]
           
         })
       
@@ -529,12 +676,36 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       # Send map to the UI
       output$regionsPlot <- renderLeaflet({
           
+          req(!facet)
           validate(need(nrow(req(summaryData())) > 0, noData()))
           
-          mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
-            shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel,
+          mapRegions(
+            managementData = summaryData(),
+            occurrenceData = subOccurrence(),
+            shapeData = subShape(), 
+            uiText = uiText(), 
+            regionLevel = input$regionLevel,
+            baseMap = addBaseMap(regions = gewest()),
             addGlobe = isolate(input$globe %% 2 == 1),
-            palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr")
+            palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
+          )
+          
+        })
+      
+      output$regionsPlotFacet <- renderPlot({
+          
+          req(facet)
+          validate(need(nrow(req(summaryData())) > 0, noData()))
+          
+          mapRegionsFacet(
+            managementData = summaryData(),
+            shapeData = subShape(), 
+            uiText = uiText(), 
+            regionLevel = req(input$regionLevel),
+            legend = input$legend,
+            addGlobe = input$globe,
+            palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
+          )
           
         })
       
@@ -551,7 +722,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           validate(need(nrow(req(summaryData())) > 0, noData()))
           
           mapPopup(summaryData = summaryData(), uiText = uiText(), year = input$year,
-            unit = input$unit, bronMap = input$bronMap)
+            unit = input$unit, showBron = !is.null(filter()))
                               
         })
       
@@ -620,6 +791,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       observe({
           
           req(input$legend)
+          req(!facet)
           req(summaryData())
           
           proxy <- leafletProxy("regionsPlot")
@@ -713,27 +885,54 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
       # Create final map (for download)
       finalMap <- reactive({
           
-          newMap <- mapRegions(managementData = summaryData(), occurrenceData = subOccurrence(), 
-            shapeData = subShape(), uiText = uiText(), regionLevel = input$regionLevel,
-            legend = input$legend, addGlobe = input$globe %% 2 == 1,
-            palette = if (input$unit == "difference") "RdYlGn" else "YlOrBr")
+          req(nrow(summaryData()) > 0)
+          
+          if (facet) {
+            
+            myPlot <- mapRegionsFacet(
+              managementData = summaryData(),
+              shapeData = subShape(),
+              uiText = uiText(), 
+              regionLevel = if (is.null(input$regionLevel)) "communes" else input$regionLevel,
+              legend = if (is.null(input$legend)) "bottom" else input$legend,
+              addGlobe = if (is.null(input$globe)) FALSE else input$globe %% 2 == 1,
+              palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
+            )
+            
+            ggplot2::ggsave(pngFile, plot = myPlot, width = 8, height = 4, dpi = 150)
+            pngFile
+            
+          } else {
+          
+          newMap <- mapRegions(
+            managementData = summaryData(), 
+            occurrenceData = subOccurrence(), 
+            shapeData = subShape(), 
+            baseMap = addBaseMap(regions = gewest()),
+            uiText = uiText(), 
+            regionLevel = if (is.null(input$regionLevel)) "communes" else input$regionLevel,
+            legend = if (is.null(input$legend)) "topright" else input$legend, 
+            addGlobe = if (is.null(input$globe)) FALSE else input$globe %% 2 == 1,
+            palette = if (is.null(input$unit) || input$unit != "difference") "YlOrBr" else "RdYlGn")
           
           
           # save the zoom level and centering to the map object
-          newMap <- newMap %>% setView(
-            lng = input$regionsPlot_center$lng,
-            lat = input$regionsPlot_center$lat,
-            zoom = input$regionsPlot_zoom
-          )
-          
-          tmpFile <- tempfile(fileext = ".html")
+          if (!is.null(input$regionsPlot_center))
+            newMap <- newMap %>% setView(
+              lng = input$regionsPlot_center$lng,
+              lat = input$regionsPlot_center$lat,
+              zoom = input$regionsPlot_zoom
+            )
           
           # write map to temp .html file
-          htmlwidgets::saveWidget(newMap, file = tmpFile, selfcontained = FALSE)
+          req(newMap)
+          htmlwidgets::saveWidget(newMap, file = htmlFile, selfcontained = FALSE)
           
           # output is path to temp .html file containing map
-          tmpFile
+          htmlFile
           
+        }
+        
         }) 
       
       
@@ -751,10 +950,18 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
             content = "management", fileExt = "png"),
         content = function(file) {
           
-          # convert temp .html file into .png for download
-          webshot::webshot(url = finalMap(), file = file,
-            vwidth = 1000, vheight = 500, cliprect = "viewport")
-          
+          if (facet) {
+            
+            file.copy(from = pngFile, to = file, overwrite = TRUE)
+            
+          } else {
+            
+            # convert temp .html file into .png for download
+            webshot::webshot(url = finalMap(), file = file,
+              vwidth = 1000, vheight = 500, cliprect = "viewport")
+            
+          }
+        
         }
       )
       
@@ -762,7 +969,8 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
         filename = function()
           nameFile(species = species(),
             period = input$year, 
-            content = "management_data", fileExt = "csv"),
+            content = if (!facet) "management_data" else "invasion_data", 
+            fileExt = "csv"),
         content = function(file) {
           
           ## write data to exported file
@@ -790,10 +998,10 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           
         })
       
-      plotModuleServer(id = "timePlotFlanders",
+      plotFlanders <- plotModuleServer(id = "timePlotFlanders",
         plotFunction = "trendYearRegion", 
         data = reactive({
-            timeDataFlanders()[timeDataFlanders()$region %in% req(input$gewestLevel), ]
+            timeDataFlanders()[timeDataFlanders()$region %in% req(gewest()), ]
           }),
         uiText = uiText,
         period = reactive(input$period)
@@ -827,7 +1035,7 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
           
         })
       
-      plotModuleServer(id = "timePlot",
+      plotRegion <- plotModuleServer(id = "timePlot",
         plotFunction = "trendYearRegion", 
         data = reactive({
             timeData()[timeData()$region %in% req(input$region), ]
@@ -837,6 +1045,42 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
         combine = reactive(input$combine)
       )
       
+      
+      ## Report Objects ##
+      ## -------------- ##
+      
+      observe({
+          
+          req(dashReport)
+          
+          # Update when any of these change
+          req(finalMap())
+          input
+          
+          # Return the static values
+          dashReport[[if (!facet)
+                ns("mapOccurrence") else
+                ns("mapInvasion")]] <- c(
+              list(
+                plot = isolate(finalMap()),
+                title = isolate(title()),
+                description = isolate(tmpTranslation()$description)
+              ),
+              if (!inherits(try(plotFlanders(), silent = TRUE), "try-error"))
+                list(
+                  plotFlanders = isolate(plotFlanders()$plot)
+                ),
+              if (!inherits(try(plotRegion(), silent = TRUE), "try-error"))
+                list(
+                  plotRegion = isolate(plotRegion()$plot)
+                ),
+              isolate(reactiveValuesToList(input))
+            )
+          
+        })
+      
+      
+      return(dashReport)
       
     })  
 } 
@@ -848,13 +1092,14 @@ mapRegionsServer <- function(id, uiText, species, df, occurrenceData, shapeData,
 #' @param plotDetails character vector, which plots to be shown below the map
 #' @param showUnit boolean, whether to show the option to choose unit;
 #' default is TRUE
+#' @inheritParams mapRegionsServer
 #' @return UI object
 #' 
 #' @author mvarewyck
 #' @import shiny
 #' @importFrom leaflet leafletOutput
 #' @export
-mapRegionsUI <- function(id, plotDetails = NULL, showUnit = TRUE) {
+mapRegionsUI <- function(id, plotDetails = NULL, showUnit = TRUE, facet = FALSE) {
   
   ns <- NS(id)
   
@@ -868,26 +1113,29 @@ mapRegionsUI <- function(id, plotDetails = NULL, showUnit = TRUE) {
     
     wellPanel(
       fixedRow(
-        column(4, uiOutput(ns("gewest"))),
-        column(4, uiOutput(ns("regionLevel"))),
-        column(4, uiOutput(ns("region")))
-      ),
-      fixedRow(
+        column(6, uiOutput(ns("regionLevel"))),
+        if (!facet)
+          column(6, uiOutput(ns("region"))),
         column(6, uiOutput(ns("year"))),
-        column(6, uiOutput(ns("period")))
+        if (!facet)
+          column(6, uiOutput(ns("period")))
       ),
+      uiOutput(ns("filters")),
       fixedRow(
         column(6, uiOutput(ns("legend"))),
         if (showUnit)
           column(6, uiOutput(ns("unit"))),
-        column(6, uiOutput(ns("bronMap")))
       ),
       if ("region" %in% plotDetails)
         checkboxInput(inputId = ns("combine"), 
           label = "Combine all selected regions"),
       actionLink(inputId = ns("globe"), label = "Show globe", icon = icon("globe"))
     ),
-    withSpinner(leafletOutput(ns("regionsPlot"))),
+    
+    if (!facet)
+        withSpinner(leafletOutput(ns("regionsPlot"), height = "600px")) else
+        withSpinner(plotOutput(ns("regionsPlotFacet"))),
+  
     
     tags$br(),
     
