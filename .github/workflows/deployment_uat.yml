@@ -30,6 +30,6 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
           UAT_TAG: uat
         run: |
-          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:$UAT_TAG .
+          docker build --build-arg GIT_SHA=${{ github.sha }} -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:$UAT_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           docker push $REGISTRY/$REPOSITORY:$UAT_TAG
