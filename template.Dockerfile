@@ -19,10 +19,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libxt-dev \
     wget \ 
     bzip2 
-    
-# To download leaflet maps from within the app
-## Attention: do not install phantomjs directly, will not work then!
-RUN R -e "webshot::install_phantomjs()"
 
 #include packamon.local-r-dependencies
 

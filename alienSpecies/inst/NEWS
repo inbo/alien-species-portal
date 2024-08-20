@@ -1,3 +1,5 @@
+1.0.1
+    o replace webshot by webshot2
 1.0.0
     o first version of app on UAT
     o overwrite last_observed of indicators by timeseries    

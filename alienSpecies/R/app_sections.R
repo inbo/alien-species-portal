@@ -89,7 +89,7 @@ versionUI <- function(id) {
 
 #' Link with version info - server side
 #' @inherit welcomeSectionServer
-#' @importFrom utils packageVersion 
+#' @importFrom utils packageVersion sessionInfo
 #' @export
 versionServer <- function(id, uiText) {
   

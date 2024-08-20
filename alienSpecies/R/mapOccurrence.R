@@ -418,7 +418,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @import shiny
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom webshot webshot
+#' @importFrom webshot2 webshot
 #' @importFrom sf st_drop_geometry
 #' @export
 mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
@@ -715,7 +715,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
         content = function(file) {
           
           # convert temp .html file into .png for download
-          webshot::webshot(url = finalMap(), file = file,
+          webshot2::webshot(url = finalMap(), file = file,
             vwidth = 1200, vheight = 600, cliprect = "viewport")
           
         }
