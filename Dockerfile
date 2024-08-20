@@ -1,6 +1,6 @@
 FROM rocker/r-ver:4.3.2
 
-MAINTAINER Machteld Varewyck machteld.varewyck@openanalytics.eu
+LABEL maintainer="Machteld Varewyck machteld.varewyck@openanalytics.eu"
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     libgdal-dev \
@@ -18,8 +18,12 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libssl-dev \
     texlive-latex-extra \
     lmodern \
-    && rm -rf /var/lib/apt/lists/*
-
+    wget && \
+    wget https://downloads.vivaldi.com/stable/vivaldi-stable_5.5.2805.35-1_amd64.deb && \
+    apt-get install --no-install-recommends -y ./vivaldi-stable_5.5.2805.35-1_amd64.deb && \
+    rm -rf /var/lib/apt/lists/*
+    
+    
 # Use the remotes package instead of devtools as it is much lighter
 RUN R -q -e "install.packages('remotes')"
 
@@ -37,6 +41,9 @@ RUN R -q -e "install.packages('oaStyle', repos = c(rdepot = 'https://repos.opena
 #RUN R -e "tinytex::install_tinytex()" 
 #ENV PATH="/root/bin:${PATH}" 
 #RUN R -e "tinytex::tlmgr_install(pkgs = c('fancyhdr', 'sectsty', 'titling', 'grffile'))" 
+
+# Configure browser for using webshot2
+ENV CHROMOTE_CHROME=/usr/bin/vivaldi
 
 # Git sha
 ARG GIT_SHA
