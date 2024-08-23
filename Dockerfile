@@ -19,8 +19,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     texlive-latex-extra \
     lmodern \
     wget && \
-    wget https://downloads.vivaldi.com/stable/vivaldi-stable_5.5.2805.35-1_amd64.deb && \
-    apt-get install --no-install-recommends -y ./vivaldi-stable_5.5.2805.35-1_amd64.deb && \
+    wget https://downloads.vivaldi.com/stable/vivaldi-stable_6.8.3381.55-1_$(dpkg --print-architecture).deb && \
+    apt-get install --no-install-recommends -y ./vivaldi-stable*.deb && \
     rm -rf /var/lib/apt/lists/*
     
     
