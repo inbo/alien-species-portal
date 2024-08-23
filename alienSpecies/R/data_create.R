@@ -471,8 +471,10 @@ createTabularData <- function(
       by.y = c("variable", "taxonKey"), all.x = TRUE)
     rawData$last_observed <- apply(rawData[, c("last_observed", "year")], 1, 
       function(x) if (all(is.na(x))) NA else max(x, na.rm = TRUE))
-      
+    rawData$first_observed <- as.numeric(rawData$first_observed)
+    rawData$last_observed <- as.numeric(rawData$last_observed)
                            
+    
     ## replace missing "species" with "canonicalName" if available
     # then drop "canonicalName"
     ind <- which(is.na(rawData$species) & !is.na(rawData$canonicalName))

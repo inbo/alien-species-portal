@@ -385,7 +385,7 @@ test_that("Custom bins in shiny", {
     
     # Test app
     app <- shinyApp(ui, server)
-    expect_is(app, "shiny.appobj")
+    expect_s3_class(app, "shiny.appobj")
 #   app
 
 })
