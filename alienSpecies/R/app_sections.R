@@ -214,6 +214,7 @@ versionServer <- function(id, uiText) {
 #' Shiny module for including html file - server side
 #' @param id character, unique identifier
 #' @param species reactive object, taxonkey for the selected species
+#' @param language reactive object, language for UI content
 #' @param url character, url to be displayed
 #' @return no return value
 #' 
@@ -245,7 +246,7 @@ htmlSectionServer <- function(id, species, language, url) {
 
 
 #' Shiny module for including html file - UI side
-#' @template moduleUI 
+#' @inherit welcomeSectionUI
 #' 
 #' @author mvarewyck
 #' @export
