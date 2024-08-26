@@ -159,13 +159,10 @@ observe({
     
   })
 
-timeseries <- loadTabularData(type = "timeseries")
-
 results$species_gamData <- reactive({
     
     req(input$species_choice)
         summarizeTimeSeries(
-          timeseries = timeseries,
           species = as.numeric(input$species_choice), 
           region = input$species_gewest)
     
