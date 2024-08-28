@@ -206,7 +206,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @importFrom sf st_drop_geometry
 #' @export
 mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, colors, 
-  blur = NULL, maxDate, dashReport = NULL
+  blur = NULL, maxDate, dashReport = NULL, triggerReport
 ) {
   
   moduleServer(id,
@@ -493,14 +493,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       ## Report Objects ##
       ## -------------- ##
       
-      observe({
-          
-          req(dashReport)
-          
-          # Update when any of these change
-          finalMap()
-          maxDate()
-          input
+      observeEvent(triggerReport(), {
           
           # Return the static values
           dashReport[[ns("mapHeat")]] <- c(
@@ -509,7 +502,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
               title = isolate(tmpTranslation()$title),
               description = isolate(description()) 
             ),
-            isolate(reactiveValuesToList(input))
+            reactiveValuesToList(input)
           )
           
         })

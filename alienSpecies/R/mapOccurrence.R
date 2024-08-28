@@ -412,6 +412,8 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param dashReport reactive value, contains all objects for creating the report;
 #' plot and parameters for current plot will be added with id \code{ns("mapOccurrence")}
+#' @param triggerReport reactive object, updates when downloading the report and
+#' creates all missing (non-triggered) info for the report
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -422,7 +424,8 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @importFrom sf st_drop_geometry
 #' @export
 mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
-  filter = reactive(NULL), groupVariable, showPeriod = FALSE, dashReport = NULL
+  filter = reactive(NULL), groupVariable, showPeriod = FALSE, dashReport = NULL,
+  triggerReport
 ) {
   
   moduleServer(id,
@@ -767,13 +770,8 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       
       ## Report Objects ##
       ## -------------- ##
-      
-      observe({
-          
-          req(dashReport)
-          # Update when any of these change
-          req(finalMap())
-          input
+            
+      observeEvent(triggerReport(), {
           
           # Return the static values
           dashReport[[ns("mapOccurrence")]] <- c(
@@ -783,7 +781,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
                   description = isolate(tmpTranslation()$description),
                   showPeriod = (showPeriod && !is.null(input$period))
                 ),
-                isolate(reactiveValuesToList(input))
+                reactiveValuesToList(input)
               )
           
         })

@@ -135,7 +135,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 plotTriasServer <- function(id, uiText, data, triasFunction, 
   translationId = triasFunction, triasArgs = NULL,
   filters = NULL, maxDate = reactive(NULL), outputType = c("plot", "table"),
-  dashReport = NULL) {
+  dashReport = NULL, triggerReport) {
   
   # For R CMD check
   protected <- NULL
@@ -220,11 +220,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
       ## Report Objects ##
       ## -------------- ##
       
-      observe({
-          
-          # Update when any of these change
-          req(plotResult())
-          input
+      observeEvent(triggerReport(), {
           
           # Return the static values
           dashReport[[ns(triasFunction)]] <- c(
@@ -233,7 +229,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
               title = isolate(tmpTranslation()$title),
               description = isolate(description())
             ),
-            isolate(reactiveValuesToList(input))
+            reactiveValuesToList(input)
           )
           
         })

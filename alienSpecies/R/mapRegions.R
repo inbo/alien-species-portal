@@ -439,7 +439,8 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
 #' @importFrom ggplot2 ggsave
 #' @export
 mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
-  filter = reactive(NULL), facet = FALSE, dashReport = NULL) {
+  filter = reactive(NULL), facet = FALSE, dashReport = NULL,
+  triggerReport) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -1049,13 +1050,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       ## Report Objects ##
       ## -------------- ##
       
-      observe({
-          
-          req(dashReport)
-          
-          # Update when any of these change
-          req(finalMap())
-          input
+      observeEvent(triggerReport(), {
           
           # Return the static values
           dashReport[[if (!facet)
@@ -1074,7 +1069,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
                 list(
                   plotRegion = isolate(plotRegion()$plot)
                 ),
-              isolate(reactiveValuesToList(input))
+              reactiveValuesToList(input)
             )
           
         })
