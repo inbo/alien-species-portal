@@ -14,6 +14,8 @@ get <- base::get
 if (!exists("doDebug"))
   doDebug <- FALSE
 
+chromote::set_chrome_args("--headless --no-sandbox")
+
 
 ### Data
 ### -----------
