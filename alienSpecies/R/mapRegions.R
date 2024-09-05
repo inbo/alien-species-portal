@@ -440,7 +440,7 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
 #' @export
 mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
   filter = reactive(NULL), facet = FALSE, dashReport = NULL,
-  triggerReport) {
+  triggerReport = reactive(NULL)) {
   
   moduleServer(id,
     function(input, output, session) {

@@ -135,7 +135,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 plotTriasServer <- function(id, uiText, data, triasFunction, 
   translationId = triasFunction, triasArgs = NULL,
   filters = NULL, maxDate = reactive(NULL), outputType = c("plot", "table"),
-  dashReport = NULL, triggerReport) {
+  dashReport = NULL, triggerReport = reactive(NULL)) {
   
   # For R CMD check
   protected <- NULL

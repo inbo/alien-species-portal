@@ -60,7 +60,7 @@ createSummaryNesten <- function(data,
 #' @import shiny
 #' @export
 countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
-  dashReport = NULL, triggerReport) {
+  dashReport = NULL, triggerReport = reactive(NULL)) {
   
   moduleServer(id,
     function(input, output, session) {

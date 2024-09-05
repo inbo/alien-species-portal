@@ -206,7 +206,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @importFrom sf st_drop_geometry
 #' @export
 mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, colors, 
-  blur = NULL, maxDate, dashReport = NULL, triggerReport
+  blur = NULL, maxDate, dashReport = NULL, triggerReport = reactive(NULL)
 ) {
   
   moduleServer(id,

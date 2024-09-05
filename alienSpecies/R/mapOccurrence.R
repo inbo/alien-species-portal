@@ -425,7 +425,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @export
 mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
   filter = reactive(NULL), groupVariable, showPeriod = FALSE, dashReport = NULL,
-  triggerReport
+  triggerReport = reactive(NULL)
 ) {
   
   moduleServer(id,

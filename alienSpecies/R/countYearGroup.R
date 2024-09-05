@@ -131,7 +131,7 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
 #' @import shiny
 #' @export
 countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NULL,
-  triggerReport) {
+  triggerReport = reactive(NULL)) {
   
   moduleServer(id,
     function(input, output, session) {
