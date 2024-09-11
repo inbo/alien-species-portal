@@ -306,7 +306,7 @@ createTaxaChoices <- function(exotenData) {
 #' @importFrom dplyr filter
 #' @export
 createTabularData <- function(
-    dataDir = "~/git/alien-species-portal/dataS3",
+    dataDir = "~/git/aspbo/data/output/UAT_processing",
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
     type = c("indicators", "unionlist", "occurrence")) {
   
@@ -377,7 +377,7 @@ createTabularData <- function(
     ### Extract gbif link
     rawData$gbifLink <- sapply(strsplit(rawData$source, split = ": "), function(x) x[1])
     rawData$gbifLink <- paste0("<a href='", rawData$gbifLink, "' target = '_blank'>", 
-                               sapply(strsplit(rawData$gbifLink, split = "/"), function(x) tail(x, n = 1)), "</a>")
+                               rawData$nubKey, "</a>")
     # common name and source: https://www.gbif.org/species/157131005
     
     ## recode `source` variable
