@@ -372,11 +372,8 @@ createTabularData <- function(
     ## convert english names to names recognized by the translation file
     rawData$locality <- getRegionNames(rawData$locality)
     
-    ## Extract hyperlinks 
-    
-    ### Extract gbif link
-    rawData$gbifLink <- sapply(strsplit(rawData$source, split = ": "), function(x) x[1])
-    rawData$gbifLink <- paste0("<a href='", rawData$gbifLink, "' target = '_blank'>", 
+    ## Construct gbif link
+    rawData$gbifLink <- paste0("<a href='https://www.gbif.org/species/", rawData$nubKey, "' target = '_blank'>", 
                                rawData$nubKey, "</a>")
     # common name and source: https://www.gbif.org/species/157131005
     
