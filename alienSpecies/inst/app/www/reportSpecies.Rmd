@@ -28,6 +28,10 @@ knitr::opts_chunk$set(
   fig.height = 8
 )
 
+# allow webshot2 on ECR
+# https://github.com/rstudio/chromote/blob/00c3509dcd1d27266ba4164a4324e49e0b9ef4a2/R/chromote.R#L663
+chromote::set_chrome_args("--headless --no-sandbox")
+
 gewestNames <- sapply(input$species_gewest, function(x)
     translate(data = results$translations, id = x)$title) 
     
