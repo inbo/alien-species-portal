@@ -60,7 +60,7 @@ createSummaryNesten <- function(data,
 #' @import shiny
 #' @export
 countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
-  dashReport = NULL) {
+  dashReport = NULL, triggerReport = reactive(NULL)) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -176,11 +176,7 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
       ## Report Objects ##
       ## -------------- ##
       
-      observe({
-          
-          # Update when any of these change
-          plotResult()
-          input
+      observeEvent(triggerReport(), {
           
           # Return the static values
           dashReport[[ns("countNesten")]] <- c(
@@ -189,7 +185,7 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
               title = isolate(tmpTranslation()$title),
               description = isolate(description())
             ),
-            isolate(reactiveValuesToList(input))
+            reactiveValuesToList(input)
           )
           
         })

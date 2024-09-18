@@ -412,17 +412,20 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param dashReport reactive value, contains all objects for creating the report;
 #' plot and parameters for current plot will be added with id \code{ns("mapOccurrence")}
+#' @param triggerReport reactive object, updates when downloading the report and
+#' creates all missing (non-triggered) info for the report
 #' @return no return value
 #' 
 #' @author mvarewyck
 #' @import shiny
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom webshot webshot
+#' @importFrom webshot2 webshot
 #' @importFrom sf st_drop_geometry
 #' @export
 mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
-  filter = reactive(NULL), groupVariable, showPeriod = FALSE, dashReport = NULL
+  filter = reactive(NULL), groupVariable, showPeriod = FALSE, dashReport = NULL,
+  triggerReport = reactive(NULL)
 ) {
   
   moduleServer(id,
@@ -715,7 +718,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
         content = function(file) {
           
           # convert temp .html file into .png for download
-          webshot::webshot(url = finalMap(), file = file,
+          webshot2::webshot(url = finalMap(), file = file,
             vwidth = 1200, vheight = 600, cliprect = "viewport")
           
         }
@@ -767,13 +770,8 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       
       ## Report Objects ##
       ## -------------- ##
-      
-      observe({
-          
-          req(dashReport)
-          # Update when any of these change
-          req(finalMap())
-          input
+            
+      observeEvent(triggerReport(), {
           
           # Return the static values
           dashReport[[ns("mapOccurrence")]] <- c(
@@ -783,7 +781,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
                   description = isolate(tmpTranslation()$description),
                   showPeriod = (showPeriod && !is.null(input$period))
                 ),
-                isolate(reactiveValuesToList(input))
+                reactiveValuesToList(input)
               )
           
         })

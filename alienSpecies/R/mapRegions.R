@@ -434,12 +434,13 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
 #' @import shiny
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom webshot webshot
+#' @importFrom webshot2 webshot
 #' @importFrom sf st_drop_geometry
 #' @importFrom ggplot2 ggsave
 #' @export
 mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
-  filter = reactive(NULL), facet = FALSE, dashReport = NULL) {
+  filter = reactive(NULL), facet = FALSE, dashReport = NULL,
+  triggerReport = reactive(NULL)) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -957,7 +958,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           } else {
             
             # convert temp .html file into .png for download
-            webshot::webshot(url = finalMap(), file = file,
+            webshot2::webshot(url = finalMap(), file = file,
               vwidth = 1000, vheight = 500, cliprect = "viewport")
             
           }
@@ -1049,13 +1050,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       ## Report Objects ##
       ## -------------- ##
       
-      observe({
-          
-          req(dashReport)
-          
-          # Update when any of these change
-          req(finalMap())
-          input
+      observeEvent(triggerReport(), {
           
           # Return the static values
           dashReport[[if (!facet)
@@ -1074,7 +1069,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
                 list(
                   plotRegion = isolate(plotRegion()$plot)
                 ),
-              isolate(reactiveValuesToList(input))
+              reactiveValuesToList(input)
             )
           
         })

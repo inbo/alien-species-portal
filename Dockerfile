@@ -1,6 +1,6 @@
 FROM rocker/r-ver:4.3.2
 
-MAINTAINER Machteld Varewyck machteld.varewyck@openanalytics.eu
+LABEL maintainer="Machteld Varewyck machteld.varewyck@openanalytics.eu"
 
 RUN apt-get update && apt-get install --no-install-recommends -y \
     libgdal-dev \
@@ -18,12 +18,16 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libssl-dev \
     texlive-latex-extra \
     lmodern \
-    && rm -rf /var/lib/apt/lists/*
-
+    wget && \
+    wget https://downloads.vivaldi.com/stable/vivaldi-stable_6.8.3381.55-1_$(dpkg --print-architecture).deb && \
+    apt-get install --no-install-recommends -y ./vivaldi-stable*.deb && \
+    rm -rf /var/lib/apt/lists/*
+    
+    
 # Use the remotes package instead of devtools as it is much lighter
 RUN R -q -e "install.packages('remotes')"
 
-RUN R -q -e "options(warn = 2); remotes::install_cran(c('shiny', 'data.table', 'dplyr', 'DT', 'ggplot2', 'ggspatial', 'htmlwidgets', 'httr', 'jsonlite', 'leaflet', 'leaflet.extras', 'plotly', 'reshape2', 'rgbif', 'sf', 'shinyjs', 'terra', 'testthat', 'tidyr', 'tidyverse', 'webshot', 'xtable'))"
+RUN R -q -e "options(warn = 2); remotes::install_cran(c('shiny', 'data.table', 'dplyr', 'DT', 'ggplot2', 'ggspatial', 'htmlwidgets', 'httr', 'jsonlite', 'leaflet', 'leaflet.extras', 'plotly', 'reshape2', 'rgbif', 'sf', 'shinyjs', 'terra', 'testthat', 'tidyr', 'tidyverse', 'webshot2', 'xtable'))"
 
 # Specific data format + access to S3 on UAT
 RUN R -q -e "options(warn = 2); Sys.setenv(LIBARROW_MINIMAL=FALSE); remotes::install_cran(c('arrow', 'config', 'aws.ec2metadata', 'aws.s3', 'aws.signature'), Ncpus=1)"
@@ -38,9 +42,8 @@ RUN R -q -e "install.packages('oaStyle', repos = c(rdepot = 'https://repos.opena
 #ENV PATH="/root/bin:${PATH}" 
 #RUN R -e "tinytex::tlmgr_install(pkgs = c('fancyhdr', 'sectsty', 'titling', 'grffile'))" 
 
-# For downloading the maps
-# Attention: do not install phantomjs directly, will not work then!
-RUN R -q -e "options(warn = 2); webshot::install_phantomjs()"
+# Configure browser for using webshot2
+ENV CHROMOTE_CHROME=/usr/bin/vivaldi
 
 # Git sha
 ARG GIT_SHA

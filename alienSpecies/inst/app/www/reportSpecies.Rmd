@@ -28,12 +28,10 @@ knitr::opts_chunk$set(
   fig.height = 8
 )
 
-# Needed for phantomjs no longer supported in Ubuntu22
-# https://github.com/wch/webshot/issues/115#issuecomment-1506488784 
-Sys.setenv(OPENSSL_CONF='/dev/null')
-
 gewestNames <- sapply(input$species_gewest, function(x)
     translate(data = results$translations, id = x)$title) 
+    
+reportNames <- names(dashReport)[!sapply(reactiveValuesToList(dashReport), is.null)]    
 ```
 
 ---
@@ -53,7 +51,7 @@ myTitle <- translate(results$translations, "observations")$title
 cat("#", toupper(myTitle), "\n\n") 
 incProgress(amount = 0.2, detail = myTitle)
 
-childOutput <- lapply(grep("observations", names(dashReport), value = TRUE), function(id) 
+childOutput <- lapply(grep("observations", reportNames, value = TRUE), function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 cat(unlist(childOutput), sep = '\n')
@@ -65,7 +63,7 @@ myTitle <- translate(results$translations, "indicators")$title
 cat("#", toupper(myTitle), "\n\n") 
 incProgress(amount = 0.2, detail = myTitle)
 
-childOutput <- lapply(grep("indicators", names(dashReport), value = TRUE), function(id) 
+childOutput <- lapply(grep("indicators", reportNames, value = TRUE), function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 cat(unlist(childOutput), sep = '\n')
@@ -77,7 +75,7 @@ myTitle <- translate(results$translations, "reporting")$title
 cat("#", toupper(myTitle), "\n\n") 
 incProgress(amount = 0.2, detail = myTitle)
 
-childOutput <- lapply(grep("reporting", names(dashReport), value = TRUE), function(id) 
+childOutput <- lapply(grep("reporting", reportNames, value = TRUE), function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 cat(unlist(childOutput), sep = '\n')
@@ -97,7 +95,7 @@ mgtKey <- if (taxonName() %in% cubeSpecies)
 managementIds <- paste0(mgtKey, c("-mapOccurrence", "_facet-mapInvasion",
 "_lente-barplotLenteNesten", "_province-countNesten", "_provinceTable-tableNesten", 
 "-countYearGroup"))
-managementIds <- managementIds[managementIds %in% names(dashReport)]
+managementIds <- managementIds[managementIds %in% reportNames]
 
 childOutput <- lapply(managementIds, function(id) 
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())

@@ -130,7 +130,8 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NULL) {
+countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NULL,
+  triggerReport = reactive(NULL)) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -160,10 +161,7 @@ countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NU
       ## Report Objects ##
       ## -------------- ##
       
-      observe({
-          
-          # Update when any of these change
-          req(plotResult())
+      observeEvent(triggerReport(), {
           
           # Return the static values
           dashReport[[ns("countYearGroup")]] <- isolate({

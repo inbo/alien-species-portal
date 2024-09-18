@@ -97,10 +97,7 @@ test_that("Emergence status GAM - Observations", {
 
     myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     
-    timeseries <- loadTabularData(type = "timeseries")
-    
     subData <- summarizeTimeSeries(
-      timeseries = timeseries,
       species = myKey,
       region = c("flanders", "brussels")
     )
@@ -136,10 +133,7 @@ test_that("Emergence status GAM - Occupancy", {
     
     myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     
-    timeseries <- loadTabularData(type = "timeseries")
-    
     subData <- summarizeTimeSeries(
-      timeseries = timeseries,
       species = myKey,
       region = c("flanders", "brussels")
     )

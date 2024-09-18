@@ -202,11 +202,11 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @import shiny
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom webshot webshot
+#' @importFrom webshot2 webshot
 #' @importFrom sf st_drop_geometry
 #' @export
 mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, colors, 
-  blur = NULL, maxDate, dashReport = NULL
+  blur = NULL, maxDate, dashReport = NULL, triggerReport = reactive(NULL)
 ) {
   
   moduleServer(id,
@@ -470,7 +470,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
         content = function(file) {
           
           # convert temp .html file into .png for download
-          webshot::webshot(url = finalMap(), file = file,
+          webshot2::webshot(url = finalMap(), file = file,
             vwidth = 1200, vheight = 600, cliprect = "viewport")
           
         }
@@ -493,14 +493,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       ## Report Objects ##
       ## -------------- ##
       
-      observe({
-          
-          req(dashReport)
-          
-          # Update when any of these change
-          finalMap()
-          maxDate()
-          input
+      observeEvent(triggerReport(), {
           
           # Return the static values
           dashReport[[ns("mapHeat")]] <- c(
@@ -509,7 +502,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
               title = isolate(tmpTranslation()$title),
               description = isolate(description()) 
             ),
-            isolate(reactiveValuesToList(input))
+            reactiveValuesToList(input)
           )
           
         })

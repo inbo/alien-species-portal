@@ -242,8 +242,8 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       output$plot <- renderPlotly(finalPlot())
       
       
-      if (plotFunction != "countOccupancy" & plotFunction != "countOccurrence")
-        outputOptions(output, "plot", suspendWhenHidden = FALSE)
+#      if (plotFunction != "countOccupancy" & plotFunction != "countOccurrence")
+#        outputOptions(output, "plot", suspendWhenHidden = FALSE)
       
       
       output$dataDownload <- downloadHandler(

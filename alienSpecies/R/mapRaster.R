@@ -79,7 +79,7 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
 #' @import shiny
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom webshot webshot
+#' @importFrom webshot2 webshot
 #' @importFrom terra values rast
 #' @importFrom httr http_status GET
 #' @importFrom utils download.file
@@ -306,7 +306,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
         content = function(file) {
           
           # convert temp .html file into .png for download
-          webshot::webshot(url = finalMap(), file = file,
+          webshot2::webshot(url = finalMap(), file = file,
             vwidth = 1200, vheight = 600, cliprect = "viewport")
           
         }
