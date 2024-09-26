@@ -1097,8 +1097,8 @@ createBinsServer <- function(id, uiText, data) {
 #' @importFrom ggplot2 ggsave
 #' @export
 mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
-  filter = reactive(NULL), facet = FALSE, dashReport = NULL,
-  triggerReport = reactive(NULL)) {
+  regionLevels = c("communes", "provinces"), filter = reactive(NULL), 
+  facet = FALSE, dashReport = NULL, triggerReport = reactive(NULL)) {
   
   moduleServer(id,
     function(input, output, session) {

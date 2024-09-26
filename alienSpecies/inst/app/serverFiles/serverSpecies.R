@@ -721,42 +721,46 @@ species_readyForDownload <- reactive({
     if (!is.null(results$species_managementFile()))
       validate(need(any(grepl("management", names(dashReport))), "Please wait"))
     
+    removeNotification(id = "reportWait")   
+    
     return(species_createReport())
     
   })
 
 observeEvent(species_readyForDownload(), {
     
-    oldDir <- getwd()
-    setwd(tempdir())
-    on.exit(setwd(oldDir))
-    
-    fromFiles <- system.file("app/www", c(
-        "reportSpecies.Rmd", 
-        "plotSpecies.Rmd",
-        "plotLandscape.Rmd"
-      ), package = "alienSpecies")
-    file.copy(from = fromFiles, to = file.path(tempdir(), basename(fromFiles)), overwrite = TRUE)
-    
-    species_reportFile(
-      rmarkdown::render(
-        input = file.path(tempdir(), basename(fromFiles[1])),
-        output_file = tempfile(fileext = ".pdf"),
-        intermediates_dir = tempdir(),
-        output_options = list(
-          bigLogo = getPathLogo(type = "combined")
+    withProgress(message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), value = 0, {
+        
+        oldDir <- getwd()
+        setwd(tempdir())
+        on.exit(setwd(oldDir))
+        
+        fromFiles <- system.file("app/www", c(
+            "reportSpecies.Rmd", 
+            "plotSpecies.Rmd",
+            "plotLandscape.Rmd"
+          ), package = "alienSpecies")
+        file.copy(from = fromFiles, to = file.path(tempdir(), basename(fromFiles)), overwrite = TRUE)
+        
+        species_reportFile(
+          rmarkdown::render(
+            input = file.path(tempdir(), basename(fromFiles[1])),
+            output_file = tempfile(fileext = ".pdf"),
+            intermediates_dir = tempdir(),
+            output_options = list(
+              bigLogo = getPathLogo(type = "combined")
+            )
+          )
         )
-      )
-    )
-    
-    session$sendCustomMessage(type = "imageReady", 
-      message = list(id = "species-downloadReport"))
-    
-    # Reset report content - if switching species
-    for (iName in names(dashReport))
-      dashReport[[iName]] <- NULL
-    
-    removeNotification(id = "reportWait")   
+        
+        session$sendCustomMessage(type = "imageReady", 
+          message = list(id = "species-downloadReport"))
+        
+        # Reset report content - if switching species
+        for (iName in names(dashReport))
+          dashReport[[iName]] <- NULL
+        
+      })
     
   })
 
