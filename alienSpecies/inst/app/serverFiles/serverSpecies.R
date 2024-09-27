@@ -218,18 +218,6 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
   triggerReport = species_createReport
 )
 
-# TODO tmp fix for reading latest data
-if (TRUE) {
-  readS3(
-    file = "be_alientaxa_cube_processed.RData", 
-    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
-  )
-  facet_df <- rawData[, c("year", "cell_code1", "taxonKey", "n",
-      "isFlanders", "isWallonia", "isBrussels", "gemeente", "provincie", "gewest",           
-      "scientificName", "classKey", "cell_code10")]
-  data.table::setnames(facet_df, "gemeente", "NAAM")
-  data.table::setnames(facet_df, "gewest", "GEWEST")
-}
 
 ## Invasion history
 dashReport <- mapRegionsServer(id = "indicators_facet",
@@ -237,9 +225,7 @@ dashReport <- mapRegionsServer(id = "indicators_facet",
   species = taxonName,
   gewest = reactive(req(input$species_gewest)),
   regionLevels = c("communes", "provinces", "cell_code1", "cell_code10"),
-  df = reactive({
-      facet_df[taxonKey %in% input$species_choice, ]
-    }),
+  df = reactive(occurrenceData[taxonKey %in% input$species_choice, ]),
   occurrenceData = NULL,
   shapeData = allShapes,
   facet = TRUE,

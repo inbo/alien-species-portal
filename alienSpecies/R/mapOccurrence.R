@@ -759,10 +759,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
         data = reactive({
             validate(need(gewest(), noData()))
             req(filterData())
-            merge(filterData(), 
-              # attach regions for coloring
-              sf::st_drop_geometry(shapeData$utm1_bel_with_regions)[, c("CELLCODE", paste0("is", simpleCap(gewest())))], 
-              by.x = "cell_code1", by.y = "CELLCODE", all.x = TRUE)
+            filterData()
           }),
         period = reactive(input$period),
         combine = reactive(input$combine),
