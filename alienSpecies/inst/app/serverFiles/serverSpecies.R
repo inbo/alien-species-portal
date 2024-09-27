@@ -227,8 +227,8 @@ if (TRUE) {
   facet_df <- rawData[, c("year", "cell_code1", "taxonKey", "n",
       "isFlanders", "isWallonia", "isBrussels", "gemeente", "provincie", "gewest",           
       "scientificName", "classKey", "cell_code10")]
-  setnames(facet_df, "gemeente", "NAAM")
-  setnames(facet_df, "gewest", "GEWEST")
+  data.table::setnames(facet_df, "gemeente", "NAAM")
+  data.table::setnames(facet_df, "gewest", "GEWEST")
 }
 
 ## Invasion history
