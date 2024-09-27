@@ -229,7 +229,8 @@ dashReport <- mapRegionsServer(id = "indicators_facet",
   occurrenceData = NULL,
   shapeData = allShapes,
   facet = TRUE,
-  dashReport = dashReport
+  dashReport = dashReport,
+  triggerReport = species_createReport
 )
 
 ### Reporting
