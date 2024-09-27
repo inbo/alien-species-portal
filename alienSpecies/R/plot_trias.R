@@ -165,7 +165,8 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
       output$filters <- renderUI({
           
           if (!is.null(filters)) 
-            lapply(names(filters), function(iFilter) {
+            wellPanel(
+              lapply(names(filters), function(iFilter) {
                   if (filters[[iFilter]]$type == "checkbox") {
                     checkboxInput(inputId = ns(iFilter), 
                       label = translate(uiText(), iFilter)$title) 
@@ -173,10 +174,11 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
                     choices <- filters[[iFilter]]$choices
                     names(choices) <- translate(uiText(), choices)$title
                     fluidRow(column(4, selectInput(inputId = ns(iFilter),
-                      label = translate(uiText(), iFilter)$title,
-                      choices = choices)))
+                          label = translate(uiText(), iFilter)$title,
+                          choices = choices)))
                   }
                 })
+            )
           
         })
       
@@ -191,7 +193,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
           subData
           
         })      
-    
+
       
       plotResult <- plotModuleServer(id = "plotTrias",
         plotFunction = "plotTrias",
@@ -204,12 +206,14 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
             if (!is.null(triasArgs)) {
               
               initArgs <- triasArgs()
-              if (triasFunction == "apply_gam")
-                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):max(plotData()$year, na.rm = TRUE)
-              if (!is.null(input$correctBias) && input$correctBias) {
+              if (triasFunction == "apply_gam") {
+                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):
+                  max(plotData()$year, na.rm = TRUE)
+                if (!is.null(input$correctBias) && input$correctBias) {
                   if (initArgs$y_var == "obs")
                     initArgs$baseline_var <- "cobs" else
                     initArgs$baseline_var <- "c_ncells"
+                }
               }
               if (!is.null(input$regionLevel))
                 initArgs$type <- input$regionLevel
@@ -270,9 +274,7 @@ plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = F
       ns = ns,
       
       uiOutput(ns("descriptionPlotTrias")),
-      wellPanel(
-        uiOutput(ns("filters"))
-      ),
+      uiOutput(ns("filters")),
       
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else

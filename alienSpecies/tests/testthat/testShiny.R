@@ -230,8 +230,7 @@ test_that("Module mapHeat",{
                     })
 })
 
-# 
-# 
+
 test_that("Module mapRegions",{
 
   vespaPoints <- Vespa_velutina_shape$points
@@ -267,13 +266,9 @@ test_that("Module mapRegions",{
                     args = list(
                       uiText = reactive(translationsEn),
                       species = reactive( "Vespa velutina"),
-                      df = reactive({
-                        vespaBoth
-                        
-                      }),
+                      df = reactive(vespaBoth),
                       occurrenceData = NULL,
-                      shapeData = allShapes,
-                      sourceChoices = c("individual", "nest")
+                      shapeData = allShapes
                     ), {
                       session$setInputs(globe = 2)
                       session$setInputs(year = "2018")
@@ -282,9 +277,7 @@ test_that("Module mapRegions",{
                       session$setInputs(period = c(2017,2020))
                       session$setInputs(regionLevel = "communes")
                       session$setInputs(gewestLevel = c("flanders", "brussels", "wallonia"))
-                      session$setInputs(bronMap = c("individual", "nest"))
                       expect_true(!is.null(subData ))
-                      expect_true(!is.null(output$bronMap ))
                       expect_true(!is.null(summaryData()))
                       expect_true(!is.null(noData()))
                      # expect_true(!is.null(output$regionsPlot ))
@@ -387,5 +380,5 @@ test_that("Custom bins in shiny", {
     app <- shinyApp(ui, server)
     expect_s3_class(app, "shiny.appobj")
 #   app
-
-})
+    
+  })

@@ -160,7 +160,7 @@ createTimeseries <- function(
   
                              
   # For R CMD check
-  df_ts <- taxonKey <- NULL
+  df_ts <- taxonKey <- eea_cell_code <- NULL
   
   # created from https://github.com/inbo/aspbo/blob/uat/src/05_occurrence_indicators_preprocessing.Rmd
   ## Data at 1km x 1km grid level
@@ -324,6 +324,7 @@ createTabularData <- function(
   i.scientificName <- NULL
   i.classKey <- NULL
   taxonKey <- variable <- eea_cell_code <- NULL
+  obs <- NULL
   
   warningMessage <- NULL
   

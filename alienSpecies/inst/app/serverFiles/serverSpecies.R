@@ -464,19 +464,6 @@ observe({
         triggerReport = species_createReport
       )
       
-      # Facet invasion
-      dashReport <- mapRegionsServer(id = "management2_facet",
-        uiText = reactive(results$translations),
-        species = taxonName,
-        gewest = reactive(req(input$species_gewest)),
-        df = reactive(combinedManaged),
-        occurrenceData = NULL,
-        shapeData = allShapes,
-        facet = TRUE,
-        dashReport = dashReport,
-        triggerReport = species_createReport
-      )
-      
       # Aantal lente nesten
       dashReport <- plotTriasServer(
         id = "management2_lente",
@@ -546,19 +533,6 @@ observe({
         df = results$species_managementData,
         occurrenceData = occurrenceData,
         shapeData = allShapes,
-        dashReport = dashReport,
-        triggerReport = species_createReport
-      )
-      
-      # Facet invasion
-      dashReport <- mapRegionsServer(id = "management3_facet",
-        uiText = reactive(results$translations),
-        species = taxonName,
-        gewest = reactive(req(input$species_gewest)),
-        df = results$species_managementData,
-        occurrenceData = NULL,
-        shapeData = allShapes,
-        facet = TRUE,
         dashReport = dashReport,
         triggerReport = species_createReport
       )
@@ -729,7 +703,9 @@ species_readyForDownload <- reactive({
 
 observeEvent(species_readyForDownload(), {
     
-    withProgress(message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), value = 0, {
+    withProgress(
+      message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), 
+      value = 0, {
         
         oldDir <- getwd()
         setwd(tempdir())
