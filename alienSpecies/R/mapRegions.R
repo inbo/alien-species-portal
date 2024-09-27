@@ -451,7 +451,12 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
     if (!is.na(maxValue))
       values[length(values)] <- maxValue
     
-    paste0(values[-length(values)] + c(0, rep(1, length(values)-2)), "-", values[-1])
+    fromValues <- values[-length(values)] + c(0, rep(1, length(values)-2))
+    toValues <- values[-1] 
+    # Replace if 'from' larger than 'to'
+    fromValues <- sapply(seq_along(fromValues), function(i) min(fromValues[i], toValues[i]))
+    
+    toReturn <- paste0(fromValues, "-", toValues)
     
   }
   
@@ -534,8 +539,7 @@ createBinsUI <- function(id) {
   
   fixedRow(
     column(4, 
-      sliderInput(inputId = ns("nBins"), label = "nBins", 
-        min = 3, max = 8, value = 5),
+      uiOutput(ns("nBinsOut")),
       selectInput(inputId = ns("binType"), label = "binType", 
         choices = c("userDefined", "uniform", "quantiles")),
       fluidRow(
@@ -599,6 +603,24 @@ createBinsServer <- function(id, uiText, data) {
           
         })
       
+      output$nBinsOut <- renderUI({
+          
+          unit <- attr(data(), "unit")
+          
+          if (unit == "cpue")
+            responseVariable <- "effort" else
+            responseVariable <- "n"
+          
+          possibleValues <- unique(data()[[responseVariable]])
+          maxBins <- length(possibleValues[!is.na(possibleValues)])
+          print(unique(data()[[responseVariable]]))
+          
+          sliderInput(inputId = ns("nBins"), label = "nBins", 
+            min = if (maxBins <= 3) 0 else 3, 
+            max = min(8, maxBins), 
+            value = min(5, maxBins))
+          
+        })
       
       binnedData <- reactive({
           
