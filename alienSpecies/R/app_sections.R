@@ -223,13 +223,14 @@ versionServer <- function(id, uiText) {
 #' @param id character, unique identifier
 #' @param species reactive object, taxonkey for the selected species
 #' @param language reactive object, language for UI content
-#' @param url character, url to be displayed
+#' @param url character, url to be included in the link (back-end)
+#' @param linkText character, text to be displayed for the url (front-end)
 #' @return no return value
 #' 
 #' @author mvarewyck
 #' @importFrom htmltools includeHTML
 #' @export
-htmlSectionServer <- function(id, species, language, url) {
+htmlSectionServer <- function(id, species, language, url = NA, linkText) {
   
   moduleServer(id, function(input, output, session) {
       
@@ -242,7 +243,7 @@ htmlSectionServer <- function(id, species, language, url) {
           
           tagList(
             if (!is.na(url))
-              tags$a(href = url, target = "_blank", url),
+              tags$a(href = url, target = "_blank", linkText),
             if (httr::http_status(httr::GET(dataFile))$category != "Client error")
               includeHTML(dataFile)
           )

@@ -594,9 +594,10 @@ observe({
     # https://stackoverflow.com/a/64324799
     
     # Conditionally enable 'More'
+    moreChoices <- unique(c(keysRiskMap, keysLinks, harmoniaData$gbif_taxonkey))
     shinyjs::toggleState(
       selector = '#species_tabs a[data-value="species_more"', 
-      condition = input$species_choice %in% c(keysRiskMap, keysLinks, harmoniaData$gbif_taxonkey)
+      condition = input$species_choice %in% moreChoices
     )
     # Risk maps
     shinyjs::toggleState(
@@ -610,20 +611,30 @@ observe({
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_links"', 
-      condition = input$species_choice %in% c(keysLinks, harmoniaData$gbif_taxonkey)
+      condition = input$species_choice %in% keysLinks
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_risk_management"', 
-      condition = FALSE
+      condition = input$species_choice %in% harmoniaData$gbif_taxonkey
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_images"', 
       condition = FALSE
     )
     
+    if (input$species_choice %in% moreChoices)
+      updateTabsetPanel(session = session, inputId = "species_more", 
+        selected = if (input$species_choice %in% keysRiskMap)
+            "species_risk_maps" else if (input$species_choice %in% keysLinks)
+            "species_links" else if (input$species_choice %in% harmoniaData$gbif_taxonkey)
+            "species_risk_management") else
+      updateTabsetPanel(session = session, inputId = "species_tabs", 
+        selected = "species_observations")
+  
   })
 
 # Risk maps
+## test with "Psittacula krameri"
 observe({
     
     req(input$species_choice)
@@ -632,6 +643,7 @@ observe({
       id = "risk", 
       uiText = reactive(results$translations),
       species = taxonName,
+      gewest = reactive(input$species_gewest),
       taxonKey = reactive(input$species_choice)
     )
     
@@ -639,13 +651,26 @@ observe({
 
 
 # Links
+## test with "Vespa velutina"
 observe({
     
     req(input$species_choice)
     
     htmlSectionServer(id = "links", species = reactive(input$species_choice),
+      language = reactive(attr(results$translations, "language")))
+    
+  })
+
+# Risk assessment
+## test with "Psittacula krameri"
+observe({
+    
+    req(input$species_choice)
+    
+    htmlSectionServer(id = "risk_assessment", species = reactive(input$species_choice),
       language = reactive(attr(results$translations, "language")),
-      url = harmoniaData$harmonia_url[match(input$species_choice, harmoniaData$gbif_taxonkey)])
+      url = harmoniaData$harmonia_url[match(input$species_choice, harmoniaData$gbif_taxonkey)],
+      linkText = "Harmonia+ Risk Assessment")
     
   })
 
