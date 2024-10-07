@@ -269,7 +269,8 @@ heatSpecies <- c("Vespa velutina")
 results$species_managementFile <- reactive({
     
     req(taxonName())
-    expectFile <- if (taxonName() %in% heatSpecies)
+    expectFile <- if (taxonName() == "Vespa velutina")  # exclude Vespa velutina mgt #121
+        "" else if (taxonName() %in% heatSpecies)
         paste0(gsub(" ", "_", taxonName()), "_shape.RData") else 
         gsub(" ", "_", paste0(taxonName(), ".csv"))
     availableFiles <- aws.s3::get_bucket_df(
