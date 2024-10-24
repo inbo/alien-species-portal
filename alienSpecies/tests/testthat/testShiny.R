@@ -342,7 +342,7 @@ test_that("Custom bins in shiny", {
       
       originalData <- reactive({
           
-          firstBins <- createBins(data = tmpData, cutValues = c(0, 10, 20, 30, Inf))
+          firstBins <- createBins(data = tmpData, nBins = 4)
           isolate(binnedData(firstBins))
           firstBins
           
@@ -370,7 +370,7 @@ test_that("Custom bins in shiny", {
       
       output$printBinned <- renderPrint({
           
-          table(binnedData()$group)
+          binnedData()
           
         })
       
