@@ -192,7 +192,8 @@ createSummaryRegions <- function(data, shapeData,
   attr(allData, "unit") <- unit
   
   # Create group variable
-  allData <- createBins(data = allData)
+  allData <- createBinsData(data = allData,
+    cutValues = cutBins(data = allData, nBins = 4))
   
   
   return(allData)
@@ -422,21 +423,42 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
 
 }
 
-#' Create bins
-#' @param data data.frame, as returned by \code{\link{createSummaryRegions}} 
-#' @param nBins integer, number of bins
-#' @param binType character, type of bins; should be one of \code{c("userDefined", "quantiles", "uniform")}
-#' @param cutValues numeric vector, if \code{binType} is "userDefined" this can
-#' contain the cut values defined by the user; default is NULL
-#' @param customLabels character vector, labels that should be used for the groups;
-#' if NULL the code will generate some labels; default is NULL
-#' @return data.frame as in \code{data} but with additional column "group"
+#' Create labels for cutoff values
+#' @param values numeric vector, cutoff values
+#' @param newLabels character vector, current labels provided by the user;
+#' default value is NULL
+#' @return character vector, labels for the cutoff values
 #' 
 #' @author mvarewyck
-#' @importFrom stats quantile
 #' @export
-createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uniform"), 
-  cutValues = NULL, customLabels = NULL) {
+labelBins <- function(values, newLabels = NULL) {
+  
+  fromValues <- values[-length(values)] + c(0, rep(1, length(values)-2))
+  toValues <- values[-1] 
+  # Replace if 'from' larger than 'to'
+  fromValues <- sapply(seq_along(fromValues), function(i) min(fromValues[i], toValues[i]))
+  
+  toReturn <- paste0(fromValues, "-", toValues)
+  
+  if (!is.null(newLabels)) {
+    
+    newLabels[is.na(newLabels)] <- toReturn[is.na(newLabels)]
+    newLabels
+    
+  } else toReturn
+  
+}
+
+
+#' Create cut-off values
+#' @inheritParams createBinsData  
+#' @param nBins integer, number of bins
+#' @param binType character, type of bins; should be one of \code{c("userDefined", "quantiles", "uniform")}
+#' @return numeric vector, cutoff values
+#' 
+#' @author mvarewyck
+#' @export
+cutBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uniform")) {
   
   
   binType <- match.arg(binType)
@@ -446,102 +468,64 @@ createBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uni
     responseVariable <- "effort" else
     responseVariable <- "n"
   
-  labelValues <- function(values, minValue = NA, maxValue = NA, newLabels = customLabels) {
-    
-    if (!is.na(minValue))
-      values[1] <- minValue
-    if (!is.na(maxValue))
-      values[length(values)] <- maxValue
-    
-    fromValues <- values[-length(values)] + c(0, rep(1, length(values)-2))
-    toValues <- values[-1] 
-    # Replace if 'from' larger than 'to'
-    fromValues <- sapply(seq_along(fromValues), function(i) min(fromValues[i], toValues[i]))
-    
-    toReturn <- paste0(fromValues, "-", toValues)
-    
-    if (!is.null(newLabels)) {
-      
-      newLabels[is.na(newLabels)] <- toReturn[is.na(newLabels)]
-      newLabels
-      
-    } else toReturn
-    
-  }
   
-  
-  if (binType %in% c("uniform", "quantiles")) {
+  if (length(unique(data[[responseVariable]])) == nBins) {
     
-    if (length(unique(data[[responseVariable]])) == nBins) {
-      
-      cutValues <- c(unique(data[[responseVariable]]), Inf)
-        
-    } else if (length(unique(data[[responseVariable]])) == (nBins+1)) {
-      
-      cutValues <- unique(data[[responseVariable]])
-      
-    } else if (binType == "uniform") {
-      
-      dataRange <- range(data[[responseVariable]], na.rm = TRUE) 
-      cutValues <- round(dataRange[1] + c(0, (dataRange[2] - dataRange[1])/nBins*(1:nBins)))
-      
-    } else {
-      
-      cutValues <- round(quantile(data[[responseVariable]], probs = seq(0, 1, length.out = nBins+1), na.rm = TRUE))
-      
-    }
-          
-    for (i in seq_along(cutValues))
-      if (duplicated(cutValues)[i])
-        cutValues[i] <- cutValues[i] + 1
-    newLabels <- labelValues(cutValues, newLabels = customLabels)
-    cutValues[length(cutValues)] <- Inf
+    cutValues <- c(unique(data[[responseVariable]]), Inf)
     
-    data$group <- cut(x = data[[responseVariable]], breaks = cutValues, include.lowest = TRUE,
-      labels = newLabels)
+  } else if (length(unique(data[[responseVariable]])) == (nBins+1)) {
+    
+    cutValues <- unique(data[[responseVariable]])
+    
+  } else if (binType == "quantiles") {
+    
+    cutValues <- round(quantile(data[[responseVariable]], probs = seq(0, 1, length.out = nBins+1), na.rm = TRUE))
     
   } else {
     
-    if (unit == "cpue") {
-      
-      if (is.null(cutValues))
-        cutValues <- c(0, 10, 100, 200, 300, 400, Inf)
-      data$group <- cut(x = data[[responseVariable]], 
-        breaks = cutValues,
-        labels = labelValues(cutValues, 
-          minValue = 0,
-          maxValue = ceiling(max(data[[responseVariable]], na.rm = TRUE)))
-      )
-      
-    } else if (unit == "difference") {
-      
-      if (is.null(cutValues))
-        cutValues <- c(-Inf, -20, -10, 0, 10, 20, Inf)
-      
-      data$group <- cut(x = data[[responseVariable]], 
-        breaks = cutValues,
-        labels = labelValues(cutValues, 
-          minValue = min(-50, min(data[[responseVariable]], na.rm = TRUE)),
-          maxValue = max(50, max(data[[responseVariable]], na.rm = TRUE)))
-      )
-      
-    } else {
-      
-      if (is.null(cutValues))
-        cutValues <- c(0, 50, 100, 500, Inf)
-            
-      data$group <- cut(x = data[[responseVariable]], 
-        breaks = cutValues,
-        labels = labelValues(cutValues, 
-          minValue = 0,
-          maxValue = max(1000, max(data[[responseVariable]], na.rm = TRUE)))
-      )
-      
-    }
+    dataRange <- range(data[[responseVariable]], na.rm = TRUE)
+    cutValues <- round(dataRange[1] + c(0, (dataRange[2] - dataRange[1])/nBins*(1:nBins)))
     
   }
   
-  attr(data, "breaks") <- cutValues[-1]
+  for (i in seq_along(cutValues))
+    if (duplicated(cutValues)[i])
+      cutValues[i] <- cutValues[i-1] + 1
+  
+  cutValues
+  
+}
+
+
+#' Create bins data
+#' @param data data.frame, as returned by \code{\link{createSummaryRegions}} 
+#' @param cutValues numeric vector, if \code{binType} is "userDefined" this can
+#' contain the cut values defined by the user; default is NULL
+#' @param customLabels character vector, labels that should be used for the groups;
+#' if NULL the code will generate some labels; default is NULL
+#' @return data.frame as in \code{data} but with additional column "group"
+#' 
+#' @author mvarewyck
+#' @importFrom stats quantile
+#' @export
+createBinsData <- function(data, cutValues, customLabels = NULL) {
+  
+  newLabels <- labelBins(cutValues, newLabels = customLabels)
+  breakValues <- cutValues
+  breakValues[length(breakValues)] <- Inf
+  
+  unit <- attr(data, "unit")
+  
+  if (unit == "cpue")
+    responseVariable <- "effort" else
+    responseVariable <- "n"
+  
+  data$group <- cut(
+    x = data[[responseVariable]], 
+    breaks = breakValues, 
+    include.lowest = TRUE,
+    labels = newLabels)
+  
   
   data
   
@@ -583,7 +567,7 @@ createBinsUI <- function(id) {
 #' @return reactive data.frame, binned data
 #' 
 #' @author mvarewyck
-#' @importFrom graphics barplot
+#' @importFrom graphics barplot text
 #' @export
 createBinsServer <- function(id, uiText, data) {
   
@@ -598,8 +582,7 @@ createBinsServer <- function(id, uiText, data) {
       observe({
           
           updateSliderInput(session, inputId = "nBins",
-            label = translate(uiText(), "nBins")$title,
-            value = length(levels(data()$group)))
+            label = translate(uiText(), "nBins")$title)
           
         })
       
@@ -648,56 +631,11 @@ createBinsServer <- function(id, uiText, data) {
           
         })
       
-      binnedData <- reactive({
-          
-          currentValues <- sapply(1:isolate(input$nBins), function(i) 
-                if (is.null(input[[paste0("classBound", i)]]))
-                  NA else
-                  input[[paste0("classBound", i)]]
-            )
-          currentLabels <- sapply(1:isolate(input$nBins), function(i) 
-                if (is.null(input[[paste0("classLabel", i)]])) 
-                  NA else
-                  input[[paste0("classLabel", i)]]
-            )
-          
-          isolate({
-              
-              if (input$binType != previousType() | input$nBins != previousBins()) {
-                
-                previousType(input$binType)
-                previousBins(input$nBins)
-                currentLabels <- NA
-                
-              }
-              
-            })
-                   
-          tryCatch(createBins(
-            data = data(), 
-            nBins = req(input$nBins), 
-            binType = req(input$binType),
-            cutValues = if (input$binType == "userDefined") 
-              c(
-                # start value
-                lowestValue(), 
-                # other values = last of each group
-                if (!all(is.na(currentValues))) {
-                    currentValues[length(currentValues)] <- Inf
-                    currentValues 
-                  } else
-                    sapply(levels(data()$group), function(x) as.numeric(tail(strsplit(x, split = "-")[[1]], n = 1)))
-              ),
-            customLabels = if (!all(is.na(currentLabels))) currentLabels
-          ), error = function(err) validate(need(FALSE, translate(uiText(), "noData"))))
-          
-        })
-      
       colorBins <- reactive({
           
           req(input$nBins)
           
-          palette <- if (attr(binnedData(), "unit") == "difference") "RdYlGn" else "YlOrBr"
+          palette <- if (attr(data(), "unit") == "difference") "RdYlGn" else "YlOrBr"
           paletteFunction <- colorFactor(palette = palette, levels = letters[1:input$nBins], 
             na.color = "transparent", reverse = (palette != "YlOrBr"))
           
@@ -705,11 +643,23 @@ createBinsServer <- function(id, uiText, data) {
           
         })
       
+      originalBreaks <- reactive({
+          
+          cutBins(
+            data = data(), 
+            nBins = req(input$nBins), 
+            binType = req(input$binType)
+          )
+          
+        })
+      
       output$binNames <- renderUI({
           
           req(input$nBins)
           
-          currentGroups <- levels(binnedData()$group)
+          currentGroups <- labelBins(
+            values = originalBreaks()
+          )
           
           lapply(1:input$nBins, function(i) {
               
@@ -728,24 +678,16 @@ createBinsServer <- function(id, uiText, data) {
       
       output$binBreaks <- renderUI({
           
+          req(input$binType)
           req(input$nBins)
           
           if (input$binType == "userDefined") {
-            
-            isolate({
-                currentBounds <- sapply(1:input$nBins, function(i) 
-                    if (i == input$nBins)
-                      Inf else if (!is.null(input[[paste0("classBound", i)]]))
-                      input[[paste0("classBound", i)]] else
-                      attr(binnedData(), "breaks")[i]
-                )
-              })
             
             lapply(1:input$nBins, function(i) {
                 
                 if (i != input$nBins) numericInput(ns(paste0("classBound", i)), 
                     label = if (i == 1) translate(uiText(), "break")$title else "",
-                    value = currentBounds[i])
+                    value = originalBreaks()[i])
                 
               })
             
@@ -754,29 +696,37 @@ createBinsServer <- function(id, uiText, data) {
             lapply(1:input$nBins, function(i) {
                 
                 if (i != input$nBins) shinyjs::disabled(numericInput(ns(paste0("classBound", i)), 
-                    label = if (i == 1) translate(uiText(), "break")$title else "",
-                    value = attr(binnedData(), "breaks")[i]))
+                      label = if (i == 1) translate(uiText(), "break")$title else "",
+                      value = originalBreaks()[i]))
                 
-            })
+              })
             
           }
-        
           
+        })
+      
+      adjustedBreaks <- reactive({
+          
+          req(input$nBins)
+          req(input$binType)
+          
+          if (input$binType == "userDefined") {
+            c(lowestValue(), 
+              sapply(1:input$nBins, function(i) 
+                  if (i == input$nBins)
+                    Inf else 
+                    req(input[[paste0("classBound", i)]]))) 
+          } else {
+            originalBreaks()
+          }
+        
         })
       
       binnedDataAfter <- reactive({
           
-          req(input$binType)
-          
-          createBins(data = data(),
-            nBins = input$nBins, 
-            binType = input$binType, 
-            cutValues = if (input$binType == "userDefined")
-              c(lowestValue(), 
-                sapply(1:input$nBins, function(i) 
-                    if (i == input$nBins)
-                      Inf else 
-                      req(input[[paste0("classBound", i)]]))),
+          createBinsData(
+            data = data(),
+            cutValues = adjustedBreaks(),
             customLabels = sapply(1:input$nBins, function(i) input[[paste0("classLabel", i)]])
           )
         
@@ -789,9 +739,11 @@ createBinsServer <- function(id, uiText, data) {
               translate(uiText(), "noData")$title))
           
           classTable <- table(binnedDataAfter()$group)
+          originalLabels <- paste0("(", labelBins(values = adjustedBreaks()), ")")
           
-          barplot(classTable, las = 1, ylab = translate(uiText(), "number")$title,
+          bp <- barplot(classTable, las = 1, ylab = translate(uiText(), "number")$title,
             col = colorBins())
+          text(x = bp[,1], y = -max(classTable)/5, adj = c(0.5, 0), originalLabels, offset = 3, cex = 0.8, xpd = TRUE)
           
         })
       
@@ -1066,7 +1018,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       observe({
           
           results$tmpBinnedData <- createBinsServer(id = "mapRegions", uiText = uiText, 
-            data = binnedData)
+            data = summaryData)
           
         })
       
