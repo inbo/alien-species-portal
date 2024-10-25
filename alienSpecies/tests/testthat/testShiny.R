@@ -318,7 +318,9 @@ test_that("Custom bins in shiny", {
     tmpData <- cars
     attr(tmpData, "unit") <- "aantal"
     tmpData$n <- tmpData$speed
-    testBins <- createBins(data = tmpData, binType = "quantiles", nBins = 4)
+    cutValues <- cutBins(data = tmpData, nBins = 4, binType = "quantiles")
+    customLabels <- labelBins(values = cutValues)
+    testBins <- createBinsData(data = tmpData, cutValues = cutValues, customLabels = customLabels)
     
     
     ui <- fluidPage(
@@ -342,7 +344,13 @@ test_that("Custom bins in shiny", {
       
       originalData <- reactive({
           
-          firstBins <- createBins(data = tmpData, nBins = 4)
+          cutValues <- cutBins(data = tmpData, nBins = 4, binType = "quantiles")
+          
+          createBinsData(
+            data = tmpData,
+            cutValues = cutValues,
+            customLabels = labelBins(values = cutValues)
+          )
           isolate(binnedData(firstBins))
           firstBins
           
