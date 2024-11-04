@@ -378,6 +378,7 @@ observeEvent(tmpKey(), {
 ### Plots
 ### -----------------
 
+results$exoten_xMajor <- reactive(optimalSteps(values = results$exoten_data()$first_observed))
 
 # Checklist tab
 observeEvent(input$exoten_tabs, {
@@ -394,6 +395,8 @@ observeEvent(input$exoten_tabs, {
       triasArgs = reactive({
           list(
             start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
+            x_major_scale_stepsize = results$exoten_xMajor(),
+            x_minor_scale_stepsize = results$exoten_xMajor()/2,
             x_lab = translate(results$translations, "year")$title,
             y_lab = translate(results$translations, "indicator_introduction_year")$title
           )
@@ -409,6 +412,8 @@ observeEvent(input$exoten_tabs, {
       triasArgs = reactive({
           list(
             start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
+            x_major_scale_stepsize = results$exoten_xMajor(),
+            x_minor_scale_stepsize = results$exoten_xMajor()/2,
             x_lab = translate(results$translations, "year")$title,
             y_lab = translate(results$translations, "indicator_total_year")$title
           )
