@@ -546,12 +546,15 @@ observeEvent(input$exoten_tabs, {
       triasFunction = "indicator_native_range_year",
       triasArgs = reactive({
           list(
+            x_major_scale_stepsize = results$exoten_xMajor(),
             x_lab = translate(results$translations, "year")$title,
             y_lab = translate(results$translations, "number")$title
           )
         }),
       filters = list(
-        regionLevel = c("native_continent", "native_range"))
+        regionLevel = c("native_continent", "native_range"),
+        summarizeBy = c("absolute", "cumulative")
+        )
     )
     
   })
