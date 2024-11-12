@@ -43,6 +43,7 @@ summarizeTimeSeries <- function(species, region = c("flanders", "wallonia", "bru
   
   combinedData <- do.call(rbindlist, list(list(nonProtectedData, protectedData), fill = TRUE))
   
+  
   return(combinedData)
   
   

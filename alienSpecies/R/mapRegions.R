@@ -50,7 +50,8 @@ combineVespaData <- function(pointsData, nestenData, nestenBeheerdData) {
 #' @param data data.table with management data
 #' @param shapeData list, each object is \code{SpatialPolygonsDataFrame}. 
 #' Needed for the \code{regionLevel} specified
-#' @param regionLevel character, should be one of \code{c("communes", "provinces")}
+#' @param regionLevel character, should be one of 
+#' \code{c("communes", "provinces", "gewest", "cell_code1", "cell_code10")}
 #' @param year integer, year of interest
 #' @param unit character, should be one of \code{c("cpue", "absolute")},
 #' catch per unit of effort or absolute count
@@ -65,7 +66,7 @@ combineVespaData <- function(pointsData, nestenData, nestenBeheerdData) {
 #' @importFrom stats as.formula
 #' @export
 createSummaryRegions <- function(data, shapeData, 
-  regionLevel = c("communes", "provinces", "gewest"),
+  regionLevel = c("communes", "provinces", "gewest", "cell_code1", "cell_code10"),
   year = NULL, unit = c("absolute", "cpue", "difference"), groupingVariable = NULL) {
   
   # For R CMD check
@@ -106,7 +107,8 @@ createSummaryRegions <- function(data, shapeData,
   regionVariable <- switch(regionLevel,
     communes = "NAAM",
     provinces = "provincie",
-    gewest = "GEWEST"
+    gewest = "GEWEST",
+    regionLevel
   )
   
   if (!regionVariable %in% colnames(data))
@@ -127,12 +129,6 @@ createSummaryRegions <- function(data, shapeData,
       summarise(effort = sum(effort, na.rm = TRUE),
         n = sum(n, na.rm = TRUE))
     
-    summaryData$group <- cut(x = summaryData$effort, 
-      breaks = c(0, 10, 100, 200, 300, 400, Inf),
-      labels = c("1-10", "11-100", "101-200", "201-300", "300-400", 
-        paste0("401-", max(500, ceiling(max(summaryData$n)))))
-    )
-    
     summaryData$outcome <- summaryData$effort
     
   } else if (unit == "difference") {
@@ -149,12 +145,6 @@ createSummaryRegions <- function(data, shapeData,
     summaryData <- merge(currentData, previousData)
     summaryData$n <- summaryData$nCurrent - summaryData$nPrevious
     
-    summaryData$group <- cut(x = summaryData$n, 
-      breaks = c(-Inf, -20, -10, 0, 10, 20, Inf),
-      labels = c(paste0(min(-50, floor(min(summaryData$n, na.rm = TRUE))), ", -20"), "-20, -10", "-10, 0", 
-          "0, 10", "10, 20", paste0("20, ", max(50, ceiling(max(summaryData$n, na.rm = TRUE)))))
-    )
-    
     summaryData$outcome <- ceiling(summaryData$n)
     
   } else {
@@ -170,7 +160,7 @@ createSummaryRegions <- function(data, shapeData,
       myFormula <- as.formula(paste("region + year ~", paste(groupingVariable, collapse = " + ")))
       summaryData <- reshape2::dcast(summaryData, myFormula, 
         value.var = "count", fun.aggregate = sum)
-
+      
       summaryData$n <- apply(summaryData[, -(1:2), drop = FALSE], 1, sum, na.rm = TRUE)     
       
     } else {
@@ -182,27 +172,29 @@ createSummaryRegions <- function(data, shapeData,
       
     }
     
-    summaryData$group <- cut(x = summaryData$n, 
-      breaks = c(0, 1000, 5000, 10000, Inf),
-      labels = c("1-1000", "1001-5000", "5001-10000", 
-        paste0("10001-", max(50000, ceiling(max(summaryData$n)))))
-    )
-    
     summaryData$outcome <- ceiling(summaryData$n)
     
   }
   
-  # Add names & times with 0 observations
-  fullData <- cbind(expand.grid(
-      year = myYear,
-      region = if (regionLevel == "flanders") 
-          "flanders" else if (regionLevel == "gewest")
-          unique(shapeData$communes$GEWEST) else
-          unique(shapeData[[regionLevel]]$NAAM)))
-  allData <- merge(summaryData, fullData, all.x = TRUE, all.y = TRUE)
-  allData$outcome[is.na(allData$outcome)] <- 0
+  # Add names & times with 0 observations -> not for UTM
+  if (regionLevel %in% c("gewest", "provinces", "communes")) {
+    fullData <- cbind(expand.grid(
+        year = myYear,
+        region = if (regionLevel == "gewest")
+            unique(shapeData$communes$GEWEST) else
+            unique(shapeData[[regionLevel]]$NAAM)
+      ))
+    allData <- merge(summaryData, fullData, all.x = TRUE, all.y = TRUE)
+    allData$outcome[is.na(allData$outcome)] <- 0
+  } else allData <- summaryData
+
   
   attr(allData, "unit") <- unit
+  
+  # Create group variable
+  allData <- createBinsData(data = allData,
+    cutValues = cutBins(data = allData, nBins = 4))
+  
   
   return(allData)
   
@@ -328,20 +320,34 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData,
 #' @importFrom ggspatial annotation_map_tile
 #' @export
 mapRegionsFacet <- function(managementData, shapeData, uiText = NULL,
-  regionLevel = c("communes", "provinces"), palette = "YlOrBr",
-  legend = "right", addGlobe = FALSE) {
+  regionLevel = c("communes", "provinces", "cell_code1", "cell_code10"), 
+  palette = "YlOrBr", legend = "right", addGlobe = FALSE) {
   
   # For R CMD check
   group <- NULL
   
-  plotData <- merge(shapeData[[regionLevel]], managementData,
-    by.x = "NAAM", by.y = "region", all.x = TRUE)
+  subShape <- if (regionLevel %in% c("communes", "provinces"))
+      shapeData[[regionLevel]] else
+      shapeData[[paste0("utm", gsub("cell_code", "", regionLevel), "_bel_with_regions")]]
+  
+  plotData <- merge(subShape, managementData,
+    by.x = if (regionLevel %in% c("communes", "provinces")) "NAAM" else "CELLCODE", 
+    by.y = "region", 
+    all.x = if (regionLevel %in% c("communes", "provinces")) TRUE else FALSE)
+  
+  if (nrow(plotData) == 0)
+    return(NULL)
+  
+  paletteFunction <- colorFactor(palette = palette, levels = levels(plotData$group), 
+    na.color = "transparent", reverse = (palette != "YlOrBr"))
+  scaleValues <- paletteFunction(levels(plotData$group))
+  names(scaleValues) <- levels(plotData$group)
   
   # Facet plot
   myPlot <- ggplot() + 
-    geom_sf(data = plotData, aes(fill = group), size = 0.5) + 
+    geom_sf(data = plotData, aes(fill = group), size = 0.5, show.legend = TRUE) + 
     facet_wrap(~ year, ncol = 3) +
-    scale_fill_brewer(palette = palette) +
+    scale_fill_manual(values = scaleValues, drop = FALSE) +
     theme_inbo(transparent = TRUE) + 
     theme(
       legend.position = legend,
@@ -359,11 +365,15 @@ mapRegionsFacet <- function(managementData, shapeData, uiText = NULL,
       geom_sf(data = plotData, aes(fill = group), size = 0.5) +
       labs(caption = "\u00a9 OpenStreetMap contributors")
   
-  if (regionLevel == "communes")
+  if (regionLevel == "communes") {
     # Add province borders
     myPlot <- myPlot +
       geom_sf(data = shapeData$provinces, fill = NA, color = "black", size = 1)
-  
+  } else if (regionLevel %in% c("cell_code1", "cell_code10")) {
+    # Add gewest borders
+    myPlot <- myPlot +
+      geom_sf(data = shapeData$gewestbel, fill = NA, color = "black", size = 1)
+  }
   
   myPlot
   
@@ -393,7 +403,7 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
             tmpData <- suppressWarnings(reshape2::melt(iData, id.vars = colnames(iData)[1:2]))
             tmpData$nest <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[1])
             tmpData$isBeheerd <- sapply(strsplit(as.character(tmpData$variable), split = "_"), function(x) x[2])
-            
+
             tmpData <- tmpData[!is.na(tmpData$isBeheerd), ]
             formattedTable <- reshape2::dcast(tmpData[, c("nest", "isBeheerd", "value")], nest ~ isBeheerd, value.var = "value")
             formattedTable$nest[formattedTable$nest == "NA"] <- "unknown"
@@ -413,6 +423,338 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
 
 }
 
+#' Create labels for cutoff values
+#' @param values numeric vector, cutoff values
+#' @param newLabels character vector, current labels provided by the user;
+#' default value is NULL
+#' @return character vector, labels for the cutoff values
+#' 
+#' @author mvarewyck
+#' @export
+labelBins <- function(values, newLabels = NULL) {
+  
+  fromValues <- values[-length(values)] + c(0, rep(1, length(values)-2))
+  toValues <- values[-1] 
+  # Replace if 'from' larger than 'to'
+  fromValues <- sapply(seq_along(fromValues), function(i) min(fromValues[i], toValues[i]))
+  
+  toReturn <- paste0(fromValues, "-", toValues)
+  
+  if (!is.null(newLabels)) {
+    
+    newLabels[is.na(newLabels)] <- toReturn[is.na(newLabels)]
+    newLabels
+    
+  } else toReturn
+  
+}
+
+
+#' Create cut-off values
+#' @inheritParams createBinsData  
+#' @param nBins integer, number of bins
+#' @param binType character, type of bins; should be one of \code{c("userDefined", "quantiles", "uniform")}
+#' @return numeric vector, cutoff values
+#' 
+#' @author mvarewyck
+#' @export
+cutBins <- function(data, nBins, binType = c("userDefined", "quantiles", "uniform")) {
+  
+  
+  binType <- match.arg(binType)
+  unit <- attr(data, "unit")
+  
+  if (unit == "cpue")
+    responseVariable <- "effort" else
+    responseVariable <- "n"
+  
+  
+  if (length(unique(data[[responseVariable]])) == nBins) {
+    
+    cutValues <- c(unique(data[[responseVariable]]), Inf)
+    
+  } else if (length(unique(data[[responseVariable]])) == (nBins+1)) {
+    
+    cutValues <- unique(data[[responseVariable]])
+    
+  } else if (binType == "quantiles") {
+    
+    cutValues <- round(quantile(data[[responseVariable]], probs = seq(0, 1, length.out = nBins+1), na.rm = TRUE))
+    
+  } else {
+    
+    dataRange <- range(data[[responseVariable]], na.rm = TRUE)
+    cutValues <- round(dataRange[1] + c(0, (dataRange[2] - dataRange[1])/nBins*(1:nBins)))
+    
+  }
+  
+  for (i in seq_along(cutValues))
+    if (duplicated(cutValues)[i])
+      cutValues[i] <- cutValues[i-1] + 1
+  
+  cutValues
+  
+}
+
+
+#' Create bins data
+#' @param data data.frame, as returned by \code{\link{createSummaryRegions}} 
+#' @param cutValues numeric vector, if \code{binType} is "userDefined" this can
+#' contain the cut values defined by the user; default is NULL
+#' @param customLabels character vector, labels that should be used for the groups;
+#' if NULL the code will generate some labels; default is NULL
+#' @return data.frame as in \code{data} but with additional column "group"
+#' 
+#' @author mvarewyck
+#' @importFrom stats quantile
+#' @export
+createBinsData <- function(data, cutValues, customLabels = NULL) {
+  
+  newLabels <- labelBins(cutValues, newLabels = customLabels)
+  breakValues <- cutValues
+  breakValues[length(breakValues)] <- Inf
+  
+  unit <- attr(data, "unit")
+  
+  if (unit == "cpue")
+    responseVariable <- "effort" else
+    responseVariable <- "n"
+  
+  data$group <- cut(
+    x = data[[responseVariable]], 
+    breaks = breakValues, 
+    include.lowest = TRUE,
+    labels = newLabels)
+  
+  
+  data
+  
+}
+
+
+
+#' Create user input for defining cutoff bins - server side
+#' @inheritParams mapRegionsUI
+#' @return ui object
+#' 
+#' @author mvarewyck
+#' @export
+createBinsUI <- function(id) {
+  
+  ns <- NS(id)
+  
+  fixedRow(
+    column(4, 
+      uiOutput(ns("nBinsOut")),
+      selectInput(inputId = ns("binType"), label = "binType", 
+        choices = c("userDefined", "uniform", "quantiles")),
+      fluidRow(
+        column(6, uiOutput(ns("binNames"))),
+        column(6, uiOutput(ns("binBreaks")))
+      )
+    ),
+    column(6, 
+      plotOutput(ns("binDescriptives"))
+    )
+  )
+  
+}
+
+
+#' Create user input for defining cutoff bins - server side
+#' @inheritParams mapRegionsServer
+#' @param data reactive data.frame; see also \code{createBins}
+#' @return reactive data.frame, binned data
+#' 
+#' @author mvarewyck
+#' @importFrom graphics barplot text
+#' @export
+createBinsServer <- function(id, uiText, data) {
+  
+  moduleServer(id,
+    function(input, output, session) {
+      
+      ns <- session$ns
+      
+      previousType <- reactiveVal("userDefined")
+      previousBins <- reactiveVal(4)
+      
+      observe({
+          
+          updateSliderInput(session, inputId = "nBins",
+            label = translate(uiText(), "nBins")$title)
+          
+        })
+      
+      observe({
+          
+          binTypes <- c("userDefined", "uniform", "quantiles")
+          names(binTypes) <- translate(uiText(), binTypes)$title
+          
+          updateSelectInput(session, inputId = "binType",
+            label = translate(uiText(), "binType")$title, 
+            choices = binTypes)
+          
+        }) 
+      
+      lowestValue <- reactive({
+          
+          unit <- attr(data(), "unit")
+          
+          if (unit == "cpue")
+            responseVariable <- "effort" else
+            responseVariable <- "n"
+          
+          min(c(0, data()[[responseVariable]]), na.rm = TRUE)
+          
+        })
+      
+      output$nBinsOut <- renderUI({
+          
+          req(data())
+          
+          unit <- attr(data(), "unit")
+          
+          if (unit == "cpue")
+            responseVariable <- "effort" else
+            responseVariable <- "n"
+          
+          possibleValues <- unique(data()[[responseVariable]])
+          maxBins <- length(possibleValues[!is.na(possibleValues)]) - 1
+          previousBins(min(4, maxBins))
+          
+          sliderInput(inputId = ns("nBins"), label = "nBins", 
+            min = if (maxBins <= 5) 0 else 3, 
+            max = min(8, maxBins), 
+            value = min(4, maxBins),
+            step = 1)
+          
+        })
+      
+      colorBins <- reactive({
+          
+          req(input$nBins)
+          
+          palette <- if (attr(data(), "unit") == "difference") "RdYlGn" else "YlOrBr"
+          paletteFunction <- colorFactor(palette = palette, levels = letters[1:input$nBins], 
+            na.color = "transparent", reverse = (palette != "YlOrBr"))
+          
+          paletteFunction(letters[1:input$nBins])
+          
+        })
+      
+      originalBreaks <- reactive({
+          
+          cutBins(
+            data = data(), 
+            nBins = req(input$nBins), 
+            binType = req(input$binType)
+          )
+          
+        })
+      
+      output$binNames <- renderUI({
+          
+          req(input$nBins)
+          
+          currentGroups <- labelBins(
+            values = originalBreaks()
+          )
+          
+          lapply(1:input$nBins, function(i) {
+              
+              tagList(
+                textInput(ns(paste0("classLabel", i)), 
+                  label = if (i == 1) translate(uiText(), "name")$title else "", 
+                  value = currentGroups[i]),
+                tags$style(paste0("#", ns(paste0("classLabel", i)), 
+                    " {background-color: ", colorBins()[i], 
+                    if (i > ceiling(input$nBins/2)) "; color: white", ";}"))
+              )
+              
+            })
+          
+        })
+      
+      output$binBreaks <- renderUI({
+          
+          req(input$binType)
+          req(input$nBins)
+          
+          if (input$binType == "userDefined") {
+            
+            lapply(1:input$nBins, function(i) {
+                
+                if (i != input$nBins) numericInput(ns(paste0("classBound", i)), 
+                    label = if (i == 1) translate(uiText(), "break")$title else "",
+                    value = originalBreaks()[i])
+                
+              })
+            
+          } else {
+            
+            lapply(1:input$nBins, function(i) {
+                
+                if (i != input$nBins) shinyjs::disabled(numericInput(ns(paste0("classBound", i)), 
+                      label = if (i == 1) translate(uiText(), "break")$title else "",
+                      value = originalBreaks()[i]))
+                
+              })
+            
+          }
+          
+        })
+      
+      adjustedBreaks <- reactive({
+          
+          req(input$nBins)
+          req(input$binType)
+          
+          if (input$binType == "userDefined") {
+            c(lowestValue(), 
+              sapply(1:input$nBins, function(i) 
+                  if (i == input$nBins)
+                    Inf else 
+                    req(input[[paste0("classBound", i)]]))) 
+          } else {
+            originalBreaks()
+          }
+        
+        })
+      
+      binnedDataAfter <- reactive({
+          
+          createBinsData(
+            data = data(),
+            cutValues = adjustedBreaks(),
+            customLabels = sapply(1:input$nBins, function(i) input[[paste0("classLabel", i)]])
+          )
+        
+        })
+      
+      output$binDescriptives <- renderPlot({
+          
+          validate(need(class(tryCatch(binnedDataAfter(), 
+                  error = function(err) err$message)) == "data.frame",
+              translate(uiText(), "noData")$title))
+          
+          classTable <- table(binnedDataAfter()$group)
+          originalLabels <- paste0("(", labelBins(values = adjustedBreaks()), ")")
+          
+          bp <- barplot(classTable, las = 1, ylab = translate(uiText(), "number")$title,
+            col = colorBins())
+          text(x = bp[,1], y = -max(classTable)/5, adj = c(0.5, 0), originalLabels, offset = 3, cex = 0.8, xpd = TRUE)
+          
+        })
+      
+      return(binnedDataAfter)
+    
+    })
+  
+}
+
+
+
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
 #' 
 #' @inheritParams welcomeSectionServer
@@ -420,6 +762,8 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
 #' @inheritParams mapCubeServer
 #' @inheritParams mapCubeUI
 #' @inheritParams createSummaryRegions
+#' @param regionLevels character vector, lists options for regionlevel
+#' choices
 #' @param df reactive data.frame, data as loaded by \code{\link{loadGbif}}
 #' @param occurrenceData data.table, as obtained by \code{loadTabularData(type = "occurrence")}
 #' @param filter reactive list with filters to be shown in the app;
@@ -439,8 +783,8 @@ mapPopup <- function(summaryData, uiText, year, unit, showBron = FALSE) {
 #' @importFrom ggplot2 ggsave
 #' @export
 mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, shapeData,
-  filter = reactive(NULL), facet = FALSE, dashReport = NULL,
-  triggerReport = reactive(NULL)) {
+  regionLevels = c("communes", "provinces"), filter = reactive(NULL), 
+  facet = FALSE, dashReport = NULL, triggerReport = reactive(NULL)) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -472,7 +816,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
                       input$year
                 ))
           )
-        
+          
         })
       
       output$titleMapRegions <- renderUI(h3(HTML(title())))
@@ -564,7 +908,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
               }))
           
         })
-            
+      
       subShape <- reactive({
           
           req(gewest())
@@ -582,7 +926,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       
       output$regionLevel <- renderUI({
           
-          choices <- c("communes", "provinces")
+          choices <- regionLevels
           names(choices) <- translate(uiText(), choices)$title
           
           selectInput(inputId = ns("regionLevel"), label = translate(uiText(), "regionLevel")$title,
@@ -634,6 +978,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           
         })
            
+      binnedData <- reactiveVal()
       
       summaryData <- reactive({
           
@@ -643,21 +988,45 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
               currentYear else 
               input$year
           
-          createSummaryRegions(data = subData(), 
+          toReturn <- createSummaryRegions(data = subData(), 
             shapeData = shapeData,
             regionLevel = if (is.null(input$regionLevel)) "communes" else input$regionLevel,
             year = if (facet)
-              list(
-                c(selectedYear-8, selectedYear-5), 
-                c(selectedYear-4, selectedYear-1),
-                selectedYear) else
+                list(
+                  c(selectedYear-8, selectedYear-5), 
+                  c(selectedYear-4, selectedYear-1),
+                  selectedYear) else
                 selectedYear, 
             unit = if (is.null(input$unit)) "absolute" else input$unit,
             groupingVariable = if (!is.null(filter())) c("nest_type", "isBeheerd")
           )
           
+          isolate(binnedData(toReturn))
+          
+          toReturn
+          
         })
       
+      
+      observe({
+          
+          updateActionButton(session, inputId = "binConfirm",
+            label = translate(uiText(), "binConfirm")$title)
+          
+        })
+      
+      observe({
+          
+          results$tmpBinnedData <- createBinsServer(id = "mapRegions", uiText = uiText, 
+            data = summaryData)
+          
+        })
+      
+      observeEvent(input$binConfirm, {
+
+          isolate(binnedData(results$tmpBinnedData()))
+          
+        })
       
       # Filter Occurrence data
       subOccurrence <- reactive({
@@ -678,16 +1047,17 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       output$regionsPlot <- renderLeaflet({
           
           req(!facet)
-          validate(need(nrow(req(summaryData())) > 0, noData()))
+          validate(need(nrow(req(summaryData())) > 0, noData()),
+            need(nrow(req(binnedData())) > 0, noData()))
           
           mapRegions(
-            managementData = summaryData(),
+            managementData = binnedData(),
             occurrenceData = subOccurrence(),
             shapeData = subShape(), 
             uiText = uiText(), 
             regionLevel = input$regionLevel,
             baseMap = addBaseMap(regions = gewest()),
-            addGlobe = isolate(input$globe %% 2 == 1),
+            addGlobe = input$globe,
             palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
           )
           
@@ -696,10 +1066,11 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       output$regionsPlotFacet <- renderPlot({
           
           req(facet)
-          validate(need(nrow(req(summaryData())) > 0, noData()))
-          
+          validate(need(nrow(req(summaryData())) > 0, noData()),
+            need(nrow(req(binnedData())) > 0, noData()))
+
           mapRegionsFacet(
-            managementData = summaryData(),
+            managementData = binnedData(),
             shapeData = subShape(), 
             uiText = uiText(), 
             regionLevel = req(input$regionLevel),
@@ -720,11 +1091,11 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
       # Define text to be shown in the pop-ups
       textPopup <- reactive({
           
-          validate(need(nrow(req(summaryData())) > 0, noData()))
+          validate(need(nrow(req(binnedData())) > 0, noData()))
           
-          mapPopup(summaryData = summaryData(), uiText = uiText(), year = input$year,
+          mapPopup(summaryData = binnedData(), uiText = uiText(), year = input$year,
             unit = input$unit, showBron = !is.null(filter()))
-                              
+          
         })
       
       # Add popups
@@ -741,10 +1112,10 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
             
             if (!is.null(event$id)) {
               
-              if (event$id %in% summaryData()$region) {
+              if (event$id %in% binnedData()$region) {
                 
                 textSelected <- textPopup()[
-                  summaryData()$region == event$id]
+                  binnedData()$region == event$id]
                 
                 isolate({
                     
@@ -768,17 +1139,11 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           
           if (!is.null(input$globe) & !is.null(proxy)){
             
-            if (input$globe %% 2 == 1){
-              
-              updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "hideGlobe")$title)
+            if (input$globe) {
               
               proxy %>% addTiles()
               
             } else {
-              
-              updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "showGlobe")$title)
               
               proxy %>% clearTiles()
               
@@ -793,7 +1158,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           
           req(input$legend)
           req(!facet)
-          req(summaryData())
+          req(binnedData())
           
           proxy <- leafletProxy("regionsPlot")
           proxy %>% 
@@ -803,9 +1168,9 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           if (input$legend != "none") {
             
             palette <- if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
-            paletteFunction <- colorFactor(palette = palette, levels = levels(summaryData()$group), 
+            paletteFunction <- colorFactor(palette = palette, levels = levels(binnedData()$group), 
               na.color = "transparent", reverse = (palette != "YlOrBr"))
-            valuesPalette <- summaryData()$group[match(spatialData()$NAAM, summaryData()$region)]
+            valuesPalette <- binnedData()$group[match(spatialData()$NAAM, binnedData()$region)]
             
             
             proxy %>% addLegend(
@@ -891,12 +1256,12 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           if (facet) {
             
             myPlot <- mapRegionsFacet(
-              managementData = summaryData(),
+              managementData = binnedData(),
               shapeData = subShape(),
               uiText = uiText(), 
               regionLevel = if (is.null(input$regionLevel)) "communes" else input$regionLevel,
               legend = if (is.null(input$legend)) "bottom" else input$legend,
-              addGlobe = if (is.null(input$globe)) FALSE else input$globe %% 2 == 1,
+              addGlobe = if (is.null(input$globe)) FALSE else input$globe,
               palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
             )
             
@@ -904,36 +1269,36 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
             pngFile
             
           } else {
+            
+            newMap <- mapRegions(
+              managementData = binnedData(), 
+              occurrenceData = subOccurrence(), 
+              shapeData = subShape(), 
+              baseMap = addBaseMap(regions = gewest()),
+              uiText = uiText(), 
+              regionLevel = if (is.null(input$regionLevel)) "communes" else input$regionLevel,
+              legend = if (is.null(input$legend)) "topright" else input$legend, 
+              addGlobe = if (is.null(input$globe)) FALSE else input$globe,
+              palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr")
+            
+            
+            # save the zoom level and centering to the map object
+            if (!is.null(input$regionsPlot_center))
+              newMap <- newMap %>% setView(
+                lng = input$regionsPlot_center$lng,
+                lat = input$regionsPlot_center$lat,
+                zoom = input$regionsPlot_zoom
+              )
+            
+            # write map to temp .html file
+            req(newMap)
+            htmlwidgets::saveWidget(newMap, file = htmlFile, selfcontained = FALSE)
+            
+            # output is path to temp .html file containing map
+            htmlFile
+            
+          }
           
-          newMap <- mapRegions(
-            managementData = summaryData(), 
-            occurrenceData = subOccurrence(), 
-            shapeData = subShape(), 
-            baseMap = addBaseMap(regions = gewest()),
-            uiText = uiText(), 
-            regionLevel = if (is.null(input$regionLevel)) "communes" else input$regionLevel,
-            legend = if (is.null(input$legend)) "topright" else input$legend, 
-            addGlobe = if (is.null(input$globe)) FALSE else input$globe %% 2 == 1,
-            palette = if (is.null(input$unit) || input$unit != "difference") "YlOrBr" else "RdYlGn")
-          
-          
-          # save the zoom level and centering to the map object
-          if (!is.null(input$regionsPlot_center))
-            newMap <- newMap %>% setView(
-              lng = input$regionsPlot_center$lng,
-              lat = input$regionsPlot_center$lat,
-              zoom = input$regionsPlot_zoom
-            )
-          
-          # write map to temp .html file
-          req(newMap)
-          htmlwidgets::saveWidget(newMap, file = htmlFile, selfcontained = FALSE)
-          
-          # output is path to temp .html file containing map
-          htmlFile
-          
-        }
-        
         }) 
       
       
@@ -962,7 +1327,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
               vwidth = 1000, vheight = 500, cliprect = "viewport")
             
           }
-        
+          
         }
       )
       
@@ -975,7 +1340,7 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
         content = function(file) {
           
           ## write data to exported file
-          write.table(x = summaryData(), file = file, quote = FALSE, row.names = FALSE,
+          write.table(x = binnedData(), file = file, quote = FALSE, row.names = FALSE,
             sep = ";", dec = ",")
           
         })
@@ -1124,13 +1489,22 @@ mapRegionsUI <- function(id, plotDetails = NULL, showUnit = TRUE, facet = FALSE)
       if ("region" %in% plotDetails)
         checkboxInput(inputId = ns("combine"), 
           label = "Combine all selected regions"),
-      actionLink(inputId = ns("globe"), label = "Show globe", icon = icon("globe"))
+      checkboxInput(inputId = ns("globe"), label = "Show globe"),
+      
+      actionLink(ns("showClasses"), label = "Edit classes", 
+        icon = icon("angle-double-down", class = "green-icon")),
+      
+      conditionalPanel("input.showClasses % 2 == 1", ns = ns,
+        createBinsUI(id = ns("mapRegions")),
+        actionButton(inputId = ns("binConfirm"), label = "binConfirm")
+      )
+    
     ),
     
     if (!facet)
         withSpinner(leafletOutput(ns("regionsPlot"), height = "600px")) else
         withSpinner(plotOutput(ns("regionsPlotFacet"))),
-  
+    
     
     tags$br(),
     

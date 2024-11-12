@@ -14,7 +14,7 @@
 #' }
 #' 
 #' @author mvarewyck
-#' @importFrom plotly ggplotly
+#' @importFrom plotly ggplotly layout
 #' @importFrom INBOtheme theme_inbo
 #' @export
 plotTrias <- function(triasFunction, df, triasArgs = NULL,
@@ -142,6 +142,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
   
   outputType <- match.arg(outputType)
   
+  
   moduleServer(id,
     function(input, output, session) {
       
@@ -166,15 +167,15 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
           if (!is.null(filters)) 
             wellPanel(
               lapply(names(filters), function(iFilter) {
-                  if (all(filters[[iFilter]] == "checkbox")) {
+                  if (filters[[iFilter]]$type == "checkbox") {
                     checkboxInput(inputId = ns(iFilter), 
                       label = translate(uiText(), iFilter)$title) 
-                  } else {
-                    choices <- filters[[iFilter]]
+                  } else if (filters[[iFilter]]$type == "select") {
+                    choices <- filters[[iFilter]]$choices
                     names(choices) <- translate(uiText(), choices)$title
                     fluidRow(column(4, selectInput(inputId = ns(iFilter),
-                      label = translate(uiText(), iFilter)$title,
-                      choices = choices)))
+                          label = translate(uiText(), iFilter)$title,
+                          choices = choices)))
                   }
                 })
             )
@@ -191,25 +192,34 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
           
           subData
           
-        })
+        })      
+
       
       plotResult <- plotModuleServer(id = "plotTrias",
         plotFunction = "plotTrias",
         triasFunction = triasFunction, 
         data = plotData,
         triasArgs = reactive({
+            
+            req(plotData())
+            
             if (!is.null(triasArgs)) {
+              
               initArgs <- triasArgs()
-              if (triasFunction == "apply_gam")
-                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):max(plotData()$year, na.rm = TRUE)
-              if (!is.null(input$correctBias) && input$correctBias) {
+              if (triasFunction == "apply_gam") {
+                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):
+                  max(plotData()$year, na.rm = TRUE)
+                if (!is.null(input$correctBias) && input$correctBias) {
                   if (initArgs$y_var == "obs")
                     initArgs$baseline_var <- "cobs" else
                     initArgs$baseline_var <- "c_ncells"
+                }
               }
               if (!is.null(input$regionLevel))
                 initArgs$type <- input$regionLevel
+              
               initArgs
+              
             } else NULL
           }),
         outputType = outputType,

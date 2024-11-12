@@ -230,8 +230,7 @@ test_that("Module mapHeat",{
                     })
 })
 
-# 
-# 
+
 test_that("Module mapRegions",{
 
   vespaPoints <- Vespa_velutina_shape$points
@@ -267,13 +266,9 @@ test_that("Module mapRegions",{
                     args = list(
                       uiText = reactive(translationsEn),
                       species = reactive( "Vespa velutina"),
-                      df = reactive({
-                        vespaBoth
-                        
-                      }),
+                      df = reactive(vespaBoth),
                       occurrenceData = NULL,
-                      shapeData = allShapes,
-                      sourceChoices = c("individual", "nest")
+                      shapeData = allShapes
                     ), {
                       session$setInputs(globe = 2)
                       session$setInputs(year = "2018")
@@ -282,9 +277,7 @@ test_that("Module mapRegions",{
                       session$setInputs(period = c(2017,2020))
                       session$setInputs(regionLevel = "communes")
                       session$setInputs(gewestLevel = c("flanders", "brussels", "wallonia"))
-                      session$setInputs(bronMap = c("individual", "nest"))
                       expect_true(!is.null(subData ))
-                      expect_true(!is.null(output$bronMap ))
                       expect_true(!is.null(summaryData()))
                       expect_true(!is.null(noData()))
                      # expect_true(!is.null(output$regionsPlot ))
@@ -318,6 +311,82 @@ test_that("Module countNesten",{
 
 
 
+uiText <- loadMetaData()
 
-
-
+test_that("Custom bins in shiny", {
+    
+    tmpData <- cars
+    attr(tmpData, "unit") <- "aantal"
+    tmpData$n <- tmpData$speed
+    cutValues <- cutBins(data = tmpData, nBins = 4, binType = "quantiles")
+    customLabels <- labelBins(values = cutValues)
+    testBins <- createBinsData(data = tmpData, cutValues = cutValues, customLabels = customLabels)
+    
+    
+    ui <- fluidPage(
+      
+      shinyjs::useShinyjs(),
+      
+      actionLink("browser", "Connect to browser"),
+      
+      createBinsUI(id = "mapRegions"),
+      actionButton(inputId = "binConfirm", label = "binConfirm"),
+      verbatimTextOutput("printOriginal"),
+      verbatimTextOutput("printBinned")
+    )
+    
+    server <- function(input, output, session) {
+      
+      results <- reactiveValues()
+      binnedData <- reactiveVal()
+      
+      observeEvent(input$browser, browser())
+      
+      originalData <- reactive({
+          
+          cutValues <- cutBins(data = tmpData, nBins = 4, binType = "quantiles")
+          
+          createBinsData(
+            data = tmpData,
+            cutValues = cutValues,
+            customLabels = labelBins(values = cutValues)
+          )
+          isolate(binnedData(firstBins))
+          firstBins
+          
+        })
+      
+      observe({
+          
+          results$tmpBinnedData <- createBinsServer(id = "mapRegions", 
+            uiText = reactive(uiText), data = binnedData)
+          
+        })
+      
+      observeEvent(input$binConfirm, {
+          
+          isolate(binnedData(results$tmpBinnedData()))
+          
+        })
+      
+      
+      output$printOriginal <- renderPrint({
+          
+          table(originalData()$group)
+          
+        })
+      
+      output$printBinned <- renderPrint({
+          
+          binnedData()
+          
+        })
+      
+    }
+    
+    # Test app
+    app <- shinyApp(ui, server)
+    expect_s3_class(app, "shiny.appobj")
+#   app
+    
+  })

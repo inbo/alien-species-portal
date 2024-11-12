@@ -48,6 +48,94 @@ welcomeSectionUI <- function(id) {
 }
 
 
+#' Shiny module for creating footer section - server side
+#' @inheritParams welcomeSectionServer
+#' @return reactive for creating the report
+#' 
+#' @author mvarewyck
+#' @import shiny
+#' @export
+footerSectionServer <- function(id, uiText) {
+  
+  moduleServer(id, function(input, output, session) {
+      
+      ns <- session$ns    
+      
+      ## SUBMIT & DOWNLOAD report ##
+      
+      observe({
+          
+          updateActionButton(inputId = "createReport", 
+            label = translate(data = uiText, id = "createReport")$title)
+          
+        })
+      
+      
+      ## REPORT missing and CONTACT ##
+      observeEvent(input$contact, {
+          
+          showModal(
+            modalDialog(
+              title = "Contact",
+              footer = modalButton(label = NULL, icon = icon("xmark")),
+              easyClose = TRUE,
+              
+              tags$h5(translate(data = uiText, "contactMissing"), ":"),
+              tags$a(href = "https://waarnemingen.be/fieldwork/observations/create/", target="_blank", 
+                "https://waarnemingen.be/fieldwork/observations/create/"),
+              tags$br(),
+              tags$a(href = "https://www.inaturalist.org/observations/upload", target = "_blank",
+                "https://www.inaturalist.org/observations/upload"),
+              tags$h5(translate(data = uiText, "contactApp"), ":"),
+              tags$a(href="mailto:faunabeheer@inbo.be?subject=Alien%20species%20web%20applicatie&body=**Describe%20the%20bug**%0AA%20clear%20and%20concise%20description%20of%20what%20the%20bug%20is.%0A%0A**To%20Reproduce**%0ASteps%20to%20reproduce%20the%20behavior%3A%0A1.%20Go%20to%20%27...%27%0A2.%20Click%20on%20%27....%27%0A3.%20Scroll%20down%20to%20%27....%27%0A4.%20See%20error%0A%0A**Expected%20behavior**%0AA%20clear%20and%20concise%20description%20of%20what%20you%20expected%20to%20happen.%0A%0A**Screenshots**%0AIf%20applicable%2C%20add%20screenshots%20to%20help%20explain%20your%20problem.%0A%0A**Desktop%20%28please%20complete%20the%20following%20information%29%3A**%0A%20-%20OS%3A%20%5Be.g.%20iOS%5D%0A%20-%20Browser%20%5Be.g.%20chrome%2C%20safari%5D%0A%20-%20Version%20%5Be.g.%2022%5D%0A%0A**Smartphone%20%28please%20complete%20the%20following%20information%29%3A**%0A%20-%20Device%3A%20%5Be.g.%20iPhone6%5D%0A%20-%20OS%3A%20%5Be.g.%20iOS8.1%5D%0A%20-%20Browser%20%5Be.g.%20stock%20browser%2C%20safari%5D%0A%20-%20Version%20%5Be.g.%2022%5D%0A%0A**Additional%20context**%0AAdd%20any%20other%20context%20about%20the%20problem%20here.", target="_blank", 
+                "faunabeheer@inbo.be")              
+            )
+          )
+        
+          
+        })
+      
+      return(reactive(input$createReport))
+      
+      
+    })
+  
+}
+
+#' #' Shiny module for creating footer section - UI side
+#' @param id character, unique identifier
+#' @param showReport boolean, whether to show a button to download report
+#' @return no return value
+#' 
+#' @author mvarewyck
+#' @import shiny
+#' @export
+footerSectionUI <- function(id, showReport = FALSE) {
+  
+  ns <- NS(id)
+  
+  tags$div(style = "margin-bottom: 70px;",
+    
+    tags$div(class = "footer",
+      tags$div(class = "footer-content",
+        
+        actionButton(inputId = ns("contact"), label = "Contact", 
+          icon = icon("envelope")),
+        
+        if (showReport)
+          tagList(
+            singleton(
+              tags$head(tags$script(src = "triggerDownload.js"))
+            ),
+            actionButton(inputId = ns("createReport"), label = "Create report", 
+              icon = icon("file-pdf")),
+            downloadLink(ns("downloadReport"), " ", class = "invisible")
+          )
+      )
+    )
+  )
+
+}
 
 #' Replace {{fields}} in title/description translations
 #' @param text character, input from translation
@@ -64,8 +152,8 @@ decodeText <- function(text, params) {
   for (iParam in names(params)) {
     
     newText <- if (iParam == "period")
-      paste(newText, yearToTitleString(params[[iParam]])) else
-      gsub(paste0("\\{\\{", iParam, "\\}\\}"), params[[iParam]], newText)
+        paste(newText, yearToTitleString(params[[iParam]])) else
+        gsub(paste0("\\{\\{", iParam, "\\}\\}"), params[[iParam]], newText)
     
   }
   
@@ -129,3 +217,53 @@ versionServer <- function(id, uiText) {
       
     })
 }
+
+
+#' Shiny module for including html file - server side
+#' @param id character, unique identifier
+#' @param species reactive object, taxonkey for the selected species
+#' @param language reactive object, language for UI content
+#' @param url character, url to be included in the link (back-end)
+#' @param linkText character, text to be displayed for the url (front-end)
+#' @return no return value
+#' 
+#' @author mvarewyck
+#' @importFrom htmltools includeHTML
+#' @export
+htmlSectionServer <- function(id, species, language, url = NA, linkText) {
+  
+  moduleServer(id, function(input, output, session) {
+      
+      output$addLinks <- renderUI({
+          
+          dataPath <- file.path("https://raw.githubusercontent.com/inbo/aspbo",
+            if (Sys.getenv("R_CONFIG_ACTIVE") == "production") "main" else "uat",
+            "HTML_pages/HTML")
+          dataFile <- file.path(dataPath, paste0(species(), "_", language(), ".html"))
+          
+          if (!is.na(url))
+            tags$a(href = url, target = "_blank", linkText) else if (httr::http_status(httr::GET(dataFile))$category != "Client error")
+            includeHTML(dataFile)
+          
+        
+        })
+      
+    })
+}
+
+
+#' Shiny module for including html file - UI side
+#' @inherit welcomeSectionUI
+#' 
+#' @author mvarewyck
+#' @export
+htmlSectionUI <- function(id) {
+  
+  ns <- NS(id)
+  
+  tags$div(style = "margin-top: 20px;",
+    uiOutput(ns("addLinks"))
+  )
+  
+}
+

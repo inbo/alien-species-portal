@@ -344,9 +344,8 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       
       # Add/remove map layers
       observe({
-       
         
-         input[[ names(filter())[2] ]]
+         input[[names(filter())[2]]]
         
           proxy <- leafletProxy("spacePlot")
           
@@ -425,13 +424,14 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       finalMap <- reactive({
           
           req(nrow(combinedDataPostFilter()) > 0)
-          req(input[[names(filter())[1]]])
-     
+          
           newMap <- mapHeat(
             combinedData = combinedDataPostFilter(),
             baseMap = addBaseMap(regions = gewest()),
             colors = colors(),
-            selected = input[[names(filter())[1]]],
+            selected = if (is.null(input[[names(filter())[1]]])) 
+              filter()[[names(filter())[1]]] else
+              input[[names(filter())[1]]],
             blur = blur, 
             legend = if (is.null(input$legend)) "topright" else input$legend,
             addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 1,

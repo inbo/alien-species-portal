@@ -36,7 +36,8 @@ tagList(
         value = "species_indicators",
         tags$div(style = "margin-top: 10px;",
           plotTriasUI(id = "indicators_gamObservations", showPlotDefault = TRUE),
-          plotTriasUI(id = "indicators_gamOccupancy", showPlotDefault = TRUE)
+          plotTriasUI(id = "indicators_gamOccupancy", showPlotDefault = TRUE),
+          mapRegionsUI(id = "indicators_facet", showUnit = FALSE, facet = TRUE)
         )
       ),
       
@@ -61,24 +62,18 @@ tagList(
           tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps",
             mapRasterUI("risk")
           ),
-          tabPanel(titleModuleUI(id = "species_links"), value = "species_links"),
-          tabPanel(titleModuleUI(id = "species_risk_assessment"), value = "species_risk_management"),
+          tabPanel(titleModuleUI(id = "species_links"), value = "species_links",
+            htmlSectionUI("links")
+          ),
+          tabPanel(titleModuleUI(id = "species_risk_assessment"), value = "species_risk_management",
+            htmlSectionUI("risk_assessment")
+          ),
           tabPanel(titleModuleUI(id = "species_images"), value = "species_images")
           )
       )
     ),
     
-    tags$div(style = "margin-bottom: 70px;"),
-    
-    tags$div(class = "footer",
-      tags$div(class = "footer-content",
-        singleton(
-          tags$head(tags$script(src = "triggerDownload.js"))
-        ),
-        actionButton(inputId = "species_createReport", label = "Create report", 
-          icon = icon("file-pdf")),
-        downloadLink("species_downloadReport", " ", class = "invisible")
-      )
-    )
+    footerSectionUI(id = "species", showReport = TRUE)
+
   )
 )
