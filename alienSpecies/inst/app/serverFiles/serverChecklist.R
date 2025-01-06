@@ -344,6 +344,17 @@ output$exoten_legendText <- renderUI({
   })
 
 
+### Table overview
+### -----------------
+
+output$exoten_overviewLink <- renderUI({
+  
+  actionLink(inputId = "exoten_overview", 
+             label = translate(results$translations, "tableTitle")$title, 
+             icon = icon("angle-double-down", class = "green-icon"))
+  
+})
+
 output$exoten_overviewText <- renderUI({
     
     tags$em(HTML(translate(uiText(), "tableIndicators")$description))
