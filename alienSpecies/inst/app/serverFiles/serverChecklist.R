@@ -344,6 +344,12 @@ output$exoten_legendText <- renderUI({
   })
 
 
+output$exoten_overviewText <- renderUI({
+    
+    tags$em(HTML(translate(uiText(), "tableIndicators")$description))
+    
+  })
+
 
 ### Table
 ### -----------------
