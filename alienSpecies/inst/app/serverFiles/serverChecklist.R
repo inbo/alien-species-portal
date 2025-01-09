@@ -357,7 +357,7 @@ output$exoten_overviewLink <- renderUI({
 
 output$exoten_overviewText <- renderUI({
     
-    tags$em(HTML(translate(uiText(), "tableIndicators")$description))
+   tags$em(HTML(translate(reactive(results$translations), "tableIndicators")$description))
     
   })
 
