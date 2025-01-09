@@ -75,7 +75,7 @@ tagList(
               uiOutput("exoten_legendText")              
             )
           ),
-         uiOutput("exoten_overviewLink"),
+          uiOutput("exoten_overviewLink"),
           conditionalPanel("input.exoten_overview % 2 == 1",
             wellPanel(
               uiOutput("exoten_overviewText")
