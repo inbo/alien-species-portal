@@ -346,7 +346,10 @@ output$exoten_legendText <- renderUI({
 
 ### Table overview
 ### -----------------
-
+uiText <- reactive({
+  results$translations
+})
+                         
 output$exoten_overviewLink <- renderUI({
   
   actionLink(inputId = "exoten_overview", 
@@ -357,7 +360,7 @@ output$exoten_overviewLink <- renderUI({
 
 output$exoten_overviewText <- renderUI({
     
-   tags$em(HTML(translate(reactive(results$translations), "tableIndicators")$description))
+   tags$em(HTML(translate(uiText(), "tableIndicators")$description))
     
   })
 
