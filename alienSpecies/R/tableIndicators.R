@@ -92,6 +92,52 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
       ns <- session$ns
       selectedKey <- reactiveVal()
       
+      ### Legend
+      ### -----------------
+      
+      output$tableLegendLink <- renderUI({
+          
+          actionLink(inputId = ns("tableShowLegend"), 
+            label = translate(uiText(), "tableLegend")$title, 
+            icon = icon("angle-double-down", class = "green-icon"))
+          
+        })
+      
+      output$tableLegendText <- renderUI({
+          
+          tagList(
+            tags$b(translate(uiText(), "icons")$title),
+            p(icon("star"), translate(uiText(), "is_union")$title),
+            p(icon("play"), translate(uiText(), "min_1_obs")$title),
+            tags$b(translate(uiText(), "colors")$title),
+            p(drawBullet(color = "black"), translate(uiText(), "only_obs")$title),
+#            p(drawBullet(color = "orange"), translate(uiText(), "incomplete_out")$title),
+            p(drawBullet(color = "#E4E517"), translate(uiText(), "all_out")$title)
+          )
+          
+        })
+      
+      
+      ### Table overview
+      ### -----------------
+      
+      output$tableOverviewLink <- renderUI({
+          
+          actionLink(inputId = ns("tableShowOverview"), 
+            label = translate(uiText(), "tableTitle")$title, 
+            icon = icon("angle-double-down", class = "green-icon"))
+          
+        })
+      
+      output$tableOverviewText <- renderUI({
+          
+          tags$em(HTML(translate(uiText(), "tableIndicators")$description))
+          
+        })
+      
+      ### Table Output
+      ### -----------------
+      
       output$table <- renderDT({
           
           validate(need(nrow(exotenData()) > 0, "No data available"))
@@ -165,9 +211,25 @@ tableIndicatorsUI <- function(id) {
   
   ns <- NS(id)
   
-  div(style = "margin-top: 20px;",
-    uiOutput(ns("disclaimerTableIndicators")),
-    div(style = "margin-top: 20px;", DTOutput(ns("table")))
+  tagList(
+    tags$div(style = "margin-top: 10px;",
+      
+      uiOutput(ns("tableLegendLink")),
+      conditionalPanel("input.tableShowLegend % 2 == 1", ns = ns,
+        wellPanel(
+          uiOutput(ns("tableLegendText"))              
+        )
+      ),
+      uiOutput(ns("tableOverviewLink")),
+      conditionalPanel("input.tableShowOverview % 2 == 1", ns = ns,
+        wellPanel(
+          uiOutput(ns("tableOverviewText"))
+        )
+      )
+    ),
+    tags$div(style = "margin-top: 20px;",
+      div(style = "margin-top: 20px;", DTOutput(ns("table")))
+    )
   )
-
+  
 }
