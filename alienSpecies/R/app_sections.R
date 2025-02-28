@@ -18,7 +18,7 @@ welcomeSectionServer <- function(id, uiText) {
   
   moduleServer(id, function(input, output, session) {
       
-      tmpTranslation <- reactive(translate(uiText(), "welcomeTitle"))
+      tmpTranslation <- reactive(translate(uiText(), paste0(id, "-welcome")))
       
       output$welcomeTitle <- renderUI(h1(HTML(tmpTranslation()$title)))
       
