@@ -44,7 +44,13 @@ shinyUI(
             tags$script(HTML(paste("var header = $('.navbar > .container');",
                   "header.append('<div style=\"float:right;\">", 
                   versionUI(id = "main"),"</div>')"))
-            )),
+            ),
+            tags$script(
+              "Shiny.addCustomMessageHandler('openURL', function(data) {
+                eval(data.message)
+                });"
+            )
+          ),
           
           # Shape data source + contact e-mail
           header = tags$header(tags$div(align = "right", style = "margin-top: 60px; padding-right: 15px;",
