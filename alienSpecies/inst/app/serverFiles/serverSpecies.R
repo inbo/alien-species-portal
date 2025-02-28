@@ -133,7 +133,7 @@ dashReport <- mapCubeServer(id = "observations",
   shapeData = allShapes,
   showPeriod = TRUE,
   dashReport = dashReport,
-  triggerReport = reactive(input$species_createReport)
+  triggerReport = species_createReport
 )
 
 
@@ -163,9 +163,9 @@ observe({
 results$species_gamData <- reactive({
     
     req(input$species_choice)
-        summarizeTimeSeries(
-          species = as.numeric(input$species_choice), 
-          region = input$species_gewest)
+    summarizeTimeSeries(
+      species = as.numeric(input$species_choice), 
+      region = input$species_gewest)
     
   })
 
@@ -186,11 +186,11 @@ dashReport <- plotTriasServer(id = "indicators_gamObservations",
       )
     }),
   filters = list(
-    correctBias = "checkbox", 
-    protectAreas = "checkbox"
+    correctBias = list(type = "checkbox"), 
+    protectAreas = list(type = "checkbox")
   ),
   dashReport = dashReport,
-  triggerReport = reactive(input$species_createReport)
+  triggerReport = species_createReport
 )
 
 
@@ -211,13 +211,27 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
       )
     }),
   filters = list(
-    correctBias = "checkbox", 
-    protectAreas = "checkbox"
+    correctBias = list(type = "checkbox"), 
+    protectAreas = list(type = "checkbox")
   ),
   dashReport = dashReport,
-  triggerReport = reactive(input$species_createReport)
+  triggerReport = species_createReport
 )
 
+
+## Invasion history
+dashReport <- mapRegionsServer(id = "indicators_facet",
+  uiText = reactive(results$translations),
+  species = taxonName,
+  gewest = reactive(req(input$species_gewest)),
+  regionLevels = c("communes", "provinces", "cell_code1", "cell_code10"),
+  df = reactive(occurrenceData[taxonKey %in% input$species_choice, ]),
+  occurrenceData = NULL,
+  shapeData = allShapes,
+  facet = TRUE,
+  dashReport = dashReport,
+  triggerReport = species_createReport
+)
 
 ### Reporting
 ### -----------------
@@ -251,7 +265,7 @@ dashReport <- mapCubeServer(id = "reporting_t01",
   groupVariable = "source",
   shapeData = allShapes,
   dashReport = dashReport,
-  triggerReport = reactive(input$species_createReport)
+  triggerReport = species_createReport
 )
 
 
@@ -354,7 +368,7 @@ observe({
         shapeData = NULL,
         showPeriod = TRUE,
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
     } else if (taxonName() %in% heatSpecies) {
@@ -384,7 +398,7 @@ observe({
             max(results$species_managementData()$actieve_haarden$eventDate, na.rm = TRUE)
           }) ,
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       ## Alle observaties
@@ -410,7 +424,7 @@ observe({
             max(results$species_managementData()$points$eventDate, na.rm = TRUE)
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       # Trend region
@@ -435,20 +449,7 @@ observe({
               simplify = FALSE)
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
-      )
-      
-      # Facet invasion
-      dashReport <- mapRegionsServer(id = "management2_facet",
-        uiText = reactive(results$translations),
-        species = taxonName,
-        gewest = reactive(req(input$species_gewest)),
-        df = reactive(combinedManaged),
-        occurrenceData = NULL,
-        shapeData = allShapes,
-        facet = TRUE,
-        dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       # Aantal lente nesten
@@ -462,7 +463,7 @@ observe({
           #read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))
         uiText = reactive(results$translations),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
      
@@ -476,7 +477,7 @@ observe({
             max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       # Aantal nesten per provincie - tabel
@@ -488,7 +489,7 @@ observe({
         maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)),
         outputType = "table",
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       dashReport <- countYearGroupServer(
@@ -506,7 +507,7 @@ observe({
             choices
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
     } else {
@@ -521,20 +522,7 @@ observe({
         occurrenceData = occurrenceData,
         shapeData = allShapes,
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
-      )
-      
-      # Facet invasion
-      dashReport <- mapRegionsServer(id = "management3_facet",
-        uiText = reactive(results$translations),
-        species = taxonName,
-        gewest = reactive(req(input$species_gewest)),
-        df = results$species_managementData,
-        occurrenceData = NULL,
-        shapeData = allShapes,
-        facet = TRUE,
-        dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
       
       dashReport <- countYearGroupServer(
@@ -547,7 +535,7 @@ observe({
             choices
           }),
         dashReport = dashReport,
-        triggerReport = reactive(input$species_createReport)
+        triggerReport = species_createReport
       )
     } 
     
@@ -579,7 +567,6 @@ output$species_managementContent <- renderUI({
             ),
         mapHeatUI(id = "management2_observed"),
         mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
-        mapRegionsUI(id = "management2_facet", showUnit = FALSE, facet = TRUE),
         plotTriasUI(id = "management2_lente"),
         countNestenUI(id = "management2_province"),
         plotTriasUI(id = "management2_provinceTable", outputType = "table"),
@@ -590,7 +577,6 @@ output$species_managementContent <- renderUI({
       
       tagList(
         mapRegionsUI(id = "management3", plotDetails = c("flanders", "region")),
-        mapRegionsUI(id = "management3_facet", showUnit = FALSE, facet = TRUE),
         countYearGroupUI(id = "management3", showPlotDefault = TRUE)
       )
       
@@ -609,9 +595,10 @@ observe({
     # https://stackoverflow.com/a/64324799
     
     # Conditionally enable 'More'
+    moreChoices <- unique(c(keysRiskMap, keysLinks, harmoniaData$gbif_taxonkey))
     shinyjs::toggleState(
       selector = '#species_tabs a[data-value="species_more"', 
-      condition = input$species_choice %in% keysRiskMap
+      condition = input$species_choice %in% moreChoices
     )
     # Risk maps
     shinyjs::toggleState(
@@ -625,20 +612,30 @@ observe({
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_links"', 
-      condition = FALSE
+      condition = input$species_choice %in% keysLinks
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_risk_management"', 
-      condition = FALSE
+      condition = input$species_choice %in% harmoniaData$gbif_taxonkey
     )
     shinyjs::toggleState(
       selector = '#species_more a[data-value="species_images"', 
       condition = FALSE
     )
     
+    if (input$species_choice %in% moreChoices)
+      updateTabsetPanel(session = session, inputId = "species_more", 
+        selected = if (input$species_choice %in% keysRiskMap)
+            "species_risk_maps" else if (input$species_choice %in% keysLinks)
+            "species_links" else if (input$species_choice %in% harmoniaData$gbif_taxonkey)
+            "species_risk_management") else
+      updateTabsetPanel(session = session, inputId = "species_tabs", 
+        selected = "species_observations")
+  
   })
 
-
+# Risk maps
+## test with "Psittacula krameri"
 observe({
     
     req(input$species_choice)
@@ -647,33 +644,61 @@ observe({
       id = "risk", 
       uiText = reactive(results$translations),
       species = taxonName,
+      gewest = reactive(input$species_gewest),
       taxonKey = reactive(input$species_choice)
     )
     
   })
 
 
-
-## SUBMIT & DOWNLOAD report ##
-
-species_reportFile <- reactiveVal()
-
+# Links
+## test with "Vespa velutina"
 observe({
     
-    updateActionButton(inputId = "species_createReport", 
-      label = translate(data = results$translations, id = "createReport")$title)
+    req(input$species_choice)
+    
+    htmlSectionServer(id = "links", species = reactive(input$species_choice),
+      language = reactive(attr(results$translations, "language")))
     
   })
 
-observeEvent(input$species_createReport, {
+# Risk assessment
+## test with "Psittacula krameri"
+observe({
     
-    showNotification(translate(data = results$translations, id = "createReport")$title,
-      id = "reportWait", type = "message")
+    req(input$species_choice)
+    
+    htmlSectionServer(id = "risk_assessment", species = reactive(input$species_choice),
+      language = reactive(attr(results$translations, "language")),
+      url = harmoniaData$harmonia_url[match(input$species_choice, harmoniaData$gbif_taxonkey)],
+      linkText = "Harmonia+ Risk Assessment")
+    
+  })
+
+
+## Risk management
+#output$species_riskManagement <- renderUI({
+#    
+#    req(input$species_choice)
+#    # Refused to frame 'https://ias.biodiversity.be/' because an ancestor violates the following Content Security Policy directive: "frame-ancestors 'self'"
+#    tags$iframe(src = harmoniaData$harmonia_url[match(input$species_choice, harmoniaData$gbif_taxonkey)])
+#    
+#  })
+
+
+## SUBMIT & DOWNLOAD report ##
+species_createReport <- footerSectionServer(id = "species", uiText = results$translations)
+
+species_reportFile <- reactiveVal()
+
+observeEvent(species_createReport(), {
+    
+    showNotification(paste(translate(data = results$translations, id = "createReport")$title, '...\n'),
+      id = "reportWait", type = "message", duration = NULL)
     
     species_reportFile(NULL)  # reset on each button press
     
   })
-
 
 species_readyForDownload <- reactive({
     
@@ -685,13 +710,15 @@ species_readyForDownload <- reactive({
     
     removeNotification(id = "reportWait")   
     
-    return(input$species_createReport)
-  
+    return(species_createReport())
+    
   })
 
 observeEvent(species_readyForDownload(), {
-  
-  withProgress(message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), value = 0, {
+    
+    withProgress(
+      message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), 
+      value = 0, {
         
         oldDir <- getwd()
         setwd(tempdir())
@@ -715,11 +742,8 @@ observeEvent(species_readyForDownload(), {
           )
         )
         
-        # report is ready, trigger download
-        setProgress(1)
-        
         session$sendCustomMessage(type = "imageReady", 
-          message = list(id = "species_downloadReport"))
+          message = list(id = "species-downloadReport"))
         
         # Reset report content - if switching species
         for (iName in names(dashReport))
@@ -730,7 +754,8 @@ observeEvent(species_readyForDownload(), {
   })
 
 
-output$species_downloadReport <- downloadHandler(
+# Specific id for JS trigger in shiny module footerSectionUI()
+output$`species-downloadReport` <- downloadHandler(
   filename = function() 
     nameFile(species = taxonName(), content = "report", fileExt = "pdf"),
   content = function(file) 

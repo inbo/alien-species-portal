@@ -6,7 +6,6 @@
 
 .version{
   line-height: 50px;
-  padding-right: 20px;
   display: inline-block;
   vertical-align: middle;
 }
@@ -23,7 +22,7 @@
     bottom: 0pt;
     background-color: white;
     width: 100%;
-    z-index: 10000;
+    z-index: 1000;
 }
 
 .footer-content {

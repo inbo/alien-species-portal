@@ -542,7 +542,14 @@ observeEvent(input$exoten_tabs, {
     ## Plot number of species per year by native region
     plotTriasServer(id = "checklist_yearNativeRange",
       uiText = reactive(results$translations),
-      data = results$exoten_data,
+      data = reactive({
+        tmpData <- results$exoten_data()
+        tmpData[, ':=' (
+            native_continent = native_continent_translate,
+            native_range = native_range_translate
+          )]
+        tmpData
+      }),
       triasFunction = "indicator_native_range_year",
       triasArgs = reactive({
           list(
@@ -558,3 +565,7 @@ observeEvent(input$exoten_tabs, {
     )
     
   })
+
+
+# Contact button
+footerSectionServer(id = "checklist", uiText = results$translations)

@@ -5,13 +5,24 @@
 
 
 ## Load data
-allShapes <- loadShapeData("grid.RData")
+allShapes <- allShapes <- c(
+  # Grid data
+  #readShapeData(),
+  loadShapeData("grid.RData"),
+  ## be_1km and be_10km data have neither is nor GEWEST attribute to indicate region.
+  #loadShapeData("occurrenceCube.RData"),
+  # gemeentes & provinces
+  "provinces" = list(loadShapeData("provinces.RData")),
+  "communes" = list(loadShapeData("communes.RData"))
+#readShapeData(extension = ".geojson")
+)
+
 taxData <- loadTabularData(type = "occurrence")
 ## Settings
 # many versus few occurrences
 allSpecies <- c("Alopochen aegyptiaca", "Muntiacus reevesi")
 period <- c(2000, 2018)
-
+uiText <- loadMetaData(type = "ui")
 
 
 test_that("Check summary data", {
@@ -24,16 +35,17 @@ test_that("Check summary data", {
     
   })
 
-test_that("Occurrence grid shape", {
+test_that("All shape files", {
     
-    expect_equal(length(allShapes), 3)
+    expect_equal(length(allShapes), 5)
     
     expect_type(allShapes, "list")
     
     expect_setequal(
-      c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions") , names(allShapes)
-      
+      c("gewestbel", "utm1_bel_with_regions", "utm10_bel_with_regions", "provinces", "communes"), 
+      names(allShapes)
     ) 
+    
   })
 
 test_that("Occurrence plots", {
@@ -80,51 +92,120 @@ test_that("Occurrence plots", {
     expect_s3_class(myResult$data, "data.frame")
     
     # Color bars when full range selected
-    myResult <- countOccurrence(df = df, period = c(1950, 2021),
+    countOccurrence(df = df, period = c(1950, 2021),
       uiText = loadMetaData(type = "ui"))$plot
         
   })
+    
+  
+test_that("Map invasion", {
+    
+    # TODO temporary fix until data is created with alienSpecies >= v1.0.0
+    if (TRUE) {
+      
+      readS3(
+        file = "be_alientaxa_cube_processed.RData", 
+        bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
+      )
+      taxData <- rawData[, c("year", "cell_code1", "taxonKey", "n",
+          "isFlanders", "isWallonia", "isBrussels", "gemeente", "provincie", "gewest",           
+          "scientificName", "classKey", "cell_code10")]
+      
+      setnames(taxData, "gemeente", "NAAM")
+      setnames(taxData, "gewest", "GEWEST")
+      
+    }
+    
+    myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
+    currentYear <- 2023
+    
+    for (regionLevel in c("communes", "provinces", "cell_code1", "cell_code10")) {
+      
+      summaryData <- createSummaryRegions(
+        data = taxData[taxonKey %in% myKey, ],
+        shapeData = allShapes,
+        regionLevel = regionLevel,
+        year = list(
+          c(currentYear-8, currentYear-5), 
+          c(currentYear-4, currentYear-1),
+          currentYear)
+      )
+      
+      myPlot <- mapRegionsFacet(managementData = summaryData,
+        shapeData = allShapes, regionLevel = regionLevel, addGlobe = TRUE)
+      
+      expect_s3_class(myPlot, "ggplot")
+      # ggsave(filename = file.path(tempdir(), paste0("example_", regionLevel, ".png")), plot = myPlot)
+      
+    }
+    
+  })
+  
 
-
+## Note: fitting GAM model only works when loading the R-package using library(alienSpecies)
+## When loading via devtools::load_all() there is a conflict with config::get()
+## which can be resolved by
+get <- base::get
 
 test_that("Emergence status GAM - Observations", {
     
     ## Note: fitting GAM model only works when loading the R-package using library(alienSpecies)
     ## When loading via devtools::load_all() there is a conflict with config::get()
     ## which can be resolved by
-    ## library(config)
-    ## conflicted::conflict_prefer("get", "base", "config")
+    ## get <- base::get
 
     myKey <- unique(taxData$taxonKey[taxData$scientificName %in% allSpecies[2]])
     
-    subData <- summarizeTimeSeries(
-      species = myKey,
-      region = c("flanders", "brussels")
-    )
+    timeseries <- loadTabularData(type = "timeseries")
     
     correctBias <- c(TRUE, FALSE)[1]
     isProtected <- c(TRUE, FALSE)[2]
     
-    subData <- subData[protected == isProtected, ]
+    subData <- summarizeTimeSeries(
+      species = myKey,
+      region = c("flanders", "brussels")
+    )[protected == isProtected, ]
     
+    # Gam model can be fitted
     tmpResult <- plotTrias(triasFunction = "apply_gam", 
       df = subData,
       triasArgs = list(
         y_var = "obs",
-        # not restricting the data?
-        eval_years = 2008,
-#        eval_years = min(subData$year):max(subData$year),
         taxon_key = myKey, 
-        name = allSpecies[2],
+        name = allSpecies[1],
+        x_label = "Year",
+        y_label = "Observations",
+        eval_years = 2010 - c(3,1),
         type_indicator = "observations",
-        
         baseline_var = if (correctBias) "cobs",
-        verbose = TRUE)
+        region = "flanders"
+        ),
+        uiText = uiText
     )
  
     expect_type(tmpResult, "list")
     expect_s3_class(tmpResult$plot, "plotly")
     expect_s3_class(tmpResult$data, "data.frame")
+    expect_true(!any(is.na(tmpResult$data$ucl)), label = "GAM can be assessed")
+    
+    # Gam model cannot be fitted
+    tmpResult <- plotTrias(triasFunction = "apply_gam", 
+      df = subData[subData$year %in% 2020:2022, ],
+      triasArgs = list(
+        y_var = "obs",
+        taxon_key = myKey, 
+        name = allSpecies[1],
+        x_label = "Year",
+        y_label = "Observations",
+        eval_years = 2020,
+        type_indicator = "observations",
+        baseline_var = if (correctBias) "cobs",
+        region = "flanders"
+      ),
+      uiText = uiText
+    )
+    
+    expect_true(all(is.na(tmpResult$data$ucl)), label = "GAM cannot be assessed")
     
   })
 
@@ -150,7 +231,9 @@ test_that("Emergence status GAM - Occupancy", {
         eval_years = min(subData$year):max(subData$year),
         taxon_key = myKey, name = allSpecies[2],
         baseline_var = if (correctBias) "c_ncells",
-        verbose = TRUE)
+        region = "flanders",
+        verbose = TRUE),
+      uiText = uiText
     )
     
     expect_type(tmpResult, "list")

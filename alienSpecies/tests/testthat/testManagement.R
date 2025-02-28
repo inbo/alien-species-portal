@@ -98,10 +98,18 @@ test_that("Map & trend for Bullfrogs", {
     # Map - gemeente
     summaryData <- createSummaryRegions(data = managementData, 
       shapeData = allShapes, regionLevel = "communes", 
-      year = 2018, unit = "cpue")
+      year = 2023, unit = "cpue")
     myPlot <- mapRegions(managementData = summaryData, occurrenceData = occurrenceData, 
       shapeData = allShapes, regionLevel = "communes")
     expect_s3_class(myPlot, "leaflet")
+    
+    # Visualize bins
+    classTable <- table(summaryData$group)
+    palette <- if (attr(summaryData, "unit") == "difference") "RdYlGn" else "YlOrBr"
+    paletteFunction <- colorFactor(palette = palette, levels = levels(summaryData$group), 
+      na.color = "transparent", reverse = (palette != "YlOrBr"))
+    barplot(classTable, las = 1, ylab = translate(uiText, "number")$title,
+      col = paletteFunction(levels(summaryData$group)))
     
     # Map - provinces
     summaryData <- createSummaryRegions(data = managementData, 
@@ -153,27 +161,6 @@ test_that("Trend for Bullfrogs", {
     
   })
 
-
-test_that("Map invasion", {
-    
-    currentYear <- 2023
-    
-    summaryData <- createSummaryRegions(
-      data = managementData,
-      shapeData = allShapes,
-      regionLevel = "provinces",
-      year = list(
-        c(currentYear-8, currentYear-5), 
-        c(currentYear-4, currentYear-1),
-        currentYear)
-    )
-    
-    myPlot <- mapRegionsFacet(managementData = summaryData,
-      shapeData = allShapes, regionLevel = "provinces")
-    
-    expect_s3_class(myPlot, "ggplot")
-    
-  })
 
 
 ## Aziatische hoornaar ##
@@ -267,8 +254,9 @@ test_that("Map Trend", {
       shapeData = allShapes,
       regionLevel = "communes",
       year = 2022)
-    mapRegions(managementData = summaryData, shapeData = allShapes,
+    plotPoints <- mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "communes")
+    expect_s3_class(plotPoints, "leaflet")
     
     # Per province
     summaryData <- createSummaryRegions(
@@ -276,8 +264,9 @@ test_that("Map Trend", {
       shapeData = allShapes,
       regionLevel = "provinces",
       year = 2022)
-    mapRegions(managementData = summaryData, shapeData = allShapes,
+    plotPoints2 <- mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
+    expect_s3_class(plotPoints2, "leaflet")
     
     ## POINTS and NESTEN data
     summaryData <- createSummaryRegions(
@@ -286,8 +275,9 @@ test_that("Map Trend", {
       year = 2024,
       unit = "absolute",
       groupingVariable = c("nest_type", "isBeheerd"))
-    mapRegions(managementData = summaryData, shapeData = allShapes,
+    plotNesten <- mapRegions(managementData = summaryData, shapeData = allShapes,
       regionLevel = "provinces")
+    expect_s3_class(plotNesten, "leaflet")
     
     summaryData <- createSummaryRegions(
       data = vespaBoth, shapeData = allShapes,
@@ -301,6 +291,7 @@ test_that("Map Trend", {
     # create popup with summary table in it
     tmpText <- mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, 
       unit = NULL, showBron = TRUE)
+    expect_is(tmpText, "character")
     
   })
   
@@ -309,7 +300,8 @@ test_that("Management succes", {
     plotData <- summarizeYearGroupData(df = Vespa_velutina_shape$nesten, 
       gewest = "flanders") 
       
-    countYearGroup(df = plotData, groupVar = "Behandeling")
+    plotSuccess <- countYearGroup(df = plotData, groupVar = "Behandeling")
+    expect_s3_class(plotSuccess$plot, "plotly")
     
   })  
 

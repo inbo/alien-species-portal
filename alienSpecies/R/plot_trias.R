@@ -143,6 +143,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
   
   outputType <- match.arg(outputType)
   
+  
   moduleServer(id,
     function(input, output, session) {
       
@@ -192,27 +193,36 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
           
           subData
           
-        })
+        })      
+
       
       plotResult <- plotModuleServer(id = "plotTrias",
         plotFunction = "plotTrias",
         triasFunction = triasFunction, 
         data = plotData,
         triasArgs = reactive({
+            
+            req(plotData())
+            
             if (!is.null(triasArgs)) {
+              
               initArgs <- triasArgs()
-              if (triasFunction == "apply_gam")
-                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):max(plotData()$year, na.rm = TRUE)
-              if (!is.null(input$correctBias) && input$correctBias) {
+              if (triasFunction == "apply_gam") {
+                initArgs$eval_years <- min(plotData()$year, na.rm = TRUE):
+                  max(plotData()$year, na.rm = TRUE)
+                if (!is.null(input$correctBias) && input$correctBias) {
                   if (initArgs$y_var == "obs")
                     initArgs$baseline_var <- "cobs" else
                     initArgs$baseline_var <- "c_ncells"
+                }
               }
               if (!is.null(input$regionLevel))
                 initArgs$type <- input$regionLevel
               if (!is.null(input$summarizeBy))
                 initArgs$response_type <- input$summarizeBy
+
               initArgs
+              
             } else NULL
           }),
         outputType = outputType,

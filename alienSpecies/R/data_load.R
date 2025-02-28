@@ -49,6 +49,8 @@ loadTabularData <- function(
     open_dataset(file.path("s3:/", bucket, dataFile)) else
     read_parquet(file = file.path("s3:/", bucket, dataFile))
   
+  message(attr(rawData, "warning"))
+
   if (type == "indicators")
     attr(rawData, "habitats") <- c("marine", "freshwater", "terrestrial")
   
@@ -62,7 +64,7 @@ loadTabularData <- function(
 #' Load meta data for the UI
 #' @inheritParams loadTabularData 
 #' @param type character, which type of translations should be loaded;
-#' should be one of \code{c("ui","keys")}
+#' should be one of \code{c("ui", "keys", "harmonia")}
 #' @param language character, which language data sheet should be loaded;
 #' should be one of \code{c("nl", "fr", "en")}
 #' @param local boolean, whether to use local translation file in
@@ -73,7 +75,7 @@ loadTabularData <- function(
 #' @importFrom utils read.csv
 #' @export
 
-loadMetaData <- function(type = c("ui", "keys"),
+loadMetaData <- function(type = c("ui", "keys", "harmonia"),
   bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
   language = c("nl", "fr", "en"),
   local = FALSE) {
@@ -83,7 +85,8 @@ loadMetaData <- function(type = c("ui", "keys"),
    
   fileNames <- switch(type, 
     ui = paste0("translations", c("", "_simple", "_regions")),
-    keys = "keys"
+    keys = "keys",
+    harmonia = "harmonia_info"
   )
   
   allData <- sapply(fileNames, function(iFile) { 
@@ -92,7 +95,7 @@ loadMetaData <- function(type = c("ui", "keys"),
           if (local)
             read.csv(system.file("extdata", iFile, package = "alienSpecies"),
               sep = if (type == "ui") ";" else ",", encoding = "UTF-8") else
-            readS3(FUN = read.csv, sep = if (type == "ui") ";" else ",", encoding = "UTF-8", 
+            readS3(FUN = read.csv, sep = if (type == "keys") "," else ";", encoding = "UTF-8", 
               file = iFile)
         }, error = function(err) NULL)
     }, simplify = FALSE)
@@ -127,7 +130,8 @@ loadMetaData <- function(type = c("ui", "keys"),
       uiText
       
     },
-    keys = allData$keys
+    keys = allData$keys,
+    harmonia = allData$harmonia[, c("gbif_taxonkey", "harmonia_url")]
   )
   
   if (type == "ui")

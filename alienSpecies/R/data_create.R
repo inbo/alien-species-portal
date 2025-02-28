@@ -160,7 +160,7 @@ createTimeseries <- function(
   
                              
   # For R CMD check
-  df_ts <- taxonKey <- NULL
+  df_ts <- taxonKey <- eea_cell_code <- NULL
   
   # created from https://github.com/inbo/aspbo/blob/uat/src/05_occurrence_indicators_preprocessing.Rmd
   ## Data at 1km x 1km grid level
@@ -307,14 +307,14 @@ createTaxaChoices <- function(exotenData) {
 #' }
 #' @return data.table, loaded indicator/unionlist data; 
 #' and attribute 'Date', the date that this data file was created
-#' @importFrom data.table fread := as.data.table
+#' @importFrom data.table fread := as.data.table setnames
 #' @importFrom utils tail
 #' @importFrom stats complete.cases
 #' @importFrom arrow write_parquet
 #' @importFrom dplyr filter
 #' @export
 createTabularData <- function(
-    dataDir = "~/git/alien-species-portal/dataS3",
+    dataDir = "~/git/aspbo/data/output/UAT_processing",
     bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
     type = c("indicators", "unionlist", "occurrence")) {
   
@@ -324,6 +324,7 @@ createTabularData <- function(
   i.scientificName <- NULL
   i.classKey <- NULL
   taxonKey <- variable <- eea_cell_code <- NULL
+  obs <- NULL
   
   warningMessage <- NULL
   
@@ -379,12 +380,9 @@ createTabularData <- function(
     ## convert english names to names recognized by the translation file
     rawData$locality <- getRegionNames(rawData$locality)
     
-    ## Extract hyperlinks 
-    
-    ### Extract gbif link
-    rawData$gbifLink <- sapply(strsplit(rawData$source, split = ": "), function(x) x[1])
-    rawData$gbifLink <- paste0("<a href='", rawData$gbifLink, "' target = '_blank'>", 
-                               sapply(strsplit(rawData$gbifLink, split = "/"), function(x) tail(x, n = 1)), "</a>")
+    ## Construct gbif link
+    rawData$gbifLink <- paste0("<a href='https://www.gbif.org/species/", rawData$nubKey, "' target = '_blank'>", 
+                               rawData$nubKey, "</a>")
     # common name and source: https://www.gbif.org/species/157131005
     
     ## recode `source` variable
@@ -471,8 +469,10 @@ createTabularData <- function(
       by.y = c("variable", "taxonKey"), all.x = TRUE)
     rawData$last_observed <- apply(rawData[, c("last_observed", "year")], 1, 
       function(x) if (all(is.na(x))) NA else max(x, na.rm = TRUE))
-      
+    rawData$first_observed <- as.numeric(rawData$first_observed)
+    rawData$last_observed <- as.numeric(rawData$last_observed)
                            
+    
     ## replace missing "species" with "canonicalName" if available
     # then drop "canonicalName"
     ind <- which(is.na(rawData$species) & !is.na(rawData$canonicalName))
@@ -523,8 +523,11 @@ createTabularData <- function(
     rawData$cell_code10 <- gsub(pattern = "1km", replacement = "10km", 
                                 paste0(substr(rawData$eea_cell_code, start = 1, stop = 7),
                                        substr(rawData$eea_cell_code, start = 9, stop = 12)))
-    colnames(rawData)[colnames(rawData) == "eea_cell_code"] <- "cell_code1"
     
+    setnames(rawData, "eea_cell_code", "cell_code1", skip_absent = TRUE)
+    setnames(rawData, "gemeente", "NAAM", skip_absent = TRUE)
+    setnames(rawData, "gewest", "GEWEST", skip_absent = TRUE)
+  
   }
   
   attr(rawData, "Date") <- file.mtime(dataFiles)

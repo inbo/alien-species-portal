@@ -168,6 +168,8 @@ loadGbif <- function(dataFile,
     rawData[, decimalLongitude := as.numeric(decimalLongitude)]
   if ("decimalLatitude" %in% colnames(rawData))
     rawData[, decimalLatitude := as.numeric(decimalLatitude)]
+  if ("count" %in% colnames(rawData))
+    rawData[, count := as.numeric(count)]
   
   
   attr(rawData, "Date") <- file.mtime(dataFile)
