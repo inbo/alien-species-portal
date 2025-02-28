@@ -428,7 +428,11 @@ observeEvent(input$exoten_tabs, {
     
     ## Plot cumulative number of species per year
     plotTriasServer(id = "checklist-cum",
-      data = results$exoten_data,
+      data = {
+        # Retain only the smallest first_observed per key 
+        # fix https://github.com/inbo/alien-species-portal/issues/128
+        reactive(results$exoten_data()[order(first_observed), .SD[1,], by = "key"])
+      },
       uiText = reactive(results$translations),
       triasFunction = "indicator_total_year",
       triasArgs = reactive({
