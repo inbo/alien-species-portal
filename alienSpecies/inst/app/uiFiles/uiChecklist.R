@@ -14,6 +14,7 @@ tagList(
 #      uiOutput("filter_taxa"),
       selectizeInput(inputId = "exoten_taxa", label = NULL, choices = NULL, multiple = TRUE,
         width = "100%"),
+      checkboxInput(inputId = "exoten_searchVernacular", label = translate(results$translations, "vernacular_name")),
       
       fixedRow(        
         # Select habitat

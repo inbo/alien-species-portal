@@ -19,7 +19,8 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
   if (nrow(exotenData) == 0)
     return(NULL)
   
-  tableData <- exotenData[, c("key", "nubKey", "species", "gbifLink", "first_observed", "last_observed", "habitat",
+  tableData <- exotenData[, c("key", "nubKey", "species", "vernacular_name", 
+      "gbifLink", "first_observed", "last_observed", "habitat",
       "pathway_level1", "pathway_level2", "degree_of_establishment", "sourceLink", "locality")]
   
   ## combine pathways

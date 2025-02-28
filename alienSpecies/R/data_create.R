@@ -252,6 +252,7 @@ createShapeData <- function(
 #' @return data.frame all choices to be shown - for selectizeInput()
 #' 
 #' @author mvarewyck
+#' @importFrom data.table as.data.table setkey
 #' @export
 createTaxaChoices <- function(exotenData) {
   
@@ -266,28 +267,32 @@ createTaxaChoices <- function(exotenData) {
   subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
       kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
   subData <- subData[!duplicated(subData), ]
-  subData$speciesKey <- subData$key
+  setnames(subData, new = "speciesKey", old = "key")
   
   speciesLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
   
-  choices <- do.call(rbind, lapply(seq_along(speciesLevels), function(i) {
-        
-        iLevel <- speciesLevels[i]
-        keyVar <- paste0(iLevel, "Key")
-        do.call(rbind, lapply(split(subData, subData[[keyVar]]), function(iData) {
-              iData <- iData[!duplicated(iData[[keyVar]]), ]
-              longName <- paste(iData[, speciesLevels[1:i], with = FALSE], collapse = " > ")
-              data.frame(
-                value = iData[[keyVar]], 
-                label = iData[[iLevel]],
-                long = longName,
-                html = paste0("<b>", iData[[iLevel]], "</b>", if (i != 1) paste0("</br>", longName))
-              ) 
-            }))
-        
-      }))
+  choices <- as.data.table(do.call(rbind, lapply(seq_along(speciesLevels), function(i) {
+          
+          iLevel <- speciesLevels[i]
+          keyVar <- paste0(iLevel, "Key")
+          do.call(rbind, lapply(split(subData, subData[[keyVar]]), function(iData) {
+                iData <- iData[!duplicated(iData[[keyVar]]), ]
+                longName <- paste(iData[, speciesLevels[1:i], with = FALSE], collapse = " > ")
+                data.frame(
+                  value = iData[[keyVar]], 
+                  latin_name = iData[[iLevel]],
+                  long = longName,
+                  html = paste0("<b>", iData[[iLevel]], "</b>", if (i != 1) paste0("</br>", longName))
+                ) 
+              }))
+          
+        })))
   
-  choices <- choices[order(choices$label), ]
+  setkey(choices, latin_name)
+  
+  # Add vernacular name
+  choices <- cbind(choices, 
+    exotenData[match(choices$value, key), c("vernacular_name_nl", "vernacular_name_en", "vernacular_name_fr")])
   
   choices
   
@@ -356,6 +361,8 @@ createTabularData <- function(
       "nubKey",
       # full scientific name
       "scientificName",
+      # vernacular name
+      "vernacular_name_nl", "vernacular_name_en", "vernacular_name_fr",
       # Period - slider should use first_observed
       "first_observed", "last_observed", 
       # Taxonomy
