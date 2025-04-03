@@ -411,7 +411,7 @@ observeEvent(input$exoten_tabs, {
     
     ## Plot number of species per year
     plotTriasServer(id = "checklist-count",
-      data = data = {
+      data = {
         # Retain only the smallest first_observed per key 
         # fix https://github.com/inbo/alien-species-portal/issues/128
         reactive(results$exoten_data()[order(first_observed), .SD[1,], by = "key"])

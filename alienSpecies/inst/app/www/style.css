@@ -40,28 +40,6 @@ footer {
   min-height: 40px !important;
 }
 
-
-/*** For the fancy noButton but tiles - radiobuttons ***/
-
-.noButton input[type='radio'] { /* style for radiobutton */
-        visibility: hidden;
-      }
-
-.noButton .radio-inline {
-	margin-bottom: 10px;
-	margin-left: 0px;
-	margin-right: 10px;
-	padding-left: 0;
-      }
-      
-.radio-inline input:checked ~ span div {
-  background-image: url("blue-white-pattern.jpg");
-  background-size: 360px 80px;
-}
-
-.radio-inline:hover {
-  box-shadow: 10px 5px 5px #888888;
-}
       
 h1, h2, h3, h4 {
   color: #356196;
@@ -80,41 +58,60 @@ a, a:visited, a:hover, a:active, a:focus {
 }
 
 
-#checklist_indicatorsFoto {
-  width: 360px; 
-  height: 236px;
-  background-image: url("global_indicators.png");
-  background-size: 360px 236px;
+/*** For the fancy noButton but tiles - radiobuttons ***/
+
+.noButton input[type='radio'] { /* style for radiobutton */
+  visibility: hidden;
 }
 
-#species_informationFoto {
-  width: 360px; 
-  height: 236px;
-  background-image: url("species_information.jpg");
-  background-size: 360px 236px;
+.noButton .radio-inline {
+  float: left;
+  margin-bottom: 10px;
+  margin-left: 0px;
+  margin-right: 10px;
+  padding-left: 0;
+}
+      
+.radio-inline input:checked ~ span div {
+  background-image: url("blue-white-pattern.jpg");
+  background-size: 260px 80px;
 }
 
-#early_warningFoto {
-  width: 360px; 
-  height: 236px;
-  background-image: url("early_warning.jpg");
-  background-size: 360px 236px;
+.radio-inline:hover {
+  box-shadow: 10px 5px 5px #888888;
 }
 
-#managementFoto {
-  width: 360px; 
-  height: 236px;
-  background-image: url("management.jpg");
-  background-size: 360px 236px;
-}
-
-.fotoTitel {
+.radio-tiles-title {
   font-size: 20px;
   font-weight: bold;
-  height: 80px;
-  color: #fff;
+  height: 60px;
+  color: #ffffff;
   background-color: #c04384;
-  padding-top: 25px;
+  text-align: center; /*  horizontal centering*/
+/*  vertical centering*/
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.radio-tiles-image > img {
+  aspect-ratio: 400/270;
+}
+
+.radio-tiles {
+  width: 30%;
+  margin-left: 5px !important; 
+  margin-top: 5px !important;
+  margin-right: 0px;
+  margin-bottom: 20px; 
+}
+
+.radio-tiles:hover {
+  box-shadow: 10px 5px 5px #888888;
+}
+
+.radio-tiles:hover > span > .radio-tiles-title {
+  background-color: #456394 !important;
 }
 
 .shiny-download-link {
