@@ -171,6 +171,8 @@ loadGbif <- function(dataFile,
   if ("count" %in% colnames(rawData))
     rawData[, count := as.numeric(count)]
   
+  setnames(rawData, "gemeente", "NAAM", skip_absent = TRUE)
+  setnames(rawData, "gewest", "GEWEST", skip_absent = TRUE)
   
   attr(rawData, "Date") <- file.mtime(dataFile)
   

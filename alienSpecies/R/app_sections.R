@@ -157,7 +157,7 @@ decodeText <- function(text, params) {
     
   }
   
-  newText
+  HTML(newText)
   
 }
 

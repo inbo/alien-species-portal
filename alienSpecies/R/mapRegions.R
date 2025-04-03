@@ -468,16 +468,16 @@ cutBins <- function(data, nBins, binType = c("userDefined", "quantiles", "unifor
     responseVariable <- "n"
   
   uniqueResponses <- unique(data[[responseVariable]])
-  uniqueResponses <- uniqueResponses[!is.na(uniqueResponses)]  
+  uniqueResponses <- sort(uniqueResponses[!is.na(uniqueResponses)])  
   
   
   if (length(uniqueResponses) == nBins) {
     
-    cutValues <- c(unique(data[[responseVariable]]), Inf)
+    cutValues <- c(uniqueResponses, Inf)
     
   } else if (length(uniqueResponses) == (nBins+1)) {
     
-    cutValues <- unique(data[[responseVariable]])
+    cutValues <- uniqueResponses
     
   } else if (binType == "quantiles") {
     

@@ -130,7 +130,7 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NULL,
+countYearGroupServer <- function(id, species, uiText, data, groupChoices, dashReport = NULL,
   triggerReport = reactive(NULL)) {
   
   moduleServer(id,
@@ -140,7 +140,9 @@ countYearGroupServer <- function(id, uiText, data, groupChoices, dashReport = NU
       
       tmpTranslation <- reactive(translate(uiText(), ns("countYearGroup")))
       
-      output$titleCountYearGroup <- renderUI(h3(HTML(tmpTranslation()$title)))
+      output$titleCountYearGroup <- renderUI(
+        h3(decodeText(tmpTranslation()$title, params = list(species = species())))
+      )
       
       output$descriptionCountYearGroup <- renderUI(HTML(tmpTranslation()$description))
       

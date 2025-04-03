@@ -12,7 +12,6 @@
 #' @param id character, module id, unique name per plot
 #' @param showSummary boolean, whether to show a select input field for summary choice
 #' @param showPeriod boolean, whether to show a slider input field for period (first_observed)
-#' @param showGewest boolean, whether to show filter for gewest
 #' @param exportData boolean, whether a download button for the data is shown
 #' @param doWellPanel boolean, whether to display the options within a 
 #' \code{shiny::wellPanel()}
@@ -20,16 +19,13 @@
 #' @import shiny
 #' @export
 optionsModuleUI <- function(id, showSummary = FALSE, 
-  showPeriod = FALSE, showGewest = FALSE,
-  exportData = TRUE, doWellPanel = TRUE) {
+  showPeriod = FALSE, exportData = TRUE, doWellPanel = TRUE) {
   
   ns <- NS(id)
   
   
   toReturn <- tagList(
     fixedRow(
-      if (showGewest)
-        column(6, uiOutput(ns("gewest"))),
       column(6, uiOutput(ns("group"))),
       if (showSummary)
         column(6, uiOutput(ns("summarizeBy"))),
@@ -121,16 +117,6 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       
       ns <- session$ns
       
-      output$gewest <- renderUI({
-          
-          choices <- c("flanders", "brussels", "wallonia")
-          names(choices) <- translate(uiText(), choices)$title
-          
-          selectInput(inputId = ns("gewest"), label = translate(uiText(), "gewest")$title,
-            choices = choices, selected = choices, multiple = TRUE)
-          
-        })
-      
       output$group <- renderUI({
           
           if (!is.null(groupChoices))
@@ -169,10 +155,6 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           subData <- if (is.null(input$period))
             data() else
             data()[data()$first_observed %in% input$period[1]:input$period[2], ]
-        
-        if (is.null(input$gewest))
-          subData else
-          subData[subData$GEWEST %in% input$gewest, ]
           
         })
       
