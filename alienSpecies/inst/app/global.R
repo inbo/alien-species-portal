@@ -69,7 +69,7 @@ if (doDebug) {
   missingSpecies <- unique(dfCube$species[!dfCube$species %in% dictionary$scientificName])
   missingSpecies <- missingSpecies[!is.na(missingSpecies)]
   if (length(missingSpecies))
-    warning(paste("Scientific name is missing for", length(missingSpecies), "species in occupancy data."))
+    warning(paste("Taxonkey is not available (in keys.csv) for", length(missingSpecies), "species in occupancy data."))
 }
 
 
