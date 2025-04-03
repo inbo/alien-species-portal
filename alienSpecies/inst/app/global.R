@@ -59,6 +59,20 @@ if (!doDebug | !exists("allShapes"))
 
 dictionary <- loadMetaData(type = "keys")
 
+# Warning for missing info in keys.csv
+if (doDebug) {
+  # occurrence
+  missingSpecies <- occurrenceData[!duplicated(taxonKey) & is.na(scientificName), "taxonKey"]
+  if (nrow(missingSpecies))
+    warning(paste("Scientific name is missing for", nrow(missingSpecies), "species in occurrence data."))
+  # occupancy
+  missingSpecies <- unique(dfCube$species[!dfCube$species %in% dictionary$scientificName])
+  missingSpecies <- missingSpecies[!is.na(missingSpecies)]
+  if (length(missingSpecies))
+    warning(paste("Scientific name is missing for", length(missingSpecies), "species in occupancy data."))
+}
+
+
 
 # Initial exoten filter choices
 # e.g. search for Stylommatophora

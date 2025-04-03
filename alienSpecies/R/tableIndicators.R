@@ -60,7 +60,7 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
   # Add unionlist info
   tableData$unionColor <- ifelse(tableData$nubKey %in% unionlistData$taxonKey, colorCode, NA)
   # Add occurrence info
-  tableData$occurColor <- ifelse(tableData$species %in% occurrenceData$scientificName, colorCode, NA)
+  tableData$occurColor <- ifelse(tableData$nubKey %in% occurrenceData$taxonKey, colorCode, NA)
   
   # Remove after matching
   tableData$nubKey <- NULL
@@ -127,6 +127,7 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
           # data-inputid='%s' data-id='%s' onclick='activateTableLink(this);
           
           columnNames <- displayName(colnames(tableData), translations = uiText())
+          columnsHide <- which(colnames(tableData) %in% c("key", "unionColor", "occurColor")) - 1
           
           
           DT::datatable(tableData, rownames = FALSE,
@@ -134,7 +135,7 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
             colnames = columnNames,
             escape = FALSE, # display HTML code
             options = list(pageLength = 5,
-              columnDefs = list(list(visible = FALSE, targets = c(0, 9, 10))))
+              columnDefs = list(list(visible = FALSE, targets = columnsHide)))
           )
           
         })
