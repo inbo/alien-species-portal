@@ -60,8 +60,7 @@ combineVespaData <- function(pointsData, nestenData, nestenBeheerdData) {
 #' @return data.frame
 #' 
 #' @author mvarewyck
-#' @import tidyverse
-#' @importFrom data.table copy dcast
+#' @importFrom dplyr filter group_by summarise 
 #' @importFrom reshape2 dcast
 #' @importFrom stats as.formula
 #' @export
@@ -121,12 +120,12 @@ createSummaryRegions <- function(data, shapeData,
   if (unit == "cpue") {
     
     summaryData <- data %>% 
-      filter(year %in% myYear, !is.na(region), region != "NA") %>% 
-      group_by(eventID, region, year) %>% 
-      summarise(effort = max(n_fuiken, na.rm = TRUE),
+      dplyr::filter(year %in% myYear, !is.na(region), region != "NA") %>% 
+      dplyr::group_by(eventID, region, year) %>% 
+      dplyr::summarise(effort = max(n_fuiken, na.rm = TRUE),
         n = sum(count, na.rm = TRUE)/effort) %>% 
-      group_by(region, year) %>% 
-      summarise(effort = sum(effort, na.rm = TRUE),
+      dplyr::group_by(region, year) %>% 
+      dplyr::summarise(effort = sum(effort, na.rm = TRUE),
         n = sum(n, na.rm = TRUE))
     
     summaryData$outcome <- summaryData$effort
@@ -134,13 +133,13 @@ createSummaryRegions <- function(data, shapeData,
   } else if (unit == "difference") {
     
     currentData <- data %>%
-      filter(year %in% myYear, !is.na(region), region != "NA") %>% 
-      group_by(region, year) %>% 
-      summarise(nCurrent = sum(count, na.rm = TRUE))
+      dplyr::filter(year %in% myYear, !is.na(region), region != "NA") %>% 
+      dplyr::group_by(region, year) %>% 
+      dplyr::summarise(nCurrent = sum(count, na.rm = TRUE))
     previousData <- data %>%
-      filter(year %in% (myYear - 1), !is.na(region), region != "NA") %>% 
-      group_by(region, year) %>% 
-      summarise(nPrevious = sum(count, na.rm = TRUE))
+      dplyr::filter(year %in% (myYear - 1), !is.na(region), region != "NA") %>% 
+      dplyr::group_by(region, year) %>% 
+      dplyr::summarise(nPrevious = sum(count, na.rm = TRUE))
     previousData$year <- previousData$year + 1
     summaryData <- merge(currentData, previousData)
     summaryData$n <- summaryData$nCurrent - summaryData$nPrevious
@@ -152,7 +151,7 @@ createSummaryRegions <- function(data, shapeData,
     if (!is.null(groupingVariable)) {
       
       summaryData <- data %>%
-        filter(year %in% myYear, !is.na(region), region != "NA", region != "")
+        dplyr::filter(year %in% myYear, !is.na(region), region != "NA", region != "")
       
       if (nrow(summaryData) == 0)
         return(NULL)
@@ -166,9 +165,9 @@ createSummaryRegions <- function(data, shapeData,
     } else {
       
       summaryData <- data %>%
-        filter(year %in% myYear, !is.na(region), region != "NA") %>% 
-        group_by(region, year) %>% 
-        summarise(n = sum(count, na.rm = TRUE))
+        dplyr::filter(year %in% myYear, !is.na(region), region != "NA") %>% 
+        dplyr::group_by(region, year) %>% 
+        dplyr::summarise(n = sum(count, na.rm = TRUE))
       
     }
     
@@ -468,12 +467,15 @@ cutBins <- function(data, nBins, binType = c("userDefined", "quantiles", "unifor
     responseVariable <- "effort" else
     responseVariable <- "n"
   
+  uniqueResponses <- unique(data[[responseVariable]])
+  uniqueResponses <- uniqueResponses[!is.na(uniqueResponses)]  
   
-  if (length(unique(data[[responseVariable]])) == nBins) {
+  
+  if (length(uniqueResponses) == nBins) {
     
     cutValues <- c(unique(data[[responseVariable]]), Inf)
     
-  } else if (length(unique(data[[responseVariable]])) == (nBins+1)) {
+  } else if (length(uniqueResponses) == (nBins+1)) {
     
     cutValues <- unique(data[[responseVariable]])
     
