@@ -99,6 +99,8 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @param plotFunction character, defines the plot function to be called
 #' @param data reactive data.frame, data for chosen species
 #' @param period reactive numeric vector of length 2, selected period
+#' @param regions reactive character vector, selected regions to be passed to the
+#' plot function
 #' @param combine reactive boolean, see \code{\link{trendYearRegion}}
 #' @param groupChoices reactive character, defines the choices for group variable;
 #' if NULL no groupChoices available
@@ -110,7 +112,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @export
 plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
   outputType = NULL, triasFunction = NULL, triasArgs = NULL, groupChoices = NULL,
-  period = NULL, combine = NULL) {
+  period = NULL, regions = NULL, combine = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -179,6 +181,8 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
             # Reactives
             if (!is.null(period))
               list(period = period()),
+            if (!is.null(regions))
+              list(regions = regions()),
             if (!is.null(combine))
               list(combine = combine()),
             # Input

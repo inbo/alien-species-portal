@@ -108,14 +108,18 @@ createCubeData <- function(df, shapeData, groupVariable,
 #' @author mvarewyck
 #' @import plotly
 #' @importFrom INBOtheme inbo_lichtgrijs inbo_steun_blauw
-#' @importFrom data.table setkey
+#' @importFrom data.table setkey uniqueN
 #' @export
 countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
-  period = c(2000, 2018), uiText, combine = FALSE) {
+  period = c(2000, 2018), uiText, combine = FALSE, 
+  regions = NULL) {
   
   
   # For R CMD check
   count <- year <- selected <- region <- NULL
+  
+  if (is.null(regions))
+    regions <- c("flanders", "brussels", "wallonia")
   currentYear <- as.numeric(format(Sys.Date(), "%Y"))
   
   spatialLevel <- match.arg(spatialLevel)
@@ -124,16 +128,22 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
       '10km' = "cell_code10"
   )
   
-  # Filter data
+  # Filter on selected period
   df <- df[year > minYear, ][, selected := year >= period[1] & year <= period[2]]
   
   # Filter & color by regions
-  regions <- c("flanders", "brussels", "wallonia")
   allColors <- c(inbo_lichtgrijs, inbo_palette(n = 4))
   names(allColors) <- c("not selected", if (combine) "selected", 
     regions, if (!combine) "multipleRegions")
   regionCols <- paste0("is", simpleCap(regions))
+  
   if (any(regionCols %in% colnames(df))) {
+  
+    # Filter on selected regions
+    keepRegions <- regionCols %in% colnames(df)
+    regions <- regions[keepRegions]
+    regionCols <- regionCols[keepRegions]
+    df <- df[apply(df[, regionCols, with = FALSE], 1, sum) > 0, ]
     
     if (combine) {
       
@@ -141,13 +151,6 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
         levels = c("not selected", "selected"))
       
     } else {
-      
-      keepRegions <- regionCols %in% colnames(df)
-      regions <- regions[keepRegions]
-      regionCols <- regionCols[keepRegions]
-      
-      # Filter on regions
-      df <- df[apply(df[, regionCols, with = FALSE], 1, sum) > 0, ]
       
       df$region <- factor(
         ifelse(!df$selected, "not selected", 
@@ -165,9 +168,8 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
     
   }
   
-  
   if (!"count" %in% colnames(df))
-    df[, count := length(unique(base::get(iCode))), by = .(year, region, selected)]
+    df <- df[, .(count = uniqueN(base::get(iCode))), by = .(year, region, selected)]
   
   if ("region" %in% colnames(df)) {
     # with region information
@@ -764,6 +766,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           }),
         period = reactive(input$period),
         combine = reactive(input$combine),
+        regions = gewest,
         uiText = uiText
       )
       

@@ -36,7 +36,6 @@ Imports:
     terra,
 	  testthat (>= 3.0.0),
     tidyr,
-	  tidyverse,
 	  trias (>= 3.0.0),
 	  webshot2,
 	  xtable
