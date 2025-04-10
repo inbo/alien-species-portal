@@ -149,16 +149,14 @@ testS3 <- function() {
 #' @param envir environment, where to load the data; default is \code{.GlobalEnv}
 #' @return depending on the input file
 #' \itemize{
-#' \item{rdata}{no return value,
+#' \item rdata: no return value,
 #' the R object (data.frame or list) loaded from the \code{file} is assigned to
-#' the \code{.GlobalEnv}}
-#' \item{other files}{R object (data.frame or list) is returned}
+#' the \code{.GlobalEnv}
+#' \item other files: R object (data.frame or list) is returned
 #' }
 #' @author mvarewyck
 #' @importFrom aws.s3 s3load s3read_using get_object
 #' @export
-
-
 readS3 <- function(FUN = read.csv, ..., file, 
                    bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
                    envir = .GlobalEnv,

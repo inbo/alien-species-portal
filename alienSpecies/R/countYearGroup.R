@@ -48,8 +48,7 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
   summarizeBy = c("sum", "cumsum")) {
   
   # For R CMD check
-  count <- NULL
-  group <- NULL
+  count <- group <- . <- NULL
   
   summarizeBy <- match.arg(summarizeBy)
   

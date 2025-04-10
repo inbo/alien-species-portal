@@ -9,8 +9,8 @@
 #' should be one of \code{"plot", "table"}
 #' @return list with
 #' \itemize{
-#' \item{plot}{ggplotly object, only available if \code{outputType} is "plot"}
-#' \item{data}{data.frame used for the plot}
+#' \item plot: ggplotly object, only available if \code{outputType} is "plot"
+#' \item data: data.frame used for the plot
 #' }
 #' 
 #' @author mvarewyck

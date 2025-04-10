@@ -137,7 +137,7 @@ footerSectionUI <- function(id, showReport = FALSE) {
 
 }
 
-#' Replace {{fields}} in title/description translations
+#' Replace \code{"{{fields}}"} in title/description translations
 #' @param text character, input from translation
 #' @param params named list, all parameters that should be replaced with 
 #' their value

@@ -257,12 +257,8 @@ createShapeData <- function(
 createTaxaChoices <- function(exotenData) {
   
   # For R CMD check
-  kingdom <- kingdomKey <- NULL
-  phylum <- phylumKey <- NULL
-  classKey <- NULL
-  orderKey <- NULL
-  family <- familyKey <- NULL
-  species <- key <- NULL
+  kingdom <- kingdomKey <- phylum <- phylumKey <- classKey <- orderKey <- NULL
+  family <- familyKey <- species <- key <- . <- latin_name <- NULL
   
   subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
       kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
@@ -307,8 +303,8 @@ createTaxaChoices <- function(exotenData) {
 #' @param dataDir path, to folder where to read data from
 #' @param type data type, one of:
 #' \itemize{
-#' \item{\code{"indicators"}:}{for indicator data, i.e. main data set}
-#' \item{\code{"unionlist"}:}{for union list data, i.e. }
+#' \item \code{"indicators"}: for indicator data, i.e. main data set
+#' \item \code{"unionlist"}: for union list data, i.e. 
 #' }
 #' @return data.table, loaded indicator/unionlist data; 
 #' and attribute 'Date', the date that this data file was created
@@ -325,11 +321,8 @@ createTabularData <- function(
   
   
   # For R CMD check
-  scientificName <- NULL
-  i.scientificName <- NULL
-  i.classKey <- NULL
-  taxonKey <- variable <- eea_cell_code <- NULL
-  obs <- NULL
+  scientificName <- i.scientificName <- i.classKey <- taxonKey <- variable <- NULL
+  eea_cell_code <- obs <- . <- NULL
   
   warningMessage <- NULL
   

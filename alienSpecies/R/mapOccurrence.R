@@ -102,6 +102,9 @@ createCubeData <- function(df, shapeData, groupVariable,
 #' @param minYear numeric, start year of the barplot
 #' @param period numeric vector of length 2, selected period is colored blue,
 #' other years are colored gray
+#' @param regions character vector to filter data wrt certain 'gewest',
+#' available choices is (subset of) \code{c("flanders", "brussels", "wallonia")}; 
+#' NULL by default; if NULL all available regions are seleted
 #' @inheritParams trendYearRegion
 #' @return plotly
 #' 
@@ -116,7 +119,7 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   
   
   # For R CMD check
-  count <- year <- selected <- region <- NULL
+  count <- year <- selected <- region <- . <- NULL
   
   if (is.null(regions))
     regions <- c("flanders", "brussels", "wallonia")
@@ -366,7 +369,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
   addGlobe = FALSE) {
   
   # For R CMD check
-  count <- decimalLongitude <- decimalLatitude <- NULL
+  count <- decimalLongitude <- decimalLatitude <- . <- NULL
   
   if (!all(c("count", "decimalLongitude", "decimalLatitude") %in% colnames(occurrenceData)))
     return(NULL)
