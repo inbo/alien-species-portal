@@ -342,7 +342,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
   # Add background map
   if (addGlobe) {
     
-    myMap <- addTiles(myMap)
+    myMap <- addProviderTiles(myMap, providers$CartoDB.Positron)
     
   }
   
@@ -359,7 +359,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
 #' @return leaflet map
 #' 
 #' @author mvarewyck
-#' @importFrom leaflet addMarkers addTiles `%>%` markerClusterOptions leaflet
+#' @importFrom leaflet addMarkers addProviderTiles `%>%` markerClusterOptions leaflet
 #' @import data.table
 #' @export
 mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
@@ -381,7 +381,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
   # Add background map - needed for clusters to be shown and before addMarkers()
   if (addGlobe) {
     
-    myMap <- addTiles(myMap)
+    myMap <- addProviderTiles(myMap, providers$CartoDB.Positron)
     
   } else warning("Clusters will not be displayed.")
   
@@ -570,7 +570,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           mapOccurrence(occurrenceData = subData(),
             # when switching species, need to create correct basemap
             baseMap = addBaseMap(regions = gewest(), combine = input$combine),
-            addGlobe = isolate(input$globe %% 2 == 0))
+            addGlobe = isolate(input$globe %% 2 == 1))
           
         })
       
@@ -618,12 +618,12 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           
           if (!is.null(input$globe) & !is.null(proxy)){
             
-            if (input$globe %% 2 == 0){
+            if (input$globe %% 2 == 1){
               
               updateActionLink(session, inputId = "globe", 
                 label = translate(uiText(), "hideGlobe")$title)
               
-              proxy %>% addTiles()
+              proxy %>% addProviderTiles(providers$CartoDB.Positron)
               
             } else {
               
