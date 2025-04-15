@@ -92,30 +92,6 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
       ns <- session$ns
       selectedKey <- reactiveVal()
       
-      ### Legend
-      ### -----------------
-      
-      output$tableLegendLink <- renderUI({
-          
-          actionLink(inputId = ns("tableShowLegend"), 
-            label = translate(uiText(), "tableLegend")$title, 
-            icon = icon("angle-double-down", class = "green-icon"))
-          
-        })
-      
-      output$tableLegendText <- renderUI({
-          
-          tagList(
-            tags$b(translate(uiText(), "icons")$title),
-            p(icon("star"), translate(uiText(), "is_union")$title),
-            p(icon("play"), translate(uiText(), "min_1_obs")$title),
-            tags$b(translate(uiText(), "colors")$title),
-            p(drawBullet(color = "black"), translate(uiText(), "only_obs")$title),
-#            p(drawBullet(color = "orange"), translate(uiText(), "incomplete_out")$title),
-            p(drawBullet(color = "#E4E517"), translate(uiText(), "all_out")$title)
-          )
-          
-        })
       
       
       ### Table overview
