@@ -108,15 +108,18 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
       output$tableOverviewText <- renderUI({
         tagList(
           tags$em(HTML(translate(uiText(), "tableIndicators")$description)),
-          p(icon("star"), translate(uiText(), "is_union")$title),
-          p(icon("play"), translate(uiText(), "min_1_obs")$title),
-          tags$em(translate(uiText(), "colors_text")$title),
-          p(drawBullet(color = "black"), translate(uiText(), "only_obs")$title),
-          #            p(drawBullet(color = "orange"), translate(uiText(), "incomplete_out")$title),
-          p(drawBullet(color = "#E4E517"), translate(uiText(), "all_out")$title)
+          div(style = "margin-left: 20px;",
+              p(style = "margin: 2px 0;",icon("star"), tags$em(HTML(translate(uiText(), "is_union")$title))),
+              p(style = "margin: 2px 0;",icon("play"), tags$em(HTML(translate(uiText(), "min_1_obs")$title)))
+              ),
+              tags$em(HTML(translate(uiText(), "colors_text")$title)),
+          div(style = "margin-left: 20px;",
+              p(style = "margin: 2px 0;",drawBullet(color = "black"), tags$em(HTML(translate(uiText(), "only_obs")$title))),
+              #            p(drawBullet(color = "orange"), translate(uiText(), "incomplete_out")$title),
+              p(style = "margin: 2px 0;",drawBullet(color = "#E4E517"), tags$em(HTML(translate(uiText(), "all_out")$title)))
+          )
         )
-          
-        })
+      })
       
       ### Table Output
       ### -----------------
