@@ -68,16 +68,6 @@ tagList(
       
       tabPanel(value = "checklist_taxa", titleModuleUI(id = "checklist_taxa"), 
         
-        tags$div(style = "margin-top: 10px;",
-          
-          uiOutput("exoten_legendLink"),
-          conditionalPanel("input.exoten_legend % 2 == 1",
-            wellPanel(
-              uiOutput("exoten_legendText")              
-            )
-          )
-        ),
-        
         tableIndicatorsUI("checklist")
       
       ),
