@@ -74,7 +74,7 @@ observe({
     if (input$exoten_searchVernacular) {
       taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
           gsub("<b>.*</b>", paste0("<b>", 
-              if (taxaChoices$vernacular_name_col[i] == "NA") "" else taxaChoices$vernacular_name_col[i], 
+              if (is.na(taxaChoices$vernacular_name_col[i])) "" else taxaChoices$vernacular_name_col[i], 
               "</b> <i>", taxaChoices$latin_name[i], "</i>"), taxaChoices$html[i]))
       taxaChoices[, label := vernacular_name_col] 
       setkey(taxaChoices, vernacular_name_col)
