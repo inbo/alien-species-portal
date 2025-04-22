@@ -41,7 +41,7 @@ welcomeSectionUI <- function(id) {
     tags$div(align = "center",
       uiOutput(ns("welcomeTitle"))
     ),
-    tags$p(class = "lead", uiOutput(ns("welcomeMain")))
+    uiOutput(ns("welcomeMain"))
   )
   
   

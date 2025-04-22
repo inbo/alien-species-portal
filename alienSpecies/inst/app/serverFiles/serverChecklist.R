@@ -21,7 +21,7 @@ results$filter_exotenDataTranslated <- reactive({
     exotenData[, pathway_level2_translate := translate(results$translations, do.call(paste, c(.SD, sep = "_")))$title,
       .SDcols = c("pathway_level1", "pathway_level2")]
     exotenData[, ':=' (
-      vernacular_name = get(paste0("vernacular_name_", attr(results$translations, "language"))),  
+      vernacular_name_col = get(paste0("vernacular_name_", attr(results$translations, "language"))),  
       pathway_level1_translate = translate(results$translations, pathway_level1)$title,
       native_continent_translate = translate(results$translations, native_continent)$title,
       native_range_translate = translate(results$translations, native_range)$title,
@@ -68,19 +68,19 @@ observe({
     req(input$tabs == "checklist_indicators")
     req(!is.null(input$exoten_searchVernacular))
     
-    taxaChoices[ , vernacular_name := get(paste0("vernacular_name_", attr(results$translations, "language")))]
+    taxaChoices[ , vernacular_name_col := get(paste0("vernacular_name_", attr(results$translations, "language")))]
     
     # Search on latin or vernacular name
     if (input$exoten_searchVernacular) {
       taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
           gsub("<b>.*</b>", paste0("<b>", 
-              if (taxaChoices$vernacular_name[i] == "NA") "" else taxaChoices$vernacular_name[i], 
+              if (taxaChoices$vernacular_name_col[i] == "NA") "" else taxaChoices$vernacular_name_col[i], 
               "</b> <i>", taxaChoices$latin_name[i], "</i>"), taxaChoices$html[i]))
-      taxaChoices[, label := vernacular_name] 
-      setkey(taxaChoices, vernacular_name)
+      taxaChoices[, label := vernacular_name_col] 
+      setkey(taxaChoices, vernacular_name_col)
     } else {
       taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
-          gsub("</b>", paste0("</b> <i>", strsplit(taxaChoices$vernacular_name[i],
+          gsub("</b>", paste0("</b> <i>", strsplit(taxaChoices$vernacular_name_col[i],
                 split = ", ")[[1]][1], "</i>"), taxaChoices$html[i])
       )     
       taxaChoices[, label := latin_name]

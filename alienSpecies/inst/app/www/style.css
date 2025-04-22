@@ -169,10 +169,14 @@ p, li, label {
 
 
 
-/*** Customize Global Indicators page ***/
+/*** Customize Welcome pages ***/
 
 .jumbotron h1 {
  font-size: 36px;
+}
+
+.jumbotron p {
+ font-size: 16px;
 }
 
 .long-selectize {
