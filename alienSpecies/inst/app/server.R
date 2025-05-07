@@ -191,7 +191,41 @@ function(input, output, session) {
           source(file.path("serverFiles", "serverSpecies.R"), local = TRUE)
           results$renderedTabs <- c(results$renderedTabs, "species_information")
           
-        } 
+        },
+        early_warning = {
+          session$sendCustomMessage(type = "openURL", list(message = "
+                window.open('https://alert.riparias.be', '_blank').focus(); 
+                "))
+        },
+        other_db = {
+          output$db_content <- renderUI({
+              
+              tileChoices <- c("mica_db", "radius_db")
+              tileNames <- lapply(tileChoices, function(iChoice){
+                  foto <- list.files(path = system.file("app", "www", package = "alienSpecies"), pattern = iChoice)
+                  title <- translate(data = results$translations, id = iChoice)$title
+                  HTML(paste0(
+                      "<div class='radio-tiles-title'>", title, "</div>",
+                      "<div class='radio-tiles-image'>", 
+                      img(src = foto, width = "100%", `aspect-ratio` = "400/270"), "</div>"
+                    ))
+                })
+              
+              tags$div(style = "margin-top: -20px;",
+                radioButtons(
+                  inputId = "db_navigate", label = "", inline = TRUE,
+                  choiceValues = tileChoices, choiceNames = tileNames,
+                  selected = character(0)
+                ),
+                tags$script("$('.radio-inline').addClass('radio-tiles');")
+              )
+              
+            })
+          source(file.path("serverFiles", "serverDB.R"), local = TRUE)
+          results$renderedTabs <- c(results$renderedTabs, "other_db")
+          
+        }
+        
       )
       
     })

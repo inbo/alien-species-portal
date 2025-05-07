@@ -38,12 +38,6 @@ observeEvent(input$start_navigate, {
       "early_warning" = session$sendCustomMessage(type = "openURL", list(message = "
             window.open('https://alert.riparias.be', '_blank').focus(); 
             ")),
-      "mica_db" = session$sendCustomMessage(type = "openURL", list(message = "
-            window.open('https://mica.inbo.be/', '_blank').focus(); 
-            ")),
-      "radius_db" = session$sendCustomMessage(type = "openURL", list(message = "
-            window.open('https://radius-project.shinyapps.io/dashboard/', '_blank').focus(); 
-            ")),
       updateNavbarPage(session = session, inputId = "tabs", selected = input$start_navigate)
     )
     
@@ -66,5 +60,17 @@ output$checklist_title <- renderUI({
 output$species_title <- renderUI({
     
     translate(data = results$translations, id = tabChoices[3])$title  
+    
+  })
+
+output$early_title <- renderUI({
+    
+    translate(results$translations, id = tabChoices[4])$title  
+    
+  })
+
+output$db_title <- renderUI({
+    
+    translate(data = results$translations, id = tabChoices[5])$title  
     
   })
