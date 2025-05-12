@@ -38,9 +38,9 @@ shinyUI(
         navbarPage(
           title = tags$div(
             HTML("&emsp;"),
-            img(src = "logoTrias.png", height = "45px", style = "margin-right: 50px"), 
+            img(src = "logoTrias.png", height = "45px", style = "margin-right: 10px"), 
             img(src = "logo.png", float = "top", height = "45px"),
-            style = "margin-top: -13px; margin-bottom: -13px; margin-left: -300px; margin-right: 50px;",
+            style = "margin-top: -13px; margin-bottom: -13px; margin-left: -150px; margin-right: 50px;",
             tags$script(HTML(paste("var header = $('.navbar > .container');",
                   "header.append('<div style=\"float:right;\">", 
                   versionUI(id = "main"),"</div>')"))
