@@ -102,20 +102,27 @@ createCubeData <- function(df, shapeData, groupVariable,
 #' @param minYear numeric, start year of the barplot
 #' @param period numeric vector of length 2, selected period is colored blue,
 #' other years are colored gray
+#' @param regions character vector to filter data wrt certain 'gewest',
+#' available choices is (subset of) \code{c("flanders", "brussels", "wallonia")}; 
+#' NULL by default; if NULL all available regions are seleted
 #' @inheritParams trendYearRegion
 #' @return plotly
 #' 
 #' @author mvarewyck
 #' @import plotly
 #' @importFrom INBOtheme inbo_lichtgrijs inbo_steun_blauw
-#' @importFrom data.table setkey
+#' @importFrom data.table setkey uniqueN
 #' @export
 countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
-  period = c(2000, 2018), uiText, combine = FALSE) {
+  period = c(2000, 2018), uiText, combine = FALSE, 
+  regions = NULL) {
   
   
   # For R CMD check
-  count <- year <- selected <- region <- NULL
+  count <- year <- selected <- region <- . <- NULL
+  
+  if (is.null(regions))
+    regions <- c("flanders", "brussels", "wallonia")
   currentYear <- as.numeric(format(Sys.Date(), "%Y"))
   
   spatialLevel <- match.arg(spatialLevel)
@@ -124,16 +131,22 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
       '10km' = "cell_code10"
   )
   
-  # Filter data
+  # Filter on selected period
   df <- df[year > minYear, ][, selected := year >= period[1] & year <= period[2]]
   
   # Filter & color by regions
-  regions <- c("flanders", "brussels", "wallonia")
   allColors <- c(inbo_lichtgrijs, inbo_palette(n = 4))
   names(allColors) <- c("not selected", if (combine) "selected", 
     regions, if (!combine) "multipleRegions")
   regionCols <- paste0("is", simpleCap(regions))
+  
   if (any(regionCols %in% colnames(df))) {
+  
+    # Filter on selected regions
+    keepRegions <- regionCols %in% colnames(df)
+    regions <- regions[keepRegions]
+    regionCols <- regionCols[keepRegions]
+    df <- df[apply(df[, regionCols, with = FALSE], 1, sum) > 0, ]
     
     if (combine) {
       
@@ -141,13 +154,6 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
         levels = c("not selected", "selected"))
       
     } else {
-      
-      keepRegions <- regionCols %in% colnames(df)
-      regions <- regions[keepRegions]
-      regionCols <- regionCols[keepRegions]
-      
-      # Filter on regions
-      df <- df[apply(df[, regionCols, with = FALSE], 1, sum) > 0, ]
       
       df$region <- factor(
         ifelse(!df$selected, "not selected", 
@@ -165,9 +171,8 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
     
   }
   
-  
   if (!"count" %in% colnames(df))
-    df[, count := length(unique(base::get(iCode))), by = .(year, region, selected)]
+    df <- df[, .(count = uniqueN(base::get(iCode))), by = .(year, region, selected)]
   
   if ("region" %in% colnames(df)) {
     # with region information
@@ -340,7 +345,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
   # Add background map
   if (addGlobe) {
     
-    myMap <- addTiles(myMap)
+    myMap <- addProviderTiles(myMap, providers$CartoDB.Positron)
     
   }
   
@@ -357,14 +362,14 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
 #' @return leaflet map
 #' 
 #' @author mvarewyck
-#' @importFrom leaflet addMarkers addTiles `%>%` markerClusterOptions leaflet
+#' @importFrom leaflet addMarkers addProviderTiles `%>%` markerClusterOptions leaflet
 #' @import data.table
 #' @export
 mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
   addGlobe = FALSE) {
   
   # For R CMD check
-  count <- decimalLongitude <- decimalLatitude <- NULL
+  count <- decimalLongitude <- decimalLatitude <- . <- NULL
   
   if (!all(c("count", "decimalLongitude", "decimalLatitude") %in% colnames(occurrenceData)))
     return(NULL)
@@ -379,7 +384,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
   # Add background map - needed for clusters to be shown and before addMarkers()
   if (addGlobe) {
     
-    myMap <- addTiles(myMap)
+    myMap <- addProviderTiles(myMap, providers$CartoDB.Positron)
     
   } else warning("Clusters will not be displayed.")
   
@@ -445,7 +450,8 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       noData <- reactive(translate(uiText(), "noData")$title)
       tmpTranslation <- reactive(translate(uiText(), ns("mapOccurrence")))
       
-      output$descriptionMapOccurrence <- renderUI(tmpTranslation()$description)
+      output$descriptionMapOccurrence <- renderUI(
+        decodeText(tmpTranslation()$description, params = list(species = species())))
       
       title <- reactive({
           
@@ -567,7 +573,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           mapOccurrence(occurrenceData = subData(),
             # when switching species, need to create correct basemap
             baseMap = addBaseMap(regions = gewest(), combine = input$combine),
-            addGlobe = isolate(input$globe %% 2 == 0))
+            addGlobe = isolate(input$globe %% 2 == 1))
           
         })
       
@@ -615,12 +621,12 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           
           if (!is.null(input$globe) & !is.null(proxy)){
             
-            if (input$globe %% 2 == 0){
+            if (input$globe %% 2 == 1){
               
               updateActionLink(session, inputId = "globe", 
                 label = translate(uiText(), "hideGlobe")$title)
               
-              proxy %>% addTiles()
+              proxy %>% addProviderTiles(providers$CartoDB.Positron)
               
             } else {
               
@@ -763,6 +769,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           }),
         period = reactive(input$period),
         combine = reactive(input$combine),
+        regions = gewest,
         uiText = uiText
       )
       

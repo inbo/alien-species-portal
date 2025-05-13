@@ -1,6 +1,8 @@
 library(alienSpecies)
 library(shiny)
 
+library(data.table)
+
 
 
 ### General
@@ -21,7 +23,7 @@ chromote::set_chrome_args(c('--headless','--no-sandbox'))
 ### -----------
 
 tabChoices <- c("start", "checklist_indicators", "species_information", 
-  "early_warning", "management")[1:4]
+  "early_warning", "other_db", "management")[1:5]
 
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")
@@ -58,6 +60,20 @@ if (!doDebug | !exists("allShapes"))
   )
 
 dictionary <- loadMetaData(type = "keys")
+
+# Warning for missing info in keys.csv
+if (doDebug) {
+  # occurrence
+  missingSpecies <- occurrenceData[!duplicated(taxonKey) & is.na(scientificName), "taxonKey"]
+  if (nrow(missingSpecies))
+    warning(paste("Scientific name is missing for", nrow(missingSpecies), "species in occurrence data."))
+  # occupancy
+  missingSpecies <- unique(dfCube$species[!dfCube$species %in% dictionary$scientificName])
+  missingSpecies <- missingSpecies[!is.na(missingSpecies)]
+  if (length(missingSpecies))
+    warning(paste("Taxonkey is not available (in keys.csv) for", length(missingSpecies), "species in occupancy data."))
+}
+
 
 
 # Initial exoten filter choices

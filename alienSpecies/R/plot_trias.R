@@ -9,8 +9,8 @@
 #' should be one of \code{"plot", "table"}
 #' @return list with
 #' \itemize{
-#' \item{plot}{ggplotly object, only available if \code{outputType} is "plot"}
-#' \item{data}{data.frame used for the plot}
+#' \item plot: ggplotly object, only available if \code{outputType} is "plot"
+#' \item data: data.frame used for the plot
 #' }
 #' 
 #' @author mvarewyck
@@ -38,10 +38,18 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
   ## convert to plotly object
   if (outputType == "plot") {
     
-    if (all(c("plot", "data_top_graph") %in% names(resultFct))) {
+    if (all(c("interactive_plot", "data") %in% names(resultFct))) {
       
       list(
-        plot = ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE)), 
+        plot = resultFct$interactive_plot, 
+        data = resultFct$data
+      ) 
+      
+    } else if (all(c("plot", "data_top_graph") %in% names(resultFct))) {
+      
+      list(
+        plot = ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE)) %>%
+          plotly::layout(xaxis = list(tickangle = "auto")), 
         data = resultFct$data_top_graph
       ) 
       
@@ -84,13 +92,6 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
         plot = myPlot, 
         data = resultFct$output
       )
-      
-    } else if (all(c("static_plot", "data") %in% names(resultFct))) {
-      
-      list(
-        plot = ggplotly(resultFct$static_plot + INBOtheme::theme_inbo(transparent = TRUE)), 
-        data = resultFct$data
-      ) 
       
     } else {
 
@@ -166,18 +167,18 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
           
           if (!is.null(filters)) 
             wellPanel(
-              lapply(names(filters), function(iFilter) {
-                  if (filters[[iFilter]]$type == "checkbox") {
+              fluidRow(lapply(names(filters), function(iFilter) {
+                  if (all(filters[[iFilter]] == "checkbox")) {
                     checkboxInput(inputId = ns(iFilter), 
                       label = translate(uiText(), iFilter)$title) 
-                  } else if (filters[[iFilter]]$type == "select") {
-                    choices <- filters[[iFilter]]$choices
+                  } else {
+                    choices <- filters[[iFilter]]
                     names(choices) <- translate(uiText(), choices)$title
-                    fluidRow(column(4, selectInput(inputId = ns(iFilter),
-                          label = translate(uiText(), iFilter)$title,
-                          choices = choices)))
+                    column(4, selectInput(inputId = ns(iFilter),
+                      label = translate(uiText(), iFilter)$title,
+                      choices = choices))
                   }
-                })
+                }))
             )
           
         })
@@ -217,7 +218,9 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
               }
               if (!is.null(input$regionLevel))
                 initArgs$type <- input$regionLevel
-              
+              if (!is.null(input$summarizeBy))
+                initArgs$response_type <- input$summarizeBy
+
               initArgs
               
             } else NULL

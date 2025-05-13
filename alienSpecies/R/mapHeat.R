@@ -124,7 +124,7 @@ combineNestenData <- function(pointsData, nestenData,
 #' @return leaflet map
 #' 
 #' @author mvarewyck
-#' @importFrom leaflet addTiles `%>%` leaflet addLegend addScaleBar addCircleMarkers 
+#' @importFrom leaflet addProviderTiles `%>%` leaflet addLegend addScaleBar addCircleMarkers 
 #' @importFrom leaflet.extras addHeatmap
 #' @export
 
@@ -136,7 +136,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
   ah_map <- baseMap
   
   if (addGlobe)
-    ah_map <- addTiles(ah_map)
+    ah_map <- addProviderTiles(ah_map, providers$CartoDB.Positron)
   
   
   if (legend != "none")
@@ -375,7 +375,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
               updateActionLink(session, inputId = "globe", 
                 label = translate(uiText(), "hideGlobe")$title)
               
-              proxy %>% addTiles()
+              proxy %>% addProviderTiles(providers$CartoDB.Positron)
               
             } else {
               

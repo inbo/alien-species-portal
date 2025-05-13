@@ -327,15 +327,7 @@ results$species_managementData <- reactive({
             
     } else {
       
-      tmpData <- loadGbif(dataFile = results$species_managementFile())
-      
-      if (!"GEWEST" %in% colnames(tmpData) && "NISCODE" %in% colnames(tmpData)){
-        tmpData$GEWEST <- allShapes$communes$GEWEST[
-          match(tmpData$NISCODE, allShapes$communes$NISCODE)]
-        tmpData <- tmpData[tmpData$GEWEST %in% input$species_gewest, ]
-      }
-      
-      tmpData
+      loadGbif(dataFile = results$species_managementFile())
       
     }
     
@@ -494,6 +486,7 @@ observe({
       
       dashReport <- countYearGroupServer(
         id = "management2", 
+        species = taxonName,
         uiText = reactive(results$translations), 
         data = reactive({
             req(results$species_managementData())
@@ -527,6 +520,7 @@ observe({
       
       dashReport <- countYearGroupServer(
         id = "management3", 
+        species = taxonName,
         uiText = reactive(results$translations), 
         data = results$species_managementData,
         groupChoices = reactive({

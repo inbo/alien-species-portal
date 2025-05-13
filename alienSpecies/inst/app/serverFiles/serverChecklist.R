@@ -21,6 +21,7 @@ results$filter_exotenDataTranslated <- reactive({
     exotenData[, pathway_level2_translate := translate(results$translations, do.call(paste, c(.SD, sep = "_")))$title,
       .SDcols = c("pathway_level1", "pathway_level2")]
     exotenData[, ':=' (
+      vernacular_name_col = get(paste0("vernacular_name_", attr(results$translations, "language"))),  
       pathway_level1_translate = translate(results$translations, pathway_level1)$title,
       native_continent_translate = translate(results$translations, native_continent)$title,
       native_range_translate = translate(results$translations, native_range)$title,
@@ -62,22 +63,43 @@ observeEvent(exoten_triggerMore(), {
 ### -----------------
 
 
-observeEvent(input$tabs, {
+observe({
     
-    if (input$tabs == "checklist_indicators")
-      updateSelectizeInput(session, inputId = "exoten_taxa", choices = taxaChoices,
-        selected = urlSearch()$taxa,
-        server = TRUE,
-        options = list(
-          placeholder = translate(results$translations, "allTaxa")$title,
-          render = I(
-            "{
-              option: function(item, escape) {
-              return '<div class=\"long-selectize\">' + item.html + '</div>'; }
-              }"
-          ))
-      )
-
+    req(input$tabs == "checklist_indicators")
+    req(!is.null(input$exoten_searchVernacular))
+    
+    taxaChoices[ , vernacular_name_col := get(paste0("vernacular_name_", attr(results$translations, "language")))]
+    
+    # Search on latin or vernacular name
+    if (input$exoten_searchVernacular) {
+      taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
+          gsub("<b>.*</b>", paste0("<b>", 
+              if (is.na(taxaChoices$vernacular_name_col[i])) "" else taxaChoices$vernacular_name_col[i], 
+              "</b> <i>", taxaChoices$latin_name[i], "</i>"), taxaChoices$html[i]))
+      taxaChoices[, label := vernacular_name_col] 
+      setkey(taxaChoices, vernacular_name_col)
+    } else {
+      taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
+          gsub("</b>", paste0("</b> <i>", strsplit(taxaChoices$vernacular_name_col[i],
+                split = ", ")[[1]][1], "</i>"), taxaChoices$html[i])
+      )     
+      taxaChoices[, label := latin_name]
+      setkey(taxaChoices, latin_name)
+    }
+    
+    updateSelectizeInput(session, inputId = "exoten_taxa", choices = taxaChoices,
+      selected = urlSearch()$taxa,
+      server = TRUE,
+      options = list(
+        placeholder = translate(results$translations, "allTaxa")$title,
+        render = I(
+          "{
+            option: function(item, escape) {
+            return '<div class=\"long-selectize\">' + item.showHtml + '</div>'; }
+            }"
+        ))
+    )
+    
   })
 
 
@@ -353,6 +375,7 @@ observeEvent(tmpKey(), {
 ### Plots
 ### -----------------
 
+results$exoten_xMajor <- reactive(optimalSteps(values = results$exoten_data()$first_observed))
 
 # Checklist tab
 observeEvent(input$exoten_tabs, {
@@ -363,12 +386,18 @@ observeEvent(input$exoten_tabs, {
     
     ## Plot number of species per year
     plotTriasServer(id = "checklist-count",
-      data = results$exoten_data,
+      data = {
+        # Retain only the smallest first_observed per key 
+        # fix https://github.com/inbo/alien-species-portal/issues/128
+        reactive(results$exoten_data()[order(first_observed), .SD[1,], by = "key"])
+      },
       uiText = reactive(results$translations),
       triasFunction = "indicator_introduction_year",
       triasArgs = reactive({
           list(
             start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
+            x_major_scale_stepsize = results$exoten_xMajor(),
+            x_minor_scale_stepsize = results$exoten_xMajor()/2,
             x_lab = translate(results$translations, "year")$title,
             y_lab = translate(results$translations, "indicator_introduction_year")$title
           )
@@ -378,12 +407,18 @@ observeEvent(input$exoten_tabs, {
     
     ## Plot cumulative number of species per year
     plotTriasServer(id = "checklist-cum",
-      data = results$exoten_data,
+      data = {
+        # Retain only the smallest first_observed per key 
+        # fix https://github.com/inbo/alien-species-portal/issues/128
+        reactive(results$exoten_data()[order(first_observed), .SD[1,], by = "key"])
+      },
       uiText = reactive(results$translations),
       triasFunction = "indicator_total_year",
       triasArgs = reactive({
           list(
             start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
+            x_major_scale_stepsize = results$exoten_xMajor(),
+            x_minor_scale_stepsize = results$exoten_xMajor()/2,
             x_lab = translate(results$translations, "year")$title,
             y_lab = translate(results$translations, "indicator_total_year")$title
           )
@@ -523,13 +558,15 @@ observeEvent(input$exoten_tabs, {
       triasFunction = "indicator_native_range_year",
       triasArgs = reactive({
           list(
+            x_major_scale_stepsize = results$exoten_xMajor(),
             x_lab = translate(results$translations, "year")$title,
             y_lab = translate(results$translations, "number")$title
           )
         }),
       filters = list(
-        regionLevel = list(type = "select", choices = c("native_continent", "native_range"))
-      )
+        regionLevel = c("native_continent", "native_range"),
+        summarizeBy = c("absolute", "cumulative")
+        )
     )
     
   })

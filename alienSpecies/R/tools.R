@@ -183,6 +183,30 @@ simpleCap <- function(names, keepNames = TRUE) {
 }
 
 
+#' Define optimal stepsize for plot axis range
+#' 
+#' @param values numeric vector, at least min and max value to define the range
+#' @param maxCuts integer, max number of cut values given the \code{values} 
+#' @return integer, stepsize which results in max \code{maxCuts} when the range is defined 
+#' by \code{values}
+#' 
+#' @author mvarewyck
+#' @export
+optimalSteps <- function(values, maxCuts = 10) {
+  
+  acceptedSizes <- c(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)
+  
+  # Calculate an approximate increment
+  approxIncrement <- diff(range(values, na.rm = TRUE)) / maxCuts
+  
+  # Find the smallest 'nice' number that is greater than or equal to the approximate increment
+  stepSize <- min(acceptedSizes[acceptedSizes >= approxIncrement])
+  
+  return(stepSize)
+  
+}
+
+
 #' get path of INBO logo file
 #' 
 #' @return character, path of logo file

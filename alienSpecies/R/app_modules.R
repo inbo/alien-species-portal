@@ -12,7 +12,6 @@
 #' @param id character, module id, unique name per plot
 #' @param showSummary boolean, whether to show a select input field for summary choice
 #' @param showPeriod boolean, whether to show a slider input field for period (first_observed)
-#' @param showGewest boolean, whether to show filter for gewest
 #' @param exportData boolean, whether a download button for the data is shown
 #' @param doWellPanel boolean, whether to display the options within a 
 #' \code{shiny::wellPanel()}
@@ -20,16 +19,13 @@
 #' @import shiny
 #' @export
 optionsModuleUI <- function(id, showSummary = FALSE, 
-  showPeriod = FALSE, showGewest = FALSE,
-  exportData = TRUE, doWellPanel = TRUE) {
+  showPeriod = FALSE, exportData = TRUE, doWellPanel = TRUE) {
   
   ns <- NS(id)
   
   
   toReturn <- tagList(
     fixedRow(
-      if (showGewest)
-        column(6, uiOutput(ns("gewest"))),
       column(6, uiOutput(ns("group"))),
       if (showSummary)
         column(6, uiOutput(ns("summarizeBy"))),
@@ -103,6 +99,8 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @param plotFunction character, defines the plot function to be called
 #' @param data reactive data.frame, data for chosen species
 #' @param period reactive numeric vector of length 2, selected period
+#' @param regions reactive character vector, selected regions to be passed to the
+#' plot function
 #' @param combine reactive boolean, see \code{\link{trendYearRegion}}
 #' @param groupChoices reactive character, defines the choices for group variable;
 #' if NULL no groupChoices available
@@ -114,22 +112,12 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @export
 plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
   outputType = NULL, triasFunction = NULL, triasArgs = NULL, groupChoices = NULL,
-  period = NULL, combine = NULL) {
+  period = NULL, regions = NULL, combine = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
       
       ns <- session$ns
-      
-      output$gewest <- renderUI({
-          
-          choices <- c("flanders", "brussels", "wallonia")
-          names(choices) <- translate(uiText(), choices)$title
-          
-          selectInput(inputId = ns("gewest"), label = translate(uiText(), "gewest")$title,
-            choices = choices, selected = choices, multiple = TRUE)
-          
-        })
       
       output$group <- renderUI({
           
@@ -169,10 +157,6 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           subData <- if (is.null(input$period))
             data() else
             data()[data()$first_observed %in% input$period[1]:input$period[2], ]
-        
-        if (is.null(input$gewest))
-          subData else
-          subData[subData$GEWEST %in% input$gewest, ]
           
         })
       
@@ -197,6 +181,8 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
             # Reactives
             if (!is.null(period))
               list(period = period()),
+            if (!is.null(regions))
+              list(regions = regions()),
             if (!is.null(combine))
               list(combine = combine()),
             # Input

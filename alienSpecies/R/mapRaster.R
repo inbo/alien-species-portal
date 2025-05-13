@@ -16,7 +16,7 @@
 #' @return leaflet map
 #' 
 #' @author mvarewyck
-#' @importFrom leaflet addScaleBar addTiles addLegend colorNumeric addRasterImage
+#' @importFrom leaflet addScaleBar addProviderTiles addLegend colorNumeric addRasterImage
 #' @importFrom terra values
 #' @export
 
@@ -29,7 +29,7 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
     addScaleBar(position = "bottomleft")
   
   if (addGlobe)
-    rasterMap <- addTiles(rasterMap)
+    rasterMap <- addProviderTiles(rasterMap, providers$CartoDB.Positron)
   
   
   if (is.null(rasterInput))
@@ -209,7 +209,8 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
               updateActionLink(session, inputId = "globe", 
                 label = translate(uiText(), "hideGlobe")$title)
               
-              proxy %>% addTiles(options = tileOptions(zIndex = -10))
+              proxy %>% addProviderTiles(providers$CartoDB.Positron,
+                options = providerTileOptions(zIndex = -10))
               
             } else {
               

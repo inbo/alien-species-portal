@@ -38,13 +38,19 @@ shinyUI(
         navbarPage(
           title = tags$div(
             HTML("&emsp;"),
-            img(src = "logoTrias.png", height = "45px", style = "margin-right: 50px"), 
+            img(src = "logoTrias.png", height = "45px", style = "margin-right: 10px"), 
             img(src = "logo.png", float = "top", height = "45px"),
             style = "margin-top: -13px; margin-bottom: -13px; margin-left: -150px; margin-right: 50px;",
             tags$script(HTML(paste("var header = $('.navbar > .container');",
                   "header.append('<div style=\"float:right;\">", 
                   versionUI(id = "main"),"</div>')"))
-            )),
+            ),
+            tags$script(
+              "Shiny.addCustomMessageHandler('openURL', function(data) {
+                eval(data.message)
+                });"
+            )
+          ),
           
           # Shape data source + contact e-mail
           header = tags$header(tags$div(align = "right", style = "margin-top: 60px; padding-right: 15px;",
@@ -64,7 +70,10 @@ shinyUI(
           tabPanel(title = uiOutput("checklist_title"), value = "checklist_indicators",
             uiOutput("indicators_content")),
           tabPanel(title = uiOutput("species_title"), value = "species_information",
-            uiOutput("species_content"))
+            uiOutput("species_content")),
+          tabPanel(title = uiOutput("early_title"), value = "early_warning"),
+          tabPanel(title = uiOutput("db_title"), value = "other_db",
+            tags$div(class = "noButton", style = "margin-top:20px;", uiOutput("db_content")))
         )
       
       )

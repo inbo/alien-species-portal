@@ -17,7 +17,7 @@ summarizeTimeSeries <- function(species, region = c("flanders", "wallonia", "bru
   
   # For R CMD check
   obs <- cobs <- pa_obs <- pa_cobs <- classKey <- taxonKey <- year <- protected <- NULL
-  natura2000 <- NULL
+  natura2000 <- . <- NULL
   
   # Have to load the data every time - otherwise time-out
   timeseries <- loadTabularData(type = "timeseries")

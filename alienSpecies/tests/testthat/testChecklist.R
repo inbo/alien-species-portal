@@ -184,10 +184,7 @@ test_that("Grafiek: Mate van verspreiding van de Unielijstsoorten", {
 ## PLOT 4
 test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio van oorsprong", {
     
-    # Data for single species
-    speciesData <- exotenData[exotenData$degree_of_establishment == "invasive", ]
-    
-    tmpResult <- trias::indicator_native_range_year(df = speciesData, 
+    tmpResult <- trias::indicator_native_range_year(df = exotenData, 
       type = "native_continent",  # native_continent or native_range
       taxon_key_col = "key")
     expect_type(tmpResult, "list")
@@ -195,6 +192,11 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio
     expect_s3_class(tmpResult$interactive_plot, "plotly")
     expect_s3_class(tmpResult$data, "data.frame")
     
+    tmpResult <- trias::indicator_native_range_year(df = exotenData, 
+      type = "native_continent",  # native_continent or native_range
+      response_type = "cumulative",
+      taxon_key_col = "key")
+    expect_type(tmpResult, "list")
     
   })
 

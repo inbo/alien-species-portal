@@ -18,7 +18,7 @@ welcomeSectionServer <- function(id, uiText) {
   
   moduleServer(id, function(input, output, session) {
       
-      tmpTranslation <- reactive(translate(uiText(), "welcomeTitle"))
+      tmpTranslation <- reactive(translate(uiText(), paste0(id, "-welcome")))
       
       output$welcomeTitle <- renderUI(h1(HTML(tmpTranslation()$title)))
       
@@ -41,7 +41,7 @@ welcomeSectionUI <- function(id) {
     tags$div(align = "center",
       uiOutput(ns("welcomeTitle"))
     ),
-    tags$p(class = "lead", uiOutput(ns("welcomeMain")))
+    uiOutput(ns("welcomeMain"))
   )
   
   
@@ -137,7 +137,7 @@ footerSectionUI <- function(id, showReport = FALSE) {
 
 }
 
-#' Replace {{fields}} in title/description translations
+#' Replace \code{"{{fields}}"} in title/description translations
 #' @param text character, input from translation
 #' @param params named list, all parameters that should be replaced with 
 #' their value
@@ -157,7 +157,7 @@ decodeText <- function(text, params) {
     
   }
   
-  newText
+  HTML(newText)
   
 }
 
