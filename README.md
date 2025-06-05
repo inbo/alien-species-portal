@@ -1,4 +1,5 @@
 Automated deployment to UAT: [![.github/workflows/deployment_uat.yml](https://github.com/inbo/alien-species-portal/actions/workflows/deployment_uat.yml/badge.svg?branch=uat)](https://github.com/inbo/alien-species-portal/actions/workflows/deployment_uat.yml)
+
 Release based deployment to PRD: [![.github/workflows/deployment_prod.yml](https://github.com/inbo/alien-species-portal/actions/workflows/deployment_prod.yml/badge.svg)](https://github.com/inbo/alien-species-portal/actions/workflows/deployment_prod.yml)
 
 # alien-species-portal
