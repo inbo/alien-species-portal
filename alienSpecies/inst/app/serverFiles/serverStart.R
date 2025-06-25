@@ -1,4 +1,6 @@
 
+# Allows to click the same tile twice: reset value after clicking
+resetNavigation <- reactiveVal(FALSE)
 
 output$start_title <- renderUI({
     
@@ -20,6 +22,9 @@ output$start_tiles <- renderUI({
           ))
       })
     
+    if (resetNavigation())
+      resetNavigation(FALSE)
+    
     tags$div(style = "margin-top: -20px;",
       radioButtons(
         inputId = "start_navigate", label = "", inline = TRUE,
@@ -40,6 +45,7 @@ observeEvent(input$start_navigate, {
             ")),
       updateNavbarPage(session = session, inputId = "tabs", selected = input$start_navigate)
     )
+    resetNavigation(TRUE)
     
   })
 
@@ -66,11 +72,5 @@ output$species_title <- renderUI({
 output$early_title <- renderUI({
     
     translate(results$translations, id = tabChoices[4])$title  
-    
-  })
-
-output$db_title <- renderUI({
-    
-    translate(data = results$translations, id = tabChoices[5])$title  
     
   })

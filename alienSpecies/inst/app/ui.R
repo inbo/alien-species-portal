@@ -72,8 +72,8 @@ shinyUI(
           tabPanel(title = uiOutput("species_title"), value = "species_information",
             uiOutput("species_content")),
           tabPanel(title = uiOutput("early_title"), value = "early_warning"),
-          tabPanel(title = uiOutput("db_title"), value = "other_db",
-            tags$div(class = "noButton", style = "margin-top:20px;", uiOutput("db_content")))
+          dbUI(id = "dbPage"),
+          faqUI(id = "faqPage")
         )
       
       )

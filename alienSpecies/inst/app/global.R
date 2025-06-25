@@ -23,7 +23,7 @@ chromote::set_chrome_args(c('--headless','--no-sandbox'))
 ### -----------
 
 tabChoices <- c("start", "checklist_indicators", "species_information", 
-  "early_warning", "other_db", "management")[1:5]
+  "early_warning", "other_db", "faq", "management")[1:6]
 
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")
