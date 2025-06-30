@@ -89,6 +89,23 @@ observe({
             
   })
 
+output$species_disclaimer <- renderUI({
+    
+    req(input$species_choice)
+    
+    disclaimerId <- paste0("obs_disclaimer_", input$species_choice)
+    
+    if (disclaimerId %in% results$translations$id) {
+      
+      tags$div(
+        class = "info-box",
+        tags$div(class = "info-icon", "!"),
+        HTML(translate(results$translations, id = disclaimerId)$description)
+      )
+      
+    }
+    
+  })
 
 
 ### Observations
@@ -662,7 +679,9 @@ observe({
     
     req(input$species_choice)
     
-    htmlSectionServer(id = "risk_assessment", species = reactive(input$species_choice),
+    htmlSectionServer(
+      id = "risk_assessment", 
+      species = reactive(input$species_choice),
       language = reactive(attr(results$translations, "language")),
       url = harmoniaData$harmonia_url[match(input$species_choice, harmoniaData$gbif_taxonkey)],
       linkText = "Harmonia+ Risk Assessment")

@@ -18,7 +18,9 @@ tagList(
           selectInput(inputId = "species_gewest", label = NULL,
             choices = NULL, multiple = TRUE, width = "100%"))
       )
-    )
+    ),
+    # Disclaimer
+    uiOutput("species_disclaimer")
   ),
   
   tags$div(class = "container",
