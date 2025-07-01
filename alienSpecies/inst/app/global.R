@@ -18,6 +18,8 @@ if (!exists("doDebug"))
 
 chromote::set_chrome_args(c('--headless','--no-sandbox'))
 
+addResourcePath("www", system.file("app", "www", package = "alienSpecies"))
+
 
 ### Data
 ### -----------

@@ -37,10 +37,8 @@ shinyUI(
       tags$div(class = "navbar1", 
         navbarPage(
           title = tags$div(
-            HTML("&emsp;"),
-            img(src = "logoTrias.png", height = "45px", style = "margin-right: 10px"), 
-            img(src = "logo.png", float = "top", height = "45px"),
-            style = "margin-top: -13px; margin-bottom: -13px; margin-left: -150px; margin-right: 50px;",
+            tags$a(href = "https://www.inbo.be", target = "_blank", 
+              tags$img(src = "www/logo.png", height = "45px;")),
             tags$script(HTML(paste("var header = $('.navbar > .container');",
                   "header.append('<div style=\"float:right;\">", 
                   versionUI(id = "main"),"</div>')"))
@@ -78,6 +76,11 @@ shinyUI(
       
       )
     
+    ),
+    
+    tags$footer(class = "bottom-banner",
+      tags$a(href = "https://osf.io/7dpgr/", target = "_blank", 
+        tags$img(src = "www/logoTrias.png", style = "height:50px;"))
     )
   
   )
