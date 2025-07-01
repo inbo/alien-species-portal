@@ -82,12 +82,8 @@ observe({
 
 
 # Update search ID
-observe({
-            
-    results$searchId <- paste0("&taxonkey=", input$species_choice, 
-      "&gewest=", paste(input$species_gewest, collapse = ","))
-            
-  })
+observe(results$searchId$taxonkey <- input$species_choice)
+observe(results$searchId$gewest <- paste(input$species_gewest, collapse = ","))
 
 output$species_disclaimer <- renderUI({
     
@@ -106,6 +102,31 @@ output$species_disclaimer <- renderUI({
     }
     
   })
+
+### Update tabpage wrt URL link
+### -----------------
+
+# Append/Replace tabpage in URL
+observe({
+    
+    req(input$species_tabs)
+    
+    input$species_tabs
+    
+    isolate(results$searchId$tab <- input$species_tabs)
+    
+  })
+
+
+# Update tabpage wrt URL link
+observe({
+    
+    req(urlSearch()$tab)
+    updateTabsetPanel(session, inputId = "species_tabs",
+      selected = urlSearch()$tab)
+    
+  })
+
 
 
 ### Observations

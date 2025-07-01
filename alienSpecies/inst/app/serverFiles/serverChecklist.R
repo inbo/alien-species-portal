@@ -172,9 +172,9 @@ observeEvent(input$exoten_timeButton, {
 
 observeEvent(urlSearch(), {
     
-    if (!is.null(urlSearch()$timeNA))
+    if ("timeNA" %in% names(urlSearch()))
       results$exoten_timeNA <- urlSearch()$timeNA == "true"
-    if (!is.null(urlSearch()$time))
+    if ("time" %in% names(urlSearch()))
       results$exoten_time <- as.numeric(strsplit(urlSearch()$time, split = "-")[[1]])
     
   })
@@ -246,12 +246,10 @@ filter_source <- filterSelectServer(
 results$exoten_data <- reactive({
     
     subData <- data.table::copy(results$filter_exotenDataTranslated())
-    searchId <- ""
-        
+    
     # taxa
     if (!is.null(input$exoten_taxa)) {
-      searchId <- paste0(searchId, "&taxa=", 
-        paste(input$exoten_taxa, collapse = ","))
+      results$searchId$taxa <- paste(input$exoten_taxa, collapse = ",")
 #        matchCombo(selected = input$exoten_taxa, longChoices = longTaxaChoices))
 #      subData <- filterCombo(exotenData = subData, inputValue = input$exoten_taxa, 
 #        inputLevels = taxaLevels)
@@ -263,44 +261,44 @@ results$exoten_data <- reactive({
       
     # habitat
     if (!is.null(filter_habitat())) {
-      searchId <- paste0(searchId, "&habitat=", paste(filter_habitat(), collapse = ","))
+      results$searchId$habitat <- paste(filter_habitat(), collapse = ",")
       subData <- subData[grepl(paste(filter_habitat(), collapse = "|"), subData$habitat), ]
     }
     
     # pathways
     if (!is.null(input$exoten_pw)) {
       matchPw <- matchCombo(selected = input$exoten_pw, longChoices = unlist(results$filter_pwChoices()))
-      searchId <- paste0(searchId, "&pw=", matchPw)
+      results$searchId$pw <- matchPw
       subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchPw, split = ",")[[1]], 
         inputLevels = c("pathway_level1", "pathway_level2"))
     }
     
     # degree of establishment
     if (!is.null(filter_doe())) {
-      searchId <- paste0(searchId, "&doe=", paste(filter_doe(), collapse = ","))
+      results$searchId$doe <- paste(filter_doe(), collapse = ",")
       subData <- subData[degree_of_establishment %in% filter_doe(), ]
     }
     
     # native
     if (!is.null(input$exoten_native)) {
       matchNative <- matchCombo(selected = input$exoten_native, longChoices = unlist(results$filter_nativeChoices())) 
-      searchId <- paste0(searchId, "&native=", matchNative)
+      results$searchId$native <- matchNative
       subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchNative, split = ",")[[1]], 
         inputLevels = c("native_continent", "native_range"))
     }
     
     # time
     if (!results$exoten_timeNA)
-      searchId <- paste0(searchId, "&timeNA=false")
+      results$searchId$timeNA <- "false"
     if (!all(results$exoten_time == defaultTime)) {
-      searchId <- paste0(searchId, "&time=", paste(results$exoten_time, collapse = "-"))
+      results$searchId$time <- paste(results$exoten_time, collapse = "-")
       subData <- subData[first_observed %in% 
           c(if (results$exoten_timeNA) NA, results$exoten_time[1]:results$exoten_time[2]), ]
     }
     
     # unionlist - always save
     if (!is.null(filter_union())) {
-      searchId <- paste0(searchId, "&union=", filter_union())
+      results$searchId$union <- filter_union()
       if (length(filter_union()) == 1) {
         if (filter_union() == "Union list")
           subData <- subData[nubKey %in% unionlistData$taxonKey, ] else if (filter_union() == "Non-union list")
@@ -310,13 +308,13 @@ results$exoten_data <- reactive({
     
     # region
     if (!is.null(filter_region())) {
-      searchId <- paste0(searchId, "&region=", paste(filter_region(), collapse = ","))
+      results$searchId$region <- paste(filter_region(), collapse = ",")
       subData <- subData[locality %in% filter_region(), ]
     }
     
     # source
     if (!is.null(filter_source())) {
-      searchId <- paste0(searchId, "&source=", paste(filter_source(), collapse = ","))
+      results$searchId$source <- paste(filter_source(), collapse = ",")
       subData <- subData[source %in% filter_source(), ]
     }
     
@@ -325,7 +323,6 @@ results$exoten_data <- reactive({
       old = c("pathway_level1_translate", "pathway_level2_translate", "habitat_translate", "degree_of_establishment_translate", "locality_translate"), 
       new = c("pathway_level1", "pathway_level2", "habitat", "degree_of_establishment", "locality"))
     
-    results$searchId <- searchId
     
     subData
     
@@ -339,6 +336,30 @@ output$nrowsFinal <- renderText({
 
   })
 
+
+### Update tabpage wrt URL link
+### -----------------
+
+# Append/Replace tabpage in URL
+observe({
+    
+    req(input$exoten_tabs)
+    
+    input$exoten_tabs
+    
+    isolate(results$searchId$tab <- input$exoten_tabs)
+  
+  })
+
+
+# Update tabpage wrt URL link
+observe({
+    
+    req(urlSearch()$tab)
+    updateTabsetPanel(session, inputId = "exoten_tabs",
+      selected = urlSearch()$tab)
+    
+  })
 
 
 

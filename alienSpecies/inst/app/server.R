@@ -36,7 +36,7 @@ function(input, output, session) {
   results <- reactiveValues(
     # Default language is dutch
     translations = loadMetaData(language = "en", local = doDebug),
-    searchId = "",
+    searchId = list(),
     renderedTabs = c("start", "checklist_taxa"),
     exoten_timeNA = defaultTimeNA,
     exoten_time = defaultTime,
@@ -65,12 +65,15 @@ function(input, output, session) {
   
   shareLink <- reactive({
       
-      searchId <- if (input$tabs != "start")
+      searchId <- if (input$tabs %in% c("checklist_indicators", "species_information"))
           results$searchId else 
-          ""
-      languageId <- paste0("&language=", attr(results$translations, "language"))
+          list()
+      searchId$language <- attr(results$translations, "language")
+      searchId$page <- input$tabs
       
-      paste0("http://alienspecies.inbo.be/?page=", input$tabs, languageId, searchId)
+      createQueryString(
+        baseUrl = config::get("url", file = system.file("config.yml", package = "alienSpecies")),
+        query = searchId)
       
     })
     
@@ -169,6 +172,9 @@ function(input, output, session) {
   
   # Render tabpanel upon need
   observeEvent(input$tabs, {
+      
+      # Reset filters from other page
+      results$searchId <- list()      
       
       # render only once
       req(!input$tabs %in% results$renderedTabs)
