@@ -68,19 +68,19 @@ observe({
     req(input$tabs == "checklist_indicators")
     req(!is.null(input$exoten_searchVernacular))
     
-    taxaChoices[ , vernacular_name_col := get(paste0("vernacular_name_", attr(results$translations, "language")))]
+    taxaChoices[ , vernacular_name_list := get(paste0("vernacular_name_", attr(results$translations, "language"), "_list"))]
     
     # Search on latin or vernacular name
     if (input$exoten_searchVernacular) {
       taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
           gsub("<b>.*</b>", paste0("<b>", 
-              if (is.na(taxaChoices$vernacular_name_col[i])) "" else taxaChoices$vernacular_name_col[i], 
+              if (is.na(taxaChoices$vernacular_name_list[i])) "" else taxaChoices$vernacular_name_list[i], 
               "</b> <i>", taxaChoices$latin_name[i], "</i>"), taxaChoices$html[i]))
-      taxaChoices[, label := vernacular_name_col] 
-      setkey(taxaChoices, vernacular_name_col)
+      taxaChoices[, label := vernacular_name_list] 
+      setkey(taxaChoices, vernacular_name_list)
     } else {
       taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
-          gsub("</b>", paste0("</b> <i>", strsplit(taxaChoices$vernacular_name_col[i],
+          gsub("</b>", paste0("</b> <i>", strsplit(taxaChoices$vernacular_name_list[i],
                 split = ", ")[[1]][1], "</i>"), taxaChoices$html[i])
       )     
       taxaChoices[, label := latin_name]
