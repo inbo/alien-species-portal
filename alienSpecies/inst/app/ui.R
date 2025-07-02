@@ -76,11 +76,6 @@ shinyUI(
       
       )
     
-    ),
-    
-    tags$footer(class = "bottom-banner",
-      tags$a(href = "https://osf.io/7dpgr/", target = "_blank", 
-        tags$img(src = "www/logoTrias.png", style = "height:50px;"))
     )
   
   )
