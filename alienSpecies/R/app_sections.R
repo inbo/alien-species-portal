@@ -241,10 +241,12 @@ htmlSectionServer <- function(id, species, language, url = NA, linkText) {
             "HTML_pages/HTML")
           dataFile <- file.path(dataPath, paste0(species(), "_", language(), ".html"))
           
-          if (!is.na(url))
-            tags$a(href = url, target = "_blank", linkText) else if (httr::http_status(httr::GET(dataFile))$category != "Client error")
+          if (!is.na(url)) {
+            lapply(seq_along(url), function(i)
+                  tags$p(tags$a(href = url[i], target = "_blank", linkText[i]))) 
+          } else if (httr::http_status(httr::GET(dataFile))$category != "Client error") {
             includeHTML(dataFile)
-          
+          }
         
         })
       
