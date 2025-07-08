@@ -680,7 +680,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
             newMap <- mapOccurrence(
               occurrenceData = req(subData()), 
               baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
-              addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 0
+              addGlobe = if (is.null(input$globe)) FALSE else input$globe %% 2 == 1
             )
             
           } else {
@@ -690,7 +690,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
               groupVariable = groupVariable,
               baseMap = addBaseMap(regions = req(gewest()), combine = input$combine),
               legend = if (is.null(input$legend)) "topright" else input$legend,
-              addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 0
+              addGlobe = if (is.null(input$globe)) FALSE else input$globe %% 2 == 1
             )
             
           }
