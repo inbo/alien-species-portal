@@ -186,7 +186,10 @@ versionServer <- function(id, uiText) {
       
       observeEvent(input$version, {
           
-#          # For internal use
+#          # For internal testing
+          ## PRD
+#          Sys.setenv("GIT_SHA" = system("git describe --tags `git rev-list --tags --max-count=1`", intern = TRUE))
+          ## UAT
 #          Sys.setenv("GIT_SHA" = system("git rev-parse HEAD", intern = TRUE))
           hashCode <- Sys.getenv("GIT_SHA")
           
@@ -199,7 +202,11 @@ versionServer <- function(id, uiText) {
                 "GIT:", if (hashCode == "") 
                     translate(uiText(), "unknown")$title else 
                     tags$a(id = "gitVersion", 
-                      href = paste0("https://github.com/inbo/alien-species-portal/commit/",hashCode), 
+                      href = if (Sys.getenv("R_CONFIG_ACTIVE") == "production") {
+                          paste0("https://github.com/inbo/alien-species-portal/releases/tag/", hashCode)
+                        } else {
+                          paste0("https://github.com/inbo/alien-species-portal/commit/", hashCode)
+                        }, 
                       target = "_blank", hashCode),
                 tags$br(),
                 actionLink(inputId = session$ns("showInfo"), label = "R Session Info"),
