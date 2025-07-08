@@ -25,7 +25,7 @@ addResourcePath("www", system.file("app", "www", package = "alienSpecies"))
 ### -----------
 
 tabChoices <- c("start", "checklist_indicators", "species_information", 
-  "early_warning", "other_db", "faq", "management")[1:6]
+  "other_db", "faq", "management")[1:5]
 
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")

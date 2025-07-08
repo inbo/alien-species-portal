@@ -28,7 +28,7 @@ dbServer <- function(id, translations) {
       
       output$content <- renderUI({
           
-          tileChoices <- c("mica_db", "radius_db")
+          tileChoices <- c("early_warning", "mica_db", "radius_db")
           tileNames <- lapply(tileChoices, function(iChoice){
               foto <- list.files(path = system.file("app", "www", package = "alienSpecies"), pattern = iChoice)
               title <- translate(data = translations, id = iChoice)$title
@@ -56,6 +56,9 @@ dbServer <- function(id, translations) {
       observeEvent(input$navigate, {
           
           switch(input$navigate, 
+            "early_warning" = session$sendCustomMessage(type = "openURL", list(message = "
+                  window.open('https://alert.riparias.be', '_blank').focus(); 
+                  ")), 
             "mica_db" = session$sendCustomMessage(type = "openURL", list(message = "
                   window.open('https://mica.inbo.be/', '_blank').focus(); 
                   ")),

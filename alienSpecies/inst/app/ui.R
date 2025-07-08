@@ -69,7 +69,6 @@ shinyUI(
             uiOutput("indicators_content")),
           tabPanel(title = uiOutput("species_title"), value = "species_information",
             uiOutput("species_content")),
-          tabPanel(title = uiOutput("early_title"), value = "early_warning"),
           dbUI(id = "dbPage"),
           faqUI(id = "faqPage")
         )

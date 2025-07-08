@@ -39,12 +39,7 @@ output$start_tiles <- renderUI({
 
 observeEvent(input$start_navigate, {
     
-    switch(input$start_navigate, 
-      "early_warning" = session$sendCustomMessage(type = "openURL", list(message = "
-            window.open('https://alert.riparias.be', '_blank').focus(); 
-            ")),
-      updateNavbarPage(session = session, inputId = "tabs", selected = input$start_navigate)
-    )
+    updateNavbarPage(session = session, inputId = "tabs", selected = input$start_navigate)
     resetNavigation(TRUE)
     
   })
@@ -66,11 +61,5 @@ output$checklist_title <- renderUI({
 output$species_title <- renderUI({
     
     translate(data = results$translations, id = tabChoices[3])$title  
-    
-  })
-
-output$early_title <- renderUI({
-    
-    translate(results$translations, id = tabChoices[4])$title  
     
   })

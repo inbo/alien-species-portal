@@ -198,11 +198,6 @@ function(input, output, session) {
           results$renderedTabs <- c(results$renderedTabs, "species_information")
           
         },
-        early_warning = {
-          session$sendCustomMessage(type = "openURL", list(message = "
-                window.open('https://alert.riparias.be', '_blank').focus(); 
-                "))
-        },
         other_db = {
           
           results$renderedTabs <- c(results$renderedTabs, "other_db")
