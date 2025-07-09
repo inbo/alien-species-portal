@@ -583,7 +583,7 @@ observeEvent(input$exoten_tabs, {
                 min(results$exoten_data()$first_observed, na.rm = TRUE):
                   max(results$exoten_data()$first_observed, na.rm = TRUE) else 
                 input$exoten_time[1]:input$exoten_time[2],
-            include_missing_years = TRUE,
+            x_include_missing = TRUE,
             x_major_scale_stepsize = results$exoten_xMajor(),
             x_lab = translate(results$translations, "year")$title,
             y_lab = translate(results$translations, "number")$title
