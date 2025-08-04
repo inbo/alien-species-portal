@@ -59,11 +59,13 @@ plotModuleUI <- function(id, height = "600px") {
   
   ns <- NS(id)
   
-  if (id == "management2_lente-plotTrias")
-    # dirty fix: this plot stays hidden when behind spinner
-    plotlyOutput(ns("plot"), height = height) else
-    withSpinner(plotlyOutput(ns("plot"), height = height))
-
+  tagList(
+    uiOutput(ns("plotMessage")),
+    if (id == "management2_lente-plotTrias")
+        # dirty fix: this plot stays hidden when behind spinner
+        plotlyOutput(ns("plot"), height = height) else
+        withSpinner(plotlyOutput(ns("plot"), height = height))
+  )
 }
 
 
@@ -83,6 +85,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
   ns <- NS(id)
   
   tagList(
+    uiOutput(ns("plotMessage")),
     withSpinner(DT::DTOutput(ns("table"))),
     if (includeTotal)
       uiOutput(ns("total"))
@@ -154,7 +157,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       # Filter plot data
       subData <- reactive({
          
-          subData <- if (is.null(input$period))
+          if (is.null(input$period))
             data() else
             data()[data()$first_observed %in% input$period[1]:input$period[2], ]
           
@@ -163,34 +166,40 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       
       argList <- reactive({
           
-          validate(need(nrow(subData()) > 0, translate(uiText(), "noData")$title))
-          
-          argList <- c(
-            list(
-            # General
-              df = subData()),
-            if (!is.null(outputType))
-              list(outputType = outputType),
-            if (!is.null(uiText))
-              list(uiText = uiText()),
-            # Trias
-            if (!is.null(triasFunction))
-              list(triasFunction = triasFunction),
-            if (!is.null(triasArgs))
-              list(triasArgs = triasArgs()),
-            # Reactives
-            if (!is.null(period))
-              list(period = period()),
-            if (!is.null(regions))
-              list(regions = regions()),
-            if (!is.null(combine))
-              list(combine = combine()),
-            # Input
-            if (!is.null(input$group))
-              list(groupVar = input$group),
-            if (!is.null(input$summarizeBy))
-              list(summarizeBy = input$summarizeBy)
-          )
+          if (nrow(subData()) == 0) {
+            output$plotMessage <- renderUI(tagList(tags$br(), tags$h4(translate(uiText(), "noData")$title)))
+            
+            argList <- NULL
+          } else {
+            output$plotMessage <- renderUI(NULL)
+            
+            argList <- c(
+              list(
+                # General
+                df = subData()),
+              if (!is.null(outputType))
+                list(outputType = outputType),
+              if (!is.null(uiText))
+                list(uiText = uiText()),
+              # Trias
+              if (!is.null(triasFunction))
+                list(triasFunction = triasFunction),
+              if (!is.null(triasArgs))
+                list(triasArgs = triasArgs()),
+              # Reactives
+              if (!is.null(period))
+                list(period = period()),
+              if (!is.null(regions))
+                list(regions = regions()),
+              if (!is.null(combine))
+                list(combine = combine()),
+              # Input
+              if (!is.null(input$group))
+                list(groupVar = input$group),
+              if (!is.null(input$summarizeBy))
+                list(summarizeBy = input$summarizeBy)
+            )
+          }
           
           argList
           
@@ -222,7 +231,14 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
         })
       
       
-      output$plot <- renderPlotly(finalPlot())
+      output$plot <- renderPlotly({
+          tryCatch({
+              finalPlot()
+            },
+            error = function(err)
+              NULL
+          )	
+        })
       
       
 #      if (plotFunction != "countOccupancy" & plotFunction != "countOccurrence")
@@ -262,11 +278,17 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       
       output$table <- DT::renderDT({
           
-          DT::datatable(resultFct()$data, rownames = FALSE,
-            colnames = resultFct()$columnNames,
-            selection = "single",
-            options = list(dom = 'ftp', 
-              pageLength = if (triasFunction == "tableNesten") -1 else 5))
+          tryCatch({
+              DT::datatable(resultFct()$data, rownames = FALSE,
+                colnames = resultFct()$columnNames,
+                selection = "single",
+                options = list(dom = 'ftp', 
+                  pageLength = if (triasFunction == "tableNesten") -1 else 5))
+              
+            },
+            error = function(err)
+              NULL
+          )	
           
         })
       
