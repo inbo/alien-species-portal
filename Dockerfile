@@ -30,7 +30,8 @@ RUN R -q -e "install.packages('remotes')"
 RUN R -q -e "options(warn = 2); remotes::install_cran(c('shiny', 'data.table', 'dplyr', 'DT', 'ggplot2', 'ggspatial', 'htmlwidgets', 'httr', 'jsonlite', 'leaflet', 'leaflet.extras', 'plotly', 'reshape2', 'rgbif', 'sf', 'shinyjs', 'terra', 'testthat', 'tidyr',  'webshot2', 'xtable'))"
 
 # Specific data format + access to S3 on UAT
-RUN R -q -e "options(warn = 2); Sys.setenv(LIBARROW_MINIMAL=FALSE); remotes::install_cran(c('arrow', 'config', 'aws.ec2metadata', 'aws.s3', 'aws.signature'), Ncpus=1)"
+RUN R -q -e "options(warn = 2); Sys.setenv(LIBARROW_MINIMAL=FALSE); remotes::install_cran(c('arrow', 'config', 'aws.ec2metadata', 'aws.signature'), Ncpus=1)"
+RUN R -q -e "options(warn = 2); Sys.setenv(LIBARROW_MINIMAL=FALSE); remotes::install_version('aws.s3', version = '0.3.22', repos = 'https://rforge.net')"
 
 # INBO packages & dependencies
 RUN R -q -e "options(warn = 2); remotes::install_cran('tibble')"
