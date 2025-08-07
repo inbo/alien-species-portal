@@ -30,6 +30,7 @@ Imports:
     plotly,
     reshape2,
     rgbif,
+    shiny.i18n,
 	  shiny,
 	  shinycssloaders,
 	  sf,
