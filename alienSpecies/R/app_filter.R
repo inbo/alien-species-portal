@@ -67,7 +67,7 @@ filterSelectServer <- function(id, url, initChoices, translations) {
           
           selectInput(inputId = ns("filter"), label = NULL, 
             choices = initChoices, 
-            selected = if (!is.null(url()[[id]])) strsplit(url()[[id]], split = ",")[[1]],
+            selected = if (!is.null(url()[[id]])) {strsplit(url()[[id]], split = ",")[[1]]} else input$filter,
             multiple = TRUE)
         })
       

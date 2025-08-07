@@ -228,6 +228,6 @@ function(input, output, session) {
     })
     
     dbServer(id = "dbPage", translations = results$translations)
-    faqServer(id = "faqPage", translations = results$translations)
+    faqServer(id = "faqPage", language = reactive(results$language))
   
 }

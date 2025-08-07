@@ -12,7 +12,7 @@
 #' 
 #' @author mvarewyck
 #' @export
-faqServer <- function(id, translations) {
+faqServer <- function(id, language) {
   
   moduleServer(id, function(input, output, session) {
       
@@ -20,12 +20,12 @@ faqServer <- function(id, translations) {
       
       output$title <- renderUI({
           
-          translate(data = translations, id = "faq")$title  
+          translate(data = NULL, id = "faq")$title  
           
         })
       
       htmlSectionServer(id = "content", species = reactive("FAQ"),
-        language = reactive(attr(translations, "language")))
+        language = language)
       
     })
   

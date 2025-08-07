@@ -75,7 +75,7 @@ observe({
       updateSelectInput(session = session, inputId = "species_gewest", 
       choices = choices,
       selected = if (!is.null(urlSearch()$gewest)) 
-          strsplit(urlSearch()$gewest, split = ",")[[1]] else 
+          strsplit(urlSearch()$gewest, split = ",")[[1]] else if (!is.null(isolate(input$species_gewest))) input$species_gewest else 
           choices)
             
 })
@@ -690,7 +690,7 @@ observe({
     req(input$species_choice)
     
     htmlSectionServer(id = "links", species = reactive(input$species_choice),
-      language = reactive(attr(results$translations, "language")))
+      language = reactive(results$language))
     
   })
 
@@ -705,7 +705,7 @@ observe({
     htmlSectionServer(
       id = "risk_assessment", 
       species = reactive(input$species_choice),
-      language = reactive(attr(results$translations, "language")),
+      language = reactive(results$language),
       url = harmoniaData$harmonia_url[matchingLinks],
       linkText = sapply(matchingLinks, function(iLink)
           switch(harmoniaData$url_type[iLink],

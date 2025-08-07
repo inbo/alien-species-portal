@@ -21,7 +21,7 @@ results$filter_exotenDataTranslated <- reactive({
     exotenData[, pathway_level2_translate := translate(results$translations, do.call(paste, c(.SD, sep = "_")))$title,
       .SDcols = c("pathway_level1", "pathway_level2")]
     exotenData[, ':=' (
-      vernacular_name_col = get(paste0("vernacular_name_", attr(results$translations, "language"))),  
+      vernacular_name_col = get(paste0("vernacular_name_", results$language)),  
       pathway_level1_translate = translate(results$translations, pathway_level1)$title,
       native_continent_translate = translate(results$translations, native_continent)$title,
       native_range_translate = translate(results$translations, native_range)$title,
@@ -68,7 +68,7 @@ observe({
     req(input$tabs == "checklist_indicators")
     req(!is.null(input$exoten_searchVernacular))
     
-    taxaChoices[ , vernacular_name_list := get(paste0("vernacular_name_", attr(results$translations, "language"), "_list"))]
+    taxaChoices[ , vernacular_name_list := get(paste0("vernacular_name_", results$language, "_list"))]
     
     # Search on latin or vernacular name
     if (input$exoten_searchVernacular) {
@@ -88,7 +88,9 @@ observe({
     }
     
     updateSelectizeInput(session, inputId = "exoten_taxa", choices = taxaChoices,
-      selected = urlSearch()$taxa,
+      selected = if ((is.null(all(isolate(results$exoten_taxa))) || all(isolate(results$exoten_taxa) == "")) & !is.null(urlSearch()$taxa))
+          strsplit(urlSearch()$taxa, ",")[[1]] else
+          isolate(results$exoten_taxa),
       server = TRUE,
       options = list(
         placeholder = translate(results$translations, "allTaxa")$title,
@@ -101,6 +103,11 @@ observe({
     )
     
   })
+
+# Save choice when leaving this tab
+  observe({
+      results$exoten_taxa <- input$exoten_taxa
+    })
 
 
 # habitat
@@ -122,9 +129,16 @@ results$filter_pwChoices <- reactive({
 
 output$filter_pw <- renderUI({
     
+    selected <- if (!is.null(urlSearch()$pw)) {
+        urlSearch()$pw 
+      } else if (!is.null(isolate(input$exoten_pw))) {
+        isolate(results$searchId$pw)
+      } else NULL
+    
     comboTreeInput("exoten_pw", choices = results$filter_pwChoices(),
       placeholder = translate(results$translations, "allPathways")$title, 
-      selected = urlSearch()$pw)
+      selected = selected
+    )
     
   })
 
@@ -147,9 +161,17 @@ results$filter_nativeChoices <- reactive({
 
 output$filter_native <- renderUI({
     
+    selected <- if (!is.null(urlSearch()$native)) {
+        print("AAAAA")
+      urlSearch()$native 
+    } else if (!is.null(isolate(input$exoten_native))) {
+      isolate(results$searchId$native)
+    } else NULL
+    
     comboTreeInput("exoten_native", choices = results$filter_nativeChoices(),
       placeholder = translate(results$translations, "allNative")$title, 
-      selected = urlSearch()$native)
+      selected = selected
+    )
     
   })
 
@@ -267,7 +289,7 @@ results$exoten_data <- reactive({
     
     # pathways
     if (!is.null(input$exoten_pw)) {
-      matchPw <- matchCombo(selected = input$exoten_pw, longChoices = unlist(results$filter_pwChoices()))
+      matchPw <- matchCombo(selected = input$exoten_pw, longChoices = isolate(unlist(results$filter_pwChoices())))
       results$searchId$pw <- matchPw
       subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchPw, split = ",")[[1]], 
         inputLevels = c("pathway_level1", "pathway_level2"))
@@ -281,7 +303,7 @@ results$exoten_data <- reactive({
     
     # native
     if (!is.null(input$exoten_native)) {
-      matchNative <- matchCombo(selected = input$exoten_native, longChoices = unlist(results$filter_nativeChoices())) 
+      matchNative <- matchCombo(selected = input$exoten_native, longChoices = isolate(unlist(results$filter_nativeChoices()))) 
       results$searchId$native <- matchNative
       subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchNative, split = ",")[[1]], 
         inputLevels = c("native_continent", "native_range"))
