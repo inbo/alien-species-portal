@@ -29,6 +29,6 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
           PROD_TAG: prod
         run: |
-          docker build --build-arg GIT_SHA=${{ github.sha }} -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:$PROD_TAG .
+          docker build --build-arg GIT_SHA=${{ github.ref_name }} -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -t $REGISTRY/$REPOSITORY:$PROD_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           docker push $REGISTRY/$REPOSITORY:$PROD_TAG
