@@ -18,11 +18,10 @@ lapply(c("observations", "indicators", "reporting", "management", "more",
     "habitats", "risk_maps", "links", "risk_assessment", "images"), function(iName)
     titleModuleServer(
       id = paste0("species_", iName),
-      uiText = reactive(results$translations),
       plotFunction = iName
     ))
 
-welcomeSectionServer(id = "species", uiText = reactive(results$translations))
+welcomeSectionServer(id = "species")
 
 
 # Species selection
@@ -68,7 +67,7 @@ observeEvent(input$tabs, {
 observe({
     
     choices <- c("flanders", "wallonia", "brussels")
-    names(choices) <- translate(results$translations, choices)$title
+    names(choices) <- translate(choices)$title
     
     # Trigger update when changing tab
     if (input$tabs == "species_information")
@@ -91,12 +90,12 @@ output$species_disclaimer <- renderUI({
     
     disclaimerId <- paste0("obs_disclaimer_", input$species_choice)
     
-    if (disclaimerId %in% results$translations$id) {
+    if (translate(disclaimerId)$title != disclaimerId) {
       
       tags$div(
         class = "info-box",
         tags$div(class = "info-icon", "!"),
-        HTML(translate(results$translations, id = disclaimerId)$description)
+        HTML(translate(id = disclaimerId)$description)
       )
       
     }
@@ -160,7 +159,6 @@ observe({
 
 ## Map + barplot
 dashReport <- mapCubeServer(id = "observations",
-  uiText = reactive(results$translations),
   species = taxonName,
   gewest = reactive(req(input$species_gewest)),
   df = reactive({
@@ -209,7 +207,6 @@ results$species_gamData <- reactive({
 
 ## Emergence status GAM - Observations
 dashReport <- plotTriasServer(id = "indicators_gamObservations",
-  uiText = reactive(results$translations),
   data = results$species_gamData,
   triasFunction = "apply_gam",
   translationId = "apply_gamObservations",
@@ -218,8 +215,8 @@ dashReport <- plotTriasServer(id = "indicators_gamObservations",
         y_var = "obs", 
         taxon_key = input$species_choice, 
         name = taxonName(),
-        x_label = translate(results$translations, "year")$title,
-        y_label = translate(results$translations, "observations")$title,
+        x_label = translate("year")$title,
+        y_label = translate("observations")$title,
         region = input$species_gewest
       )
     }),
@@ -234,7 +231,6 @@ dashReport <- plotTriasServer(id = "indicators_gamObservations",
 
 ## Emergence status GAM - Occupancy
 dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
-  uiText = reactive(results$translations),
   data = results$species_gamData,
   triasFunction = "apply_gam",
   translationId = "apply_gamOccupancy",
@@ -243,8 +239,8 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
         y_var = "ncells", 
         taxon_key = input$species_choice, 
         name = taxonName(),
-        x_label = translate(results$translations, "year")$title,
-        y_label = translate(results$translations, "occupancy")$title,
+        x_label = translate("year")$title,
+        y_label = translate("occupancy")$title,
         region = input$species_gewest
       )
     }),
@@ -259,7 +255,6 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
 
 ## Invasion history
 dashReport <- mapRegionsServer(id = "indicators_facet",
-  uiText = reactive(results$translations),
   species = taxonName,
   gewest = reactive(req(input$species_gewest)),
   regionLevels = c("communes", "provinces", "cell_code1", "cell_code10"),
@@ -295,7 +290,6 @@ observe({
 
 # t0 and t1
 dashReport <- mapCubeServer(id = "reporting_t01",
-  uiText = reactive(results$translations),
   species = taxonName,
   gewest = reactive(req(input$species_gewest)),
   df = reactive(dfCube[species %in% taxonName(), ]),
@@ -355,7 +349,7 @@ results$species_managementData <- reactive({
     
     req(taxonName())
     
-    validate(need(results$species_managementFile(), translate(results$translations, "noData")$title))
+    validate(need(results$species_managementFile(), translate("noData")$title))
     
     if (taxonName() %in% heatSpecies) {
       
@@ -383,7 +377,6 @@ observe({
       ## Map + slider barplot: Oxyura jamaicensis
       
       dashReport <- mapCubeServer(id = "management",
-        uiText = reactive(results$translations),
         species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
@@ -413,7 +406,6 @@ observe({
       names(colorsActive) <- c("individual", "untreated nest")
       
       dashReport <- mapHeatServer(id = "management2_active",
-        uiText = reactive(results$translations),
         species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         combinedData = reactive(combinedActive),
@@ -434,8 +426,7 @@ observe({
       ## Alle observaties
       combinedObserved <- combineNestenData(
         pointsData = results$species_managementData()$points, 
-        nestenData = results$species_managementData()$nesten,
-        uiText = results$translations
+        nestenData = results$species_managementData()$nesten
       # For testing only: when no observations yet, use latest available year
 #        currentYear = format(max(results$species_managementData()$points$eventDate, na.rm = TRUE), "%Y")
       )
@@ -443,7 +434,6 @@ observe({
       names(colorsObserved) <- c("individual", "nest")
       
       dashReport <- mapHeatServer(id = "management2_observed",
-        uiText = reactive(results$translations),
         species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         combinedData = reactive(combinedObserved),
@@ -465,7 +455,6 @@ observe({
       )
       dashReport <- mapRegionsServer(
         id = "management2",
-        uiText = reactive(results$translations),
         species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         df = reactive(combinedManaged),
@@ -491,7 +480,6 @@ observe({
             bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies"))
           )),
           #read.csv(system.file("extdata", "management", "Vespa_velutina", "aantal_lente_nesten.csv", package = "alienSpecies"))
-        uiText = reactive(results$translations),
         dashReport = dashReport,
         triggerReport = species_createReport
       )
@@ -501,7 +489,6 @@ observe({
       dashReport <- countNestenServer(
         id = "management2_province",
         data = reactive(results$species_managementData()$nesten),
-        uiText = reactive(results$translations),
         maxDate = reactive({
             req(results$species_managementData())
             max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)
@@ -515,7 +502,6 @@ observe({
         id = "management2_provinceTable",
         triasFunction = "tableNesten",
         data = reactive(results$species_managementData()$nesten),
-        uiText = reactive(results$translations),
         maxDate = reactive(max(results$species_managementData()$nesten$observation_time, na.rm = TRUE)),
         outputType = "table",
         dashReport = dashReport,
@@ -525,7 +511,6 @@ observe({
       dashReport <- countYearGroupServer(
         id = "management2", 
         species = taxonName,
-        uiText = reactive(results$translations), 
         data = reactive({
             req(results$species_managementData())
             summarizeYearGroupData(
@@ -534,7 +519,7 @@ observe({
           }),
         groupChoices = reactive({
             choices <- c("", "Behandeling")
-            names(choices) <- c("", translate(results$translations, choices[-1])$title)
+            names(choices) <- c("", translate(choices[-1])$title)
             choices
           }),
         dashReport = dashReport,
@@ -546,7 +531,6 @@ observe({
       
       dashReport <- mapRegionsServer(
         id = "management3",
-        uiText = reactive(results$translations),
         species = taxonName,
         gewest = reactive(req(input$species_gewest)),
         df = results$species_managementData,
@@ -559,11 +543,10 @@ observe({
       dashReport <- countYearGroupServer(
         id = "management3", 
         species = taxonName,
-        uiText = reactive(results$translations), 
         data = results$species_managementData,
         groupChoices = reactive({
             choices <- c("", "lifeStage")
-            names(choices) <- c("", translate(results$translations, choices[-1])$title)
+            names(choices) <- c("", translate(choices[-1])$title)
             choices
           }),
         dashReport = dashReport,
@@ -594,8 +577,8 @@ output$species_managementContent <- renderUI({
         if (isSeason) 
             mapHeatUI(id = "management2_active") else 
             tags$div(class = "container",
-              h3(HTML(translate(results$translations, "management2_active-mapHeat")$title)),
-              helpText(translate(results$translations, "disclaimerVespa")$title)
+              h3(HTML(translate("management2_active-mapHeat")$title)),
+              helpText(translate("disclaimerVespa")$title)
             ),
         mapHeatUI(id = "management2_observed"),
         mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
@@ -676,7 +659,6 @@ observe({
     
     mapRasterServer(
       id = "risk", 
-      uiText = reactive(results$translations),
       species = taxonName,
       gewest = reactive(input$species_gewest),
       taxonKey = reactive(input$species_choice)
@@ -730,13 +712,13 @@ observe({
 
 
 ## SUBMIT & DOWNLOAD report ##
-species_createReport <- footerSectionServer(id = "species", uiText = results$translations)
+species_createReport <- footerSectionServer(id = "species")
 
 species_reportFile <- reactiveVal()
 
 observeEvent(species_createReport(), {
     
-    showNotification(paste(translate(data = results$translations, id = "createReport")$title, '...\n'),
+    showNotification(paste(translate(id = "createReport")$title, '...\n'),
       id = "reportWait", type = "message", duration = NULL)
     
     species_reportFile(NULL)  # reset on each button press
@@ -760,7 +742,7 @@ species_readyForDownload <- reactive({
 observeEvent(species_readyForDownload(), {
     
     withProgress(
-      message = paste(translate(data = results$translations, id = "createReport")$title, '...\n'), 
+      message = paste(translate(id = "createReport")$title, '...\n'), 
       value = 0, {
         
         oldDir <- getwd()

@@ -114,7 +114,7 @@ createCubeData <- function(df, shapeData, groupVariable,
 #' @importFrom data.table setkey uniqueN
 #' @export
 countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
-  period = c(2000, 2018), uiText, combine = FALSE, 
+  period = c(2000, 2018), combine = FALSE, 
   regions = NULL) {
   
   
@@ -165,8 +165,8 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
     
     # Rename
     newLevels <- as.list(levels(droplevels(df$region)))
-    names(newLevels) <- translate(uiText, unlist(newLevels))$title
-    names(allColors) <- translate(uiText, names(allColors))$title
+    names(newLevels) <- translate(unlist(newLevels))$title
+    names(allColors) <- translate(names(allColors))$title
     levels(df$region) <- newLevels
     
   }
@@ -202,7 +202,7 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
         x = ~year, y = ~count, showlegend = FALSE,
         marker = list(color = inbo_lichtgrijs)) %>%
     layout(
-      xaxis = list(title = translate(uiText, "year")$title, range = c(minYear, currentYear)),
+      xaxis = list(title = translate("year")$title, range = c(minYear, currentYear)),
       yaxis = list(title = ""),
       showlegend = !combine & !is.null(nOccurred$region),
       barmode = "stack",
@@ -298,7 +298,6 @@ addBaseMap <- function(map = leaflet(),
 #' @param baseMap leaflet object as created by \code{createBaseMap}
 #' @param legend character, legend placement; default is "none", no legend
 #' @param addGlobe boolean, whether to add world map to background; default is FALSE 
-#' @param uiText data.frame, for translations
 #' @inheritParams createCubeData
 #' @return leaflet map
 #' 
@@ -306,7 +305,7 @@ addBaseMap <- function(map = leaflet(),
 #' @import leaflet
 #' @export
 mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none", 
-  addGlobe = FALSE, groupVariable, uiText = NULL) {
+  addGlobe = FALSE, groupVariable) {
   
   
   myColors <- paletteMap(groupNames = names(cubeShape), groupVariable = groupVariable)
@@ -336,7 +335,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
       pal = palette, 
       values = myColors$levels,
       opacity = 0.8,
-      title = translate(uiText, "legend")$title,
+      title = translate("legend")$title,
       layerId = "legend"
     )
     
@@ -411,7 +410,6 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
 #' 
 #' @param filter reactive list with filters to be shown in the app;
-#' names should match a plotFunction in \code{uiText}; 
 #' values define the choices in \code{selectInput}
 #' @inheritParams welcomeSectionServer
 #' @inheritParams createCubeData
@@ -432,7 +430,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @importFrom webshot2 webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
+mapCubeServer <- function(id, species, gewest, df, shapeData,
   filter = reactive(NULL), groupVariable, showPeriod = FALSE, dashReport = NULL,
   triggerReport = reactive(NULL)
 ) {
@@ -447,8 +445,8 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       ns <- session$ns
       tmpFile <- tempfile(fileext = ".html")
             
-      noData <- reactive(translate(uiText(), "noData")$title)
-      tmpTranslation <- reactive(translate(uiText(), ns("mapOccurrence")))
+      noData <- reactive(translate("noData")$title)
+      tmpTranslation <- reactive(translate(ns("mapOccurrence")))
       
       output$descriptionMapOccurrence <- renderUI(
         decodeText(tmpTranslation()$description, params = list(species = species())))
@@ -475,11 +473,11 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
             lapply(names(filter()), function(filterName) {
                 
                 choices <- filter()[[filterName]]
-                names(choices) <- translate(uiText(), choices)$title
+                names(choices) <- translate(choices)$title
                 
                 column(6, 
                   selectInput(inputId = ns(filterName), 
-                    label = translate(uiText(), filterName)$title,
+                    label = translate(filterName)$title,
                     choices = choices,
                     multiple = TRUE, selected = filter()[[filterName]])
                 )
@@ -510,10 +508,10 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       output$legend <- renderUI({
           
           legendChoices <- c("topright", "bottomright", "topleft", "bottomleft", "none")
-          names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x)$title)
+          names(legendChoices) <- sapply(legendChoices, function(x) translate(x)$title)
           
           selectInput(inputId = ns("legend"), 
-            label = translate(uiText(), "legend")$title,
+            label = translate("legend")$title,
             choices = legendChoices)
           
         })
@@ -624,14 +622,14 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
             if (input$globe %% 2 == 0){
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "hideGlobe")$title)
+                label = translate("hideGlobe")$title)
               
               proxy %>% addProviderTiles(providers$CartoDB.Positron)
               
             } else {
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "showGlobe")$title)
+                label = translate("showGlobe")$title)
               
               proxy %>% clearTiles()
               
@@ -663,7 +661,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
               pal = palette, 
               values = myColors$levels,
               opacity = 0.8,
-              title = translate(uiText(), "legend")$title,
+              title = translate("legend")$title,
               layerId = "legend"
             )                      
             
@@ -720,7 +718,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       # Download the map
       output$downloadMapButton <- renderUI({
           downloadButton(ns("download"), 
-            label = translate(uiText(), "downloadMap")$title, 
+            label = translate("downloadMap")$title, 
             class = "downloadButton")
         })
       
@@ -760,7 +758,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       observe({
           
           updateCheckboxInput(session = session, inputId = "combine",
-            label = translate(uiText(), "combineRegions")$title)
+            label = translate("combineRegions")$title)
           
         })  
       
@@ -773,8 +771,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           }),
         period = reactive(input$period),
         combine = reactive(input$combine),
-        regions = gewest,
-        uiText = uiText
+        regions = gewest
       )
       
       

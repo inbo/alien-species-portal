@@ -1,7 +1,6 @@
 
 #' Generic function to call plot/table function from the trias package
 #' 
-#' @inheritParams welcomeSectionServer
 #' @param triasFunction character, plot function to be called from trias package
 #' @param df data.frame see e.g. \code{\link[trias]{visualize_pathways_level1}}
 #' @param triasArgs list, extra arguments to be passed to the trias plot function
@@ -18,7 +17,7 @@
 #' @importFrom INBOtheme theme_inbo
 #' @export
 plotTrias <- function(triasFunction, df, triasArgs = NULL,
-  outputType = c("plot", "table"), uiText) {
+  outputType = c("plot", "table")) {
   
   
   outputType <- match.arg(outputType)
@@ -60,21 +59,21 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
       if (triasFunction == "apply_gam") {
         
         newLabels <- sapply(3:0, function(i)
-          uiText$title[uiText$id == paste0("gam_", i)])
+            translate(paste0("gam_", i))$title)
         names(newLabels) <- as.character(3:0)
         
         # update title
         myPlot <- myPlot %>% plotly::layout(title = paste0(
             triasArgs$y_label, " GAM - ", triasArgs$name, " (", triasArgs$taxon_key, ") - ",
             paste(c(if (!is.null(triasArgs$baseline_var))
-              translate(uiText, "correctBias")$title,
+              translate("correctBias")$title,
             if (all(resultFct$output$protected))
-              translate(uiText, "protectAreas")$title), collapse = " & "),
+              translate("protectAreas")$title), collapse = " & "),
           " from ", min(df$year, na.rm = TRUE), " to ", max(df$year, na.rm = TRUE),
           " in ",
           if (all(c("flanders", "wallonia", "brussels") %in% selectedRegions))
-            translate(uiText, "Belgi\u00EB")$title else
-            paste(translate(uiText, selectedRegions)$title, collapse = ", ")
+            translate("Belgi\u00EB")$title else
+            paste(translate(selectedRegions)$title, collapse = ", ")
           ))
         # move annotation to the left
         if (any(grepl("The status cannot", myPlot$x$data[[2]]$text))) {
@@ -106,7 +105,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
     
     list(
       data = resultFct, 
-      columnNames = displayName(colnames(resultFct), translations = uiText)
+      columnNames = displayName(colnames(resultFct))
     )
     
   }
@@ -120,8 +119,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @inheritParams plotTrias
 #' @inheritParams mapCubeServer
 #' @param data reactive object, data for \code{\link{plotTrias}}
-#' @param translationId character, identifier for the translation file provided 
-#' in \code{uiText}; by default this is same as \code{triasFunction}
+#' @param translationId character, identifier for the translation file; 
+#' by default this is same as \code{triasFunction}
 #' @param triasArgs reactive object, extra plot arguments to be passed to the 
 #' trias package
 #' @param filters character vector, additional filters for the TRIAS plot to 
@@ -133,7 +132,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @import shiny
 #' @import trias
 #' @export
-plotTriasServer <- function(id, uiText, data, triasFunction, 
+plotTriasServer <- function(id, data, triasFunction, 
   translationId = triasFunction, triasArgs = NULL,
   filters = NULL, maxDate = reactive(NULL), outputType = c("plot", "table"),
   dashReport = NULL, triggerReport = reactive(NULL)) {
@@ -149,7 +148,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
       
       ns <- session$ns
       
-      tmpTranslation <- reactive(translate(uiText(), translationId))
+      tmpTranslation <- reactive(translate(translationId))
       
       output$titlePlotTrias <- renderUI(h3(HTML(tmpTranslation()$title)))
       
@@ -170,12 +169,12 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
               fluidRow(lapply(names(filters), function(iFilter) {
                   if (all(filters[[iFilter]] == "checkbox")) {
                     checkboxInput(inputId = ns(iFilter), 
-                      label = translate(uiText(), iFilter)$title) 
+                      label = translate(iFilter)$title) 
                   } else {
                     choices <- filters[[iFilter]]
-                    names(choices) <- translate(uiText(), choices)$title
+                    names(choices) <- translate(choices)$title
                     column(4, selectInput(inputId = ns(iFilter),
-                      label = translate(uiText(), iFilter)$title,
+                      label = translate(iFilter)$title,
                       choices = choices))
                   }
                 }))
@@ -225,8 +224,7 @@ plotTriasServer <- function(id, uiText, data, triasFunction,
               
             } else NULL
           }),
-        outputType = outputType,
-        uiText = uiText
+        outputType = outputType
       )
       
       

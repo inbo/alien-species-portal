@@ -224,20 +224,21 @@ getRegionNames <- function(x) {
 
 
 #' Translate text given id
-#' @param data data.frame with columns title and id
 #' @param id character, row identifier for the \code{data}
 #' 
 #' @return character 
 #' 
 #' @author mvarewyck
 #' @export
-translate <- function(data = loadMetaData(type = "ui"), id) {
+translate <- function(id) {
   
   # id NA
   if (all(is.na(id)))
-    return(data)
+    return(id)
   
-  translation <- data.frame(id = id, title = c(i18n$t(paste0(id, "_title"))), description = c(suppressWarnings(i18n$t(paste0(id, "_description")))))
+  translation <- suppressWarnings(
+    data.frame(id = id, title = c(i18n$t(paste0(id, "_title"))), description = c(suppressWarnings(i18n$t(paste0(id, "_description")))))
+  )
   
   # Composite translations e.g. habitats
   compositeIds <- grepl("|", id, fixed = TRUE)

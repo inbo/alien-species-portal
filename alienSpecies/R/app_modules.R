@@ -113,7 +113,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @importFrom utils write.table tail
 #' @importFrom DT datatable formatRound renderDT
 #' @export
-plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
+plotModuleServer <- function(id, plotFunction, data,
   outputType = NULL, triasFunction = NULL, triasArgs = NULL, groupChoices = NULL,
   period = NULL, regions = NULL, combine = NULL) {
   
@@ -125,7 +125,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       output$group <- renderUI({
           
           if (!is.null(groupChoices))
-            selectInput(inputId = ns("group"), label = translate(uiText(), "group")$title, 
+            selectInput(inputId = ns("group"), label = translate("group")$title, 
               choices = groupChoices())
           
         })
@@ -133,10 +133,10 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       output$summarizeBy <- renderUI({
           
           choices <- c("sum", "cumsum")
-          names(choices) <- translate(uiText(), choices)$title
+          names(choices) <- translate(choices)$title
           
           selectInput(inputId = ns("summarizeBy"), 
-            label = translate(uiText(), "summarizeBy")$title, choices = choices)
+            label = translate("summarizeBy")$title, choices = choices)
           
         })
       
@@ -147,7 +147,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
           timeRange <- range(data()$first_observed, na.rm = TRUE) 
           
           sliderInput(inputId = ns("period"), 
-              label = translate(uiText(), "period")$title,
+              label = translate("period")$title,
               min = timeRange[1], max = timeRange[2], value = timeRange,
               step = 1, sep = "", width = "100%")
         
@@ -167,7 +167,7 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
       argList <- reactive({
           
           if (nrow(subData()) == 0) {
-            output$plotMessage <- renderUI(tagList(tags$br(), tags$h4(translate(uiText(), "noData")$title)))
+            output$plotMessage <- renderUI(tagList(tags$br(), tags$h4(translate("noData")$title)))
             
             argList <- NULL
           } else {
@@ -179,8 +179,6 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
                 df = subData()),
               if (!is.null(outputType))
                 list(outputType = outputType),
-              if (!is.null(uiText))
-                list(uiText = uiText()),
               # Trias
               if (!is.null(triasFunction))
                 list(triasFunction = triasFunction),
@@ -315,14 +313,14 @@ plotModuleServer <- function(id, plotFunction, data, uiText = NULL,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-titleModuleServer <- function(id, plotFunction, uiText) {
+titleModuleServer <- function(id, plotFunction) {
   
   moduleServer(id,
     function(input, output, session) {
       
       output$title <- renderUI({
           
-          translate(uiText(), plotFunction)$title 
+          translate(plotFunction)$title 
           
         })
     })

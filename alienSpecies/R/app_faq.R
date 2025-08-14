@@ -7,7 +7,7 @@
 #' FAQ page - server module
 #' 
 #' @inheritParams plotModuleServer 
-#' @param translations reactive value, data.frame with all available translations 
+#' @param language reactive value, language
 #' @return no return value
 #' 
 #' @author mvarewyck
@@ -20,7 +20,7 @@ faqServer <- function(id, language) {
       
       output$title <- renderUI({
           
-          translate(data = NULL, id = "faq")$title  
+          translate(id = "faq")$title  
           
         })
       

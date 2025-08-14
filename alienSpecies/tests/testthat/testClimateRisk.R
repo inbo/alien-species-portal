@@ -10,6 +10,10 @@
 taxData <- loadTabularData(type = "occurrence")
 allSpecies <- c("Psittacula krameri")
 
+# Translations
+## TODO set correct path of S3 bucket!!
+i18n <- Translator$new(translation_csvs_path = file.path(system.file("app", package = "alienSpecies"), "translations"))
+
 test_that("Create climate risk map", {
     
     # Specify trias risk map file

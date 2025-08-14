@@ -105,7 +105,7 @@ test_that("Tools", {
     expect_type(myFile, "character")
     
     expect_message({
-        myName <- displayName(text = "test", translations = loadMetaData(language = "nl"))
+        myName <- displayName(text = "test")
         expect_type(myName, "character")
       })
     

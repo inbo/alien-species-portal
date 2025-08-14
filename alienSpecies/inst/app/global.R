@@ -22,6 +22,7 @@ chromote::set_chrome_args(c('--headless','--no-sandbox'))
 addResourcePath("www", system.file("app", "www", package = "alienSpecies"))
 
 # Translations
+## TODO set correct path of S3 bucket!!
 i18n <- Translator$new(translation_csvs_path = file.path(system.file("app", package = "alienSpecies"), "translations"))
 i18n$set_translation_language("id")
 

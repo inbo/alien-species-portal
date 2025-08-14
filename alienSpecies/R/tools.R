@@ -30,23 +30,16 @@ nameFile <- function(species = NULL, period = NULL, content, fileExt) {
 
 #' Convert original variable names to display names
 #' @param text character vector, names to be 'translated'
-#' @param translations data.frame, contains translations for \code{text}
 #' @return named character vector, names are the new display names and values
 #' are the original values from \code{text}
 #' 
 #' @author mvarewyck
 #' @export
-displayName <- function(text, translations = NULL) {
-  
-  
-  if (is.null(translations)) {
-    names(text) <- text
-    return(text)
-  } 
+displayName <- function(text) {
   
   newNames <- sapply(text, function(x) {
       
-      toReturn <- translate(translations, x)$title
+      toReturn <- translate(x)$title
       if (is.na(toReturn))
         x else
         toReturn

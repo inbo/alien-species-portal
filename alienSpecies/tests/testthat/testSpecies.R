@@ -22,7 +22,6 @@ taxData <- loadTabularData(type = "occurrence")
 # many versus few occurrences
 allSpecies <- c("Alopochen aegyptiaca", "Muntiacus reevesi")
 period <- c(2000, 2018)
-uiText <- loadMetaData(type = "ui")
 
 
 test_that("Check summary data", {
@@ -85,15 +84,13 @@ test_that("Occurrence plots", {
     df <- merge(taxData[taxData$taxonKey %in% myKey, ], 
       sf::st_drop_geometry(allShapes$utm1_bel_with_regions)[, c("CELLCODE", "isFlanders", "isBrussels")], 
       by.x = "cell_code1", by.y = "CELLCODE")
-    myResult <- countOccurrence(df = df, period = c(2012, 2021), combine = FALSE, 
-      uiText = loadMetaData(type = "ui"))
+    myResult <- countOccurrence(df = df, period = c(2012, 2021), combine = FALSE)
     
     expect_s3_class(myResult$plot, "plotly")
     expect_s3_class(myResult$data, "data.frame")
     
     # Color bars when full range selected
-    countOccurrence(df = df, period = c(1950, 2021),
-      uiText = loadMetaData(type = "ui"))$plot
+    countOccurrence(df = df, period = c(1950, 2021))$plot
         
   })
     
@@ -179,8 +176,7 @@ test_that("Emergence status GAM - Observations", {
         type_indicator = "observations",
         baseline_var = if (correctBias) "cobs",
         region = "flanders"
-        ),
-        uiText = uiText
+        )
     )
  
     expect_type(tmpResult, "list")
@@ -201,8 +197,7 @@ test_that("Emergence status GAM - Observations", {
         type_indicator = "observations",
         baseline_var = if (correctBias) "cobs",
         region = "flanders"
-      ),
-      uiText = uiText
+      )
     )
     
     expect_true(all(is.na(tmpResult$data$ucl)), label = "GAM cannot be assessed")
@@ -232,8 +227,7 @@ test_that("Emergence status GAM - Occupancy", {
         taxon_key = myKey, name = allSpecies[2],
         baseline_var = if (correctBias) "c_ncells",
         region = "flanders",
-        verbose = TRUE),
-      uiText = uiText
+        verbose = TRUE)
     )
     
     expect_type(tmpResult, "list")

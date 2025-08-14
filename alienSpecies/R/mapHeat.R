@@ -56,7 +56,6 @@ combineActiveData <- function(activeData, untreatedData, managedData = NULL) {
 #' @param pointsData sf data.frame, points observations for individuals
 #' @param nestenData sf data.frame, points observations for nests
 #' @param currentYear integer, current year for selecting nest data
-#' @inheritParams mapHeat
 #' @return sf data.frame, combining both data sources
 #' 
 #' @author mvarewyck
@@ -64,8 +63,7 @@ combineActiveData <- function(activeData, untreatedData, managedData = NULL) {
 #' @importFrom data.table year
 #' @export
 combineNestenData <- function(pointsData, nestenData, 
-  currentYear = data.table::year(Sys.Date()),
-  uiText = NULL) {
+  currentYear = data.table::year(Sys.Date())) {
   
   # For R CMD check
   type <- eventDate <- popup <- institutionCode <- id <- observation_time <- NULL
@@ -88,9 +86,9 @@ combineNestenData <- function(pointsData, nestenData,
   nesten <- nesten %>% 
     mutate(type = "nest",
       popup = paste(
-        translate(uiText, "nest")$title, ":", translate(uiText, nest_type)$title,
-        "</br>", translate(uiText, "management")$title, ":", translate(uiText, result)$title,
-        "</br>Vespawatch", translate(uiText, "row")$title, id), 
+        translate("nest")$title, ":", translate(nest_type)$title,
+        "</br>", translate("management")$title, ":", translate(result)$title,
+        "</br>Vespawatch", translate("row")$title, id), 
       institutionCode = "Vespawatch")
   
   nesten_redux <- nesten %>% 
@@ -129,7 +127,7 @@ combineNestenData <- function(pointsData, nestenData,
 #' @export
 
 mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, selected,
-  legend = "topright", addGlobe = FALSE, uiText = NULL) {
+  legend = "topright", addGlobe = FALSE) {
   
   
   # Base map
@@ -144,9 +142,9 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
       map = ah_map,
       position = legend,
       colors = colors,
-      labels = sapply(names(colors), function(x) translate(uiText, x)$title),
+      labels = sapply(names(colors), function(x) translate(x)$title),
       opacity = 0.8,
-      title = translate(uiText, "legend")$title,
+      title = translate("legend")$title,
       layerId = "legend"
     )
   
@@ -193,7 +191,6 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @inheritParams mapHeat
 #' @inheritParams mapCubeServer
 #' @param filter reactive list with filters to be shown in the app;
-#' names should match a plotFunction in \code{uiText}; 
 #' values define the choices in \code{selectInput}
 #' @param maxDate reactive date, last observation date in the dataset
 #' @return no return value
@@ -205,7 +202,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @importFrom webshot2 webshot
 #' @importFrom sf st_drop_geometry
 #' @export
-mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, colors, 
+mapHeatServer <- function(id, species, gewest, combinedData, filter, colors, 
   blur = NULL, maxDate, dashReport = NULL, triggerReport = reactive(NULL)
 ) {
   
@@ -215,8 +212,8 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       ns <- session$ns
       
       
-      noData <- reactive(translate(uiText(), "noData")$title)
-      tmpTranslation <- reactive(translate(uiText(), ns("mapHeat")))
+      noData <- reactive(translate("noData")$title)
+      tmpTranslation <- reactive(translate(ns("mapHeat")))
       
       tmpFile <- tempfile(fileext = ".html")
       
@@ -257,22 +254,22 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
               if(is.factor(filter()[[filterName]])){
               
                 choices <- filter()[[filterName]]
-                names(choices) <- translate(uiText(), choices)$title
+                names(choices) <- translate(choices)$title
                 
                 column(4, 
                   selectInput(inputId = ns(filterName), 
-                    label = translate(uiText(), filterName)$title,
+                    label = translate(filterName)$title,
                     choices = choices,
                     multiple = TRUE, selected = filter()[[filterName]])
                 )
                 }else if(is.numeric(filter()[[filterName]])){
                   
                   
-                choices <- c(translate(uiText(), "none")$title, filter()[[filterName]])
+                choices <- c(translate("none")$title, filter()[[filterName]])
           
                 column(4, 
                        selectInput(inputId = ns(filterName), 
-                                   label = translate(uiText(), filterName)$title,
+                                   label = translate(filterName)$title,
                                    choices = choices,
                                    multiple = FALSE, selected =  min(as.numeric(filter()[[filterName]])))
                 )
@@ -287,10 +284,10 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       output$legend <- renderUI({
           
           legendChoices <- c("topright", "bottomright", "topleft", "bottomleft", "none")
-          names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x)$title)
+          names(legendChoices) <- sapply(legendChoices, function(x) translate(x)$title)
           
           selectInput(inputId = ns("legend"), 
-            label = translate(uiText(), "legend")$title,
+            label = translate("legend")$title,
             choices = legendChoices)
           
         })
@@ -331,8 +328,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
             colors = colors(),
             selected = unique(combinedDataPostFilter()$filter),
             addGlobe = isolate(input$globe %% 2 == 1),
-            blur = blur,
-            uiText = uiText()
+            blur = blur
           )
           
           myMap
@@ -373,14 +369,14 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
             if (input$globe %% 2 == 1){
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "hideGlobe")$title)
+                label = translate("hideGlobe")$title)
               
               proxy %>% addProviderTiles(providers$CartoDB.Positron)
               
             } else {
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "showGlobe")$title)
+                label = translate("showGlobe")$title)
               
               proxy %>% clearTiles()
               
@@ -404,14 +400,14 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
             
             excludedLayers <- setdiff(input[[names(filter())[1]]], filter()[[1]])
             currentColors <- colors()[!names(colors()) %in% excludedLayers]
-            names(currentColors) <- sapply(names(currentColors), function(x) translate(uiText(), x)$title)
+            names(currentColors) <- sapply(names(currentColors), function(x) translate(x)$title)
             
             proxy %>% addLegend(
               position = input$legend,
               colors = currentColors,
               labels = names(currentColors),
               opacity = 0.8,
-              title = translate(uiText(), "legend")$title,
+              title = translate("legend")$title,
               layerId = "legend"
             )                      
             
@@ -434,8 +430,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
               input[[names(filter())[1]]],
             blur = blur, 
             legend = if (is.null(input$legend)) "topright" else input$legend,
-            addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 1,
-            uiText = uiText()
+            addGlobe = if (is.null(input$globe)) TRUE else input$globe %% 2 == 1
           )
           
           # save the zoom level and centering to the map object
@@ -459,7 +454,7 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       # Download the map
       output$downloadMapButton <- renderUI({
           downloadButton(ns("download"), 
-            label = translate(uiText(), "downloadMap")$title, 
+            label = translate("downloadMap")$title, 
             class = "downloadButton")
         })
       
