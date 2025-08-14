@@ -52,20 +52,77 @@ function(input, output, session) {
   
   # Select language
   observeEvent(input$translate_nl, {
+      
+      showModal(
+        modalDialog(
+          title = translate(data = uiText, "confirm_language_change")$title,
+          footer = tagList(
+            actionButton(inputId = "confirm_nl", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
+            modalButton(label = NULL, icon = icon("xmark"))
+          ),
+          easyClose = FALSE,
+          
+          translate(data = uiText, "confirm_language_change")$description      
+        )
+      )
+    })
+  
+  observeEvent(input$confirm_nl, {
       update_lang("nl")
       results$language <- "nl"
+      
+      removeModal()
     })
+  
+  
   observeEvent(input$translate_fr, {
+      
+      showModal(
+        modalDialog(
+          title = translate(data = uiText, "confirm_language_change")$title,
+          footer = tagList(
+            actionButton(inputId = "confirm_fr", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
+            modalButton(label = NULL, icon = icon("xmark"))
+          ),
+          easyClose = FALSE,
+          
+          translate(data = uiText, "confirm_language_change")$description      
+        )
+      )
+    })
+  
+  observeEvent(input$confirm_fr, {
       update_lang("fr")
       results$language <- "fr"
+      
+      removeModal()
     })
+  
   observeEvent(input$translate_en, {
+      
+      showModal(
+        modalDialog(
+          title = translate(data = uiText, "confirm_language_change")$title,
+          footer = tagList(
+            actionButton(inputId = "confirm_en", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
+            modalButton(label = NULL, icon = icon("xmark"))
+          ),
+          easyClose = FALSE,
+          
+          translate(data = uiText, "confirm_language_change")$description      
+        )
+      )
+    })
+  
+  observeEvent(input$confirm_en, {
       update_lang("en")
       results$language <- "en"
+      
+      removeModal()
     })
   
   results$switchTranslation <- reactive(
-    input$translate_nl + input$translate_fr + input$translate_en
+    input$confirm_nl + input$confirm_fr + input$confirm_en
   )
   
   
