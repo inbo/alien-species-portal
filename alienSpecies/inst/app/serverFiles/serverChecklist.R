@@ -558,6 +558,7 @@ observeEvent(input$exoten_tabs, {
       triasFunction = "indicator_native_range_year",
       triasArgs = reactive({
           list(
+            x_include_missing = TRUE,
             x_major_scale_stepsize = results$exoten_xMajor(),
             x_lab = translate(results$translations, "year")$title,
             y_lab = translate(results$translations, "number")$title
