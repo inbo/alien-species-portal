@@ -662,7 +662,9 @@ observe({
             "species_links" else if (input$species_choice %in% harmoniaData$gbif_taxonkey)
             "species_risk_management") else
       updateTabsetPanel(session = session, inputId = "species_tabs", 
-        selected = "species_observations")
+        selected = if (!is.null(urlSearch()$tab)) 
+            urlSearch()$tab else 
+            "species_observations")
   
   })
 
