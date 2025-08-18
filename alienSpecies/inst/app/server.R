@@ -55,14 +55,14 @@ function(input, output, session) {
       
       showModal(
         modalDialog(
-          title = translate("confirm_language_change")$title,
+          title = translate("confirmLanguageChange")$title,
           footer = tagList(
             actionButton(inputId = "confirm_nl", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
             modalButton(label = NULL, icon = icon("xmark"))
           ),
           easyClose = FALSE,
           
-          translate("confirm_language_change")$description      
+          translate("confirmLanguageChange")$description      
         )
       )
     })
@@ -79,14 +79,14 @@ function(input, output, session) {
       
       showModal(
         modalDialog(
-          title = translate("confirm_language_change")$title,
+          title = translate("confirmLanguageChange")$title,
           footer = tagList(
             actionButton(inputId = "confirm_fr", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
             modalButton(label = NULL, icon = icon("xmark"))
           ),
           easyClose = FALSE,
           
-          translate("confirm_language_change")$description      
+          translate("confirmLanguageChange")$description      
         )
       )
     })
@@ -102,14 +102,14 @@ function(input, output, session) {
       
       showModal(
         modalDialog(
-          title = translate("confirm_language_change")$title,
+          title = translate("confirmLanguageChange")$title,
           footer = tagList(
             actionButton(inputId = "confirm_en", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
             modalButton(label = NULL, icon = icon("xmark"))
           ),
           easyClose = FALSE,
           
-          translate("confirm_language_change")$description      
+          translate("confirmLanguageChange")$description      
         )
       )
     })
