@@ -448,7 +448,14 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
       tmpFile <- tempfile(fileext = ".html")
             
       noData <- reactive(translate(uiText(), "noData")$title)
-      tmpTranslation <- reactive(translate(uiText(), ns("mapOccurrence")))
+      tmpTranslation <- reactive({
+          tmpID <- ns(paste0("mapOccurrence_", gsub(" ", "_", tolower(species()))))
+          if (id == "management" && tmpID %in% unique(uiText()$id)) {
+            translate(uiText(), tmpdID)
+          } else {
+            translate(uiText(), ns("mapOccurrence"))
+          }
+        })
       
       output$descriptionMapOccurrence <- renderUI(
         decodeText(tmpTranslation()$description, params = list(species = species())))
