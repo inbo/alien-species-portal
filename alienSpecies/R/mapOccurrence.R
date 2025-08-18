@@ -452,7 +452,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
       tmpTranslation <- reactive({
           tmpID <- ns(paste0("mapOccurrence_", gsub(" ", "_", tolower(species()))))
           if (id == "management" && (translate(tmpID)$title != tmpID)) {
-            translate(tmpdID)
+            translate(tmpID)
           } else {
             translate(ns("mapOccurrence"))
           }
