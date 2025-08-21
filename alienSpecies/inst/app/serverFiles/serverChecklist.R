@@ -167,7 +167,24 @@ observeEvent(input$exoten_timeButton, {
           duration = NULL
         )
         shinyjs::runjs('setTimeout(function(){$("#time-popup").append($("#shiny-notification-panel"))},0);')
-    
+        shinyjs::runjs('// Remove old handler first (to avoid duplicates)
+            $(document).off("click.closeRef");
+            
+            // Add handler namespaced with .closeRef
+            setTimeout(function() {
+            $(document).on("click.closeRef", function(event) {
+            if (!$(event.target).closest(".shiny-notification").length) {
+            Shiny.setInputValue("close_ref", true, {priority: "event"});
+            }
+            });
+            }, 0);')
+      
+  })
+
+observeEvent(input$close_ref, priority = 5, {
+    removeNotification(id = "ref")
+    # Remove the handler once closed
+    shinyjs::runjs('$(document).off("click.closeRef");')
   })
 
 observeEvent(urlSearch(), {

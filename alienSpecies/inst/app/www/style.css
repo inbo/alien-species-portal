@@ -156,6 +156,10 @@ p, li, label {
 }
 
 
+.shiny-notification-close {
+  display: none !important;
+}
+
 /*** Button colors ***/
 
 
