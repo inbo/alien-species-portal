@@ -223,10 +223,10 @@ dashReport <- plotTriasServer(id = "indicators_gamObservations",
         region = input$species_gewest
       )
     }),
-  filters = list(
+  filters = reactive(list(
     correctBias = list(type = "checkbox"), 
     protectAreas = list(type = "checkbox")
-  ),
+  )),
   dashReport = dashReport,
   triggerReport = species_createReport
 )
@@ -248,10 +248,10 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
         region = input$species_gewest
       )
     }),
-  filters = list(
+  filters = reactive(list(
     correctBias = list(type = "checkbox"), 
     protectAreas = list(type = "checkbox")
-  ),
+  )),
   dashReport = dashReport,
   triggerReport = species_createReport
 )
