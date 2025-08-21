@@ -314,18 +314,24 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
   
   myMap <- baseMap
   
-  for (i in length(cubeShape):1)
-   
-     myMap <- myMap %>%
+  for (i in length(cubeShape):1) {
+    fillOpacity <- if (groupVariable != "cell_code" && i != length(cubeShape)) 
+        0.5 
+      else if (i != length(cubeShape)) 
+        0.35
+      else 
+        0
+    
+    myMap <- myMap %>%
       addPolygons(
         data = cubeShape[[i]],
-        weight = 1,
+        weight = if (i != length(cubeShape) && groupVariable == "cell_code") 2 else 1,
         color = if (i != length(cubeShape)) ~ palette(myColors$levels[i]) else "black",
-        fillOpacity = if (groupVariable != "cell_code" && i != length(cubeShape)) 0.5 else 0,
+        fillOpacity = fillOpacity,
         popup = ~CELLCODE,
         group = myColors$levels[i]
       )
-  
+  }
   
   # Add legend
   if (legend != "none") { 
