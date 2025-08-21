@@ -65,7 +65,9 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
   # Remove after matching
   tableData$nubKey <- NULL
   
-  tableData
+  tableData[order(tableData$species), c("key", "species", "vernacular_name_col", 
+      "gbifLink", "habitat", "first_observed", "last_observed", "degree_of_establishment", 
+      "pathway", "sourceLink", "unionColor", "occurColor")] 
   
 }
 
@@ -149,9 +151,15 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
                 '><i class="fa fa-play table-icon-', tableData$occurColor ,'"></i></button>'), ""),
             '</div>')
           
+          # Add "more" column in the correct position
+          nbCol <- ncol(tableData)
+          insert_pos <- nbCol - 4
+          tableData <- tableData %>% select(colnames(tableData)[append(1:nbCol[-nbCol], nbCol, after = insert_pos)])
+          
           # data-inputid='%s' data-id='%s' onclick='activateTableLink(this);
           
           columnNames <- displayName(colnames(tableData), translations = uiText())
+          names(columnNames) <- tools::toTitleCase(names(columnNames))
           columnsHide <- which(colnames(tableData) %in% c("key", "unionColor", "occurColor")) - 1
           
           
