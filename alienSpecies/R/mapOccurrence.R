@@ -504,7 +504,7 @@ mapCubeServer <- function(id, uiText, species, gewest, df, shapeData,
           
           req(df())
           
-          periodChoice <- range(df()$year, na.rm = TRUE)
+          periodChoice <- c(1950, currentYear)
           
           div(style = "margin-left:50px; margin-right:10px;",
             sliderInput(
