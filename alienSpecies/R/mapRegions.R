@@ -1061,6 +1061,14 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
             baseMap = addBaseMap(regions = gewest()),
             addGlobe = input$globe,
             palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
+          ) %>%
+          leaflet.extras::addFullscreenControl() %>% 
+          leaflet.extras2::addEasyprint(   # use leaflets personal functionality to download maps
+            options = leaflet.extras2::easyprintOptions(
+              exportOnly = TRUE,
+              hideControlContainer = FALSE,  # Keep controls visible
+              hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
+            )
           )
           
         })
@@ -1303,35 +1311,50 @@ mapRegionsServer <- function(id, uiText, species, gewest, df, occurrenceData, sh
           
         }) 
       
+        # Download the map
+        output$downloadMapButton <- renderUI({
+#          downloadButton(ns("download"), 
+#            label = translate(uiText(), "downloadMap")$title, 
+#            class = "downloadButton")
+            
+            actionButton(ns("download"), 
+              label = translate(uiText(), "downloadMap")$title, 
+              icon = icon("download"),
+              class = "btn-default shiny-download-link downloadButton", type = "button")
+          })
+        
+        observeEvent(input$download, {
+            
+            leafletProxy("spacePlot") %>% leaflet.extras2::easyprintMap(
+              sizeModes = "CurrentSize",
+              filename = nameFile(species = species(),
+                period = input$year, 
+                content = "management", fileExt = "png")
+            )
+            
+          })
       
-      # Download the map
-      output$downloadMapButton <- renderUI({
-          downloadButton(ns("download"), 
-            label = translate(uiText(), "downloadMap")$title, 
-            class = "downloadButton")
-        })
-      
-      output$download <- downloadHandler(
-        filename = function()
-          nameFile(species = species(),
-            period = input$year, 
-            content = "management", fileExt = "png"),
-        content = function(file) {
-          
-          if (facet) {
-            
-            file.copy(from = pngFile, to = file, overwrite = TRUE)
-            
-          } else {
-            
-            # convert temp .html file into .png for download
-            webshot2::webshot(url = finalMap(), file = file,
-              vwidth = 1000, vheight = 500, cliprect = "viewport")
-            
-          }
-          
-        }
-      )
+#      output$download <- downloadHandler(
+#        filename = function()
+#          nameFile(species = species(),
+#            period = input$year, 
+#            content = "management", fileExt = "png"),
+#        content = function(file) {
+#          
+#          if (facet) {
+#            
+#            file.copy(from = pngFile, to = file, overwrite = TRUE)
+#            
+#          } else {
+#            
+#            # convert temp .html file into .png for download
+#            webshot2::webshot(url = finalMap(), file = file,
+#              vwidth = 1000, vheight = 500, cliprect = "viewport")
+#            
+#          }
+#          
+#        }
+#      )
       
       output$downloadData <- downloadHandler(
         filename = function()
