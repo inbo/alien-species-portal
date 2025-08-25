@@ -81,8 +81,10 @@ if (doDebug) {
 # Initial exoten filter choices
 # e.g. search for Stylommatophora
 taxaLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
+pwLevel1Choices <- sort(unique(exotenData$pathway_level1))
 habitatChoices <- attr(exotenData, "habitats")
 doeChoices <- sort(unique(exotenData$degree_of_establishment))
+nativeChoices <- sort(unique(exotenData$native_continent))
 regionChoices <- sort(unique(exotenData$locality))
 bronChoices <- sort(levels(exotenData$source))
 
