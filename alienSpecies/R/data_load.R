@@ -131,7 +131,19 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
       
     },
     keys = allData$keys,
-    harmonia = allData$harmonia[, c("gbif_taxonkey", "harmonia_url")]
+    harmonia = {
+      
+      selectedColumns <- c("gbif_taxonkey", "harmonia_url", "url_type")
+      
+      # TODO remove when fixing https://github.com/inbo/aspbo/issues/423
+      ## begin temp fix
+      if (!"url_type" %in% colnames(allData$harmonia))
+        allData$harmonia$url_type <- "harmonia"
+      ## end temp fix
+      
+      allData$harmonia[, selectedColumns]
+      
+    }
   )
   
   if (type == "ui")

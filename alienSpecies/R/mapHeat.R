@@ -335,7 +335,15 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
             uiText = uiText()
           )
           
-          myMap
+          myMap  %>%
+            leaflet.extras::addFullscreenControl() %>% 
+            leaflet.extras2::addEasyprint(   # use leaflets personal functionality to download maps
+              options = leaflet.extras2::easyprintOptions(
+                exportOnly = TRUE,
+                hideControlContainer = FALSE,  # Keep controls visible
+                hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
+              )
+            )
           
         })
       
@@ -458,23 +466,38 @@ mapHeatServer <- function(id, uiText, species, gewest, combinedData, filter, col
       
       # Download the map
       output$downloadMapButton <- renderUI({
-          downloadButton(ns("download"), 
+#          downloadButton(ns("download"), 
+#            label = translate(uiText(), "downloadMap")$title, 
+#            class = "downloadButton")
+          
+          actionButton(ns("download"), 
             label = translate(uiText(), "downloadMap")$title, 
-            class = "downloadButton")
+            icon = icon("download"),
+            class = "btn-default shiny-download-link downloadButton", type = "button")
         })
       
-      output$download <- downloadHandler(
-        filename = function()
-          nameFile(species = species(),
-            content = id, fileExt = "png"),
-        content = function(file) {
+      observeEvent(input$download, {
           
-          # convert temp .html file into .png for download
-          webshot2::webshot(url = finalMap(), file = file,
-            vwidth = 1200, vheight = 600, cliprect = "viewport")
+          leafletProxy("spacePlot") %>% leaflet.extras2::easyprintMap(
+            sizeModes = "CurrentSize",
+            filename = nameFile(species = species(),
+              content = id, fileExt = "png")
+          )
           
-        }
-      )
+        })
+      
+#      output$download <- downloadHandler(
+#        filename = function()
+#          nameFile(species = species(),
+#            content = id, fileExt = "png"),
+#        content = function(file) {
+#          
+#          # convert temp .html file into .png for download
+#          webshot2::webshot(url = finalMap(), file = file,
+#            vwidth = 1200, vheight = 600, cliprect = "viewport")
+#          
+#        }
+#      )
       
 #      output$downloadData <- downloadHandler(
 #        filename = function()

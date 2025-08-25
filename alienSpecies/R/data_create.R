@@ -287,8 +287,19 @@ createTaxaChoices <- function(exotenData) {
   setkey(choices, latin_name)
   
   # Add vernacular name
+  # TODO remove after data update https://github.com/inbo/aspbo/issues/393
+  ## begin temp solution
+  if (!"vernacular_name_nl_list" %in% colnames(exotenData)) {
+    exotenData[, ':=' (
+        vernacular_name_nl_list = vernacular_name_nl,
+        vernacular_name_en_list = vernacular_name_en,
+        vernacular_name_fr_list = vernacular_name_fr
+      )]
+  }
+  ## end temp solution
   choices <- cbind(choices, 
-    exotenData[match(choices$value, key), c("vernacular_name_nl", "vernacular_name_en", "vernacular_name_fr")])
+    exotenData[match(choices$value, key), 
+      c("vernacular_name_nl_list", "vernacular_name_en_list", "vernacular_name_fr_list")])
   
   choices
   
@@ -347,15 +358,17 @@ createTabularData <- function(
       stop("New habitats detected. Add relevant columns in createTabularData()")
     
     ## extract necessary columns
-    rawData <- rawData[, c(
+    selectedCols <- c(
       # GBIF key - necessary to use trias function
       "key", 
       # Taxon key
       "nubKey",
       # full scientific name
       "scientificName",
-      # vernacular name
+      # vernacular name (short)
       "vernacular_name_nl", "vernacular_name_en", "vernacular_name_fr",
+      # vernacular name (long)
+      "vernacular_name_nl_list", "vernacular_name_en_list", "vernacular_name_fr_list",
       # Period - slider should use first_observed
       "first_observed", "last_observed", 
       # Taxonomy
@@ -370,12 +383,21 @@ createTabularData <- function(
       "pathway_level1", "pathway_level2",
       # Habitat
       "habitat", ## easier to use the 3 booleans below instead
-      ..currentHabitats,
+      currentHabitats,
       # Source
       "source",
       # union list filtering
       "species", "canonicalName"
-    )]
+    )
+    
+    # Intermediate solution when updating data
+    missingCols <- !selectedCols %in% colnames(rawData)
+    if (any(missingCols)) {
+      warning("Missing column names in ", dataFiles, "\n",
+        paste(selectedCols[missingCols], collapse = ", "))
+      selectedCols <- selectedCols[!missingCols]
+    }
+    rawData <- rawData[, ..selectedCols]
     
     ## convert english names to names recognized by the translation file
     rawData$locality <- getRegionNames(rawData$locality)
@@ -492,6 +514,10 @@ createTabularData <- function(
       object = "taxachoices_processed.parquet",
       opts = list(multipart = TRUE,
         region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
+    
+    # All vernacular_name_*_list redundant after creating taxaChoices
+    rawData[, c("vernacular_name_nl_list", "vernacular_name_en_list", "vernacular_name_fr_list") := NULL]
+
     
                       
   } else if (type == "unionlist") {

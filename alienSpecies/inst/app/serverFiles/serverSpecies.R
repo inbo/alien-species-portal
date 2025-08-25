@@ -82,11 +82,49 @@ observe({
 
 
 # Update search ID
+observe(results$searchId$taxonkey <- input$species_choice)
+observe(results$searchId$gewest <- paste(input$species_gewest, collapse = ","))
+
+output$species_disclaimer <- renderUI({
+    
+    req(input$species_choice)
+    
+    disclaimerId <- paste0("obs_disclaimer_", input$species_choice)
+    
+    if (disclaimerId %in% results$translations$id) {
+      
+      tags$div(
+        class = "info-box",
+        tags$div(class = "info-icon", "!"),
+        HTML(translate(results$translations, id = disclaimerId)$description)
+      )
+      
+    }
+    
+  })
+
+### Update tabpage wrt URL link
+### -----------------
+
+# Append/Replace tabpage in URL
 observe({
-            
-    results$searchId <- paste0("&taxonkey=", input$species_choice, 
-      "&gewest=", paste(input$species_gewest, collapse = ","))
-            
+    
+    req(input$species_tabs)
+    
+    input$species_tabs
+    
+    isolate(results$searchId$tab <- input$species_tabs)
+    
+  })
+
+
+# Update tabpage wrt URL link
+observe({
+    
+    req(urlSearch()$tab)
+    updateTabsetPanel(session, inputId = "species_tabs",
+      selected = urlSearch()$tab)
+    
   })
 
 
@@ -185,10 +223,10 @@ dashReport <- plotTriasServer(id = "indicators_gamObservations",
         region = input$species_gewest
       )
     }),
-  filters = list(
+  filters = reactive(list(
     correctBias = list(type = "checkbox"), 
     protectAreas = list(type = "checkbox")
-  ),
+  )),
   dashReport = dashReport,
   triggerReport = species_createReport
 )
@@ -210,10 +248,10 @@ dashReport <- plotTriasServer(id = "indicators_gamOccupancy",
         region = input$species_gewest
       )
     }),
-  filters = list(
+  filters = reactive(list(
     correctBias = list(type = "checkbox"), 
     protectAreas = list(type = "checkbox")
-  ),
+  )),
   dashReport = dashReport,
   triggerReport = species_createReport
 )
@@ -624,7 +662,9 @@ observe({
             "species_links" else if (input$species_choice %in% harmoniaData$gbif_taxonkey)
             "species_risk_management") else
       updateTabsetPanel(session = session, inputId = "species_tabs", 
-        selected = "species_observations")
+        selected = if (!is.null(urlSearch()$tab)) 
+            urlSearch()$tab else 
+            "species_observations")
   
   })
 
@@ -662,10 +702,19 @@ observe({
     
     req(input$species_choice)
     
-    htmlSectionServer(id = "risk_assessment", species = reactive(input$species_choice),
+    matchingLinks <- match(input$species_choice, harmoniaData$gbif_taxonkey)
+    
+    htmlSectionServer(
+      id = "risk_assessment", 
+      species = reactive(input$species_choice),
       language = reactive(attr(results$translations, "language")),
-      url = harmoniaData$harmonia_url[match(input$species_choice, harmoniaData$gbif_taxonkey)],
-      linkText = "Harmonia+ Risk Assessment")
+      url = harmoniaData$harmonia_url[matchingLinks],
+      linkText = sapply(matchingLinks, function(iLink)
+          switch(harmoniaData$url_type[iLink],
+            harmonia = "Harmonia+ Risk Assessment",
+            harmoniaData$url_type[iLink])
+      )
+    )
     
   })
 

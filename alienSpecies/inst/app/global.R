@@ -18,12 +18,14 @@ if (!exists("doDebug"))
 
 chromote::set_chrome_args(c('--headless','--no-sandbox'))
 
+addResourcePath("www", system.file("app", "www", package = "alienSpecies"))
+
 
 ### Data
 ### -----------
 
 tabChoices <- c("start", "checklist_indicators", "species_information", 
-  "early_warning", "other_db", "management")[1:5]
+  "other_db", "faq", "management")[1:5]
 
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")

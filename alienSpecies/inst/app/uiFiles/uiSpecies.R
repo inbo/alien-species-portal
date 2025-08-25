@@ -12,13 +12,15 @@ tagList(
       welcomeSectionUI(id = "species"),
       fixedRow(
         column(6,
-          selectInput(inputId = "species_choice", label = NULL, choices = NULL,
+          selectizeInput(inputId = "species_choice", label = NULL, choices = NULL,
             width = "100%")),
         column(6,
           selectInput(inputId = "species_gewest", label = NULL,
             choices = NULL, multiple = TRUE, width = "100%"))
       )
-    )
+    ),
+    # Disclaimer
+    uiOutput("species_disclaimer")
   ),
   
   tags$div(class = "container",

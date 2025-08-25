@@ -107,6 +107,22 @@ yearToTitleString <- function(year, brackets = TRUE) {
 }
 
 
+#' Create query string based on query list
+#' @param baseUrl character, base URL to append query string after
+#' @param query named list, all parameters and values to be included in the query 
+#' @return character, query string to be used in the app
+#' 
+#' @author mvarewyck
+#' @export
+createQueryString <- function(baseUrl, query) {
+  
+  queryString <- paste0(names(query), "=", query, collapse = "&")
+  
+  paste0(baseUrl, "/?", queryString)
+  
+}
+
+
 
 #' Helper function to draw bullet in specific color
 #' 

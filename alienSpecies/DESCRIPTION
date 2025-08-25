@@ -26,6 +26,7 @@ Imports:
     jsonlite,
     leaflet (>= 2.2.0),
     leaflet.extras,
+    leaflet.extras2,
     methods,
     plotly,
     reshape2,

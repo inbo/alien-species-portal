@@ -36,7 +36,7 @@ function(input, output, session) {
   results <- reactiveValues(
     # Default language is dutch
     translations = loadMetaData(language = "en", local = doDebug),
-    searchId = "",
+    searchId = list(),
     renderedTabs = c("start", "checklist_taxa"),
     exoten_timeNA = defaultTimeNA,
     exoten_time = defaultTime,
@@ -65,12 +65,15 @@ function(input, output, session) {
   
   shareLink <- reactive({
       
-      searchId <- if (input$tabs != "start")
+      searchId <- if (input$tabs %in% c("checklist_indicators", "species_information"))
           results$searchId else 
-          ""
-      languageId <- paste0("&language=", attr(results$translations, "language"))
+          list()
+      searchId$language <- attr(results$translations, "language")
+      searchId$page <- input$tabs
       
-      paste0("http://alienspecies.inbo.be/?page=", input$tabs, languageId, searchId)
+      createQueryString(
+        baseUrl = config::get("url", file = system.file("config.yml", package = "alienSpecies")),
+        query = searchId)
       
     })
     
@@ -170,6 +173,9 @@ function(input, output, session) {
   # Render tabpanel upon need
   observeEvent(input$tabs, {
       
+      # Reset filters from other page
+      results$searchId <- list()      
+      
       # render only once
       req(!input$tabs %in% results$renderedTabs)
       
@@ -192,42 +198,21 @@ function(input, output, session) {
           results$renderedTabs <- c(results$renderedTabs, "species_information")
           
         },
-        early_warning = {
-          session$sendCustomMessage(type = "openURL", list(message = "
-                window.open('https://alert.riparias.be', '_blank').focus(); 
-                "))
-        },
         other_db = {
-          output$db_content <- renderUI({
-              
-              tileChoices <- c("mica_db", "radius_db")
-              tileNames <- lapply(tileChoices, function(iChoice){
-                  foto <- list.files(path = system.file("app", "www", package = "alienSpecies"), pattern = iChoice)
-                  title <- translate(data = results$translations, id = iChoice)$title
-                  HTML(paste0(
-                      "<div class='radio-tiles-title'>", title, "</div>",
-                      "<div class='radio-tiles-image'>", 
-                      img(src = foto, width = "100%", `aspect-ratio` = "400/270"), "</div>"
-                    ))
-                })
-              
-              tags$div(style = "margin-top: -20px;",
-                radioButtons(
-                  inputId = "db_navigate", label = "", inline = TRUE,
-                  choiceValues = tileChoices, choiceNames = tileNames,
-                  selected = character(0)
-                ),
-                tags$script("$('.radio-inline').addClass('radio-tiles');")
-              )
-              
-            })
-          source(file.path("serverFiles", "serverDB.R"), local = TRUE)
+          
           results$renderedTabs <- c(results$renderedTabs, "other_db")
+          
+        }, faq = {
+          
+          results$renderedTabs <- c(results$renderedTabs, "faq")
           
         }
         
       )
       
     })
+    
+    dbServer(id = "dbPage", translations = results$translations)
+    faqServer(id = "faqPage", translations = results$translations)
   
 }
