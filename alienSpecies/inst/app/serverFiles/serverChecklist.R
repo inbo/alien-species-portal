@@ -599,10 +599,13 @@ observeEvent(input$exoten_tabs, {
       triasFunction = "indicator_native_range_year",
       triasArgs = reactive({
           list(
+<<<<<<< HEAD
             years = if (is.null(input$exoten_time))
                 min(results$exoten_data()$first_observed, na.rm = TRUE):
                   max(results$exoten_data()$first_observed, na.rm = TRUE) else 
                 input$exoten_time[1]:input$exoten_time[2],
+=======
+>>>>>>> refs/remotes/origin/uat
             x_include_missing = TRUE,
             x_major_scale_stepsize = results$exoten_xMajor(),
             x_lab = translate(results$translations, "year")$title,

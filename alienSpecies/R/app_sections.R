@@ -186,10 +186,17 @@ versionServer <- function(id, uiText) {
       
       observeEvent(input$version, {
           
+<<<<<<< HEAD
 #          # For internal testing
           ## PRD
 #          Sys.setenv("GIT_SHA" = system("git describe --tags `git rev-list --tags --max-count=1`", intern = TRUE))
           ## UAT
+=======
+          ## For internal testing
+          # PRD
+#          Sys.setenv("GIT_SHA" = system("git describe --tags `git rev-list --tags --max-count=1`", intern = TRUE))
+          # UAT
+>>>>>>> refs/remotes/origin/uat
 #          Sys.setenv("GIT_SHA" = system("git rev-parse HEAD", intern = TRUE))
           hashCode <- Sys.getenv("GIT_SHA")
           
