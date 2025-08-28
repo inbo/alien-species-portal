@@ -12,9 +12,8 @@ unionlistData <- loadTabularData(type = "unionlist")
 occurrenceData <- loadTabularData(type = "occurrence")
 
 # Translations
-## TODO set correct path of S3 bucket!!
-i18n <- Translator$new(translation_csvs_path = file.path(system.file("app", package = "alienSpecies"), "translations"))
-
+translation_dir <- download_translations()
+i18n <- Translator$new(translation_csvs_path = translation_dir)
 ##
 ## Combine duplicated keys
 ##

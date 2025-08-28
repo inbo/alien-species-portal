@@ -264,3 +264,25 @@ plotlyReport <- function(myPlot) {
   
 }
 
+
+
+#' Download translation files from S3 into a temporary directory
+#' 
+#' @return character folder path
+#' 
+#' @author sjunius
+download_translations <- function() {
+  temp_dir <- tempdir()
+  translation_files <- c("translation_en.csv", "translation_fr.csv", "translation_nl.csv")
+  
+  for (file in translation_files) {
+    aws.s3::save_object(
+      object = file.path("translations", file),
+      bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
+      file = file.path(temp_dir, file)
+    )
+  }
+  
+  return(temp_dir)
+}
+
