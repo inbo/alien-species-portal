@@ -123,7 +123,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' by default this is same as \code{triasFunction}
 #' @param triasArgs reactive object, extra plot arguments to be passed to the 
 #' trias package
-#' @param filters character vector, additional filters for the TRIAS plot to 
+#' @param filters reactive character vector, additional filters for the TRIAS plot to 
 #' be dipslayed
 #' @param maxDate reactive date, maximum observation date for printing in description
 #' @return no return value
@@ -134,8 +134,8 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 #' @export
 plotTriasServer <- function(id, data, triasFunction, 
   translationId = triasFunction, triasArgs = NULL,
-  filters = NULL, maxDate = reactive(NULL), outputType = c("plot", "table"),
-  dashReport = NULL, triggerReport = reactive(NULL)) {
+  filters = reactive(NULL), maxDate = reactive(NULL), outputType = c("plot", "table"),
+  dashReport = NULL, triggerReport = reactive(NULL), results = NULL) {
   
   # For R CMD check
   protected <- NULL
@@ -164,7 +164,8 @@ plotTriasServer <- function(id, data, triasFunction,
       
       output$filters <- renderUI({
           
-          if (!is.null(filters)) 
+          if (!is.null(filters())) {
+            filters <- filters()
             wellPanel(
               fluidRow(lapply(names(filters), function(iFilter) {
                   if (all(filters[[iFilter]] == "checkbox")) {
@@ -179,6 +180,7 @@ plotTriasServer <- function(id, data, triasFunction,
                   }
                 }))
             )
+          }
           
         })
       
@@ -189,6 +191,10 @@ plotTriasServer <- function(id, data, triasFunction,
           
           if (!is.null(input$protectAreas))
             subData <- subData[protected == input$protectAreas, ]
+          
+          if (!is.null(input$pathway_level1)) {
+              subData <- subData[subData$pathway_level1 %in% input$pathway_level1,]
+          }
           
           subData
           
@@ -219,6 +225,15 @@ plotTriasServer <- function(id, data, triasFunction,
                 initArgs$type <- input$regionLevel
               if (!is.null(input$summarizeBy))
                 initArgs$response_type <- input$summarizeBy
+              if (!is.null(input$pathway_level1)) {
+                initArgs$chosen_pathway_level1 <- input$pathway_level1
+                initArgs$pathways <- {
+                  levelsP2 <- sort(unique(plotData()$pathway_level2))
+                  c(grep(translate(results$translations, "unknown")$title, levelsP2, value = TRUE, invert = TRUE), 
+                    grep(translate(results$translations, "unknown")$title, levelsP2, value = TRUE)
+                  )          
+                }
+              }
 
               initArgs
               
@@ -267,7 +282,7 @@ plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = F
   ns <- NS(id)
   outputType <- match.arg(outputType)
   
-  tagList(
+  tags$div(class = "container",
     
     actionLink(inputId = ns("linkPlotTrias"), 
       label = uiOutput(ns("titlePlotTrias"))),

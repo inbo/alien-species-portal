@@ -313,18 +313,24 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
   
   myMap <- baseMap
   
-  for (i in length(cubeShape):1)
-   
-     myMap <- myMap %>%
+  for (i in length(cubeShape):1) {
+    fillOpacity <- if (groupVariable != "cell_code" && i != length(cubeShape)) 
+        0.5 
+      else if (i != length(cubeShape)) 
+        0.35
+      else 
+        0
+    
+    myMap <- myMap %>%
       addPolygons(
         data = cubeShape[[i]],
-        weight = 1,
+        weight = if (i != length(cubeShape) && groupVariable == "cell_code") 2 else 1,
         color = if (i != length(cubeShape)) ~ palette(myColors$levels[i]) else "black",
-        fillOpacity = if (groupVariable != "cell_code" && i != length(cubeShape)) 0.5 else 0,
+        fillOpacity = fillOpacity,
         popup = ~CELLCODE,
         group = myColors$levels[i]
       )
-  
+  }
   
   # Add legend
   if (legend != "none") { 
@@ -499,7 +505,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           
           req(df())
           
-          periodChoice <- range(df()$year, na.rm = TRUE)
+          periodChoice <- c(1950, currentYear)
           
           div(style = "margin-left:50px; margin-right:10px;",
             sliderInput(
@@ -604,8 +610,25 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
       output$spacePlot <- renderLeaflet({
           
           if (is.null(shapeData))
-            mapOccurrenceLeaflet() else
-            mapCubeLeaflet()
+            mapOccurrenceLeaflet() %>%
+              leaflet.extras::addFullscreenControl() %>% 
+              leaflet.extras2::addEasyprint(  # use leaflets personal functionality to download maps
+                options = leaflet.extras2::easyprintOptions(
+                  exportOnly = TRUE,
+                  hideControlContainer = FALSE,  # Keep controls visible
+                  hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
+                )
+              )
+          else
+            mapCubeLeaflet() %>%
+              leaflet.extras::addFullscreenControl() %>% 
+              leaflet.extras2::addEasyprint(  # use leaflets personal functionality to download maps
+                options = leaflet.extras2::easyprintOptions(
+                  exportOnly = TRUE,
+                  hideControlContainer = FALSE,  # Keep controls visible
+                  hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
+                )
+              )
           
         })
       
@@ -691,7 +714,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
               addGlobe = if (is.null(input$globe)) 
                   TRUE else 
                   input$globe %% 2 == 0
-            )
+            ) 
             
           } else {
             
@@ -727,24 +750,39 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
       
       # Download the map
       output$downloadMapButton <- renderUI({
-          downloadButton(ns("download"), 
+#          downloadButton(ns("download"), 
+#            label = translate(uiText(), "downloadMap")$title, 
+#            class = "downloadButton")
+          actionButton(ns("download"), 
             label = translate("downloadMap")$title, 
-            class = "downloadButton")
+            icon = icon("download"),
+            class = "btn-default shiny-download-link downloadButton", type = "button")
         })
       
-      output$download <- downloadHandler(
-        filename = function()
-          nameFile(species = species(),
-            period = input$period, 
-            content = id, fileExt = "png"),
-        content = function(file) {
+      observeEvent(input$download, {
           
-          # convert temp .html file into .png for download
-          webshot2::webshot(url = finalMap(), file = file,
-            vwidth = 1200, vheight = 600, cliprect = "viewport")
+          leafletProxy("spacePlot") %>% leaflet.extras2::easyprintMap(
+            sizeModes = "CurrentSize",
+            filename = nameFile(species = species(),
+              period = input$period, 
+              content = id, fileExt = "png")
+          )
           
-        }
-      )
+        })
+      
+#      output$download <- downloadHandler(
+#        filename = function()
+#          nameFile(species = species(),
+#            period = input$period, 
+#            content = id, fileExt = "png"),
+#        content = function(file) {
+#          
+#          # convert temp .html file into .png for download
+#          webshot2::webshot(url = finalMap(), file = file,
+#            vwidth = 1200, vheight = 600, cliprect = "viewport")
+#          
+#        }
+#      )
       
       output$downloadData <- downloadHandler(
         filename = function()

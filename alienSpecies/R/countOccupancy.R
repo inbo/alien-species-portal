@@ -14,6 +14,7 @@
 countOccupancy <- function(df, nSquares = 370) {
   
   plotData <- data.table::melt(df[, c("species", "t0", "t1")], id.vars = "species")
+  plotData[, "species"] <- droplevels(plotData[, "species"])
   levels(plotData$variable) <- c(
     translate("baseline")$title, 
     translate("reporting")$title)
@@ -75,7 +76,7 @@ countOccupancyUI <- function(id) {
   ns <- NS(id)
   
   
-  tagList(
+  tags$div(class = "container",
     
     actionLink(inputId = ns("linkOccupancy"), 
       label = uiOutput(ns("titleOccupancy"))),
