@@ -86,7 +86,7 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
   fileNames <- switch(type, 
     ui = paste0("translations", c("", "_simple", "_regions")),
     keys = "keys",
-    harmonia = "PRA_links"
+    harmonia = "harmonia_info"
   )
   
   allData <- sapply(fileNames, function(iFile) { 
@@ -95,7 +95,7 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
           if (local)
             read.csv(system.file("extdata", iFile, package = "alienSpecies"),
               sep = if (type == "ui") ";" else ",", encoding = "UTF-8") else
-            readS3(FUN = read.csv, sep = if (type == "ui") ";" else ",", encoding = "UTF-8", 
+            readS3(FUN = read.csv, sep = if (type == "keys") "," else ";", encoding = "UTF-8", 
               file = iFile)
         }, error = function(err) NULL)
     }, simplify = FALSE)
