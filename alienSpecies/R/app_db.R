@@ -7,12 +7,11 @@
 #' Extra DB page - server module
 #' 
 #' @inheritParams plotModuleServer 
-#' @param translations reactive value, data.frame with all available translations 
 #' @return no return value
 #' 
 #' @author mvarewyck
 #' @export
-dbServer <- function(id, translations) {
+dbServer <- function(id) {
   
   moduleServer(id, function(input, output, session) {
       
@@ -22,7 +21,7 @@ dbServer <- function(id, translations) {
       
       output$title <- renderUI({
           
-          translate(data = translations, id = "other_db")$title  
+          translate(id = "other_db")$title  
           
         })
       
@@ -31,7 +30,7 @@ dbServer <- function(id, translations) {
           tileChoices <- c("early_warning", "mica_db", "radius_db")
           tileNames <- lapply(tileChoices, function(iChoice){
               foto <- list.files(path = system.file("app", "www", package = "alienSpecies"), pattern = iChoice)
-              title <- translate(data = translations, id = iChoice)$title
+              title <- translate(id = iChoice)$title
               HTML(paste0(
                   "<div class='radio-tiles-title'>", title, "</div>",
                   "<div class='radio-tiles-image'>", 

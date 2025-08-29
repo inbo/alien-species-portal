@@ -59,7 +59,7 @@ createSummaryNesten <- function(data,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
+countNestenServer <- function(id, maxDate = reactive(NULL), data,
   dashReport = NULL, triggerReport = reactive(NULL)) {
   
   moduleServer(id,
@@ -69,7 +69,7 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
       
       results <- reactiveValues()
       
-      tmpTranslation <- reactive(translate(uiText(), "countNesten"))
+      tmpTranslation <- reactive(translate("countNesten"))
       
       output$titleCountNesten <- renderUI(h3(HTML(tmpTranslation()$title)))
       
@@ -92,7 +92,7 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
             results$period_value <- range(data()$year, na.rm = TRUE)
           
           sliderInput(inputId = ns("period"), 
-            label = translate(uiText(), "period")$title,
+            label = translate("period")$title,
             value = results$period_value,
             min = min(data()$year, na.rm = TRUE),
             max = max(data()$year, na.rm = TRUE),
@@ -116,9 +116,9 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
       output$regionLevel <- renderUI({
           
           choices <- c("communes", "provinces", "gewest")
-          names(choices) <- translate(uiText(), choices)$title
+          names(choices) <- translate(choices)$title
           
-          selectInput(inputId = ns("regionLevel"), label = translate(uiText(), "regionLevel")$title,
+          selectInput(inputId = ns("regionLevel"), label = translate("regionLevel")$title,
             choices = choices)
           
         })
@@ -134,10 +134,10 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
           )
           choices <- sort(unique(data()[[regionVariable]]))
           # expected to be missing for some region levels
-          names(choices) <- suppressWarnings(translate(uiText(), choices)$title)
+          names(choices) <- suppressWarnings(translate(choices)$title)
           
           selectInput(inputId = ns("region"), 
-            label = translate(uiText(), "regions")$title,
+            label = translate("regions")$title,
             choices = choices, multiple = TRUE)
           
         })
@@ -151,10 +151,10 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
           nestChoices <- nestChoices[!nestChoices %in% c('NA', 'NULL')]
           req(length(nestChoices) > 0)
           names(nestChoices) <- sapply(nestChoices, function(x) 
-              translate(uiText(), x)$title)
+              translate(x)$title)
           
           selectInput(inputId = ns("typeNesten"), 
-            label = translate(uiText(), "nest")$title,
+            label = translate("nest")$title,
             choices = nestChoices, multiple = TRUE)
           
         })
@@ -169,7 +169,6 @@ countNestenServer <- function(id, uiText, maxDate = reactive(NULL), data,
       plotResult <- plotModuleServer(id = "countNesten",
         plotFunction = "trendYearRegion",
         data = reactive(plotData()[plotData()$region %in% req(input$region), ]),
-        uiText = uiText,
         combine = reactive(input$combine)
       )
       
@@ -249,7 +248,7 @@ countNestenUI <- function(id) {
 #' @importFrom dplyr group_by summarise n mutate ungroup rename all_of
 #' @importFrom tidyr pivot_wider
 #' @export
-tableNesten <- function(df, uiText = NULL) {
+tableNesten <- function(df) {
   
   # For R CMD check
   NAAM <- provincie <- NULL
@@ -259,7 +258,7 @@ tableNesten <- function(df, uiText = NULL) {
     st_drop_geometry() %>% 
     group_by(year) %>% 
     summarise(n = n()) %>% 
-    mutate(provincie = translate(uiText, id = "total")$title)
+    mutate(provincie = translate(id = "total")$title)
   
   prov_per_year <- df %>% 
     st_drop_geometry()  %>% 
@@ -268,7 +267,7 @@ tableNesten <- function(df, uiText = NULL) {
     ungroup()
   
   newName <- "provincie"
-  names(newName) <- translate(uiText, id = "provinces")$title
+  names(newName) <- translate(id = "provinces")$title
   
   dt_prov_nesten <- rbind(prov_per_year, total_per_year) %>% 
     tidyr::pivot_wider(id_cols = provincie,
@@ -288,13 +287,12 @@ tableNesten <- function(df, uiText = NULL) {
 #' Used on Management page for Vespa Velutina
 #' 
 #' @param df data.frame input data for plotting
-#' @inheritParams mapHeatServer
 #' @return plotly object
 #' 
 #' @author mvarewyck
 #' @import ggplot2
 #' @export
-barplotLenteNesten <- function(df, uiText = NULL) {
+barplotLenteNesten <- function(df) {
   
   # For R CMD check
   observation_jaar <- aantal_gemelde_nesten <- prov <- NULL
@@ -303,11 +301,11 @@ barplotLenteNesten <- function(df, uiText = NULL) {
         y = aantal_gemelde_nesten,
         fill = prov)) +
     labs(
-      x = translate(uiText, id = "year")$title,
-      y = translate(uiText, id = "lenteNesten")$title
+      x = translate(id = "year")$title,
+      y = translate(id = "lenteNesten")$title
     ) +
     scale_fill_discrete(
-      name = translate(uiText, id = "provinces")$title
+      name = translate(id = "provinces")$title
     ) +
     geom_bar(position = "stack", stat = "identity")
   

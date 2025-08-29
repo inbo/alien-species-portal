@@ -86,8 +86,7 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
 #' @importFrom webshot2 webshot
 #' @importFrom DT renderDT datatable
 #' @export
-tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
-  uiText) {
+tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -103,23 +102,23 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
       output$tableOverviewLink <- renderUI({
           
           actionLink(inputId = ns("tableShowOverview"), 
-            label = translate(uiText(), "tableTitle")$title, 
+            label = translate("tableTitle")$title, 
             icon = icon("angle-double-down", class = "green-icon"))
           
         })
       
       output$tableOverviewText <- renderUI({
         tagList(
-          tags$em(HTML(translate(uiText(), "tableIndicators")$description)),
+          tags$em(HTML(translate("tableIndicators")$description)),
           div(style = "margin-left: 20px;",
-              p(style = "margin: 2px 0;",icon("star"), tags$em(HTML(translate(uiText(), "is_union")$title))),
-              p(style = "margin: 2px 0;",icon("play"), tags$em(HTML(translate(uiText(), "min_1_obs")$title)))
+              p(style = "margin: 2px 0;",icon("star"), tags$em(HTML(translate("is_union")$title))),
+              p(style = "margin: 2px 0;",icon("play"), tags$em(HTML(translate("min_1_obs")$title)))
               ),
-              tags$em(HTML(translate(uiText(), "colors_text")$title)),
+              tags$em(HTML(translate("colors_text")$title)),
           div(style = "margin-left: 20px;",
-              p(style = "margin: 2px 0;",drawBullet(color = "black"), tags$em(HTML(translate(uiText(), "only_obs")$title))),
-              #            p(drawBullet(color = "orange"), translate(uiText(), "incomplete_out")$title),
-              p(style = "margin: 2px 0;",drawBullet(color = "#E4E517"), tags$em(HTML(translate(uiText(), "all_out")$title)))
+              p(style = "margin: 2px 0;",drawBullet(color = "black"), tags$em(HTML(translate("only_obs")$title))),
+              #            p(drawBullet(color = "orange"), translate("incomplete_out")$title),
+              p(style = "margin: 2px 0;",drawBullet(color = "#E4E517"), tags$em(HTML(translate("all_out")$title)))
           )
         )
       })
@@ -158,7 +157,7 @@ tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData,
           
           # data-inputid='%s' data-id='%s' onclick='activateTableLink(this);
           
-          columnNames <- displayName(colnames(tableData), translations = uiText())
+          columnNames <- displayName(colnames(tableData))
           names(columnNames) <- tools::toTitleCase(names(columnNames))
           columnsHide <- which(colnames(tableData) %in% c("key", "unionColor", "occurColor")) - 1
           

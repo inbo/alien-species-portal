@@ -44,7 +44,7 @@ summarizeYearGroupData <- function(df, gewest) {
 #' @importFrom data.table setnames copy
 #' @importFrom INBOtheme inbo_palette
 #' @export
-countYearGroup <- function(df, groupVar = "", uiText = NULL,
+countYearGroup <- function(df, groupVar = "",
   summarizeBy = c("sum", "cumsum")) {
   
   # For R CMD check
@@ -99,9 +99,9 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
         y = ~count, color = ~group, hoverinfo = "text+name",
         colors = colors, type = "bar") %>%
       layout(
-        xaxis = list(title = translate(uiText, "year")$title), 
-        yaxis = list(title = translate(uiText, summarizeBy)$title),
-        legend = list(title = if (!is.null(groupVar)) list(text = translate(uiText, groupVar)$title)),
+        xaxis = list(title = translate("year")$title), 
+        yaxis = list(title = translate(summarizeBy)$title),
+        legend = list(title = if (!is.null(groupVar)) list(text = translate(groupVar)$title)),
         barmode = if (is.null(groupVar) || length(groupLevels) == 1) "group" else "stack",
         annotations = list(x = totalCount$year, 
           y = totalCount$count, 
@@ -129,7 +129,7 @@ countYearGroup <- function(df, groupVar = "", uiText = NULL,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-countYearGroupServer <- function(id, species, uiText, data, groupChoices, dashReport = NULL,
+countYearGroupServer <- function(id, species, data, groupChoices, dashReport = NULL,
   triggerReport = reactive(NULL)) {
   
   moduleServer(id,
@@ -137,7 +137,7 @@ countYearGroupServer <- function(id, species, uiText, data, groupChoices, dashRe
       
       ns <- session$ns
       
-      tmpTranslation <- reactive(translate(uiText(), ns("countYearGroup")))
+      tmpTranslation <- reactive(translate(ns("countYearGroup")))
       
       output$titleCountYearGroup <- renderUI(
         h3(decodeText(tmpTranslation()$title, params = list(species = species())))
@@ -151,11 +151,10 @@ countYearGroupServer <- function(id, species, uiText, data, groupChoices, dashRe
         plotFunction = "countYearGroup", 
         data = reactive({
             req(data())
-            validate(need(nrow(data()) > 0, translate(uiText(), "noData")$title))
+            validate(need(nrow(data()) > 0, translate("noData")$title))
             data()
           }),
-        groupChoices = groupChoices,
-        uiText = uiText
+        groupChoices = groupChoices
       )
       
       

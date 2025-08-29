@@ -1,5 +1,6 @@
 library(alienSpecies)
 library(shiny)
+library(shiny.i18n)
 
 library(data.table)
 
@@ -20,6 +21,11 @@ chromote::set_chrome_args(c('--headless','--no-sandbox'))
 
 addResourcePath("www", system.file("app", "www", package = "alienSpecies"))
 
+### Translations
+### -----------
+translation_dir <- download_translations()
+i18n <- Translator$new(translation_csvs_path = translation_dir)
+i18n$set_translation_language("id")
 
 ### Data
 ### -----------

@@ -30,23 +30,16 @@ nameFile <- function(species = NULL, period = NULL, content, fileExt) {
 
 #' Convert original variable names to display names
 #' @param text character vector, names to be 'translated'
-#' @param translations data.frame, contains translations for \code{text}
 #' @return named character vector, names are the new display names and values
 #' are the original values from \code{text}
 #' 
 #' @author mvarewyck
 #' @export
-displayName <- function(text, translations = NULL) {
-  
-  
-  if (is.null(translations)) {
-    names(text) <- text
-    return(text)
-  } 
+displayName <- function(text) {
   
   newNames <- sapply(text, function(x) {
       
-      toReturn <- translate(translations, x)$title
+      toReturn <- translate(x)$title
       if (is.na(toReturn))
         x else
         toReturn
@@ -269,5 +262,27 @@ plotlyReport <- function(myPlot) {
   
   myPlot %>% layout(autosize = FALSE, width = 1000, height = 400)
   
+}
+
+
+
+#' Download translation files from S3 into a temporary directory
+#' 
+#' @return character folder path
+#' 
+#' @author sjunius
+download_translations <- function() {
+  temp_dir <- tempdir()
+  translation_files <- c("translation_en.csv", "translation_fr.csv", "translation_nl.csv")
+  
+  for (file in translation_files) {
+    aws.s3::save_object(
+      object = file.path("translations", file),
+      bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
+      file = file.path(temp_dir, file)
+    )
+  }
+  
+  return(temp_dir)
 }
 

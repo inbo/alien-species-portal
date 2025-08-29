@@ -1,6 +1,8 @@
 shinyUI(
   
   bootstrapPage(
+    # Use i18n in UI for translations
+    usei18n(i18n),
     
     ## For debugging
     uiOutput("debug"),
@@ -51,11 +53,20 @@ shinyUI(
           ),
           
           # Shape data source + contact e-mail
-          header = tags$header(tags$div(align = "right", style = "margin-top: 60px; padding-right: 15px;",
+          header = tags$header(
+            tags$div(align = "right", style = "margin-top: 60px; padding-right: 15px;",
               tags$p(
                 tags$div(uiOutput("shareLink"), style = "display: inline-block;"))
-            )
-          ),
+            ),
+            tags$div(align = "right", style = "padding-right: 15px;",
+              tags$p(
+                actionLink(inputId = "translate_en", label = "EN"),
+                "-",
+                actionLink(inputId = "translate_fr", label = "FR"),
+                "-", 
+                actionLink(inputId = "translate_nl", label = "NL")
+              )
+          )),
           
           windowTitle = "Alien Species Portal",
           fluid = FALSE, 

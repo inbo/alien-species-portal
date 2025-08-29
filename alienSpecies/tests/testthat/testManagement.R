@@ -12,9 +12,10 @@ allShapes <- c(
   "provinces" = list(loadShapeData("provinces.RData")),
   "communes" = list(loadShapeData("communes.RData"))
 )
-uiText <- loadMetaData()
 
-
+# Translations
+translation_dir <- download_translations()
+i18n <- Translator$new(translation_csvs_path = translation_dir)
 
 ## Rosse stekelstaart ##
 ## Oxyura jamaicensis
@@ -53,13 +54,12 @@ test_that("Map for Ruddy Duck", {
 
 test_that("Barplot for Ruddy Duck", {
     
-    myPlot <- countOccurrence(df = managementData, uiText = uiText)
+    myPlot <- countOccurrence(df = managementData)
     expect_s3_class(myPlot$plot, "plotly")
     
     # Filter on sampling
     filterValue <- unique(managementData$samplingProtocol)[1]
-    countOccurrence(df = managementData[managementData$samplingProtocol == filterValue, ],
-      uiText = uiText)
+    countOccurrence(df = managementData[managementData$samplingProtocol == filterValue, ])
     
   })
 
@@ -108,7 +108,7 @@ test_that("Map & trend for Bullfrogs", {
     palette <- if (attr(summaryData, "unit") == "difference") "RdYlGn" else "YlOrBr"
     paletteFunction <- colorFactor(palette = palette, levels = levels(summaryData$group), 
       na.color = "transparent", reverse = (palette != "YlOrBr"))
-    barplot(classTable, las = 1, ylab = translate(uiText, "number")$title,
+    barplot(classTable, las = 1, ylab = translate("number")$title,
       col = paletteFunction(levels(summaryData$group)))
     
     # Map - provinces
@@ -289,7 +289,7 @@ test_that("Map Trend", {
     trendYearRegion(df = summaryData)$plot
     
     # create popup with summary table in it
-    tmpText <- mapPopup(summaryData = summaryData, uiText = uiText, year = 2023, 
+    tmpText <- mapPopup(summaryData = summaryData, year = 2023, 
       unit = NULL, showBron = TRUE)
     expect_is(tmpText, "character")
     
@@ -333,7 +333,7 @@ test_that("Map invasion", {
     )
     
    myPlot <- mapRegionsFacet(managementData = summaryData,
-     shapeData = allShapes, regionLevel = regionLevel, uiText = uiText,
+     shapeData = allShapes, regionLevel = regionLevel,
      legend = legend, addGlobe = addGlobe)
    # TODO globe layer slows down the graph
     # Alternative: https://yutani.rbind.io/post/2018-06-09-plot-osm-tiles/

@@ -4,6 +4,11 @@ function(input, output, session) {
   # -------------
   
   observe({
+      update_lang(attr(results$translations, "language"))
+      results$language <- attr(results$translations, "language")
+    })
+  
+  observe({
       
       if (doDebug)
         shinyjs::showLog()
@@ -35,6 +40,7 @@ function(input, output, session) {
   
   results <- reactiveValues(
     # Default language is dutch
+    language = "en",
     translations = loadMetaData(language = "en", local = doDebug),
     searchId = list(),
     renderedTabs = c("start", "checklist_taxa"),
@@ -45,19 +51,85 @@ function(input, output, session) {
   
   
   # Select language
-  observeEvent(input$translate_nl, results$translations <- loadMetaData(language = "nl", local = doDebug))
-  observeEvent(input$translate_fr, results$translations <- loadMetaData(language = "fr", local = doDebug))
-  observeEvent(input$translate_en, results$translations <- loadMetaData(language = "en", local = doDebug))
+  observeEvent(input$translate_nl, {
+      
+      showModal(
+        modalDialog(
+          title = translate("confirmLanguageChange")$title,
+          footer = tagList(
+            actionButton(inputId = "confirm_nl", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
+            modalButton(label = NULL, icon = icon("xmark"))
+          ),
+          easyClose = FALSE,
+          
+          translate("confirmLanguageChange")$description      
+        )
+      )
+    })
+  
+  observeEvent(input$confirm_nl, {
+      update_lang("nl")
+      results$language <- "nl"
+      
+      removeModal()
+    })
+  
+  
+  observeEvent(input$translate_fr, {
+      
+      showModal(
+        modalDialog(
+          title = translate("confirmLanguageChange")$title,
+          footer = tagList(
+            actionButton(inputId = "confirm_fr", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
+            modalButton(label = NULL, icon = icon("xmark"))
+          ),
+          easyClose = FALSE,
+          
+          translate("confirmLanguageChange")$description      
+        )
+      )
+    })
+  
+  observeEvent(input$confirm_fr, {
+      update_lang("fr")
+      results$language <- "fr"
+      
+      removeModal()
+    })
+  
+  observeEvent(input$translate_en, {
+      
+      showModal(
+        modalDialog(
+          title = translate("confirmLanguageChange")$title,
+          footer = tagList(
+            actionButton(inputId = "confirm_en", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
+            modalButton(label = NULL, icon = icon("xmark"))
+          ),
+          easyClose = FALSE,
+          
+          translate("confirmLanguageChange")$description      
+        )
+      )
+    })
+  
+  observeEvent(input$confirm_en, {
+      update_lang("en")
+      results$language <- "en"
+      
+      removeModal()
+    })
   
   results$switchTranslation <- reactive(
-    input$translate_nl + input$translate_fr + input$translate_en
+    input$confirm_nl + input$confirm_fr + input$confirm_en
   )
   
   
   # Version
   # -------
   
-  versionServer(id = "main", uiText = reactive(results$translations))
+  versionServer(id = "main")
   
   
   # URL Query
@@ -68,7 +140,7 @@ function(input, output, session) {
       searchId <- if (input$tabs %in% c("checklist_indicators", "species_information"))
           results$searchId else 
           list()
-      searchId$language <- attr(results$translations, "language")
+      searchId$language <- results$language
       searchId$page <- input$tabs
       
       createQueryString(
@@ -159,7 +231,7 @@ function(input, output, session) {
   # ----------
   
   output$shareLink <- renderUI(
-    actionLink(inputId = "showShare", label = translate(results$translations, "shareLink"))
+    actionLink(inputId = "showShare", label = translate("shareLink")$title)
   )
   
   # Landing page
@@ -212,7 +284,7 @@ function(input, output, session) {
       
     })
     
-    dbServer(id = "dbPage", translations = results$translations)
-    faqServer(id = "faqPage", translations = results$translations)
+    dbServer(id = "dbPage")
+    faqServer(id = "faqPage", language = reactive(results$language))
   
 }

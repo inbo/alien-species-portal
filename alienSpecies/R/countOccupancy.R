@@ -4,7 +4,6 @@
 #' Create occupancy bar chart
 #' @param df data.frame as created by \code{\link{loadOccupancyData}}
 #' @param nSquares integer, total number of squares for calculating percentages
-#' @inheritParams welcomeSectionServer
 #' @return list with plotly object and data.frame
 #' 
 #' @author mvarewyck
@@ -12,20 +11,20 @@
 #' @importFrom INBOtheme inbo_palette
 #' @importFrom data.table melt
 #' @export
-countOccupancy <- function(df, nSquares = 370, uiText = NULL) {
+countOccupancy <- function(df, nSquares = 370) {
   
   plotData <- data.table::melt(df[, c("species", "t0", "t1")], id.vars = "species")
   plotData[, "species"] <- droplevels(plotData[, "species"])
   levels(plotData$variable) <- c(
-    translate(uiText, "baseline")$title, 
-    translate(uiText, "reporting")$title)
+    translate("baseline")$title, 
+    translate("reporting")$title)
   
   colors <- inbo_palette(3)[-1]
   names(colors) <- unique(plotData$variable)
   
   p <- plot_ly(data = plotData, x = ~value/nSquares*100, y = ~species,
       color = ~variable, colors = colors, type = "bar", orientation = "h") %>%
-    layout(xaxis = list(title = translate(uiText, 'percentCages')$title),
+    layout(xaxis = list(title = translate('percentCages')$title),
       yaxis = list(title = ""), barmode = 'group')
   
   
@@ -42,14 +41,14 @@ countOccupancy <- function(df, nSquares = 370, uiText = NULL) {
 #' @author mvarewyck
 #' @import shiny
 #' @export
-countOccupancyServer <- function(id, uiText, data) {
+countOccupancyServer <- function(id, data) {
   
   moduleServer(id,
     function(input, output, session) {
       
       ns <- session$ns
       
-      tmpTranslation <- reactive(translate(uiText(), "countOccupancy"))
+      tmpTranslation <- reactive(translate("countOccupancy"))
       
       output$descriptionOccupancy <- renderUI(HTML(tmpTranslation()$description))
       
@@ -58,8 +57,7 @@ countOccupancyServer <- function(id, uiText, data) {
       
       plotModuleServer(id = "occupancy",
         plotFunction = "countOccupancy", 
-        data = data,
-        uiText = uiText
+        data = data
       )
       
     })
