@@ -4,7 +4,7 @@ resetNavigation <- reactiveVal(FALSE)
 
 output$start_title <- renderUI({
     
-    translate(results$translations, id = tabChoices[1])$title    
+    translate(id = tabChoices[1])$title    
     
   })
 
@@ -14,7 +14,7 @@ output$start_tiles <- renderUI({
     tileChoices <- tabChoices[-1]
     tileNames <- lapply(tileChoices, function(iChoice){
         foto <- list.files(path = system.file("app", "www", package = "alienSpecies"), pattern = iChoice)
-        title <- translate(data = results$translations, id = iChoice)$title
+        title <- translate(id = iChoice)$title
         HTML(paste0(
             "<div class='radio-tiles-title'>", title, "</div>",
             "<div class='radio-tiles-image'>", 
@@ -54,12 +54,12 @@ observeEvent(input$tabs, {
 # Titles for pages in navbar
 output$checklist_title <- renderUI({
     
-    translate(results$translations, id = tabChoices[2])$title  
+    translate(id = tabChoices[2])$title  
     
   })
 
 output$species_title <- renderUI({
     
-    translate(data = results$translations, id = tabChoices[3])$title  
+    translate(id = tabChoices[3])$title  
     
   })

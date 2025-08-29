@@ -21,7 +21,7 @@
 #' @export
 
 mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral", 
-  legend = "topright", legendScale = "risk", addGlobe = FALSE, uiText = NULL) {
+  legend = "topright", legendScale = "risk", addGlobe = FALSE) {
   
   
   # Base map
@@ -47,10 +47,10 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
       opacity = 0.8,
       colors = rasterPal(seq(0, 1, by = 0.2)),
       labels = c(
-        paste("0 -", translate(uiText, paste0(legendScale, "Low"))$title), 
+        paste("0 -", translate(paste0(legendScale, "Low"))$title), 
         rep("", 4), 
-        paste("1 -", translate(uiText, paste0(legendScale, "High"))$title)),
-      title = translate(uiText, "legend")$title,
+        paste("1 -", translate(paste0(legendScale, "High"))$title)),
+      title = translate("legend")$title,
       layerId = "legend"
     )
   
@@ -84,7 +84,7 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
 #' @importFrom httr http_status GET
 #' @importFrom utils download.file
 #' @export
-mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
+mapRasterServer <- function(id, species, gewest, taxonKey) {
   
   colors <- "Spectral"
     
@@ -94,8 +94,8 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
       ns <- session$ns
       
       
-      noData <- reactive(translate(uiText(), "noData")$title)
-      tmpTranslation <- reactive(translate(uiText(), ns("mapRaster")))
+      noData <- reactive(translate("noData")$title)
+      tmpTranslation <- reactive(translate(ns("mapRaster")))
       
       output$titleMapRaster <- renderUI(h3(HTML(tmpTranslation()$title)))
       output$descriptionMapRaster <- renderUI(HTML(tmpTranslation()$description))
@@ -105,10 +105,10 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
           
           # Filter choices
           modelScenarios <- c("hist", "rcp26", "rcp45", "rcp85")
-          names(modelScenarios) <- translate(uiText(), modelScenarios)$title
+          names(modelScenarios) <- translate(modelScenarios)$title
           
           modelTypes <- c("riskMap", "confMap", "diffMap")
-          names(modelTypes) <- translate(uiText(), modelTypes)$title
+          names(modelTypes) <- translate(modelTypes)$title
           
           
           filters <- list(
@@ -120,7 +120,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
               
               column(4, 
                 selectInput(inputId = ns(iName), 
-                  label = translate(uiText(), iName)$title,
+                  label = translate(iName)$title,
                   choices = filters[[iName]],
                   multiple = FALSE))
               
@@ -173,10 +173,10 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
       output$legend <- renderUI({
           
           legendChoices <- c("topright", "bottomright", "topleft", "bottomleft", "none")
-          names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x)$title)
+          names(legendChoices) <- sapply(legendChoices, function(x) translate(x)$title)
           
           selectInput(inputId = ns("legend"), 
-            label = translate(uiText(), "legend")$title,
+            label = translate("legend")$title,
             choices = legendChoices)
           
         })
@@ -190,8 +190,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
             baseMap = addBaseMap(regions = gewest()),
             colors = colors,
             legendScale = isolate(gsub("Map", "", input$modelType)),
-            addGlobe = isolate(input$globe %% 2 == 1),
-            uiText = uiText()
+            addGlobe = isolate(input$globe %% 2 == 1)
           ) %>%
           leaflet.extras::addFullscreenControl() %>% 
           leaflet.extras2::addEasyprint(    # use leaflets personal functionality to download maps
@@ -215,7 +214,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
             if (input$globe %% 2 == 1){
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "hideGlobe")$title)
+                label = translate("hideGlobe")$title)
               
               proxy %>% addProviderTiles(providers$CartoDB.Positron,
                 options = providerTileOptions(zIndex = -10))
@@ -223,7 +222,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
             } else {
               
               updateActionLink(session, inputId = "globe", 
-                label = translate(uiText(), "showGlobe")$title)
+                label = translate("showGlobe")$title)
               
               proxy %>% clearTiles()
               
@@ -257,10 +256,10 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
               opacity = 0.8,
               colors = rasterPal(seq(0, 1, by = 0.2)),
               labels = c(
-                paste("0 -", translate(uiText(), paste0(legendScale, "Low"))$title), 
+                paste("0 -", translate(paste0(legendScale, "Low"))$title), 
                 rep("", 4), 
-                paste("1 -", translate(uiText(), paste0(legendScale, "High"))$title)),
-              title = translate(uiText(), "legend")$title,
+                paste("1 -", translate(paste0(legendScale, "High"))$title)),
+              title = translate("legend")$title,
               layerId = "legend"
             )                      
             
@@ -278,8 +277,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
             colors = colors,
             legend = input$legend,
             legendScale = gsub("Map", "", input$modelType),
-            addGlobe = input$globe %% 2 == 1,
-            uiText = uiText()
+            addGlobe = input$globe %% 2 == 1
           )
           
           # save the zoom level and centering to the map object
@@ -308,7 +306,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
 #            class = "downloadButton")
           
           actionButton(ns("download"), 
-            label = translate(uiText(), "downloadMap")$title, 
+            label = translate("downloadMap")$title, 
             icon = icon("download"),
             class = "btn-default shiny-download-link downloadButton", type = "button")
         })
@@ -350,7 +348,7 @@ mapRasterServer <- function(id, uiText, species, gewest, taxonKey) {
 #' @import shiny
 #' @importFrom leaflet leafletOutput
 #' @export
-mapRasterUI <- function(id, uiText) {
+mapRasterUI <- function(id) {
   
   ns <- NS(id)
   

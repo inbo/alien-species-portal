@@ -224,47 +224,39 @@ getRegionNames <- function(x) {
 
 
 #' Translate text given id
-#' @param data data.frame with columns title and id
 #' @param id character, row identifier for the \code{data}
 #' 
 #' @return character 
 #' 
 #' @author mvarewyck
 #' @export
-translate <- function(data = loadMetaData(type = "ui"), id) {
+translate <- function(id) {
   
   # id NA
   if (all(is.na(id)))
-    return(data)
+    return(id)
   
+  translation <- suppressWarnings(
+    data.frame(id = id, title = c(i18n$t(paste0(id, "_title"))), description = c(suppressWarnings(i18n$t(paste0(id, "_description")))))
+  )
   
   # Composite translations e.g. habitats
   compositeIds <- grepl("|", id, fixed = TRUE)
   if (any(compositeIds)) {
-    
     newIds <- unique(id[compositeIds])
-    data <- rbind(data,
-      data.frame(id = newIds, t(as.data.frame(sapply(newIds, function(x)
-                apply(data[match(strsplit(x, split = "\\|")[[1]], data$id), c("title", "description")], 2, paste, collapse = "|")))))
-    )
     
+    compositeTranslations <- sapply(newIds, function(x) {
+        paste(   i18n$t(paste0(strsplit(x, split = "\\|")[[1]], "_title")), collapse = "|")
+      })
+    
+    translation[compositeIds, "title"] <- compositeTranslations[translation[compositeIds, "id"]]
   } 
   
-  # Helpfull during development to see which are missing
-  # can be turned of in production
-  if (!is.null(data) & !all(id %in% data$id)) {
-    if (!all(is.na(id[!id %in% data$id])))
-      message("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
-  }
+  idsWithoutTranslation <- which(endsWith(translation$title, "_title"))
+  translation[idsWithoutTranslation, "title"] <- translation[idsWithoutTranslation, "id"]
+  translation[endsWith(translation$description, "_description"), "description"] <- ""
   
-  data <- rbind(
-    data,
-    # empty if no match
-    data.frame(id = id, title = id, description = "")
-  )
-  
-  data[match(id, data$id), c("title", "description")]
-  
+  translation
 }
 
 

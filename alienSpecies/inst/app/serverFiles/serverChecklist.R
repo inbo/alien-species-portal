@@ -9,30 +9,29 @@
 lapply(c("taxa", "trend", "pathways", "origin"), function(iName)
     titleModuleServer(
       id = paste0("checklist_", iName),
-      uiText = reactive(results$translations),
       plotFunction = iName
     ))
 
-welcomeSectionServer(id = "checklist", uiText = reactive(results$translations))
+welcomeSectionServer(id = "checklist")
 
 # Translate necessary columns
 results$filter_exotenDataTranslated <- reactive({
     
-    exotenData[, pathway_level2_translate := translate(results$translations, do.call(paste, c(.SD, sep = "_")))$title,
+    exotenData[, pathway_level2_translate := translate(do.call(paste, c(.SD, sep = "_")))$title,
       .SDcols = c("pathway_level1", "pathway_level2")]
     exotenData[, ':=' (
-      vernacular_name_col = get(paste0("vernacular_name_", attr(results$translations, "language"))),  
-      pathway_level1_translate = translate(results$translations, pathway_level1)$title,
-      native_continent_translate = translate(results$translations, native_continent)$title,
-      native_range_translate = translate(results$translations, native_range)$title,
-      degree_of_establishment_translate = translate(results$translations, degree_of_establishment)$title,
-      habitat_translate = translate(results$translations, habitat)$title,
-      locality_translate = translate(results$translations, locality)$title
+      vernacular_name_col = get(paste0("vernacular_name_", results$language)),  
+      pathway_level1_translate = translate(pathway_level1)$title,
+      native_continent_translate = translate(native_continent)$title,
+      native_range_translate = translate(native_range)$title,
+      degree_of_establishment_translate = translate(degree_of_establishment)$title,
+      habitat_translate = translate(habitat)$title,
+      locality_translate = translate(locality)$title
     )]    
   
   })
 
-unknownValue <- reactive(translate(results$translations, "unknown")$title)
+unknownValue <- reactive(translate("unknown")$title)
 
 
 ### Filter Data
@@ -49,10 +48,10 @@ observeEvent(exoten_triggerMore(), {
     
   if (input$exoten_more %% 2 == 1)
     updateActionLink(session = session, inputId = "exoten_more", 
-      label = translate(results$translations, "less")$title,
+      label = translate("less")$title,
       icon = icon("angle-double-up", class = "green-icon")) else
     updateActionLink(session = session, inputId = "exoten_more", 
-      label = translate(results$translations, "more")$title,
+      label = translate("more")$title,
       icon = icon("angle-double-down", class = "green-icon"))
   
   })
@@ -68,7 +67,7 @@ observe({
     req(input$tabs == "checklist_indicators")
     req(!is.null(input$exoten_searchVernacular))
     
-    taxaChoices[ , vernacular_name_list := get(paste0("vernacular_name_", attr(results$translations, "language"), "_list"))]
+    taxaChoices[ , vernacular_name_list := get(paste0("vernacular_name_", results$language, "_list"))]
     
     # Search on latin or vernacular name
     if (input$exoten_searchVernacular) {
@@ -88,10 +87,12 @@ observe({
     }
     
     updateSelectizeInput(session, inputId = "exoten_taxa", choices = taxaChoices,
-      selected = urlSearch()$taxa,
+      selected = if ((is.null(all(isolate(results$exoten_taxa))) || all(isolate(results$exoten_taxa) == "")) & !is.null(urlSearch()$taxa))
+          strsplit(urlSearch()$taxa, ",")[[1]] else
+          isolate(results$exoten_taxa),
       server = TRUE,
       options = list(
-        placeholder = translate(results$translations, "allTaxa")$title,
+        placeholder = translate("allTaxa")$title,
         render = I(
           "{
             option: function(item, escape) {
@@ -102,13 +103,17 @@ observe({
     
   })
 
+# Save choice when leaving this tab
+  observe({
+      results$exoten_taxa <- input$exoten_taxa
+    })
+
 
 # habitat
 filter_habitat <- filterSelectServer(
   id = "habitat",
   url = urlSearch,
-  initChoices = c("allHabitats", habitatChoices),
-  translations = reactive(results$translations)
+  initChoices = c("allHabitats", habitatChoices)
 )
 
 # pathways
@@ -122,9 +127,16 @@ results$filter_pwChoices <- reactive({
 
 output$filter_pw <- renderUI({
     
+    selected <- if (!is.null(urlSearch()$pw)) {
+        urlSearch()$pw 
+      } else if (!is.null(isolate(input$exoten_pw))) {
+        isolate(results$searchId$pw)
+      } else NULL
+    
     comboTreeInput("exoten_pw", choices = results$filter_pwChoices(),
-      placeholder = translate(results$translations, "allPathways")$title, 
-      selected = urlSearch()$pw)
+      placeholder = translate("allPathways")$title, 
+      selected = selected
+    )
     
   })
 
@@ -132,8 +144,7 @@ output$filter_pw <- renderUI({
 filter_doe <- filterSelectServer(
   id = "doe",
   url = urlSearch,
-  initChoices = c("allDoe", doeChoices),
-  translations = reactive(results$translations)
+  initChoices = c("allDoe", doeChoices)
 )
 
 # native
@@ -147,9 +158,17 @@ results$filter_nativeChoices <- reactive({
 
 output$filter_native <- renderUI({
     
+    selected <- if (!is.null(urlSearch()$native)) {
+        print("AAAAA")
+      urlSearch()$native 
+    } else if (!is.null(isolate(input$exoten_native))) {
+      isolate(results$searchId$native)
+    } else NULL
+    
     comboTreeInput("exoten_native", choices = results$filter_nativeChoices(),
-      placeholder = translate(results$translations, "allNative")$title, 
-      selected = urlSearch()$native)
+      placeholder = translate("allNative")$title, 
+      selected = selected
+    )
     
   })
 
@@ -202,9 +221,9 @@ observe({
     invalidateLater(1000)
     
     myLabel <- if (all(defaultTime == results$exoten_time) & defaultTimeNA == results$exoten_timeNA)
-      translate(results$translations, "allYears")$title else
+      translate("allYears")$title else
       paste(paste(results$exoten_time, collapse = "-"), if (results$exoten_timeNA) 
-          translate(results$translations, "andMissing")$title)
+          translate("andMissing")$title)
   
     updateActionButton(session = session, inputId = "exoten_timeButton", label = myLabel)
     
@@ -215,7 +234,7 @@ observeEvent(input$exoten_time, results$exoten_time <- input$exoten_time)
 
 output$exoten_timeNA <- renderUI({
     
-    checkboxInput(inputId = "exoten_timeNA", label = translate(results$translations, "includeMissing")$title, 
+    checkboxInput(inputId = "exoten_timeNA", label = translate("includeMissing")$title, 
       value = results$exoten_timeNA)
     
   })
@@ -235,24 +254,21 @@ output$exoten_time <- renderUI({
 filter_union <- filterSelectServer(
   id = "union",
   url = urlSearch,
-  initChoices = c("allUnion", "Union list", "Non-union list"),
-  translations = reactive(results$translations)
+  initChoices = c("allUnion", "Union list", "Non-union list")
 )
 
 # regions
 filter_region <- filterSelectServer(
   id = "region",
   url = urlSearch,
-  initChoices = c("allRegions", regionChoices),
-  translations = reactive(results$translations)
+  initChoices = c("allRegions", regionChoices)
 )
 
 # bron
 filter_source <- filterSelectServer(
   id = "source",
   url = urlSearch,
-  initChoices = c("allSources", bronChoices),
-  translations = reactive(results$translations)
+  initChoices = c("allSources", bronChoices)
 )
 
 
@@ -284,7 +300,7 @@ results$exoten_data <- reactive({
     
     # pathways
     if (!is.null(input$exoten_pw)) {
-      matchPw <- matchCombo(selected = input$exoten_pw, longChoices = unlist(results$filter_pwChoices()))
+      matchPw <- matchCombo(selected = input$exoten_pw, longChoices = isolate(unlist(results$filter_pwChoices())))
       results$searchId$pw <- matchPw
       subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchPw, split = ",")[[1]], 
         inputLevels = c("pathway_level1", "pathway_level2"))
@@ -298,7 +314,7 @@ results$exoten_data <- reactive({
     
     # native
     if (!is.null(input$exoten_native)) {
-      matchNative <- matchCombo(selected = input$exoten_native, longChoices = unlist(results$filter_nativeChoices())) 
+      matchNative <- matchCombo(selected = input$exoten_native, longChoices = isolate(unlist(results$filter_nativeChoices()))) 
       results$searchId$native <- matchNative
       subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchNative, split = ",")[[1]], 
         inputLevels = c("native_continent", "native_range"))
@@ -348,7 +364,7 @@ results$exoten_data <- reactive({
 output$nrowsFinal <- renderText({
     
     validate(need(nrow(results$exoten_data()) > 0, "No data available"))
-    paste0(translate(results$translations, "totalSpecies")$title, ": ", 
+    paste0(translate("totalSpecies")$title, ": ", 
       length(unique(results$exoten_data()$key)))
 
   })
@@ -390,8 +406,7 @@ tmpKey <- tableIndicatorsServer(
   id = "checklist",
   exotenData = results$exoten_data,
   unionlistData = unionlistData,
-  occurrenceData = occurrenceData,
-  uiText = reactive(results$translations)
+  occurrenceData = occurrenceData
 )
 
 # Redirect to species page
@@ -440,15 +455,14 @@ observeEvent(input$exoten_tabs, {
         # fix https://github.com/inbo/alien-species-portal/issues/128
         reactive(results$exoten_data()[order(first_observed), .SD[1,], by = "key"])
       },
-      uiText = reactive(results$translations),
       triasFunction = "indicator_introduction_year",
       triasArgs = reactive({
           list(
             start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
             x_major_scale_stepsize = results$exoten_xMajor(),
             x_minor_scale_stepsize = results$exoten_xMajor()/2,
-            x_lab = translate(results$translations, "year")$title,
-            y_lab = translate(results$translations, "indicator_introduction_year")$title
+            x_lab = translate("year")$title,
+            y_lab = translate("indicator_introduction_year")$title
           )
         })
     )
@@ -461,23 +475,21 @@ observeEvent(input$exoten_tabs, {
         # fix https://github.com/inbo/alien-species-portal/issues/128
         reactive(results$exoten_data()[order(first_observed), .SD[1,], by = "key"])
       },
-      uiText = reactive(results$translations),
       triasFunction = "indicator_total_year",
       triasArgs = reactive({
           list(
             start_year_plot = min(results$exoten_data()$first_observed, na.rm = TRUE) - 1,
             x_major_scale_stepsize = results$exoten_xMajor(),
             x_minor_scale_stepsize = results$exoten_xMajor()/2,
-            x_lab = translate(results$translations, "year")$title,
-            y_lab = translate(results$translations, "indicator_total_year")$title
+            x_lab = translate("year")$title,
+            y_lab = translate("indicator_total_year")$title
           )
         })
     )
     
     ## Plot trend occupancy
     countOccupancyServer(id = "checklist",
-      data = occupancySelected,
-      uiText = reactive(results$translations)
+      data = reactive(occupancy)
     )
     
   })
@@ -499,7 +511,6 @@ observeEvent(input$exoten_tabs, {
     results$renderedTabs <- c(results$renderedTabs, "checklist_pathways")
     
     plotTriasServer(id = "checklist_tablePathway",
-      uiText = reactive(results$translations),
       data = results$exoten_data,
       triasFunction = "get_table_pathways",
       triasArgs = reactive(list(species_names = "species")),
@@ -517,13 +528,12 @@ observeEvent(input$exoten_tabs, {
       })
     
     plotTriasServer(id = "checklist_pathway1",
-      uiText = reactive(results$translations),
       data = results$exoten_data,
       triasFunction = "visualize_pathways_level1",
       triasArgs = reactive({
           list(
-            x_lab = translate(results$translations, "numberTaxa")$title,
-            y_lab = translate(results$translations, "pathways")$title,
+            x_lab = translate("numberTaxa")$title,
+            y_lab = translate("pathways")$title,
             cbd_standard = FALSE,
             pathways = results$checklist_levelsP1()
           )
@@ -531,13 +541,12 @@ observeEvent(input$exoten_tabs, {
     )
     
     plotTriasServer(id = "checklist_pathway1Trend",
-      uiText = reactive(results$translations),
       data = results$exoten_data,
       triasFunction = "visualize_pathways_year_level1",
       triasArgs = reactive({
           list(
-            x_lab = translate(results$translations, "period")$title,
-            y_lab = translate(results$translations, "numberTaxa")$title,
+            x_lab = translate("period")$title,
+            y_lab = translate("numberTaxa")$title,
             cbd_standard = FALSE,
             pathways = results$checklist_levelsP1()
           )
@@ -545,30 +554,27 @@ observeEvent(input$exoten_tabs, {
     )
     
     plotTriasServer(id = "checklist_pathway2",
-      uiText = reactive(results$translations),
       filters = reactive(list("pathway_level1" = pathway1Selected())),
       data = results$exoten_data,
       results = results,
       triasFunction = "visualize_pathways_level2",
       triasArgs = reactive({
           list(
-            x_lab = translate(results$translations, "numberTaxa")$title,
-            y_lab = translate(results$translations, "pathways")$title,
+            x_lab = translate("numberTaxa")$title,
+            y_lab = translate("pathways")$title,
             cbd_standard = FALSE
           )
         })
     )
     
     plotTriasServer(id = "checklist_pathway2Trend",
-      uiText = reactive(results$translations),
-      filters = reactive(list("pathway_level1" = pathway1Selected())),
       data = results$exoten_data,
       results = results,
       triasFunction = "visualize_pathways_year_level2",
       triasArgs = reactive({
           list(
-            x_lab = translate(results$translations, "period")$title,
-            y_lab = translate(results$translations, "numberTaxa")$title,
+            x_lab = translate("period")$title,
+            y_lab = translate("numberTaxa")$title,
             cbd_standard = FALSE
           )
         })
@@ -587,7 +593,6 @@ observeEvent(input$exoten_tabs, {
     
     ## Plot number of species per year by native region
     plotTriasServer(id = "checklist_yearNativeRange",
-      uiText = reactive(results$translations),
       data = reactive({
         tmpData <- results$exoten_data()
         tmpData[, ':=' (
@@ -599,17 +604,14 @@ observeEvent(input$exoten_tabs, {
       triasFunction = "indicator_native_range_year",
       triasArgs = reactive({
           list(
-<<<<<<< HEAD
             years = if (is.null(input$exoten_time))
                 min(results$exoten_data()$first_observed, na.rm = TRUE):
                   max(results$exoten_data()$first_observed, na.rm = TRUE) else 
                 input$exoten_time[1]:input$exoten_time[2],
-=======
->>>>>>> refs/remotes/origin/uat
             x_include_missing = TRUE,
             x_major_scale_stepsize = results$exoten_xMajor(),
-            x_lab = translate(results$translations, "year")$title,
-            y_lab = translate(results$translations, "number")$title
+            x_lab = translate("year")$title,
+            y_lab = translate("number")$title
           )
         }),
       filters = reactive(list(
@@ -622,4 +624,4 @@ observeEvent(input$exoten_tabs, {
 
 
 # Contact button
-footerSectionServer(id = "checklist", uiText = results$translations)
+footerSectionServer(id = "checklist")

@@ -7,12 +7,12 @@
 #' FAQ page - server module
 #' 
 #' @inheritParams plotModuleServer 
-#' @param translations reactive value, data.frame with all available translations 
+#' @param language reactive value, language
 #' @return no return value
 #' 
 #' @author mvarewyck
 #' @export
-faqServer <- function(id, translations) {
+faqServer <- function(id, language) {
   
   moduleServer(id, function(input, output, session) {
       
@@ -20,12 +20,12 @@ faqServer <- function(id, translations) {
       
       output$title <- renderUI({
           
-          translate(data = translations, id = "faq")$title  
+          translate(id = "faq")$title  
           
         })
       
       htmlSectionServer(id = "content", species = reactive("FAQ"),
-        language = reactive(attr(translations, "language")))
+        language = language)
       
     })
   
