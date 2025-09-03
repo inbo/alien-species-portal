@@ -508,18 +508,50 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           periodChoice <- c(1950, currentYear)
           
           div(style = "margin-left:50px; margin-right:10px;",
-            sliderInput(
-              inputId = ns("period"), 
-              label = NULL,
-              min = 1950,
-              max = currentYear,
-              value = periodChoice,
-              sep = "", 
-              width = "100%"
+            tagList(
+              sliderInput(
+                inputId = ns("period"), 
+                label = NULL,
+                min = 1950,
+                max = currentYear,
+                value = periodChoice,
+                sep = "", 
+                width = "100%"
+              ),
+              fluidRow(
+                column(2, numericInput(ns("periodStart"), translate("startYear")$title, value = 1950)),
+                column(2, offset = 8, numericInput(ns("periodEnd"), translate("endYear")$title, value = currentYear))
+              
+              )
             )
           )
           
         })
+      
+      observeEvent(input$period, priority = 5, {
+          if (input$period[1] != input$periodStart) {
+            updateNumericInput(session = session, inputId = "periodStart", value = input$period[1])
+          }
+          if (input$period[2] != input$periodEnd) {
+            updateNumericInput(session = session, inputId = "periodEnd", value = input$period[2])
+          }
+          
+        })
+      
+      observeEvent(input$periodStart, priority = 5, {
+          if (input$period[1] != input$periodStart) {
+            updateSliderInput(session = session, inputId = "period", value = c(input$periodStart, input$period[2]))
+          }
+          
+        })
+      
+      observeEvent(input$periodEnd, priority = 5, {
+          if (input$period[2] != input$periodEnd) {
+            updateSliderInput(session = session, inputId = "period", value = c(input$period[1], input$periodEnd))
+          }
+          
+        })
+      
       
       output$legend <- renderUI({
           
