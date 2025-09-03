@@ -229,8 +229,8 @@ plotTriasServer <- function(id, data, triasFunction,
                 initArgs$chosen_pathway_level1 <- input$pathway_level1
                 initArgs$pathways <- {
                   levelsP2 <- sort(unique(plotData()$pathway_level2))
-                  c(grep(translate(results$translations, "unknown")$title, levelsP2, value = TRUE, invert = TRUE), 
-                    grep(translate(results$translations, "unknown")$title, levelsP2, value = TRUE)
+                  c(grep(translate("unknown")$title, levelsP2, value = TRUE, invert = TRUE), 
+                    grep(translate("unknown")$title, levelsP2, value = TRUE)
                   )          
                 }
               }
