@@ -684,16 +684,17 @@ observe({
     
     req(input$species_choice)
     
-    matchingLinks <- match(input$species_choice, harmoniaData$gbif_taxonkey)
+    matchingLinks <- which( harmoniaData$gbif_taxonkey == input$species_choice)
     
     htmlSectionServer(
       id = "risk_assessment", 
       species = reactive(input$species_choice),
       language = reactive(results$language),
-      url = harmoniaData$harmonia_url[matchingLinks],
+      url = harmoniaData$url[matchingLinks],
       linkText = sapply(matchingLinks, function(iLink)
           switch(harmoniaData$url_type[iLink],
             harmonia = "Harmonia+ Risk Assessment",
+            iasregulation = "IAS Regulation",
             harmoniaData$url_type[iLink])
       )
     )

@@ -86,7 +86,7 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
   fileNames <- switch(type, 
     ui = paste0("translations", c("", "_simple", "_regions")),
     keys = "keys",
-    harmonia = "harmonia_info"
+    harmonia = "PRA_links"
   )
   
   allData <- sapply(fileNames, function(iFile) { 
@@ -131,19 +131,7 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
       
     },
     keys = allData$keys,
-    harmonia = {
-      
-      selectedColumns <- c("gbif_taxonkey", "harmonia_url", "url_type")
-      
-      # TODO remove when fixing https://github.com/inbo/aspbo/issues/423
-      ## begin temp fix
-      if (!"url_type" %in% colnames(allData$harmonia))
-        allData$harmonia$url_type <- "harmonia"
-      ## end temp fix
-      
-      allData$harmonia[, selectedColumns]
-      
-    }
+    harmonia = allData$PRA_links[, c("gbif_taxonkey", "url", "url_type")]
   )
   
   if (type == "ui")
