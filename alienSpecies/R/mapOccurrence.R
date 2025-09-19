@@ -522,7 +522,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
                   });
                   });
                   ", ns("periodEnd"), ns("periodEnd_blur"))),
-            div(style = "margin-left:50px; margin-right:10px;",
+            div(style = "margin-left:10px; margin-right:10px;",
               tagList(
                 sliderInput(
                   inputId = ns("period"), 
@@ -919,28 +919,51 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
     uiOutput(ns("titleMapOccurrence")),
     uiOutput(ns("descriptionMapOccurrence")),
     
-    wellPanel(
-      fixedRow(uiOutput(ns("filters")),
-        if (showLegend)
-          column(6, 
-            uiOutput(ns("legend"))
-          ),
-        if (showGlobe)
-        column(6, 
-          actionLink(inputId = ns("globe"), label = "Show globe",
-            icon = icon("globe"))
-        ),
-      column(6, checkboxInput(inputId = ns("combine"), label = "Combine all selected regions"))
+    if (!grepl("observations", id)) {
+      wellPanel(
+        fixedRow(uiOutput(ns("filters")),
+          if (showLegend)
+            column(6, 
+              uiOutput(ns("legend"))
+            ),
+          if (showGlobe)
+            column(6, 
+              actionLink(inputId = ns("globe"), label = "Show globe",
+                icon = icon("globe"))
+            ),
+          column(6, checkboxInput(inputId = ns("combine"), label = "Combine all selected regions"))
+        )
       )
-    ),
+    },
     withSpinner(leafletOutput(ns("spacePlot"), height = "600px")),
     
-    if (showPeriod) {
+    if (!grepl("observations", id) && showPeriod) {
       tagList(
         plotModuleUI(id = ns("countOccurrence"), height = "200px"),
         uiOutput(ns("period"))
       )
     },
+    
+    if (grepl("observations", id))
+      tagList(
+        plotModuleUI(id = ns("countOccurrence"), height = "200px"),
+        wellPanel(
+          fixedRow(uiOutput(ns("filters")),
+            if (showLegend)
+              column(6, 
+                uiOutput(ns("legend"))
+              ),
+            if (showGlobe)
+              column(6, 
+                actionLink(inputId = ns("globe"), label = "Show globe",
+                  icon = icon("globe"))
+              ),
+            column(6, checkboxInput(inputId = ns("combine"), label = "Combine all selected regions")),
+            if (showPeriod)
+              column(12, uiOutput(ns("period"))
+          )
+        )
+      )),
     
     tags$br(),
     
