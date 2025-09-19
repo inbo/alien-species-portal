@@ -31,10 +31,11 @@ dbServer <- function(id) {
           tileNames <- lapply(tileChoices, function(iChoice){
               foto <- list.files(path = system.file("app", "www", package = "alienSpecies"), pattern = iChoice)
               title <- translate(id = iChoice)$title
+              hover <- translate(id = iChoice)$description
               HTML(paste0(
-                  "<div class='radio-tiles-title'>", title, "</div>",
+                  "<div class='radio-tiles-title' title='", hover, "'>", title, "</div>",
                   "<div class='radio-tiles-image'>", 
-                  img(src = foto, width = "100%", `aspect-ratio` = "400/270"), "</div>"
+                  img(src = foto, width = "100%", `aspect-ratio` = "400/270", title = hover), "</div>"
                 ))
             })
           
