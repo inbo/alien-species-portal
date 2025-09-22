@@ -15,7 +15,7 @@ allShapes <- c(
 
 # Translations
 translation_dir <- download_translations()
-i18n <- Translator$new(translation_csvs_path = translation_dir)
+i18n <<- Translator$new(translation_csvs_path = translation_dir)
 
 ## Rosse stekelstaart ##
 ## Oxyura jamaicensis

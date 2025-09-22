@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 RUN R -q -e "install.packages('remotes')"
 
 RUN R -q -e "options(warn = 2); remotes::install_version('shiny', '1.10.0');"
-RUN R -q -e "options(warn = 2); remotes::install_cran(c('data.table', 'dplyr', 'DT', 'ggplot2', 'ggspatial', 'htmlwidgets', 'httr', 'jsonlite', 'leaflet', 'leaflet.extras', 'leaflet.extras2', 'plotly', 'reshape2', 'rgbif', 'sf', 'shinyjs', 'terra', 'testthat', 'tidyr',  'webshot2', 'xtable'))"
+RUN R -q -e "options(warn = 2); remotes::install_cran(c('data.table', 'dplyr', 'DT', 'ggplot2', 'ggspatial', 'htmlwidgets', 'httr', 'jsonlite', 'leaflet', 'leaflet.extras', 'leaflet.extras2', 'plotly', 'reshape2', 'rgbif', 'sf', 'shinyjs', 'terra', 'testthat', 'tidyr',  'webshot2', 'xtable', 'shiny.i18n'))"
 
 
 # Specific data format + access to S3 on UAT

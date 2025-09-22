@@ -234,7 +234,7 @@ translate <- function(id) {
     newIds <- unique(id[compositeIds])
     
     compositeTranslations <- sapply(newIds, function(x) {
-        paste(   i18n$t(paste0(strsplit(x, split = "\\|")[[1]], "_title")), collapse = "|")
+        paste(i18n$t(paste0(strsplit(x, split = "\\|")[[1]], "_title")), collapse = "|")
       })
     
     translation[compositeIds, "title"] <- compositeTranslations[translation[compositeIds, "id"]]

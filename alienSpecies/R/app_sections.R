@@ -234,6 +234,7 @@ versionServer <- function(id) {
 #' 
 #' @author mvarewyck
 #' @importFrom htmltools includeHTML
+#' @importFrom stats na.omit
 #' @export
 htmlSectionServer <- function(id, species, language, url = NA, linkText) {
   

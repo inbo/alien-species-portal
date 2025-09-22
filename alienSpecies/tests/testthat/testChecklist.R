@@ -13,7 +13,7 @@ occurrenceData <- loadTabularData(type = "occurrence")
 
 # Translations
 translation_dir <- download_translations()
-i18n <- Translator$new(translation_csvs_path = translation_dir)
+i18n <<- Translator$new(translation_csvs_path = translation_dir)
 ##
 ## Combine duplicated keys
 ##

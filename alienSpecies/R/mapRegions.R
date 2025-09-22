@@ -24,7 +24,7 @@ combineVespaData <- function(pointsData, nestenData, nestenBeheerdData) {
   # Provincie
   pointsData$provincie <- ifelse(pointsData$provincie == "Vlaams Brabant", "Vlaams-Brabant",
     ifelse(pointsData$provincie == "Bruxelles", "HoofdstedelijkGewest", 
-      ifelse(pointsData$provincie == "Liège", "Luik", 
+      ifelse(pointsData$provincie == "Li\u00E8ge", "Luik", 
         ifelse(pointsData$provincie == "Brabant Wallon", "Waals-Brabant",
           ifelse(pointsData$provincie == "Hainaut", "Henegouwen", pointsData$provincie)))))
   pointsData$nest_type <- "individual"

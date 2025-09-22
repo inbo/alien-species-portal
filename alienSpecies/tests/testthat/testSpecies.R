@@ -23,6 +23,10 @@ taxData <- loadTabularData(type = "occurrence")
 allSpecies <- c("Alopochen aegyptiaca", "Muntiacus reevesi")
 period <- c(2000, 2018)
 
+# Translations
+translation_dir <- download_translations()
+i18n <<- Translator$new(translation_csvs_path = translation_dir)
+
 
 test_that("Check summary data", {
     

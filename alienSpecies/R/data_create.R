@@ -259,6 +259,7 @@ createTaxaChoices <- function(exotenData) {
   # For R CMD check
   kingdom <- kingdomKey <- phylum <- phylumKey <- classKey <- orderKey <- NULL
   family <- familyKey <- species <- key <- . <- latin_name <- NULL
+  vernacular_name_nl <- vernacular_name_en <- vernacular_name_fr <- NULL
   
   subData <- exotenData[, .(kingdom, phylum, class, order, family, species,
       kingdomKey, phylumKey, classKey, orderKey, familyKey, key)]
@@ -333,7 +334,7 @@ createTabularData <- function(
   
   # For R CMD check
   scientificName <- i.scientificName <- i.classKey <- taxonKey <- variable <- NULL
-  eea_cell_code <- obs <- . <- NULL
+  eea_cell_code <- obs <- . <- selectedCols <- ..selectedCols <- NULL
   
   warningMessage <- NULL
   

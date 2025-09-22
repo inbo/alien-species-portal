@@ -12,7 +12,7 @@ allSpecies <- c("Psittacula krameri")
 
 # Translations
 translation_dir <- download_translations()
-i18n <- Translator$new(translation_csvs_path = translation_dir)
+i18n <<- Translator$new(translation_csvs_path = translation_dir)
 
 test_that("Create climate risk map", {
     
