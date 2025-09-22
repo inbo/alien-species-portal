@@ -271,6 +271,7 @@ plotlyReport <- function(myPlot) {
 #' @return character folder path
 #' 
 #' @author sjunius
+#' @export
 download_translations <- function() {
   temp_dir <- tempdir()
   translation_files <- c("translation_en.csv", "translation_fr.csv", "translation_nl.csv")

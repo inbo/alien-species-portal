@@ -556,7 +556,6 @@ observeEvent(input$exoten_tabs, {
     plotTriasServer(id = "checklist_pathway2",
       filters = reactive(list("pathway_level1" = pathway1Selected())),
       data = results$exoten_data,
-      results = results,
       triasFunction = "visualize_pathways_level2",
       triasArgs = reactive({
           list(
@@ -570,7 +569,6 @@ observeEvent(input$exoten_tabs, {
     plotTriasServer(id = "checklist_pathway2Trend",
       filters = reactive(list("pathway_level1" = pathway1Selected())),
       data = results$exoten_data,
-      results = results,
       triasFunction = "visualize_pathways_year_level2",
       triasArgs = reactive({
           list(
