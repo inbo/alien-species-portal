@@ -113,64 +113,30 @@ observe({
 filter_habitat <- filterSelectServer(
   id = "habitat",
   url = urlSearch,
-  initChoices = c("allHabitats", habitatChoices)
+  initChoices = reactive(c("allHabitats", habitatChoices))
 )
 
 # pathways
-results$filter_pwChoices <- reactive({
-    
-    createDoubleChoices(
-      exotenData = results$filter_exotenDataTranslated(), 
-      columns = c("pathway_level1", "pathway_level2"))
-    
-  })
+filter_pathwayLevel1 <- filterSelectServer(
+  id = "pw_level1",
+  url = urlSearch,
+  initChoices = reactive(c("allPathways", pwLevel1Choices))
+)
 
-output$filter_pw <- renderUI({
-    
-    selected <- if (!is.null(urlSearch()$pw)) {
-        urlSearch()$pw 
-      } else if (!is.null(isolate(input$exoten_pw))) {
-        isolate(results$searchId$pw)
-      } else NULL
-    
-    comboTreeInput("exoten_pw", choices = results$filter_pwChoices(),
-      placeholder = translate("allPathways")$title, 
-      selected = selected
-    )
-    
-  })
 
 # doe
 filter_doe <- filterSelectServer(
   id = "doe",
   url = urlSearch,
-  initChoices = c("allDoe", doeChoices)
+  initChoices = reactive(c("allDoe", doeChoices))
 )
 
-# native
-results$filter_nativeChoices <- reactive({
-    
-    createDoubleChoices(
-      exotenData = results$filter_exotenDataTranslated(),
-      columns = c("native_continent", "native_range"))
-    
-  })
-
-output$filter_native <- renderUI({
-    
-    selected <- if (!is.null(urlSearch()$native)) {
-        print("AAAAA")
-      urlSearch()$native 
-    } else if (!is.null(isolate(input$exoten_native))) {
-      isolate(results$searchId$native)
-    } else NULL
-    
-    comboTreeInput("exoten_native", choices = results$filter_nativeChoices(),
-      placeholder = translate("allNative")$title, 
-      selected = selected
-    )
-    
-  })
+# native continent
+filter_nativeContinent <- filterSelectServer(
+  id = "native_continent",
+  url = urlSearch,
+  initChoices = reactive(c("allNative", nativeChoices))
+)
 
 # time
 ## tricky code to make the input values apply even if the popup is not yet clicked
@@ -254,22 +220,65 @@ output$exoten_time <- renderUI({
 filter_union <- filterSelectServer(
   id = "union",
   url = urlSearch,
-  initChoices = c("allUnion", "Union list", "Non-union list")
+  initChoices = reactive(c("allUnion", "Union list", "Non-union list"))
 )
 
 # regions
 filter_region <- filterSelectServer(
   id = "region",
   url = urlSearch,
-  initChoices = c("allRegions", regionChoices)
+  initChoices = reactive(c("allRegions", regionChoices))
 )
 
 # bron
 filter_source <- filterSelectServer(
   id = "source",
   url = urlSearch,
-  initChoices = c("allSources", bronChoices)
+  initChoices = reactive(c("allSources", bronChoices))
 )
+
+# native range
+nativeRangeChoices <- eventReactive(filter_nativeContinent(), ignoreNULL = FALSE, {
+    if (is.null(filter_nativeContinent())) {
+      sort(unique(exotenData$native_range))
+    } else {
+      sort(unique(exotenData$native_range[exotenData$native_continent %in% filter_nativeContinent()]))
+    }
+    
+  })
+
+filter_nativeRange <- filterSelectServer(
+  id = "native_range",
+  url = urlSearch,
+  initChoices = reactive(c("allNativeRanges", nativeRangeChoices())),
+  selected = reactive(results$filter_nativeRange)
+)
+
+currentNativeRange <- observeEvent(filter_nativeRange(), priority = 5, ignoreNULL = FALSE, {
+    results$filter_nativeRange <- filter_nativeRange()    
+  })
+
+
+# pathway level 2
+nativePw2Choices <- eventReactive(filter_pathwayLevel1(), ignoreNULL = FALSE, {
+    if (is.null(filter_pathwayLevel1())) {
+      sort(unique(exotenData$pathway_level2))
+    } else {
+      sort(unique(exotenData$pathway_level2[exotenData$pathway_level1 %in% filter_pathwayLevel1()]))
+    }
+    
+  })
+
+filter_pathwayLevel2 <- filterSelectServer(
+  id = "pw_level2",
+  url = urlSearch,
+  initChoices = reactive(c("allPathwaySubCategories", nativePw2Choices())),
+  selected = reactive(results$filter_pwLevel2)
+)
+
+observeEvent(filter_pathwayLevel2(), priority = 5, ignoreNULL = FALSE, {
+    results$filter_pwLevel2 <- filter_pathwayLevel2()    
+  })
 
 
 ### Final Data set
@@ -298,12 +307,10 @@ results$exoten_data <- reactive({
       subData <- subData[grepl(paste(filter_habitat(), collapse = "|"), subData$habitat), ]
     }
     
-    # pathways
-    if (!is.null(input$exoten_pw)) {
-      matchPw <- matchCombo(selected = input$exoten_pw, longChoices = isolate(unlist(results$filter_pwChoices())))
-      results$searchId$pw <- matchPw
-      subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchPw, split = ",")[[1]], 
-        inputLevels = c("pathway_level1", "pathway_level2"))
+    # pathways level 1
+    if (!is.null(filter_pathwayLevel1())) {
+      results$searchId$pw_level1 <- paste(filter_pathwayLevel1(), collapse = ",")
+      subData <- subData[pathway_level1 %in% filter_pathwayLevel1(), ]
     }
     
     # degree of establishment
@@ -312,12 +319,10 @@ results$exoten_data <- reactive({
       subData <- subData[degree_of_establishment %in% filter_doe(), ]
     }
     
-    # native
-    if (!is.null(input$exoten_native)) {
-      matchNative <- matchCombo(selected = input$exoten_native, longChoices = isolate(unlist(results$filter_nativeChoices()))) 
-      results$searchId$native <- matchNative
-      subData <- filterCombo(exotenData = subData, inputValue = strsplit(matchNative, split = ",")[[1]], 
-        inputLevels = c("native_continent", "native_range"))
+    # native continent
+    if (!is.null(filter_nativeContinent())) {
+      results$searchId$native_continent <- paste(filter_nativeContinent(), collapse = ",")
+      subData <- subData[native_continent %in% filter_nativeContinent(), ]
     }
     
     # time
@@ -349,6 +354,18 @@ results$exoten_data <- reactive({
     if (!is.null(filter_source())) {
       results$searchId$source <- paste(filter_source(), collapse = ",")
       subData <- subData[source %in% filter_source(), ]
+    }
+    
+    # native range
+    if (!is.null(filter_nativeRange())) {
+      results$searchId$native_range <- paste(filter_nativeRange(), collapse = ",")
+      subData <- subData[native_range %in% filter_nativeRange(), ]
+    }
+    
+    # pathways level 2
+    if (!is.null(filter_pathwayLevel2())) {
+      results$searchId$pw_level2 <- paste(filter_pathwayLevel2(), collapse = ",")
+      subData <- subData[pathway_level2 %in% filter_pathwayLevel2(), ]
     }
     
     # use translations after subsetting
@@ -496,10 +513,10 @@ observeEvent(input$exoten_tabs, {
 
 
 pathway1Selected <- reactive({
-    if (is.null(input$exoten_pw)) {
-      unlist(lapply(results$filter_pwChoices(), function(pw) {pw$title}))
+    if (is.null(filter_pathwayLevel1())) {
+      pwLevel1Choices
     } else {
-      input$exoten_pw
+      filter_pathwayLevel1()
     }
   })
 

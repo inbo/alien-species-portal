@@ -21,12 +21,13 @@ tagList(
         column(3, filterSelectUI(id = "habitat")),
         
         # Select pathway 1
-        column(3, uiOutput("filter_pw")),
+        column(3, filterSelectUI(id = "pw_level1")),
         
         # Select degree of establishment
         column(3, filterSelectUI(id = "doe")),
         
-        column(3, uiOutput("filter_native"))
+        # Select native continent
+        column(3, filterSelectUI(id = "native_continent"))
         
       ),
       
@@ -35,24 +36,33 @@ tagList(
       
       conditionalPanel("input.exoten_more % 2 == 1", 
         
-         fixedRow(
-      
-          # Select time range
-          column(3, 
-            tags$div(class = "selection-btn-wrapper",
-              actionButton("exoten_timeButton", label = "All years",
-                icon = icon("caret-down"), width = "100%"),
-              tags$span(id = "time-popup"))
+        tagList(
+          fixedRow(
+            
+            # Select time range
+            column(3, 
+              tags$div(class = "selection-btn-wrapper",
+                actionButton("exoten_timeButton", label = "All years",
+                  icon = icon("caret-down"), width = "100%"),
+                tags$span(id = "time-popup"))
+            ),
+            
+            # Select Pathway level 2
+            column(3, filterSelectUI(id = "pw_level2")),
+            
+            # Select union list
+            column(3, filterSelectUI(id = "union")),
+            
+            # Select native range
+            column(3, filterSelectUI(id = "native_range")),
           ),
-          
-          # Select union list
-          column(3, filterSelectUI(id = "union")),
-          
-          # Select regio
-          column(3, filterSelectUI(id = "region")),
-          
-          # Select bron
-          column(3, filterSelectUI(id = "source"))
+          fixedRow(
+            # Select regio
+            column(3, filterSelectUI(id = "region")),
+            
+            # Select bron
+            column(3, filterSelectUI(id = "source"))
+          )
         )
       
       ),

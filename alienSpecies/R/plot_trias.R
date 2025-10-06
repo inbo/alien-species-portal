@@ -193,7 +193,7 @@ plotTriasServer <- function(id, data, triasFunction,
             subData <- subData[protected == input$protectAreas, ]
           
           if (!is.null(input$pathway_level1)) {
-              subData <- subData[subData$pathway_level1 %in% input$pathway_level1,]
+            subData <- subData[subData$pathway_level1 %in% translate(input$pathway_level1)$title,]
           }
           
           subData
@@ -226,7 +226,7 @@ plotTriasServer <- function(id, data, triasFunction,
               if (!is.null(input$summarizeBy))
                 initArgs$response_type <- input$summarizeBy
               if (!is.null(input$pathway_level1)) {
-                initArgs$chosen_pathway_level1 <- input$pathway_level1
+                initArgs$chosen_pathway_level1 <- translate(input$pathway_level1)$title
                 initArgs$pathways <- {
                   levelsP2 <- sort(unique(plotData()$pathway_level2))
                   c(grep(translate("unknown")$title, levelsP2, value = TRUE, invert = TRUE), 
