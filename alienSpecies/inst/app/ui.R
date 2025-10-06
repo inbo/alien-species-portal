@@ -8,6 +8,29 @@ shinyUI(
     uiOutput("debug"),
     
     shinyjs::useShinyjs(),
+    tags$head(
+      tags$script(HTML("
+            $(document).on('shiny:connected', function() {
+            // Function to update all leaflet attribution links
+            function updateLeafletLinks() {
+            $('.leaflet-control-attribution a').attr('target', '_blank');
+            }
+            
+            setTimeout(updateLeafletLinks, 100);
+            
+            // Create observer for all future leaflet maps
+            var observer = new MutationObserver(function(mutations) {
+            updateLeafletLinks();
+            });
+            
+            // Observe the entire body for new leaflet maps
+            observer.observe(document.body, { 
+            childList: true, 
+            subtree: true 
+            });
+            });
+            "))
+    ),
     
     ## Header
     ## ------
