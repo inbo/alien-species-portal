@@ -1,8 +1,8 @@
 ---
-title: "`r paste0(translate(data = results$translations, id = 'species_information')$title, ': ', taxonName())`" 
+title: "`r paste0(translate(id = 'species_information')$title, ': ', taxonName())`" 
 author: "`r paste0('v', packageVersion('alienSpecies'))`"
 date: "`r format(Sys.Date(), '%d-%m-%Y')`"
-toc-title: "r paste(translate(data = results$translations, id = 'contents')$title"
+toc-title: "r paste(translate(id = 'contents')$title"
 output: 
    oaStyle::pdf_report:
       logo: NULL
@@ -29,7 +29,7 @@ knitr::opts_chunk$set(
 )
 
 gewestNames <- sapply(input$species_gewest, function(x)
-    translate(data = results$translations, id = x)$title) 
+    translate(id = x)$title) 
     
 reportNames <- names(dashReport)[!sapply(reactiveValuesToList(dashReport), is.null)]    
 ```
@@ -40,14 +40,14 @@ subtitle: "`r toString(gewestNames)`"
 
 
 ```{r intro, results = "asis"}
-cat("*",  translate(data = results$translations, id = 'species')$title, ":", taxonName(), "\n")
-cat("*",  translate(data = results$translations, id = 'region')$title, ":", toString(gewestNames), "\n")
+cat("*",  translate(id = 'species')$title, ":", taxonName(), "\n")
+cat("*",  translate(id = 'region')$title, ":", toString(gewestNames), "\n")
 ```
 
 
 
 ```{r sectionObservations, results = "asis"}
-myTitle <- translate(results$translations, "observations")$title
+myTitle <- translate("observations")$title
 cat("#", toupper(myTitle), "\n\n") 
 incProgress(amount = 0.2, detail = myTitle)
 
@@ -55,13 +55,13 @@ childOutput <- lapply(grep("observations", reportNames, value = TRUE), function(
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 if (length(childOutput) == 0)
-  cat(translate(results$translations, "noData")$title) else
+  cat(translate("noData")$title) else
   cat(unlist(childOutput), sep = '\n')
 ``` 
 
 
 ```{r sectionIndicators, results = "asis"}
-myTitle <- translate(results$translations, "indicators")$title
+myTitle <- translate("indicators")$title
 cat("#", toupper(myTitle), "\n\n") 
 incProgress(amount = 0.2, detail = myTitle)
 
@@ -69,13 +69,13 @@ childOutput <- lapply(grep("indicators", reportNames, value = TRUE), function(id
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 if (length(childOutput) == 0)
-  cat(translate(results$translations, "noData")$title) else
+  cat(translate("noData")$title) else
   cat(unlist(childOutput), sep = '\n')
 ``` 
 
 
 ```{r sectionReporting, results = "asis"}
-myTitle <- translate(results$translations, "reporting")$title
+myTitle <- translate("reporting")$title
 cat("#", toupper(myTitle), "\n\n") 
 incProgress(amount = 0.2, detail = myTitle)
 
@@ -83,13 +83,13 @@ childOutput <- lapply(grep("reporting", reportNames, value = TRUE), function(id)
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 if (length(childOutput) == 0)
-  cat(translate(results$translations, "noData")$title) else
+  cat(translate("noData")$title) else
   cat(unlist(childOutput), sep = '\n')
 ``` 
 
 
 ```{r sectionManagement, results = "asis"}
-myTitle <- translate(results$translations, "management")$title
+myTitle <- translate("management")$title
 cat("#", toupper(myTitle), "\n\n") 
 incProgress(amount = 0.2, detail = myTitle)
 
@@ -107,7 +107,7 @@ childOutput <- lapply(managementIds, function(id)
   knitr::knit_child("plotSpecies.Rmd", quiet = TRUE, envir = environment())
 )
 if (length(childOutput) == 0)
-  cat(translate(results$translations, "noData")$title) else
+  cat(translate("noData")$title) else
   cat(unlist(childOutput), sep = '\n')
 ``` 
 
