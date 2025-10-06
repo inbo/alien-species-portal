@@ -506,7 +506,7 @@ observeEvent(input$exoten_tabs, {
     
     ## Plot trend occupancy
     countOccupancyServer(id = "checklist",
-      data = reactive(occupancy)
+      data = occupancySelected
     )
     
   })
