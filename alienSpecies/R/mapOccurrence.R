@@ -656,28 +656,51 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
       
       # Send map to the UI
       output$spacePlot <- renderLeaflet({
+          result <- tryCatch({
+              
+              if (is.null(shapeData))
+                mapOccurrenceLeaflet() %>%
+                  leaflet.extras::addFullscreenControl() %>% 
+                  leaflet.extras2::addEasyprint(  # use leaflets personal functionality to download maps
+                    options = leaflet.extras2::easyprintOptions(
+                      exportOnly = TRUE,
+                      hideControlContainer = FALSE,  # Keep controls visible
+                      hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
+                    )
+                  )
+              else
+                mapCubeLeaflet() %>%
+                  leaflet.extras::addFullscreenControl() %>% 
+                  leaflet.extras2::addEasyprint(  # use leaflets personal functionality to download maps
+                    options = leaflet.extras2::easyprintOptions(
+                      exportOnly = TRUE,
+                      hideControlContainer = FALSE,  # Keep controls visible
+                      hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
+                    )
+                  )
+              
+            }, error = function(e) {
+              NULL
+            })
           
-          if (is.null(shapeData))
-            mapOccurrenceLeaflet() %>%
-              leaflet.extras::addFullscreenControl() %>% 
-              leaflet.extras2::addEasyprint(  # use leaflets personal functionality to download maps
-                options = leaflet.extras2::easyprintOptions(
-                  exportOnly = TRUE,
-                  hideControlContainer = FALSE,  # Keep controls visible
-                  hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
-                )
-              )
-          else
-            mapCubeLeaflet() %>%
-              leaflet.extras::addFullscreenControl() %>% 
-              leaflet.extras2::addEasyprint(  # use leaflets personal functionality to download maps
-                options = leaflet.extras2::easyprintOptions(
-                  exportOnly = TRUE,
-                  hideControlContainer = FALSE,  # Keep controls visible
-                  hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
-                )
-              )
+          return(result)
+        })
+      
+      output$spacePlotMessage <- renderUI({
+          msg <- tryCatch({
+              if (is.null(shapeData))
+                mapOccurrenceLeaflet()
+              else
+                mapCubeLeaflet()
+              NULL
+            }, error = function(e) conditionMessage(e))
           
+          if (is.null(msg)) {
+            return(NULL)
+          } else {
+            div(style = "color:#595959; margin: 1em 0;",
+              msg)
+          }
         })
       
       # Add border region
@@ -858,7 +881,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           
         })  
       
-      plotModuleServer(id = "countOccurrence",
+      barplot <- plotModuleServer(id = "countOccurrence",
         plotFunction = "countOccurrence", 
         data = reactive({
             validate(need(gewest(), noData()))
@@ -880,6 +903,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           dashReport[[ns("mapOccurrence")]] <- c(
                 list(
                   plot = isolate(finalMap()),
+                  barplot = isolate(barplot()$plot),
                   title = isolate(title()),
                   description = isolate(tmpTranslation()$description),
                   showPeriod = (showPeriod && !is.null(input$period))
@@ -935,6 +959,7 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
         )
       )
     },
+    uiOutput(ns("spacePlotMessage")),
     withSpinner(leafletOutput(ns("spacePlot"), height = "600px")),
     
     if (!grepl("observations", id) && showPeriod) {
