@@ -45,12 +45,17 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
       ) 
       
     } else if (all(c("plot", "data_top_graph") %in% names(resultFct))) {
-      
-      list(
-        plot = ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE)) %>%
-          plotly::layout(xaxis = list(tickangle = "auto")), 
-        data = resultFct$data_top_graph
-      ) 
+      if (startsWith(triasFunction, "visualize_pathways_l"))
+        list(
+          plot = ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE), tooltip = "y") %>%
+            plotly::layout(xaxis = list(tickangle = "auto")), 
+          data = resultFct$data_top_graph
+        ) 
+      else list(
+          plot = ggplotly(resultFct$plot + INBOtheme::theme_inbo(transparent = TRUE)) %>%
+            plotly::layout(xaxis = list(tickangle = "auto")), 
+          data = resultFct$data_top_graph
+        ) 
       
     } else if (all(c("plot", "output") %in% names(resultFct))) {
       
