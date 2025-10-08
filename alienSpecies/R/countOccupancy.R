@@ -13,11 +13,18 @@
 #' @export
 countOccupancy <- function(df, nSquares = 370) {
   
-  plotData <- data.table::melt(df[, c("species", "t0", "t1")], id.vars = "species")
+  plotData <- data.table::melt(df[, -c("total")], id.vars = "species")
   plotData[, "species"] <- droplevels(plotData[, "species"])
-  levels(plotData$variable) <- c(
-    translate("baseline")$title, 
-    translate("reporting")$title)
+  
+  old_levels <- sort( levels(plotData$variable) )
+  new_labels <- ifelse(
+    old_levels == "t0",
+    translate("baseline")$title,
+    paste0(translate("reporting")$title, " (Cycle ", substring(old_levels, 2), ")")
+  )
+  plotData$variable <- factor(plotData$variable,
+    levels = old_levels,
+    labels = new_labels)
   
   colors <- inbo_palette(3)[-1]
   names(colors) <- unique(plotData$variable)

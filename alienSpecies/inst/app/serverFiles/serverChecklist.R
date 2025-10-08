@@ -451,11 +451,17 @@ occupancySelected <- reactive({
     # Filter occupancy data to selected species
     if (!is.null(input$exoten_taxa)) {
       taxaSelected <- dictionary$scientificName[match(input$exoten_taxa, dictionary$gbifKey)]
-      occupancy[occupancy$species %in% taxaSelected]
+      occupancyFilt <- occupancy[occupancy$species %in% taxaSelected,]
     } else {
-      occupancy
+      occupancyFilt <- occupancy
     }
     
+    if (!is.null(filter_union()) && length(filter_union()) == 1 && "Non-union list" %in% filter_union()) {
+      occupancyFilt <- occupancyFilt[FALSE,]
+    }
+    
+    occupancyFilt
+  
   })
 
 # Checklist tab

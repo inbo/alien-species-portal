@@ -160,7 +160,7 @@ loadOccupancyData <- function() {
   dfCube$year <- NULL
   dfTable <- dcast(data = setDT(as.data.frame(table(dfCube))), 
     species ~ source, value.var = "Freq")
-  dfTable$total <- dfTable$t0 + dfTable$t1
+  dfTable$total <- rowSums(dfTable[ , !(names(dfTable) %in% "species")])
   
   dfTable <- dfTable[order(dfTable$total), ]
   dfTable$species <- factor(dfTable$species, levels = unique(dfTable$species)) # sort by freq in barchart
