@@ -14,13 +14,13 @@ tryCatch({
     if (is.character(params$plot) && file.exists(params$plot)) {
       # expects path to map
       currentLandscape <- TRUE
-      cat("\n\n\\blandscape\n")
+      cat("\n\n\\belandscape\n")
     }
           
     cat("##", params$title, "\n\n")
     
     # Description
-    cat(params$description, "\n\n")
+    cat(html_to_rmd(params$description), "\n\n")
     
     
     # Parameters
@@ -56,7 +56,7 @@ tryCatch({
       
       # leaflet & landscape: not working directly
       cat(knitr::knit_child("plotLandscape.Rmd", quiet = TRUE, envir = environment()))
-      cat("\n\n\\elandscape\n")
+      cat("\n\n\\enlandscape\n")
       
     } else {
       
@@ -78,7 +78,7 @@ tryCatch({
       ), "\n\n")
       
     if (currentLandscape)
-      cat("\n\n\\elandscape\n")
+      cat("\n\n\\enlandscape\n")
   
   })
 ```

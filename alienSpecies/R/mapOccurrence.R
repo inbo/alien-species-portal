@@ -899,11 +899,21 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
             
       observeEvent(triggerReport(), {
           
+          if (any(startsWith(id, c("management", "observation")))) {
+            tmpFile <- tempfile(fileext = ".html")
+            htmlwidgets::saveWidget(barplot()$plot %>% layout(font = list(size = 30)), file = tmpFile, selfcontained = FALSE)
+            tmp_png <- tempfile(fileext = ".png")
+            dir.create(dirname(tmp_png), showWarnings = FALSE, recursive = TRUE)
+            webshot::webshot(tmpFile, file = tmp_png, vwidth = 2300, vheight = 500)
+          } else {
+            tmp_png <- NULL
+          }
+          
           # Return the static values
           dashReport[[ns("mapOccurrence")]] <- c(
                 list(
                   plot = isolate(finalMap()),
-                  barplot = isolate(barplot()$plot),
+                  barplot = isolate(tmp_png),
                   title = isolate(title()),
                   description = isolate(tmpTranslation()$description),
                   showPeriod = (showPeriod && !is.null(input$period))

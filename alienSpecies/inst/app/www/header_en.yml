@@ -1,0 +1,46 @@
+--- 
+title: "`r paste0(translate(id = 'species_information')$title, ': ', taxonName())`" 
+author: 
+  - name:
+      family: "`r paste0('v', packageVersion('alienSpecies'))`"
+      given: Alien Species Portal
+    email: faunabeheer@inbo.be
+    orcid: 0000-0001-8804-4216  # TODO adapt
+    affiliation: Research Institute for Nature and Forest (INBO) 
+    corresponding: true
+reviewer: 
+  - name:
+      given: "NULL"
+      family: "NULL"
+      
+year: "`r format(Sys.Date(), '%Y')`"
+cover-description: "NULL"
+github-repo: inbo/alien-species-portal
+doi: 00.00000/inbo.00000000
+#depotnr: 0
+#reportnr: 0
+publisher: Research Institute for Nature and Forest (INBO) 
+funder: Research Institute for Nature and Forest (INBO) 
+rightsholder: Research Institute for Nature and Forest (INBO)
+community: inbo
+keywords: Alien Species Portal
+publication_type: publication-report
+
+lot: FALSE
+lof: FALSE
+lang: en
+style: Flanders
+
+site: bookdown::bookdown_site
+link-citations: FALSE
+
+output:
+  INBOmd::pdf_report: default
+editor_options: 
+  chunk_output_type: console
+  
+header-includes:
+  - \usepackage{pdflscape}
+  - \newcommand{\belandscape}{\begin{landscape}\pagestyle{empty}}
+  - \newcommand{\enlandscape}{\end{landscape}\pagestyle{fancy}}
+---

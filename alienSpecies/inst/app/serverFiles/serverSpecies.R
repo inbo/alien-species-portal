@@ -717,7 +717,7 @@ species_createReport <- footerSectionServer(id = "species")
 
 species_reportFile <- reactiveVal()
 
-observeEvent(species_createReport(), {
+observeEvent(species_createReport(), priority = 5, {
     
     showNotification(paste(translate(id = "createReport")$title, '...\n'),
       id = "reportWait", type = "message", duration = NULL)
@@ -731,8 +731,10 @@ species_readyForDownload <- reactive({
     req(is.null(species_reportFile()))
     
     # Wait for mgt output to be ready
-    if (!is.null(results$species_managementFile()))
+    if (!is.null(results$species_managementFile())) {
+      removeNotification(id = "reportWait")
       validate(need(any(grepl("management", names(dashReport))), "Please wait"))
+    }
     
     removeNotification(id = "reportWait")   
     
@@ -750,23 +752,48 @@ observeEvent(species_readyForDownload(), {
         setwd(tempdir())
         on.exit(setwd(oldDir))
         
-        fromFiles <- system.file("app/www", c(
-            "reportSpecies.Rmd", 
-            "plotSpecies.Rmd",
-            "plotLandscape.Rmd"
-          ), package = "alienSpecies")
-        file.copy(from = fromFiles, to = file.path(tempdir(), basename(fromFiles)), overwrite = TRUE)
+        header_file <- switch(results$language,
+          "en" = "header_en.yml",
+          "nl" = "header_nl.yml",
+          "fr" = "header_fr.yml")
         
-        species_reportFile(
-          rmarkdown::render(
-            input = file.path(tempdir(), basename(fromFiles[1])),
-            output_file = tempfile(fileext = ".pdf"),
-            intermediates_dir = tempdir(),
-            output_options = list(
-              bigLogo = getPathLogo(type = "combined")
-            )
-          )
-        )
+        fromFiles <- system.file("app/www", c(
+            "index.Rmd", 
+            "plotSpecies.Rmd",
+            "plotLandscape.Rmd",
+            "logo.png",
+            "logoTrias.png"
+          ), package = "alienSpecies")
+        toFiles <- file.path(tempdir(), basename(fromFiles))
+        for (i in seq_along(fromFiles)) {
+          src <- fromFiles[i]
+          dest <- toFiles[i]
+          
+          if (basename(src) == "index.Rmd") {  # Add custom header based on language
+            header_lines <- readLines(system.file("app/www", header_file, package = "alienSpecies"))
+            rmd_lines <- readLines(src)
+            combined <- c(header_lines, "", rmd_lines)
+            writeLines(combined, dest)
+          } else {
+            file.copy(from = src, to = dest, overwrite = TRUE)
+          }
+        }
+        
+        tmpReport <- tempfile(fileext = ".pdf")
+        suppressWarnings({rmarkdown::render(
+          input = file.path(tempdir(), basename(fromFiles[1])),
+          output_file = tmpReport,
+          intermediates_dir = tempdir(),
+          output_options = list(
+            bigLogo = getPathLogo(type = "combined")
+          ),
+          quiet = TRUE
+        )})
+        
+        finalReport <- tempfile(fileext = ".pdf")
+        qpdf::pdf_subset(tmpReport, pages = 2:qpdf::pdf_length(tmpReport), output = finalReport)
+        
+        species_reportFile(finalReport)
         
         session$sendCustomMessage(type = "imageReady", 
           message = list(id = "species-downloadReport"))

@@ -245,22 +245,37 @@ getPathLogo <- function(type = c("inbo", "trias", "combined")) {
 #' @author mvarewyck
 #' @import plotly
 #' @export
-plotlyReport <- function(myPlot) {
+plotlyReport <- function(myPlot, height = 800) {
   
-  myPlot <- myPlot %>% config(displayModeBar = FALSE)
+  myPlot <- myPlot %>% layout(
+      font = list(size = 26), 
+      legend = list( font = list(size = 28),
+        title = list(
+          font = list(size = 26)
+        )),
+      xaxis = list(
+        title = list(font = list(size = 28)), 
+        tickfont = list(size = 24),                                  
+        showgrid = FALSE
+      ),
+      yaxis = list(
+        title = list(font = list(size = 28)),
+        tickfont = list(size = 24),
+        showgrid = FALSE
+      )
+    ) %>%
+    style(marker = list(size = 14)) %>% 
+    config(displayModeBar = FALSE) 
   
-  # remove gridlines
-  if (is.null(myPlot$x$layoutAttrs[[1]]$xaxis))
-    myPlot$x$layoutAttrs[[1]]$xaxis <- list(showgrid = FALSE) else
-    myPlot$x$layoutAttrs[[1]]$xaxis$showgrid <- FALSE
-#  myPlot$x$layoutAttrs[[1]]$xaxis$ticks <- "outside"
+  tmp_html <- tempfile(fileext = ".html")
+  saveWidget(myPlot, tmp_html, selfcontained = TRUE)
   
-  if (is.null(myPlot$x$layoutAttrs[[1]]$yaxis))
-    myPlot$x$layoutAttrs[[1]]$yaxis <- list(showgrid = FALSE) else
-    myPlot$x$layoutAttrs[[1]]$yaxis$showgrid <- FALSE
-#  myPlot$x$layoutAttrs[[1]]$yaxis$ticks <- "outside"
+  # Take a screenshot to a PNG
+  tmp_png <- tempfile(fileext = ".png")
+  dir.create(dirname(tmp_png), showWarnings = FALSE, recursive = TRUE)
+  webshot::webshot(tmp_html, file = tmp_png, vwidth = 1800, vheight = height)
   
-  myPlot %>% layout(autosize = FALSE, width = 1000, height = 400)
+  knitr::include_graphics(tmp_png)
   
 }
 
@@ -287,3 +302,33 @@ download_translations <- function() {
   return(temp_dir)
 }
 
+
+#' Convert text in html format to markdown format (for report)
+#' 
+#' @return character html text
+#' 
+#' @author sjunius
+#' @export
+html_to_rmd <- function(html_text) {
+  temp_html <- tempfile(fileext = ".html")
+  temp_md <- tempfile(fileext = ".md")
+  
+  # Write HTML to temp file
+  writeLines(html_text, temp_html)
+  
+  # Convert using pandoc
+  rmarkdown::pandoc_convert(
+    input = temp_html,
+    to = "markdown",
+    output = temp_md
+  )
+  
+  # Read the result
+  result <- readLines(temp_md, warn = FALSE)
+  result <- paste(result, collapse = "\n")
+  
+  # Clean up
+  unlink(c(temp_html, temp_md))
+  
+  return(result)
+}
