@@ -13,13 +13,14 @@
 #' @param showSummary boolean, whether to show a select input field for summary choice
 #' @param showPeriod boolean, whether to show a slider input field for period (first_observed)
 #' @param exportData boolean, whether a download button for the data is shown
+#' @param exportGraph boolean, whether a download button for the graph is shown
 #' @param doWellPanel boolean, whether to display the options within a 
 #' \code{shiny::wellPanel()}
 #' @return ui object (tagList)
 #' @import shiny
 #' @export
 optionsModuleUI <- function(id, showSummary = FALSE, 
-  showPeriod = FALSE, exportData = TRUE, doWellPanel = TRUE) {
+  showPeriod = FALSE, exportData = TRUE, exportGraph = TRUE, doWellPanel = TRUE) {
   
   ns <- NS(id)
   
@@ -33,7 +34,10 @@ optionsModuleUI <- function(id, showSummary = FALSE,
         column(12, uiOutput(ns("period")))
     ),
     if (exportData)
-      downloadButton(ns("dataDownload"), "Download data")
+      downloadButton(ns("dataDownload"), "Download data"),
+    if (exportGraph)
+      actionButton(ns("graphDownload"), "Download Graph", icon = icon("download"),
+        class = "btn-default shiny-download-link downloadButton", type = "button")
   )
   
   if (doWellPanel)
@@ -272,6 +276,13 @@ plotModuleServer <- function(id, plotFunction, data,
           
         }
       )
+      
+      observeEvent(input$graphDownload, {
+          shinyscreenshot::screenshot(id="plot", 
+            filename=paste0(if (!is.null(triasFunction)) triasFunction else plotFunction, "_graph")
+          )
+          
+        })
       
       
       output$table <- DT::renderDT({

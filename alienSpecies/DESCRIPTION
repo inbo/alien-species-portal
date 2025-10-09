@@ -34,6 +34,7 @@ Imports:
     shiny.i18n,
 	  shiny,
 	  shinycssloaders,
+	  shinyscreenshot,
 	  sf,
     terra,
 	  testthat (>= 3.0.0),

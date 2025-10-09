@@ -1325,13 +1325,13 @@ mapRegionsServer <- function(id, species, gewest, df, occurrenceData, shapeData,
             period = input$year, 
             content = "management", fileExt = "png"),
         content = function(file) {
-          file.copy(from = pngFile, to = file, overwrite = TRUE)
+          file.copy(from = finalMap(), to = file, overwrite = TRUE)
           
         }
       )
         
       observeEvent(input$download, {
-          leafletProxy("spacePlot") %>% leaflet.extras2::easyprintMap(
+          leafletProxy("regionsPlot") %>% leaflet.extras2::easyprintMap(
             sizeModes = "CurrentSize",
             filename = nameFile(species = species(),
               period = input$year, 

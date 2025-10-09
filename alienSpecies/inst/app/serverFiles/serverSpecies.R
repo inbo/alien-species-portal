@@ -584,7 +584,7 @@ output$species_managementContent <- renderUI({
         mapRegionsUI(id = "management2", plotDetails = c("flanders", "region"), showUnit = FALSE),
         plotTriasUI(id = "management2_lente"),
         countNestenUI(id = "management2_province"),
-        plotTriasUI(id = "management2_provinceTable", outputType = "table"),
+        plotTriasUI(id = "management2_provinceTable", outputType = "table", exportGraph = FALSE),
         countYearGroupUI(id = "management2", showPlotDefault = TRUE)
       )
       

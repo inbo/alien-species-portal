@@ -90,7 +90,7 @@ tagList(
       
       tabPanel(value = "checklist_pathways", titleModuleUI(id = "checklist_pathways"), 
         
-        plotTriasUI(id = "checklist_tablePathway", outputType = "table"),
+        plotTriasUI(id = "checklist_tablePathway", outputType = "table", exportGraph = FALSE),
         plotTriasUI(id = "checklist_pathway1"),
         plotTriasUI(id = "checklist_pathway1Trend"),
         plotTriasUI(id = "checklist_pathway2"),

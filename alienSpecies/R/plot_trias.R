@@ -282,7 +282,7 @@ plotTriasServer <- function(id, data, triasFunction,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = FALSE) {
+plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = FALSE, exportGraph = TRUE) {
   
   ns <- NS(id)
   outputType <- match.arg(outputType)
@@ -300,7 +300,7 @@ plotTriasUI <- function(id, outputType = c("plot", "table"), showPlotDefault = F
       if (outputType == "plot")
           plotModuleUI(id = ns("plotTrias")) else
           tableModuleUI(id = ns("plotTrias")),
-      optionsModuleUI(id = ns("plotTrias"), doWellPanel = FALSE),
+      optionsModuleUI(id = ns("plotTrias"), exportGraph = exportGraph, doWellPanel = FALSE),
       tags$hr()
     
     )
