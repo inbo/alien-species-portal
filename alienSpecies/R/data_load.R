@@ -146,7 +146,7 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
 
 
 
-#' Create data with occupancy for t0 and t1 data
+#' Create data with occupancy for tX data
 #' 
 #' @author mvarewyck
 #' @importFrom data.table dcast setDT as.data.table
@@ -154,13 +154,23 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
 
 loadOccupancyData <- function() {
   
-  readS3(file = "dfCube.RData")
+  #  readS3(file = "dfCube.RData") # Old file
   
+  # TODO fetch correct file from bucket
+  dfCube <- read.csv(system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"), sep = ",", encoding = "UTF-8")
   dfCube$cell_code10 <- NULL
-  dfCube$year <- NULL
-  dfTable <- dcast(data = setDT(as.data.frame(table(dfCube))), 
+  
+  # Gather occupancy data per tX
+  dfTable <- dcast(data = setDT(as.data.frame(table(dfCube %>% select(-period)))), 
     species ~ source, value.var = "Freq")
   dfTable$total <- rowSums(dfTable[ , !(names(dfTable) %in% "species")])
+  
+  # Gather period definitions per tX
+  dfPeriod <- dcast(data = unique(dfCube[, c("species", "source", "period")]), 
+    species ~ source, value.var = "period")
+  tCols <- setdiff(names(dfPeriod), "species")
+  setnames(dfPeriod, old = tCols, new = paste0(tCols, "_period"))
+  dfTable <- dfTable %>% merge(dfPeriod)
   
   dfTable <- dfTable[order(dfTable$total), ]
   dfTable$species <- factor(dfTable$species, levels = unique(dfTable$species)) # sort by freq in barchart

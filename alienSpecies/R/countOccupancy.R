@@ -13,24 +13,45 @@
 #' @export
 countOccupancy <- function(df, nSquares = 370) {
   
-  plotData <- data.table::melt(df[, -c("total")], id.vars = "species")
+  periods <- list()
+  periodCols <- colnames(df)[endsWith(colnames(df), "_period")]
+  for (col in periodCols) {
+    cycle <- gsub("_period", "", col)
+    if (cycle == "t0") {
+      periods[[cycle]] <- df %>% select(c("species", col))
+    } else {
+      periods[[cycle]] <- na.omit(unique(df %>% select(c(col))))[[1]]
+    }
+  }
+  
+  
+  plotData <- data.table::melt(df %>% select(-c("total", periodCols)), id.vars = "species")
   plotData[, "species"] <- droplevels(plotData[, "species"])
   
   old_levels <- sort( levels(plotData$variable) )
-  new_labels <- ifelse(
-    old_levels == "t0",
-    translate("baseline")$title,
-    paste0(translate("reporting")$title, " (Cycle ", substring(old_levels, 2), ")")
-  )
+  new_labels <- sapply(old_levels, function(x) {
+      if (x == "t0") {
+        translate("baseline")$title
+      } else {
+        paste0(translate("reporting")$title, " (Cycle ", substring(x, 2), ": ", periods[[x]], ")")
+      }
+    })
+    
   plotData$variable <- factor(plotData$variable,
     levels = old_levels,
     labels = new_labels)
   
-  colors <- inbo_palette(3)[-1]
-  names(colors) <- unique(plotData$variable)
+  plotData <- as.data.frame(merge(plotData, as.data.frame(periods$t0)))
+  plotData$text <- paste0(
+    "(", round(plotData$value/nSquares*100, 5), ", ", plotData$species, ")<br>",
+    plotData$variable, ifelse(plotData$variable == translate("baseline")$title, paste0(" (", plotData$t0_period, ")"), "")
+  )
   
-  p <- plot_ly(data = plotData, x = ~value/nSquares*100, y = ~species,
-      color = ~variable, colors = colors, type = "bar", orientation = "h") %>%
+  colors <- inbo_palette(length(levels(plotData$variable)) + 1)[-1]
+  names(colors) <- levels(plotData$variable)
+  
+  p <- plot_ly(data = plotData, x = ~value/nSquares*100, y = ~species, text = ~text, textposition = "none",
+      color = ~variable, colors = colors, type = "bar", orientation = "h", hoverinfo = "text") %>%
     layout(xaxis = list(title = translate('percentCages')$title),
       yaxis = list(title = ""), barmode = 'group')
   
