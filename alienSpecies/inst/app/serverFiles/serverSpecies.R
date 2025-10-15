@@ -102,6 +102,15 @@ output$species_disclaimer <- renderUI({
     
   })
 
+output$missingFilters_message <- renderUI({
+    if (nchar(input$species_choice) == 0 || is.null(input$species_gewest)) {
+        tags$div(style = "color: red; font: bold;", translate("missingFilters_species")$title)
+    } else {
+      NULL
+    }
+    
+  })
+
 ### Update tabpage wrt URL link
 ### -----------------
 
