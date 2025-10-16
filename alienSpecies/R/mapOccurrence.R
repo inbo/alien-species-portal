@@ -230,7 +230,7 @@ paletteMap <- function(groupNames, groupVariable) {
   # Actually only needed if groupVariable == "cell_codes"
   groupNames <- gsub(groupVariable, "", groupNames)
   
-  myPalette <- c("transparent", "red", inbo_palette())
+  myPalette <- c(adjustcolor("black", alpha.f = 0.1), "red", inbo_palette())
 
   myColors <- rev(myPalette[seq_along(groupNames)]) 
   
@@ -313,6 +313,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
   
   myMap <- baseMap
   
+  fillOpacities <- numeric(length(cubeShape))
   for (i in length(cubeShape):1) {
     fillOpacity <- if (groupVariable != "cell_code" && i != length(cubeShape)) 
         0.5 
@@ -321,6 +322,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
       else 
         0
     
+    fillOpacities[i] <- fillOpacity
     myMap <- myMap %>%
       addPolygons(
         data = cubeShape[[i]],
@@ -334,17 +336,17 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
   
   # Add legend
   if (legend != "none") { 
-    
-    myMap <- addLegend(
-      map = myMap,
-      position = legend,
-      pal = palette, 
-      values = myColors$levels,
-      opacity = 0.8,
-      title = translate("legend")$title,
-      layerId = "legend"
-    )
-    
+  
+      myMap <- leaflegend::addLegendFactor(
+        map = myMap,
+        position = legend,
+        pal = palette, 
+        values = myColors$levels,
+        opacity = 1,
+        fillOpacity = rev(fillOpacities),
+        title = translate("legend")$title,
+        layerId = "legendCustom"
+      ) 
   }
   
   # Add background map
@@ -355,7 +357,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
   }
   
   
-  myMap
+  list(map = myMap, opacity = fillOpacities)
   
 }
 
@@ -450,7 +452,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
       
       ns <- session$ns
       tmpFile <- tempfile(fileext = ".html")
-            
+      results <- reactiveValues()
 
       noData <- reactive(translate("noData")$title)
       tmpTranslation <- reactive(translate(ns("mapOccurrence")))
@@ -647,11 +649,16 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           
           validate(need(cubeShape(), noData()))
           
-          mapCube(cubeShape = cubeShape(), groupVariable = groupVariable, 
+          results$opacities <- NULL
+          
+          outp <- mapCube(cubeShape = cubeShape(), groupVariable = groupVariable, 
             # when switching species, need to create correct basemap
             baseMap = addBaseMap(regions = isolate(gewest()), combine = isolate(input$combine)),
             addGlobe = FALSE, legend = "topright")
           
+          results$opacities <- outp$opacity
+          
+          outp$map
         })
       
       # Send map to the UI
@@ -660,25 +667,15 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
               
               if (is.null(shapeData))
                 mapOccurrenceLeaflet() %>%
-                  leaflet.extras::addFullscreenControl() %>% 
-                  leaflet.extras2::addEasyprint(  # use leaflets personal functionality to download maps
-                    options = leaflet.extras2::easyprintOptions(
-                      exportOnly = TRUE,
-                      hideControlContainer = FALSE,  # Keep controls visible
-                      hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
-                    )
-                  )
-              else
-                mapCubeLeaflet() %>%
-                  leaflet.extras::addFullscreenControl() %>% 
-                  leaflet.extras2::addEasyprint(  # use leaflets personal functionality to download maps
-                    options = leaflet.extras2::easyprintOptions(
-                      exportOnly = TRUE,
-                      hideControlContainer = FALSE,  # Keep controls visible
-                      hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
-                    )
-                  )
-              
+                  leaflet.extras::addFullscreenControl()
+              else {
+                
+                myMap <- mapCubeLeaflet() %>%
+                  leaflet.extras::addFullscreenControl()
+                
+                myMap
+              }
+            
             }, error = function(e) {
               NULL
             })
@@ -752,24 +749,26 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           req(input$legend)
           
           proxy <- leafletProxy("spacePlot")
-          proxy %>% removeControl(layerId = "legend")
+          proxy %>% removeControl(layerId = "legendCustom")
           
           if (input$legend != "none") {
+            req(results$opacities)
             
             myColors <- paletteMap(groupNames = names(cubeShape()), 
               groupVariable = groupVariable)
             palette <- colorFactor(palette = myColors$colors, levels = myColors$levels)
             
-            proxy %>% addLegend(
-              position = input$legend,
-              pal = palette, 
-              values = myColors$levels,
-              opacity = 0.8,
-              title = translate("legend")$title,
-              layerId = "legend"
-            )                      
-            
-          }
+            proxy %>% leaflegend::addLegendFactor(
+                position = input$legend,
+                pal = palette, 
+                values = myColors$levels,
+                opacity = 1,
+                fillOpacity = rev(results$opacities),
+                title = translate("legend")$title,
+                width = 15, height = 15,
+                layerId = "legendCustom"
+              ) 
+          }              
           
         })
           
@@ -797,7 +796,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
               addGlobe = if (is.null(input$globe)) 
                   TRUE else 
                   input$globe %% 2 == 0
-            )
+            )$map 
             
           }
           
@@ -821,39 +820,40 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
       
       # Download the map
       output$downloadMapButton <- renderUI({
-#          downloadButton(ns("download"), 
-#            label = translate(uiText(), "downloadMap")$title, 
-#            class = "downloadButton")
-          actionButton(ns("download"), 
+          downloadButton(ns("download"), 
             label = translate("downloadMap")$title, 
-            icon = icon("download"),
-            class = "btn-default shiny-download-link downloadButton", type = "button")
+            class = "downloadButton")
+#          actionButton(ns("download"), 
+#            label = translate("downloadMap")$title, 
+#            icon = icon("download"),
+#            class = "btn-default shiny-download-link downloadButton", type = "button")
         })
       
-      observeEvent(input$download, {
-          
-          leafletProxy("spacePlot") %>% leaflet.extras2::easyprintMap(
-            sizeModes = "CurrentSize",
-            filename = nameFile(species = species(),
-              period = input$period, 
-              content = id, fileExt = "png")
-          )
-          
-        })
+#      observeEvent(input$download, {
+#          browser()
+#          leafletProxy("spacePlot") %>% 
+#            removeControl(layerId = "legendCustom") %>% leaflet.extras2::easyprintMap(
+#            sizeModes = "CurrentSize",
+#            filename = nameFile(species = species(),
+#              period = input$period, 
+#              content = id, fileExt = "png")
+#          )
+#          
+#        })
       
-#      output$download <- downloadHandler(
-#        filename = function()
-#          nameFile(species = species(),
-#            period = input$period, 
-#            content = id, fileExt = "png"),
-#        content = function(file) {
-#          
-#          # convert temp .html file into .png for download
-#          webshot2::webshot(url = finalMap(), file = file,
-#            vwidth = 1200, vheight = 600, cliprect = "viewport")
-#          
-#        }
-#      )
+      output$download <- downloadHandler(
+        filename = function()
+          nameFile(species = species(),
+            period = input$period, 
+            content = id, fileExt = "png"),
+        content = function(file) {
+          
+          # convert temp .html file into .png for download
+          webshot::webshot(url = finalMap(), file = file,
+            vwidth = 1200, vheight = 600, cliprect = "viewport")
+          
+        }
+      )
       
       output$downloadData <- downloadHandler(
         filename = function()

@@ -17,7 +17,7 @@ tagList(
         column(6,
           selectInput(inputId = "species_gewest", label = NULL,
             choices = NULL, multiple = TRUE, width = "100%")),
-        uiOutput("missingFilters_message")
+        column(12, uiOutput("missingFilters_message"))
       )
     ),
     # Disclaimer

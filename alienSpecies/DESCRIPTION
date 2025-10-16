@@ -24,6 +24,7 @@ Imports:
     httr,
     INBOtheme (<= 0.5.9),
     jsonlite,
+    leaflegend,
     leaflet (>= 2.2.0),
     leaflet.extras,
     leaflet.extras2,

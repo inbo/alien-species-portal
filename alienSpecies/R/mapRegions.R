@@ -285,15 +285,20 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData,
       layerId = "legend"
     )
     
-    if (!is.null(occurrenceData))
-      myMap <- addLegend(
+    if (!is.null(occurrenceData)) {
+      pal <- function(x) return("blue")
+      
+      myMap <- leaflegend::addLegendFactor(
         map = myMap,
         position = legend,
-        colors = "blue",
-        labels = translate("occurrence")$title,
+        pal = pal,
+        values = translate("occurrence")$title,
         opacity = 1,
+        width = 15, height = 15,
+        fillOpacity = 0,
         layerId = "legend2"
-      )
+      ) 
+    }
     
   }
   
@@ -1056,17 +1061,10 @@ mapRegionsServer <- function(id, species, gewest, df, occurrenceData, shapeData,
             shapeData = subShape(),
             regionLevel = input$regionLevel,
             baseMap = addBaseMap(regions = gewest()),
-            addGlobe = input$globe,
+            addGlobe = isolate(input$globe),
             palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
           ) %>%
-          leaflet.extras::addFullscreenControl() %>% 
-          leaflet.extras2::addEasyprint(   # use leaflets personal functionality to download maps
-            options = leaflet.extras2::easyprintOptions(
-              exportOnly = TRUE,
-              hideControlContainer = FALSE,  # Keep controls visible
-              hideClasses = c("leaflet-control-zoom", "leaflet-control-fullscreen", "leaflet-control-easyPrint")
-            )
-          )
+          leaflet.extras::addFullscreenControl()
           
         })
       
@@ -1188,14 +1186,19 @@ mapRegionsServer <- function(id, species, gewest, df, occurrenceData, shapeData,
               layerId = "legend"
             )
             
-            if (!is.null(occurrenceData))
-              proxy %>% addLegend(
+            if (!is.null(occurrenceData)) {
+              pal <- function(x) return("blue")
+              
+              proxy %>% leaflegend::addLegendFactor(
                 position = input$legend,
-                colors = "blue",
-                labels = translate("occurrence")$title,
+                pal = pal,
+                values = translate("occurrence")$title,
                 opacity = 1,
+                fillOpacity = 0,
+                width = 15, height = 15,
                 layerId = "legend2"
               )
+            }
             
           }
           
@@ -1312,10 +1315,13 @@ mapRegionsServer <- function(id, species, gewest, df, occurrenceData, shapeData,
               label = translate("downloadMap")$title, 
               class = "downloadButton")
           } else {
-            actionButton(ns("download"), 
-              label = translate("downloadMap")$title, 
-              icon = icon("download"),
-              class = "btn-default shiny-download-link downloadButton", type = "button")
+          downloadButton(ns("download"), 
+            label = translate("downloadMap")$title, 
+            class = "downloadButton")
+#            actionButton(ns("download"), 
+#              label = translate("downloadMap")$title, 
+#              icon = icon("download"),
+#              class = "btn-default shiny-download-link downloadButton", type = "button")
           }
         })
       
@@ -1330,15 +1336,29 @@ mapRegionsServer <- function(id, species, gewest, df, occurrenceData, shapeData,
         }
       )
         
-      observeEvent(input$download, {
-          leafletProxy("regionsPlot") %>% leaflet.extras2::easyprintMap(
-            sizeModes = "CurrentSize",
-            filename = nameFile(species = species(),
-              period = input$year, 
-              content = "management", fileExt = "png")
-          )
+#      observeEvent(input$download, {
+#          leafletProxy("regionsPlot") %>% leaflet.extras2::easyprintMap(
+#            sizeModes = "CurrentSize",
+#            filename = nameFile(species = species(),
+#              period = input$year, 
+#              content = "management", fileExt = "png")
+#          )
+#          
+#        })
+
+      output$download <- downloadHandler(
+        filename = function()
+          nameFile(species = species(),
+            period = input$year, 
+            content = "management", fileExt = "png"),
+        content = function(file) {
           
-        })
+          # convert temp .html file into .png for download
+          webshot::webshot(url = finalMap(), file = file,
+            vwidth = 1200, vheight = 600, cliprect = "viewport")
+          
+        }
+      )
       
       output$downloadData <- downloadHandler(
         filename = function()
