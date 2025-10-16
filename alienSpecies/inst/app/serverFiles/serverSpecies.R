@@ -30,7 +30,7 @@ results$species_choices <- reactive({
     # Observations
     taxChoices <- occurrenceData[!duplicated(taxonKey), scientificName]
     # Reporting
-    reportChoices <- dfCube[!duplicated(species) & !species %in% taxChoices, species]
+    reportChoices <- dfCube[!duplicated(dfCube$species) & !dfCube$species %in% taxChoices, "species"]
     
     choiceNames <- sort(c(taxChoices, reportChoices))
     choices <- dictionary$taxonKey[match(choiceNames, dictionary$scientificName)]
@@ -301,7 +301,7 @@ observe({
 dashReport <- mapCubeServer(id = "reporting_t01",
   species = taxonName,
   gewest = reactive(req(input$species_gewest)),
-  df = reactive(dfCube[species %in% taxonName(), ]),
+  df = reactive(dfCube[dfCube$species %in% taxonName(), ]),
   filter = reactive(list(source = unique(dfCube$source[dfCube$species %in% taxonName()]))),
   groupVariable = "source",
   shapeData = allShapes,

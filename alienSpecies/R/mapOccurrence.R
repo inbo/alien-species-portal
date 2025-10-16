@@ -42,7 +42,7 @@ createCubeData <- function(df, shapeData, groupVariable,
     # t0 and t1
     if (length(allGroups) > 1) {
       combinedGroup <- paste(allGroups, collapse = " & ")
-      combinedData <- df[duplicated(df, by = cellCodes), ][, source := combinedGroup]
+      combinedData <- setDT(df)[duplicated(df, by = cellCodes), ][, source := combinedGroup]
       df <- rbind(df[!df[[cellCodes]] %in% combinedData[[cellCodes]], ], combinedData)
     } else combinedGroup <- NULL
     # neither

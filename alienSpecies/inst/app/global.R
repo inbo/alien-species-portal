@@ -42,9 +42,15 @@ if (!doDebug | !exists("occurrenceData"))
 if (!doDebug | !exists("taxaChoices"))
   taxaChoices <- loadTabularData(type = "taxachoices")
 
-# Load occupancy data from createOccupancyCube() - also loads `dfCube`
+# Load occupancy data from createOccupancyCube()
 if (!doDebug | !exists("occupancy"))
   occupancy <- loadOccupancyData()
+
+# TODO fetch correct file from bucket
+dfCube <- read.csv(
+    system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"), 
+    sep = ",", encoding = "UTF-8"
+  )
 
 
 # Specify default year to show (and default max to show in time ranges)
