@@ -53,7 +53,8 @@ comboTreeInput <- function(inputId, choices, multiple = TRUE, cascaded = FALSE,
 #' @author mvarewyck
 #' @import shiny
 #' @export
-filterSelectServer <- function(id, url, initChoices, selected = reactive(NULL)) {
+filterSelectServer <- function(id, url, initChoices, selected = reactive(NULL), 
+  customTranslations = FALSE) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -62,7 +63,12 @@ filterSelectServer <- function(id, url, initChoices, selected = reactive(NULL)) 
 
       output$filter <- renderUI({
           initChoices <- initChoices()
-          names(initChoices) <- translate(initChoices)$title
+          
+          if (!customTranslations) {
+            names(initChoices) <- translate(initChoices)$title
+          } else {
+            names(initChoices) <- translate(names(initChoices))$title
+          }
           initChoices[1] <- ""
           
           selectedChoices <- if (!is.null(url()[[id]])) {

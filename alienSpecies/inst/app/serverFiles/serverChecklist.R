@@ -261,10 +261,13 @@ currentNativeRange <- observeEvent(filter_nativeRange(), priority = 5, ignoreNUL
 
 # pathway level 2
 nativePw2Choices <- eventReactive(filter_pathwayLevel1(), ignoreNULL = FALSE, {
+    pwData <- unique(exotenData[, c("pathway_level1", "pathway_level2")]) %>% arrange(pathway_level1, pathway_level2)
+    
     if (is.null(filter_pathwayLevel1())) {
-      sort(unique(exotenData$pathway_level2))
+      setNames( pwData$pathway_level2, paste(pwData$pathway_level1, pwData$pathway_level2, sep = "_") )
     } else {
-      sort(unique(exotenData$pathway_level2[exotenData$pathway_level1 %in% filter_pathwayLevel1()]))
+      pwData <- pwData[pwData$pathway_level1 %in% filter_pathwayLevel1()]
+      setNames( pwData$pathway_level2, paste(pwData$pathway_level1, pwData$pathway_level2, sep = "_") )
     }
     
   })
@@ -273,7 +276,8 @@ filter_pathwayLevel2 <- filterSelectServer(
   id = "pw_level2",
   url = urlSearch,
   initChoices = reactive(c("allPathwaySubCategories", nativePw2Choices())),
-  selected = reactive(results$filter_pwLevel2)
+  selected = reactive(results$filter_pwLevel2),
+  customTranslations = TRUE
 )
 
 observeEvent(filter_pathwayLevel2(), priority = 5, ignoreNULL = FALSE, {
