@@ -313,8 +313,24 @@ html_to_rmd <- function(html_text) {
   temp_html <- tempfile(fileext = ".html")
   temp_md <- tempfile(fileext = ".md")
   
+  html_text <- gsub('""', '"', html_text, fixed = TRUE)
+  html_text <- gsub('</br>', '<br>', html_text, fixed = TRUE)
+  
+  if (grepl("tooltip-box", html_text)) {
+    doc <- xml2::read_html(html_text, options = "HUGE")
+    # Remove all elements with class 'tooltip-box'
+    xml2::xml_remove(xml2::xml_find_all(doc, ".//span[contains(@class, 'tooltip-box')]"))
+    
+    # Extract cleaned HTML as text
+    body <- xml2::xml_find_first(doc, "//body")
+    clean_html <- paste(as.character(xml2::xml_children(body)), collapse = "\n")
+  } else {
+    clean_html <- html_text
+  }
+  
+  
   # Write HTML to temp file
-  writeLines(html_text, temp_html)
+  writeLines(clean_html, temp_html)
   
   # Convert using pandoc
   rmarkdown::pandoc_convert(

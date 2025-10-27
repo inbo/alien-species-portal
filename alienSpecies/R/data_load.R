@@ -250,6 +250,27 @@ translate <- function(id) {
     translation[compositeIds, "title"] <- compositeTranslations[translation[compositeIds, "id"]]
   } 
   
+  # Translations with hover
+  hoverIds <- grepl("\\{\\{\\{hover_", translation$description, fixed = FALSE)
+  if (any(hoverIds)) {
+    newIds <- unique(translation[hoverIds, "description"])
+    
+    hoverTranslations <- sapply(newIds, function(x) {
+        matches <- stringr::str_extract_all(x, "\\{\\{\\{hover_.*?\\}\\}\\}")[[1]]
+        keys <- stringr::str_match(matches, "\\{\\{\\{(.*?)\\}\\}\\}")[,2]
+        for (i in seq_along(keys)) {
+          x <- gsub(
+            pattern = paste0("\\{\\{\\{", keys[i], "\\}\\}\\}"), 
+            replacement = i18n$t(paste0(keys[i], "_description")), 
+            x = x
+          )
+        }
+        x
+      })
+    
+    translation[hoverIds, "description"] <- hoverTranslations
+  }
+  
   idsWithoutTranslation <- which(endsWith(translation$title, "_title"))
   translation[idsWithoutTranslation, "title"] <- translation[idsWithoutTranslation, "id"]
   translation[endsWith(translation$description, "_description"), "description"] <- ""
