@@ -316,6 +316,7 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData,
 
 #' Map with management for single species
 #' @inheritParams mapRegions 
+#' @param report boolean whether the map is created for the report
 #' @return ggplot object
 #' 
 #' @author mvarewyck
@@ -324,7 +325,7 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData,
 #' @export
 mapRegionsFacet <- function(managementData, shapeData,
   regionLevel = c("communes", "provinces", "cell_code1", "cell_code10"), 
-  palette = "YlOrBr", legend = "right", addGlobe = FALSE) {
+  palette = "YlOrBr", legend = "right", addGlobe = FALSE, report = FALSE) {
   
   # For R CMD check
   group <- NULL
@@ -348,7 +349,7 @@ mapRegionsFacet <- function(managementData, shapeData,
   
   # Facet plot
   myPlot <- ggplot() + 
-    geom_sf(data = plotData, aes(fill = group), size = 0.5, show.legend = TRUE) + 
+    geom_sf(data = plotData, aes(fill = group), size = ifelse(report, 0.15, 0.4), show.legend = TRUE) + 
     facet_wrap(~ year, ncol = 3) +
     scale_fill_manual(values = scaleValues, drop = FALSE) +
     theme_inbo(transparent = TRUE) + 
@@ -365,17 +366,17 @@ mapRegionsFacet <- function(managementData, shapeData,
         zoom = 7, alpha = 0.5, forcedownload = FALSE,
         cachedir = system.file("extdata", package = "alienSpecies")) +
       # redraw polygons
-      geom_sf(data = plotData, aes(fill = group), size = 0.5) +
+      geom_sf(data = plotData, aes(fill = group), size = ifelse(report, 0.15, 0.4)) +
       labs(caption = "\u00a9 OpenStreetMap contributors")
   
   if (regionLevel == "communes") {
     # Add province borders
     myPlot <- myPlot +
-      geom_sf(data = shapeData$provinces, fill = NA, color = "black", size = 1)
+      geom_sf(data = shapeData$provinces, fill = NA, color = "black", size = ifelse(report, 0.4, 0.8))
   } else if (regionLevel %in% c("cell_code1", "cell_code10")) {
     # Add gewest borders
     myPlot <- myPlot +
-      geom_sf(data = shapeData$gewestbel, fill = NA, color = "black", size = 1)
+      geom_sf(data = shapeData$gewestbel, fill = NA, color = "black", size = ifelse(report, 0.4, 0.8))
   }
   
   myPlot
@@ -783,7 +784,7 @@ createBinsServer <- function(id, data) {
 #' @import shiny
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom webshot2 webshot
+#' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @importFrom ggplot2 ggsave
 #' @export
@@ -1270,7 +1271,8 @@ mapRegionsServer <- function(id, species, gewest, df, occurrenceData, shapeData,
               regionLevel = if (is.null(input$regionLevel)) "communes" else input$regionLevel,
               legend = if (is.null(input$legend)) "bottom" else input$legend,
               addGlobe = if (is.null(input$globe)) FALSE else input$globe,
-              palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr"
+              palette = if (!is.null(input$unit) && input$unit == "difference") "RdYlGn" else "YlOrBr",
+              report = TRUE
             )
             
             ggplot2::ggsave(pngFile, plot = myPlot, width = 8, height = 4, dpi = 150)

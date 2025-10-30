@@ -435,7 +435,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
 #' @import shiny
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom webshot2 webshot
+#' @importFrom webshot webshot
 #' @importFrom sf st_drop_geometry
 #' @export
 mapCubeServer <- function(id, species, gewest, df, shapeData,
@@ -915,7 +915,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
                   plot = isolate(finalMap()),
                   barplot = isolate(tmp_png),
                   title = isolate(title()),
-                  description = isolate(tmpTranslation()$description),
+                  description = isolate(decodeText(tmpTranslation()$description, params = list(species = species()))),
                   showPeriod = (showPeriod && !is.null(input$period))
                 ),
                 reactiveValuesToList(input)

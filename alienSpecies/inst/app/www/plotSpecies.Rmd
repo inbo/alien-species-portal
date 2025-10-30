@@ -10,12 +10,6 @@ tryCatch({
     
     params <- dashReport[[id]]
     currentParams <- names(params)
-    
-    if (is.character(params$plot) && file.exists(params$plot)) {
-      # expects path to map
-      currentLandscape <- TRUE
-      cat("\n\n\\belandscape\n")
-    }
           
     cat("##", params$title, "\n\n")
     
@@ -44,6 +38,12 @@ tryCatch({
       
       cat(paste0("*", translate("noParameters")$title, "*\n\n"))
     
+    }
+    
+    if (is.character(params$plot) && file.exists(params$plot)) {
+      # expects path to map
+      currentLandscape <- TRUE
+      cat("\n\n\\belandscape\n")
     }
     
     # Plot

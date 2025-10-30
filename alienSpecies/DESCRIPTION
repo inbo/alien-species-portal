@@ -41,11 +41,12 @@ Imports:
 	  testthat (>= 3.0.0),
     tidyr,
 	  trias (>= 3.1.1),
-	  webshot2,
+	  webshot,
+    xml2,
 	  xtable
 Suggests:
     shinyjs
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Remotes: 
     inbo/INBOtheme@v0.5.9,
     trias-project/trias@v3.1.0

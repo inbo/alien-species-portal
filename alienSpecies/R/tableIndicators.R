@@ -83,7 +83,7 @@ tableIndicators <- function(exotenData, unionlistData, occurrenceData) {
 #' @import shiny
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom webshot2 webshot
+#' @importFrom webshot webshot
 #' @importFrom DT renderDT datatable
 #' @export
 tableIndicatorsServer <- function(id, exotenData, unionlistData, occurrenceData) {

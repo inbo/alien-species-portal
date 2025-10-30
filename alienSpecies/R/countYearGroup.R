@@ -167,7 +167,7 @@ countYearGroupServer <- function(id, species, data, groupChoices, dashReport = N
           dashReport[[ns("countYearGroup")]] <- isolate({
               c(plotResult(), 
                 list(
-                  title = tmpTranslation()$title, 
+                  title = decodeText(tmpTranslation()$title, params = list(species = species())), 
                   description = tmpTranslation()$description)
               )
             })
