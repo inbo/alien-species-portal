@@ -287,6 +287,7 @@ function(input, output, session) {
     })
     
     dbServer(id = "dbPage")
-    faqServer(id = "faqPage", language = reactive(results$language))
+    simpleHTMLPageServer(id = "about", language = reactive(results$language))
+    simpleHTMLPageServer(id = "faq", language = reactive(results$language))
   
 }

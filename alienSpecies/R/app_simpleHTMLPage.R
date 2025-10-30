@@ -4,7 +4,7 @@
 ###############################################################################
 
 
-#' FAQ page - server module
+#' Simple HTML page - server module
 #' 
 #' @inheritParams plotModuleServer 
 #' @param language reactive value, language
@@ -12,7 +12,7 @@
 #' 
 #' @author mvarewyck
 #' @export
-faqServer <- function(id, language) {
+simpleHTMLPageServer <- function(id, language) {
   
   moduleServer(id, function(input, output, session) {
       
@@ -20,18 +20,18 @@ faqServer <- function(id, language) {
       
       output$title <- renderUI({
           
-          translate(id = "faq")$title  
+          translate(id = id)$title  
           
         })
       
-      htmlSectionServer(id = "content", species = reactive("FAQ"),
+      htmlSectionServer(id = "content", species = reactive(toupper(id)),
         language = language)
       
     })
   
 }
 
-#' FAQ page - module UI
+#' Simple HTML page - module UI
 #' 
 #' @inheritParams plotModuleServer
 #' @return UI object, \code{tabPanel} object that can be included in 
@@ -39,11 +39,11 @@ faqServer <- function(id, language) {
 #' 
 #' @author mvarewyck
 #' @export
-faqUI <- function(id) {
+simpleHTMLPageUI <- function(id) {
   
   ns <- NS(id)
   
-  tabPanel(title = uiOutput(ns("title")), value = "faq",
+  tabPanel(title = uiOutput(ns("title")), value = id,
     tags$div(class = "noButton", style = "margin-top:20px;", 
       htmlSectionUI(id = ns("content")))
   )  

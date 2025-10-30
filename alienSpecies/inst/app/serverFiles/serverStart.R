@@ -12,6 +12,12 @@ output$start_title <- renderUI({
 output$start_tiles <- renderUI({
     
     tileChoices <- tabChoices[-1]
+    
+    # TODO Remove check once we know the about HTML file is available in aspbo (https://github.com/inbo/aspbo/issues/468)
+    if (!any(grepl("^ABOUT.*\\.html$", jsonlite::fromJSON(httr::content(httr::GET(paste0("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML?ref=", if (Sys.getenv("R_CONFIG_ACTIVE") == "production") "main" else "uat")), "text", encoding = "UTF-8"))$name, ignore.case = TRUE))) {
+      tileChoices <- tileChoices[tileChoices != "about"]
+    }
+    
     tileNames <- lapply(tileChoices, function(iChoice){
         foto <- list.files(path = system.file("app", "www", package = "alienSpecies"), pattern = iChoice)
         title <- translate(id = iChoice)$title

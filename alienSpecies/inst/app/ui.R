@@ -104,7 +104,11 @@ shinyUI(
           tabPanel(title = uiOutput("species_title"), value = "species_information",
             uiOutput("species_content")),
           dbUI(id = "dbPage"),
-          faqUI(id = "faqPage")
+          # TODO Remove check once we know the about HTML file is available in aspbo (https://github.com/inbo/aspbo/issues/468)
+          if (any(grepl("^ABOUT.*\\.html$", jsonlite::fromJSON(httr::content(httr::GET(paste0("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML?ref=", if (Sys.getenv("R_CONFIG_ACTIVE") == "production") "main" else "uat")), "text", encoding = "UTF-8"))$name, ignore.case = TRUE))) {
+            simpleHTMLPageUI(id = "about")
+          },
+          simpleHTMLPageUI(id = "faq")
         )
       
       )

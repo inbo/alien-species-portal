@@ -31,7 +31,7 @@ i18n$set_translation_language("id")
 ### -----------
 
 tabChoices <- c("start", "checklist_indicators", "species_information", 
-  "other_db", "faq", "management")[1:5]
+  "other_db", "about", "faq", "management")[1:6]
 
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")
