@@ -41,6 +41,6 @@ editor_options:
   
 header-includes:
   - \usepackage{pdflscape}
-  - \newcommand{\belandscape}{\begin{landscape}\pagestyle{fancy}}
+  - \newcommand{\belandscape}{\begin{landscape}\pagestyle{empty}}
   - \newcommand{\enlandscape}{\end{landscape}\pagestyle{fancy}}
 ---
