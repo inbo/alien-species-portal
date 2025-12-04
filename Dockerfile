@@ -21,7 +21,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 		fonts-crosextra-carlito \
     lmodern \
 		gnupg \
-    wget && \
+    wget \
+	libgit2-dev && \
     wget https://downloads.vivaldi.com/stable/vivaldi-stable_6.8.3381.55-1_$(dpkg --print-architecture).deb && \
     apt-get install --no-install-recommends -y ./vivaldi-stable*.deb && \
     rm -rf /var/lib/apt/lists/*
