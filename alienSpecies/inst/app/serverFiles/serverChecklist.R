@@ -261,7 +261,8 @@ currentNativeRange <- observeEvent(filter_nativeRange(), priority = 5, ignoreNUL
 
 # pathway level 2
 nativePw2Choices <- eventReactive(filter_pathwayLevel1(), ignoreNULL = FALSE, {
-    pwData <- unique(exotenData[, c("pathway_level1", "pathway_level2")]) %>% arrange(pathway_level1, pathway_level2)
+    pwData <- unique(exotenData[, c("pathway_level1", "pathway_level2")])
+    pwData <- pwData[order(pwData$pathway_level1, pwData$pathway_level2), ]
     
     if (is.null(filter_pathwayLevel1())) {
       setNames( pwData$pathway_level2, paste(pwData$pathway_level1, pwData$pathway_level2, sep = "_") )
