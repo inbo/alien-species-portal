@@ -55,7 +55,9 @@ RUN R -q -e "webshot::install_phantomjs();"
 RUN R -e "options(warn = 2); install.packages('lintr', repos='https://cloud.r-project.org')"
 RUN R -q -e "options(warn = 2); remotes::install_cran(c('bookdown', 'gert', 'pdftools', 'devtools', 'qrcode', 'gh', 'hunspell', 'pkgdown', 'rcmdcheck', 'sessioninfo', 'pingr', 'codemetar'))"
 RUN R -q -e "install.packages('tinytex')"
-RUN R -e "tinytex::install_tinytex(force = TRUE)" 
+RUN R -e "options(warn = 0); \
+  Sys.setenv(TINYTEX_REPO = 'https://mirror.ctan.org/systems/texlive/tlnet'); \
+  tinytex::install_tinytex(force = TRUE)"
 
 # Add TinyTeX binaries to PATH
 ENV PATH="${PATH}:/root/.TinyTeX/bin/x86_64-linux"
