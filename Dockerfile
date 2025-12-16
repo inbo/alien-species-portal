@@ -45,9 +45,9 @@ RUN R -q -e "options(warn = 2); remotes::install_cran(c('tibble'))"
 RUN R -q -e "options(warn = 2); remotes::install_github(c('inbo/INBOtheme@v0.5.9', 'gavinsimpson/gratia@v0.9.0', 'trias-project/trias', 'daattali/shinycssloaders'))"
 
 RUN apt-get update && apt-get install -y wget && \
-    wget https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-1-arm64.deb && \
-    dpkg -i pandoc-3.2-1-arm64.deb && \
-    rm pandoc-3.2-1-arm64.deb && \
+    wget https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-1-amd64.deb && \
+    dpkg -i pandoc-3.2-1-amd64.deb && \
+    rm pandoc-3.2-1-amd64.deb && \
     rm -rf /var/lib/apt/lists/*
 RUN R -q -e "webshot::install_phantomjs();"
 
@@ -55,9 +55,7 @@ RUN R -q -e "webshot::install_phantomjs();"
 RUN R -e "options(warn = 2); install.packages('lintr', repos='https://cloud.r-project.org')"
 RUN R -q -e "options(warn = 2); remotes::install_cran(c('bookdown', 'gert', 'pdftools', 'devtools', 'qrcode', 'gh', 'hunspell', 'pkgdown', 'rcmdcheck', 'sessioninfo', 'pingr', 'codemetar'))"
 RUN R -q -e "install.packages('tinytex')"
-RUN R -e "options(warn = 0); \
-  Sys.setenv(TINYTEX_REPO = 'https://mirror.ctan.org/systems/texlive/tlnet'); \
-  tinytex::install_tinytex(force = TRUE)"
+RUN R -e "options(warn = 0); tinytex::install_tinytex(force = TRUE, repository = 'https://ftp.gwdg.de/pub/ctan/systems/texlive/tlnet')"
 
 # Add TinyTeX binaries to PATH
 ENV PATH="${PATH}:/root/.TinyTeX/bin/x86_64-linux"
@@ -66,15 +64,27 @@ RUN apt-get update \
     ghostscript \
   && Rscript -e 'tinytex::tlmgr_install(c("babel-dutch", "babel-english", "babel-french", "beamer", "beamerswitch", "booktabs", "carlisle", "colortbl", "datetime", "dvips", "emptypage", "environ", "epstopdf", "eso-pic", "eurosym", "extsizes", "fancyhdr", "fancyvrb", "fmtcount", "float", "fontspec", "footmisc", "framed", "helvetic", "hyphen-dutch", "hyphen-french", "inconsolata", "lastpage", "lipsum", "makecell", "marginnote", "mdframed", "ms", "multirow", "parskip", "pdflscape", "pdfpages", "pdftexcmds", "placeins", "needspace", "tabu", "tex", "textpos", "threeparttable", "threeparttablex", "titlesec", "times", "tocloft", "translator", "trimspaces", "ulem", "upquote", "wrapfig", "xcolor", "xstring", "zref", "draftwatermark"))'
 
+# Fonts for LaTeX (Calibri replacement + Inconsolata)
+RUN apt-get update && apt-get install -y \
+    fonts-crosextra-carlito \
+    fonts-inconsolata \
+    && rm -rf /var/lib/apt/lists/* \
+    && fc-cache -fv
 
-RUN  mkdir ${HOME}/.fonts \
+RUN mkdir -p ${HOME}/.fonts \
   && wget https://www.wfonts.com/download/data/2014/12/12/calibri/calibri.zip \
   && unzip calibri.zip -d ${HOME}/.fonts \
   && rm calibri.zip \
-  && wget -O ${HOME}/.fonts/Inconsolatazi4-Regular.otf http://mirrors.ctan.org/fonts/inconsolata/opentype/Inconsolatazi4-Regular.otf \
-  && wget -O ${HOME}/.fonts/Inconsolatazi4-Bold.otf http://mirrors.ctan.org/fonts/inconsolata/opentype/Inconsolatazi4-Bold.otf \
-  && fc-cache -fv \
-  && Rscript -e 'tinytex:::updmap()'
+  \
+  # REMOVE WOFF files so XeLaTeX cannot pick them
+  && rm -f ${HOME}/.fonts/*.woff \
+  \
+  && wget -O ${HOME}/.fonts/Inconsolatazi4-Regular.otf \
+       https://ftp.gwdg.de/pub/ctan/fonts/inconsolata/opentype/Inconsolatazi4-Regular.otf \
+  && wget -O ${HOME}/.fonts/Inconsolatazi4-Bold.otf \
+       https://ftp.gwdg.de/pub/ctan/fonts/inconsolata/opentype/Inconsolatazi4-Bold.otf \
+  \
+  && fc-cache -fv
 	
 RUN R -q -e "options(warn = 2); install.packages(c('checklist', 'INBOmd'), repos = 'https://inbo.r-universe.dev', dependencies = FALSE)"
 RUN R -e "tinytex::tlmgr_conf(c('auxtrees', 'add', system.file('local_tex', package = 'INBOmd')))" 
