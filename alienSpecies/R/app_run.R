@@ -4,7 +4,7 @@
 #' @return no return value
 #' @importFrom shiny runApp
 #' @export
-runShiny <- function(..., port = 1234) {
+runShiny <- function(..., port = 3838) {
   
   # (1) Check S3 data - On UAT only, not PRD
   if (config::get("datacheck", file = system.file("config.yml", package = "alienSpecies")))

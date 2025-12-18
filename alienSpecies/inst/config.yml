@@ -1,6 +1,6 @@
 default:
   bucket: inbo-exotenportaal-uat-eu-west-1-default
-  url: http://127.0.0.1:1234
+  url: http://127.0.0.1:3838
   credentials:
     region: Sys.getenv('AWS_DEFAULT_REGION', unset = 'eu-west-1')
     id: Sys.getenv('AWS_ACCESS_KEY_ID')
