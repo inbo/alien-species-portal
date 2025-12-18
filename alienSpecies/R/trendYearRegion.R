@@ -49,12 +49,16 @@ trendYearRegion <- function(df,
   
   # Filter NA's
   plotData <- plotData[!is.na(plotData$outcome), ]
+  
+  # Add hover text
+  plotData$hover_text <- paste0(unitName, ": ", plotData$outcome)
     
   # Create plot
   pl <- plot_ly(data = plotData, x = ~year, y = ~outcome,
       color = ~region, colors = colorList$colors,
 #      line = list(dash = ~group),
-      hoverinfo = "x+y+name",
+      hovertemplate = paste("%{x}<br>%{customdata}<extra>%{fullData.name}</extra>"),
+      customdata = ~hover_text,
       type = "scatter", mode = "lines+markers") %>%
     layout(title = title,
       xaxis = list(title = translate("year")$title),
