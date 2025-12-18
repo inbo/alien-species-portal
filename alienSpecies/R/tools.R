@@ -273,7 +273,7 @@ plotlyReport <- function(myPlot, height = 800) {
   # Take a screenshot to a PNG
   tmp_png <- tempfile(fileext = ".png")
   dir.create(dirname(tmp_png), showWarnings = FALSE, recursive = TRUE)
-  webshot::webshot(tmp_html, file = tmp_png, vwidth = 1800, vheight = height)
+  webshot2::webshot(tmp_html, file = tmp_png, vwidth = 1800, vheight = height)
   
   knitr::include_graphics(tmp_png)
   

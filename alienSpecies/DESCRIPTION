@@ -41,7 +41,7 @@ Imports:
 	  testthat (>= 3.0.0),
     tidyr,
 	  trias (>= 3.1.1),
-	  webshot,
+	  webshot2,
     xml2,
 	  xtable
 Suggests:

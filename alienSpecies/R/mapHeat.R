@@ -199,7 +199,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
 #' @import shiny
 #' @import leaflet
 #' @importFrom htmlwidgets saveWidget
-#' @importFrom webshot webshot
+#' @importFrom webshot2 webshot
 #' @importFrom sf st_drop_geometry
 #' @export
 mapHeatServer <- function(id, species, gewest, combinedData, filter, colors, 
@@ -488,7 +488,7 @@ mapHeatServer <- function(id, species, gewest, combinedData, filter, colors,
 #        content = function(file) {
 #          
 #          # convert temp .html file into .png for download
-#          webshot::webshot(url = finalMap(), file = file,
+#          webshot2::webshot(url = finalMap(), file = file,
 #            vwidth = 1200, vheight = 600, cliprect = "viewport")
 #          
 #        }
