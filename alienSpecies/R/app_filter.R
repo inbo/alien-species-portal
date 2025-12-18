@@ -67,6 +67,7 @@ filterSelectServer <- function(id, url, initChoices, selected = reactive(NULL),
           if (!customTranslations) {
             names(initChoices) <- translate(initChoices)$title
           } else {
+            names(initChoices)[1] <- initChoices[1]
             names(initChoices) <- translate(names(initChoices))$title
           }
           initChoices[1] <- ""
