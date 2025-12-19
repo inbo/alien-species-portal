@@ -128,7 +128,7 @@ createSummaryRegions <- function(data, shapeData,
       dplyr::summarise(effort = sum(effort, na.rm = TRUE),
         n = sum(n, na.rm = TRUE))
     
-    summaryData$outcome <- summaryData$effort
+    summaryData$outcome <- summaryData$n
     
   } else if (unit == "difference") {
     
