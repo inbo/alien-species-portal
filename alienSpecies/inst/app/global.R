@@ -17,14 +17,15 @@ get <- base::get
 if (!exists("doDebug"))
   doDebug <- FALSE
 
-options(
-  chromote.chrome_args = c(
-    "--headless=new",
-    "--no-sandbox",
-    "--disable-dev-shm-usage"
-  ),
-  chromote.timeout = 60
-)
+chromote::set_chrome_args(c('--headless','--no-sandbox'))
+#options(
+#  chromote.chrome_args = c(
+#    "--headless=new",
+#    "--no-sandbox",
+#    "--disable-dev-shm-usage"
+#  ),
+#  chromote.timeout = 60
+#)
 
 addResourcePath("www", system.file("app", "www", package = "alienSpecies"))
 
