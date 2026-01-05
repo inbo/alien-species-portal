@@ -111,6 +111,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @param combine reactive boolean, see \code{\link{trendYearRegion}}
 #' @param groupChoices reactive character, defines the choices for group variable;
 #' if NULL no groupChoices available
+#' @param addYLabel reactive boolean, see \code{\link{countOccurrence}}
 #' @return no return value; plot output object is created
 #' @author mvarewyck
 #' @import shiny
@@ -119,7 +120,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @export
 plotModuleServer <- function(id, plotFunction, data,
   outputType = NULL, triasFunction = NULL, triasArgs = NULL, groupChoices = NULL,
-  period = NULL, regions = NULL, combine = NULL) {
+  period = NULL, regions = NULL, combine = NULL, addYLabel = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -199,7 +200,9 @@ plotModuleServer <- function(id, plotFunction, data,
               if (!is.null(input$group))
                 list(groupVar = input$group),
               if (!is.null(input$summarizeBy))
-                list(summarizeBy = input$summarizeBy)
+                list(summarizeBy = input$summarizeBy),
+              if (!is.null(addYLabel))
+                list(addYLabel = addYLabel)
             )
           }
           

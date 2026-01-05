@@ -105,6 +105,7 @@ createCubeData <- function(df, shapeData, groupVariable,
 #' @param regions character vector to filter data wrt certain 'gewest',
 #' available choices is (subset of) \code{c("flanders", "brussels", "wallonia")}; 
 #' NULL by default; if NULL all available regions are seleted
+#' @param addYLabel boolean whether to add a Y label
 #' @inheritParams trendYearRegion
 #' @return plotly
 #' 
@@ -115,7 +116,7 @@ createCubeData <- function(df, shapeData, groupVariable,
 #' @export
 countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   period = c(2000, 2018), combine = FALSE, 
-  regions = NULL) {
+  regions = NULL, addYLabel = FALSE) {
   
   
   # For R CMD check
@@ -127,8 +128,14 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   
   spatialLevel <- match.arg(spatialLevel)
   iCode <- switch(spatialLevel,
-      '1km' = "cell_code1",
-      '10km' = "cell_code10"
+    '1km' = "cell_code1",
+    '10km' = "cell_code10"
+  )
+  
+  yLabel <- ifelse(
+    addYLabel,
+    translate("countOccurrence_yLabel")$title,
+    ""
   )
   
   # Filter on selected period
@@ -203,7 +210,10 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
         marker = list(color = inbo_lichtgrijs)) %>%
     layout(
       xaxis = list(title = translate("year")$title, range = c(minYear, currentYear)),
-      yaxis = list(title = ""),
+      yaxis = list(title = list(
+          text = yLabel,
+          font = list(size = 9)
+        )),
       showlegend = !combine & !is.null(nOccurred$region),
       barmode = "stack",
       legend = list(orientation = 'h', x = 0.5, y = 1, xanchor = "center")
@@ -890,7 +900,8 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           }),
         period = reactive(input$period),
         combine = reactive(input$combine),
-        regions = gewest
+        regions = gewest,
+        addYLabel = grepl("observations", id)
       )
       
       
