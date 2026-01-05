@@ -212,7 +212,7 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
       xaxis = list(title = translate("year")$title, range = c(minYear, currentYear)),
       yaxis = list(title = list(
           text = yLabel,
-          font = list(size = 9)
+          font = list(size = 10)
         )),
       showlegend = !combine & !is.null(nOccurred$region),
       barmode = "stack",
