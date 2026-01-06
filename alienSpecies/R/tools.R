@@ -247,6 +247,19 @@ getPathLogo <- function(type = c("inbo", "trias", "combined")) {
 #' @export
 plotlyReport <- function(myPlot, height = 800) {
   
+  cur_data_key <- myPlot$x$cur_data
+  
+  xaxis_title <- if (!is.null(myPlot$x$layoutAttrs[[cur_data_key]]$xaxis$title)) {
+      myPlot$x$layoutAttrs[[cur_data_key]]$xaxis$title
+    } else {
+      myPlot$x$layout$xaxis$title$text
+    }
+  yaxis_title <- if (!is.null(myPlot$x$layoutAttrs[[cur_data_key]]$yaxis$title)) {
+      myPlot$x$layoutAttrs[[cur_data_key]]$yaxis$title
+    } else {
+      myPlot$x$layout$yaxis$title$text
+    }
+  
   myPlot <- myPlot %>% layout(
       font = list(size = 26), 
       legend = list( font = list(size = 28),
@@ -254,17 +267,23 @@ plotlyReport <- function(myPlot, height = 800) {
           font = list(size = 26)
         )),
       xaxis = list(
-        title = list(font = list(size = 28)), 
+        title = list(text = xaxis_title, font = list(size = 28)), 
         tickfont = list(size = 24),                                  
         showgrid = FALSE
       ),
       yaxis = list(
-        title = list(font = list(size = 28)),
+        title = list(text = yaxis_title, font = list(size = 28)),
         tickfont = list(size = 24),
         showgrid = FALSE
       )
     ) %>%
-    style(marker = list(size = 14)) %>% 
+    plotly_build() %>%
+    {
+      for (i in seq_along(.$x$data)) {
+        .$x$data[[i]]$marker$size <- 14
+      }
+      .
+    } %>%
     config(displayModeBar = FALSE) 
   
   tmp_html <- tempfile(fileext = ".html")
