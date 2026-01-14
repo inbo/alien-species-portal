@@ -34,10 +34,10 @@ optionsModuleUI <- function(id, showSummary = FALSE,
         column(12, uiOutput(ns("period")))
     ),
     if (exportGraph)
-      actionButton(ns("graphDownload"), "Download Graph", icon = icon("download"),
+      actionButton(ns("graphDownload"), translate("downloadGraph")$title, icon = icon("download"),
         class = "btn-default shiny-download-link downloadButton", type = "button"),
     if (exportData)
-      downloadButton(ns("dataDownload"), "Download data")
+      downloadButton(ns("dataDownload"), translate("downloadData")$title)
   )
   
   if (doWellPanel)
