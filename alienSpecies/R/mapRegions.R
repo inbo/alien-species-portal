@@ -126,7 +126,7 @@ createSummaryRegions <- function(data, shapeData,
         n = sum(count, na.rm = TRUE)/effort) %>% 
       dplyr::group_by(region, year) %>% 
       dplyr::summarise(effort = sum(effort, na.rm = TRUE),
-        n = sum(n, na.rm = TRUE))
+        n = sum(n, na.rm = TRUE)/effort)
     
     summaryData$outcome <- summaryData$n
     
