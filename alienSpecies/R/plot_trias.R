@@ -140,7 +140,7 @@ plotTrias <- function(triasFunction, df, triasArgs = NULL,
 plotTriasServer <- function(id, data, triasFunction, 
   translationId = triasFunction, triasArgs = NULL,
   filters = reactive(NULL), maxDate = reactive(NULL), outputType = c("plot", "table"),
-  dashReport = NULL, triggerReport = reactive(NULL)) {
+  dashReport = NULL, triggerReport = reactive(NULL), fullData = NULL) {
   
   # For R CMD check
   protected <- NULL
@@ -231,12 +231,22 @@ plotTriasServer <- function(id, data, triasFunction,
               if (!is.null(input$summarizeBy))
                 initArgs$response_type <- input$summarizeBy
               if (!is.null(input$pathway_level1)) {
-                initArgs$chosen_pathway_level1 <- translate(input$pathway_level1)$title
-                initArgs$pathways <- {
-                  levelsP2 <- sort(unique(plotData()$pathway_level2))
-                  c(grep(translate("unknown")$title, levelsP2, value = TRUE, invert = TRUE), 
-                    grep(translate("unknown")$title, levelsP2, value = TRUE)
-                  )          
+                iinitArgs$chosen_pathway_level1 <- translate(input$pathway_level1)$title
+                if (is.null(fullData)) {
+                  initArgs$pathways <- {
+                    levelsP2 <- sort(unique(plotData()$pathway_level2))
+                    c(grep(translate("unknown")$title, levelsP2, value = TRUE, invert = TRUE), 
+                      grep(translate("unknown")$title, levelsP2, value = TRUE)
+                    )          
+                  }
+                } else {
+                  subData <- fullData()[fullData()$pathway_level1 %in% translate(input$pathway_level1)$title,]
+                  initArgs$pathways <- {
+                    levelsP2 <- sort(unique(subData$pathway_level2))
+                    c(grep(translate("unknown")$title, levelsP2, value = TRUE, invert = TRUE), 
+                      grep(translate("unknown")$title, levelsP2, value = TRUE)
+                    )          
+                  }
                 }
               }
 

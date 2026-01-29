@@ -545,14 +545,33 @@ observeEvent(input$exoten_tabs, {
       outputType = "table"
     )
     
+    results$fullData <- reactive({
+        fullData <- data.table::copy(results$filter_exotenDataTranslated())
+        
+        if (!is.null(filter_pathwayLevel1())) {
+          fullData <- fullData[fullData$pathway_level1 %in% filter_pathwayLevel1(), ]
+        }
+        if (!is.null(filter_pathwayLevel2())) {
+          fullData <- fullData[fullData$pathway_level2 %in% filter_pathwayLevel2(), ]
+        }
+        
+        fullData <- data.table::setnames(fullData[, c("pathway_level1", "pathway_level2") := NULL], 
+          old = c("pathway_level1_translate", "pathway_level2_translate"), 
+          new = c("pathway_level1", "pathway_level2"))
+      })
     
     results$checklist_levelsP1 <- reactive({
-        
+        levelsP1 <- sort(unique(results$fullData()$pathway_level1))
+        c(grep(unknownValue(), levelsP1, value = TRUE, invert = TRUE), 
+          grep(unknownValue(), levelsP1, value = TRUE)
+        ) 
+      })
+    
+    results$checklist_levelsP1Trend <- reactive({
         levelsP1 <- sort(unique(results$exoten_data()$pathway_level1))
         c(grep(unknownValue(), levelsP1, value = TRUE, invert = TRUE), 
           grep(unknownValue(), levelsP1, value = TRUE)
         ) 
-        
       })
     
     plotTriasServer(id = "checklist_pathway1",
@@ -563,7 +582,7 @@ observeEvent(input$exoten_tabs, {
             x_lab = translate("numberTaxa")$title,
             y_lab = translate("pathways")$title,
             cbd_standard = FALSE,
-            pathways = results$checklist_levelsP1()
+            pathways = if (is.null(filter_pathwayLevel1())) results$checklist_levelsP1() else results$checklist_levelsP1()
           )
         })
     )
@@ -576,7 +595,7 @@ observeEvent(input$exoten_tabs, {
             x_lab = translate("period")$title,
             y_lab = translate("numberTaxa")$title,
             cbd_standard = FALSE,
-            pathways = results$checklist_levelsP1()
+            pathways = results$checklist_levelsP1Trend()
           )
         })
     )
@@ -584,6 +603,7 @@ observeEvent(input$exoten_tabs, {
     plotTriasServer(id = "checklist_pathway2",
       filters = reactive(list("pathway_level1" = pathway1Selected())),
       data = results$exoten_data,
+      fullData = results$fullData,
       triasFunction = "visualize_pathways_level2",
       triasArgs = reactive({
           list(
