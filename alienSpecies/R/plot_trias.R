@@ -13,6 +13,7 @@
 #' }
 #' 
 #' @author mvarewyck
+#' @import trias
 #' @importFrom plotly ggplotly layout
 #' @importFrom INBOtheme theme_inbo
 #' @export
@@ -231,7 +232,7 @@ plotTriasServer <- function(id, data, triasFunction,
               if (!is.null(input$summarizeBy))
                 initArgs$response_type <- input$summarizeBy
               if (!is.null(input$pathway_level1)) {
-                iinitArgs$chosen_pathway_level1 <- translate(input$pathway_level1)$title
+                initArgs$chosen_pathway_level1 <- translate(input$pathway_level1)$title
                 if (is.null(fullData)) {
                   initArgs$pathways <- {
                     levelsP2 <- sort(unique(plotData()$pathway_level2))

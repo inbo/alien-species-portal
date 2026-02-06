@@ -1,6 +1,7 @@
 library(alienSpecies)
 library(shiny)
 library(shiny.i18n)
+library(trias)
 
 library(data.table)
 

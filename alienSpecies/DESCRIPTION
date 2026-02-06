@@ -40,7 +40,7 @@ Imports:
     terra,
 	  testthat (>= 3.0.0),
     tidyr,
-	  trias (>= 3.1.1),
+	  trias (>= 3.2.2),
 	  webshot2,
     xml2,
 	  xtable
@@ -49,5 +49,5 @@ Suggests:
 RoxygenNote: 7.3.3
 Remotes: 
     inbo/INBOtheme@v0.5.9,
-    trias-project/trias@v3.1.0
+    trias-project/trias@v3.2.2
 Config/testthat/edition: 3
