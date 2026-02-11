@@ -44,7 +44,8 @@ RUN R -q -e "options(warn = 2); Sys.setenv(LIBARROW_MINIMAL=FALSE); remotes::ins
 RUN R -q -e "options(warn = 2); remotes::install_cran(c('tibble'))"
 RUN R -q -e "options(warn = 2); remotes::install_github(c('inbo/INBOtheme@v0.5.9', 'gavinsimpson/gratia@v0.9.0', 'trias-project/trias@v3.2.2', 'daattali/shinycssloaders'))"
 
-RUN apt-get update && apt-get install -y wget && \
+RUN rm -f /etc/apt/sources.list.d/vivaldi.list && \
+		apt-get update && apt-get install -y wget && \
     wget https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-1-arm64.deb && \
     dpkg -i pandoc-3.2-1-arm64.deb && \
     rm pandoc-3.2-1-arm64.deb && \
