@@ -65,27 +65,12 @@ RUN apt-get update \
     ghostscript \
   && Rscript -e 'tinytex::tlmgr_install(c("babel-dutch", "babel-english", "babel-french", "beamer", "beamerswitch", "booktabs", "carlisle", "colortbl", "datetime", "dvips", "emptypage", "environ", "epstopdf", "eso-pic", "eurosym", "extsizes", "fancyhdr", "fancyvrb", "fmtcount", "float", "fontspec", "footmisc", "framed", "helvetic", "hyphen-dutch", "hyphen-french", "inconsolata", "lastpage", "lipsum", "makecell", "marginnote", "mdframed", "ms", "multirow", "parskip", "pdflscape", "pdfpages", "pdftexcmds", "placeins", "needspace", "tabu", "tex", "textpos", "threeparttable", "threeparttablex", "titlesec", "times", "tocloft", "translator", "trimspaces", "ulem", "upquote", "wrapfig", "xcolor", "xstring", "zref", "draftwatermark"))'
 
-# Fonts for LaTeX (Calibri replacement + Inconsolata)
+# Fonts for LaTeX
 RUN apt-get update && apt-get install -y \
     fonts-crosextra-carlito \
     fonts-inconsolata \
     && rm -rf /var/lib/apt/lists/* \
     && fc-cache -fv
-
-RUN mkdir -p ${HOME}/.fonts \
-  && wget https://www.wfonts.com/download/data/2014/12/12/calibri/calibri.zip \
-  && unzip calibri.zip -d ${HOME}/.fonts \
-  && rm calibri.zip \
-  \
-  # REMOVE WOFF files so XeLaTeX cannot pick them
-  && rm -f ${HOME}/.fonts/*.woff \
-  \
-  && wget -O ${HOME}/.fonts/Inconsolatazi4-Regular.otf \
-       https://ftp.gwdg.de/pub/ctan/fonts/inconsolata/opentype/Inconsolatazi4-Regular.otf \
-  && wget -O ${HOME}/.fonts/Inconsolatazi4-Bold.otf \
-       https://ftp.gwdg.de/pub/ctan/fonts/inconsolata/opentype/Inconsolatazi4-Bold.otf \
-  \
-  && fc-cache -fv
 	
 RUN R -q -e "options(warn = 2); install.packages(c('checklist', 'INBOmd'), repos = 'https://inbo.r-universe.dev', dependencies = FALSE)"
 RUN R -e "tinytex::tlmgr_conf(c('auxtrees', 'add', system.file('local_tex', package = 'INBOmd')))" 
