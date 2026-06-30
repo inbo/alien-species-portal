@@ -517,7 +517,7 @@ createTabularData <- function(
         region = Sys.getenv("AWS_DEFAULT_REGION", unset = 'eu-west-1')))
     
     # All vernacular_name_*_list redundant after creating taxaChoices
-    rawData[, c("vernacular_name_nl_list", "vernacular_name_en_list", "vernacular_name_fr_list") := NULL]
+    # rawData[, c("vernacular_name_nl_list", "vernacular_name_en_list", "vernacular_name_fr_list") := NULL]
 
     
                       
