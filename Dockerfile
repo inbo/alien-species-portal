@@ -72,7 +72,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && fc-cache -fv
 	
-RUN R -q -e "options(warn = 2); install.packages(c('checklist', 'INBOmd'), repos = 'https://inbo.r-universe.dev', dependencies = FALSE)"
+RUN R -q -e "options(warn = 2); install.packages(c('citeme', 'cyclocomp', 'checklist', 'INBOmd'), repos = 'https://inbo.r-universe.dev', dependencies = FALSE)"
 RUN R -e "tinytex::tlmgr_conf(c('auxtrees', 'add', system.file('local_tex', package = 'INBOmd')))" 
 
 		
