@@ -290,8 +290,10 @@ createTaxaChoices <- function(exotenData) {
   # Add vernacular name
   # TODO remove after data update https://github.com/inbo/aspbo/issues/393
   ## begin temp solution
+  
   if (!"vernacular_name_nl_list" %in% colnames(exotenData)) {
-    exotenData[, ':=' (
+    cat("adding lists based on og columns")
+    exotenData <- exotenData[, ':=' (
         vernacular_name_nl_list = vernacular_name_nl,
         vernacular_name_en_list = vernacular_name_en,
         vernacular_name_fr_list = vernacular_name_fr
