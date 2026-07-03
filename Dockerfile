@@ -33,7 +33,7 @@ RUN R -q -e "install.packages('remotes')"
 
 RUN R -q -e "options(warn = 2); remotes::install_cran(c('fastmap', 'later', 'DT', 'magrittr', 'R6', 'Rcpp', 'rlang'))"
 RUN R -q -e "options(warn = 2); install.packages('https://cran.r-project.org/src/contrib/Archive/promises/promises_1.3.2.tar.gz', repos = NULL, type = 'source');"
-RUN R -q -e "options(warn = 2); remotes::install_cran(c('data.table', 'dplyr', 'DT', 'ggplot2', 'ggspatial', 'htmlwidgets', 'httr', 'jsonlite', 'leaflet', 'leaflet.extras', 'leaflet.extras2', 'leaflegend', 'plotly', 'reshape2', 'rgbif', 'sf', 'shinyscreenshot', 'shinyjs', 'shiny.i18n', 'chromote', 'terra', 'testthat', 'tidyr',  'webshot', 'webshot2', 'xtable', 'xml2'))"
+RUN R -q -e "options(warn = 2); remotes::install_cran(c('data.table', 'dplyr', 'DT', 'ggplot2', 'ggspatial', 'htmlwidgets', 'httr', 'jsonlite', 'leaflet', 'leaflet.extras', 'leaflet.extras2', 'leaflegend', 'plotly', 'reshape2', 'rgbif', 'sf', 'shinyscreenshot', 'shinyjs', 'shiny.i18n', 'chromote', 'terra', 'testthat', 'tidyr',  'webshot', 'webshot2', 'xtable', 'xml2', 'cyclocomp')"
 RUN R -q -e "options(warn = 2); install.packages('https://cran.r-project.org/src/contrib/Archive/shiny/shiny_1.10.0.tar.gz', repos = NULL, type = 'source');"
 
 # Specific data format + access to S3 on UAT
@@ -72,7 +72,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && fc-cache -fv
 	
-RUN R -q -e "options(warn = 2); install.packages(c('checklist', 'INBOmd'), repos = c('https://inbo.r-universe.dev', 'https://cloud.r-project.org'), dependencies = FALSE)"
+RUN R -q -e "options(warn = 2); install.packages(c('citeme', 'checklist', 'INBOmd'), repos = c('https://inbo.r-universe.dev', 'https://cloud.r-project.org'), dependencies = FALSE)"
 RUN R -e "tinytex::tlmgr_conf(c('auxtrees', 'add', system.file('local_tex', package = 'INBOmd')))" 
 
 		
