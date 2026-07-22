@@ -95,7 +95,7 @@ output$species_disclaimer <- renderUI({
       tags$div(
         class = "info-box",
         tags$div(class = "info-icon", "!"),
-        HTML(translate(id = disclaimerId)$description)
+        tags$div(HTML(translate(id = disclaimerId)$description))
       )
       
     }
