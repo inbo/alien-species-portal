@@ -61,3 +61,12 @@ alienSpecies/alienSpecies-tests/
 
 # temporary translations file
 /alienSpecies/inst/extdata/translations*.csv
+
+# direnv files
+.direnv
+.rlibs
+.envrc
+
+# vscode files
+.vscode
+.positai

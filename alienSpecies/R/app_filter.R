@@ -46,14 +46,15 @@ comboTreeInput <- function(inputId, choices, multiple = TRUE, cascaded = FALSE,
 #' Module for filter selection - server side
 #' @inheritParams welcomeSectionUI
 #' @param url reactive character, url search query
-#' @param initChoices character vector, choices for the \code{selectInput}
-#' @param translations reactive data.frame with translations
+#' @param initChoices reactive character vector, choices for the \code{selectInput}
+#' @param selected reactive character vector, previously selected variables
 #' @return reactive, selected filter value
 #' 
 #' @author mvarewyck
 #' @import shiny
 #' @export
-filterSelectServer <- function(id, url, initChoices, translations) {
+filterSelectServer <- function(id, url, initChoices, selected = reactive(NULL), 
+  customTranslations = FALSE) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -61,13 +62,27 @@ filterSelectServer <- function(id, url, initChoices, translations) {
       ns <- session$ns
 
       output$filter <- renderUI({
+          initChoices <- initChoices()
           
-          names(initChoices) <- translate(translations(), initChoices)$title
+          if (!customTranslations) {
+            names(initChoices) <- translate(initChoices)$title
+          } else {
+            names(initChoices)[1] <- initChoices[1]
+            names(initChoices) <- translate(names(initChoices))$title
+          }
           initChoices[1] <- ""
+          
+          selectedChoices <- if (!is.null(url()[[id]])) {
+              strsplit(url()[[id]], split = ",")[[1]]
+            } else if (!is.null(selected())) {
+              selected()
+            } else {
+              NULL
+            }
           
           selectInput(inputId = ns("filter"), label = NULL, 
             choices = initChoices, 
-            selected = if (!is.null(url()[[id]])) strsplit(url()[[id]], split = ",")[[1]],
+            selected = selectedChoices,
             multiple = TRUE)
         })
       

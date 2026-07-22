@@ -1,5 +1,7 @@
 library(alienSpecies)
 library(shiny)
+library(shiny.i18n)
+library(trias)
 
 library(data.table)
 
@@ -17,13 +19,28 @@ if (!exists("doDebug"))
   doDebug <- FALSE
 
 chromote::set_chrome_args(c('--headless','--no-sandbox'))
+#options(
+#  chromote.chrome_args = c(
+#    "--headless=new",
+#    "--no-sandbox",
+#    "--disable-dev-shm-usage"
+#  ),
+#  chromote.timeout = 60
+#)
 
+addResourcePath("www", system.file("app", "www", package = "alienSpecies"))
+
+### Translations
+### -----------
+translation_dir <- download_translations()
+i18n <- Translator$new(translation_csvs_path = translation_dir)
+i18n$set_translation_language("id")
 
 ### Data
 ### -----------
 
 tabChoices <- c("start", "checklist_indicators", "species_information", 
-  "early_warning", "other_db", "management")[1:5]
+  "other_db", "about", "faq", "management")[1:6]
 
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")
@@ -34,9 +51,15 @@ if (!doDebug | !exists("occurrenceData"))
 if (!doDebug | !exists("taxaChoices"))
   taxaChoices <- loadTabularData(type = "taxachoices")
 
-# Load occupancy data from createOccupancyCube() - also loads `dfCube`
+# Load occupancy data from createOccupancyCube()
 if (!doDebug | !exists("occupancy"))
   occupancy <- loadOccupancyData()
+
+# TODO fetch correct file from bucket
+dfCube <- read.csv(
+    system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"), 
+    sep = ",", encoding = "UTF-8"
+  )
 
 
 # Specify default year to show (and default max to show in time ranges)
@@ -79,8 +102,10 @@ if (doDebug) {
 # Initial exoten filter choices
 # e.g. search for Stylommatophora
 taxaLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
+pwLevel1Choices <- sort(unique(exotenData$pathway_level1))
 habitatChoices <- attr(exotenData, "habitats")
 doeChoices <- sort(unique(exotenData$degree_of_establishment))
+nativeChoices <- sort(unique(exotenData$native_continent))
 regionChoices <- sort(unique(exotenData$locality))
 bronChoices <- sort(levels(exotenData$source))
 

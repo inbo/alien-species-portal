@@ -30,23 +30,16 @@ nameFile <- function(species = NULL, period = NULL, content, fileExt) {
 
 #' Convert original variable names to display names
 #' @param text character vector, names to be 'translated'
-#' @param translations data.frame, contains translations for \code{text}
 #' @return named character vector, names are the new display names and values
 #' are the original values from \code{text}
 #' 
 #' @author mvarewyck
 #' @export
-displayName <- function(text, translations = NULL) {
-  
-  
-  if (is.null(translations)) {
-    names(text) <- text
-    return(text)
-  } 
+displayName <- function(text) {
   
   newNames <- sapply(text, function(x) {
       
-      toReturn <- translate(translations, x)$title
+      toReturn <- translate(x)$title
       if (is.na(toReturn))
         x else
         toReturn
@@ -104,6 +97,22 @@ yearToTitleString <- function(year, brackets = TRUE) {
     paste0("(", toReturn, ")") else 
     toReturn
 
+}
+
+
+#' Create query string based on query list
+#' @param baseUrl character, base URL to append query string after
+#' @param query named list, all parameters and values to be included in the query 
+#' @return character, query string to be used in the app
+#' 
+#' @author mvarewyck
+#' @export
+createQueryString <- function(baseUrl, query) {
+  
+  queryString <- paste0(names(query), "=", query, collapse = "&")
+  
+  paste0(baseUrl, "/?", queryString)
+  
 }
 
 
@@ -236,22 +245,125 @@ getPathLogo <- function(type = c("inbo", "trias", "combined")) {
 #' @author mvarewyck
 #' @import plotly
 #' @export
-plotlyReport <- function(myPlot) {
+plotlyReport <- function(myPlot, height = 800) {
   
-  myPlot <- myPlot %>% config(displayModeBar = FALSE)
+  cur_data_key <- myPlot$x$cur_data
   
-  # remove gridlines
-  if (is.null(myPlot$x$layoutAttrs[[1]]$xaxis))
-    myPlot$x$layoutAttrs[[1]]$xaxis <- list(showgrid = FALSE) else
-    myPlot$x$layoutAttrs[[1]]$xaxis$showgrid <- FALSE
-#  myPlot$x$layoutAttrs[[1]]$xaxis$ticks <- "outside"
+  xaxis_title <- if (!is.null(myPlot$x$layoutAttrs[[cur_data_key]]$xaxis$title)) {
+      myPlot$x$layoutAttrs[[cur_data_key]]$xaxis$title
+    } else {
+      myPlot$x$layout$xaxis$title$text
+    }
+  yaxis_title <- if (!is.null(myPlot$x$layoutAttrs[[cur_data_key]]$yaxis$title)) {
+      myPlot$x$layoutAttrs[[cur_data_key]]$yaxis$title
+    } else {
+      myPlot$x$layout$yaxis$title$text
+    }
   
-  if (is.null(myPlot$x$layoutAttrs[[1]]$yaxis))
-    myPlot$x$layoutAttrs[[1]]$yaxis <- list(showgrid = FALSE) else
-    myPlot$x$layoutAttrs[[1]]$yaxis$showgrid <- FALSE
-#  myPlot$x$layoutAttrs[[1]]$yaxis$ticks <- "outside"
+  myPlot <- myPlot %>% layout(
+      font = list(size = 26), 
+      legend = list( font = list(size = 28),
+        title = list(
+          font = list(size = 26)
+        )),
+      xaxis = list(
+        title = list(text = xaxis_title, font = list(size = 28)), 
+        tickfont = list(size = 24),                                  
+        showgrid = FALSE
+      ),
+      yaxis = list(
+        title = list(text = yaxis_title, font = list(size = 28)),
+        tickfont = list(size = 24),
+        showgrid = FALSE
+      )
+    ) %>%
+    plotly_build() %>%
+    {
+      for (i in seq_along(.$x$data)) {
+        .$x$data[[i]]$marker$size <- 14
+      }
+      .
+    } %>%
+    config(displayModeBar = FALSE) 
   
-  myPlot %>% layout(autosize = FALSE, width = 1000, height = 400)
+  tmp_html <- tempfile(fileext = ".html")
+  saveWidget(myPlot, tmp_html, selfcontained = TRUE)
+  
+  # Take a screenshot to a PNG
+  tmp_png <- tempfile(fileext = ".png")
+  dir.create(dirname(tmp_png), showWarnings = FALSE, recursive = TRUE)
+  webshot2::webshot(tmp_html, file = tmp_png, vwidth = 1800, vheight = height)
+  
+  knitr::include_graphics(tmp_png)
   
 }
 
+
+
+#' Download translation files from S3 into a temporary directory
+#' 
+#' @return character folder path
+#' 
+#' @author sjunius
+#' @export
+download_translations <- function() {
+  temp_dir <- tempdir()
+  translation_files <- c("translation_en.csv", "translation_fr.csv", "translation_nl.csv")
+  
+  for (file in translation_files) {
+    aws.s3::save_object(
+      object = file.path("translations", file),
+      bucket = config::get("bucket", file = system.file("config.yml", package = "alienSpecies")),
+      file = file.path(temp_dir, file)
+    )
+  }
+  
+  return(temp_dir)
+}
+
+
+#' Convert text in html format to markdown format (for report)
+#' 
+#' @return character html text
+#' 
+#' @author sjunius
+#' @export
+html_to_rmd <- function(html_text) {
+  temp_html <- tempfile(fileext = ".html")
+  temp_md <- tempfile(fileext = ".md")
+  
+  html_text <- gsub('""', '"', html_text, fixed = TRUE)
+  html_text <- gsub('</br>', '<br>', html_text, fixed = TRUE)
+  
+  if (grepl("tooltip-box", html_text)) {
+    doc <- xml2::read_html(html_text, options = "HUGE")
+    # Remove all elements with class 'tooltip-box'
+    xml2::xml_remove(xml2::xml_find_all(doc, ".//span[contains(@class, 'tooltip-box')]"))
+    
+    # Extract cleaned HTML as text
+    body <- xml2::xml_find_first(doc, "//body")
+    clean_html <- paste(as.character(xml2::xml_children(body)), collapse = "\n")
+  } else {
+    clean_html <- html_text
+  }
+  
+  
+  # Write HTML to temp file
+  writeLines(clean_html, temp_html)
+  
+  # Convert using pandoc
+  rmarkdown::pandoc_convert(
+    input = temp_html,
+    to = "markdown",
+    output = temp_md
+  )
+  
+  # Read the result
+  result <- readLines(temp_md, warn = FALSE)
+  result <- paste(result, collapse = "\n")
+  
+  # Clean up
+  unlink(c(temp_html, temp_md))
+  
+  return(result)
+}

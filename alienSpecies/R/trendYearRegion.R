@@ -1,7 +1,6 @@
 #' Create interactive plot for counts per selected communes and years
 #' 
 #' @param df data.frame with raw data for plotting
-#' @param uiText data.frame,  
 #' @param combine logical, summarised view of selected regions
 #' @param period numeric vector, time range selected for plot
 #' @return list with:
@@ -18,7 +17,7 @@
 #' @import plotly
 #' @importFrom stats aggregate
 #' @export
-trendYearRegion <- function(df, uiText = NULL,
+trendYearRegion <- function(df,
   combine = FALSE, period = NULL) {
   
   
@@ -26,7 +25,7 @@ trendYearRegion <- function(df, uiText = NULL,
   locatie <- NULL
   
   unit <- attr(df, "unit")
-  unitName <- translate(uiText, unit)$title
+  unitName <- translate(unit)$title
   
   if (is.null(period))
     period <- range(df$year)
@@ -36,13 +35,13 @@ trendYearRegion <- function(df, uiText = NULL,
   colorList <- replicateColors(nColors = length(unique(df$region)))
   
   # expected to be missing for some region levels
-  regionText <- suppressWarnings(translate(uiText, df$region)$title)  
+  regionText <- suppressWarnings(translate(df$region)$title)  
   title <- paste(vectorToTitleString(regionText), yearToTitleString(period))
   
   if (combine) {
     plotData <- plotData[, c("year", "outcome")]
     plotData <- aggregate(outcome ~ year, plotData, sum)
-    plotData$region <- translate(uiText, "total")$title
+    plotData$region <- translate("total")$title
   } else plotData$region <- regionText
   
   # Display year without decimals
@@ -50,15 +49,19 @@ trendYearRegion <- function(df, uiText = NULL,
   
   # Filter NA's
   plotData <- plotData[!is.na(plotData$outcome), ]
+  
+  # Add hover text
+  plotData$hover_text <- paste0(unitName, ": ", plotData$outcome)
     
   # Create plot
   pl <- plot_ly(data = plotData, x = ~year, y = ~outcome,
       color = ~region, colors = colorList$colors,
 #      line = list(dash = ~group),
-      hoverinfo = "x+y+name",
+      hovertemplate = paste("%{x}<br>%{customdata}<extra>%{fullData.name}</extra>"),
+      customdata = ~hover_text,
       type = "scatter", mode = "lines+markers") %>%
     layout(title = title,
-      xaxis = list(title = translate(uiText, "year")$title),
+      xaxis = list(title = translate("year")$title),
       yaxis = list(title = unitName,
         range = c(~min(outcome)*1.05, ~max(outcome)*1.05)),
       showlegend = TRUE,
@@ -75,7 +78,7 @@ trendYearRegion <- function(df, uiText = NULL,
       plot = pl, 
       data = plotData[, c("region", "year", unitName)], 
       warning = if (!is.null(colorList$warning))
-        translate(uiText, colorList$warning)
+        translate(colorList$warning)
     ))
   
 }

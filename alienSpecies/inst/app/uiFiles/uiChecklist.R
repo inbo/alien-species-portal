@@ -14,19 +14,20 @@ tagList(
 #      uiOutput("filter_taxa"),
       selectizeInput(inputId = "exoten_taxa", label = NULL, choices = NULL, multiple = TRUE,
         width = "100%"),
-      checkboxInput(inputId = "exoten_searchVernacular", label = translate(results$translations, "vernacular_name")),
+      checkboxInput(inputId = "exoten_searchVernacular", label = translate("vernacular_name")$title),
       
       fixedRow(        
         # Select habitat
         column(3, filterSelectUI(id = "habitat")),
         
         # Select pathway 1
-        column(3, uiOutput("filter_pw")),
+        column(3, filterSelectUI(id = "pw_level1")),
         
         # Select degree of establishment
         column(3, filterSelectUI(id = "doe")),
         
-        column(3, uiOutput("filter_native"))
+        # Select native continent
+        column(3, filterSelectUI(id = "native_continent"))
         
       ),
       
@@ -35,24 +36,33 @@ tagList(
       
       conditionalPanel("input.exoten_more % 2 == 1", 
         
-         fixedRow(
-      
-          # Select time range
-          column(3, 
-            tags$div(class = "selection-btn-wrapper",
-              actionButton("exoten_timeButton", label = "All years",
-                icon = icon("caret-down"), width = "100%"),
-              tags$span(id = "time-popup"))
+        tagList(
+          fixedRow(
+            
+            # Select time range
+            column(3, 
+              tags$div(class = "selection-btn-wrapper",
+                actionButton("exoten_timeButton", label = "All years",
+                  icon = icon("caret-down"), width = "100%"),
+                tags$span(id = "time-popup"))
+            ),
+            
+            # Select Pathway level 2
+            column(3, filterSelectUI(id = "pw_level2")),
+            
+            # Select union list
+            column(3, filterSelectUI(id = "union")),
+            
+            # Select native range
+            column(3, filterSelectUI(id = "native_range")),
           ),
-          
-          # Select union list
-          column(3, filterSelectUI(id = "union")),
-          
-          # Select regio
-          column(3, filterSelectUI(id = "region")),
-          
-          # Select bron
-          column(3, filterSelectUI(id = "source"))
+          fixedRow(
+            # Select regio
+            column(3, filterSelectUI(id = "region")),
+            
+            # Select bron
+            column(3, filterSelectUI(id = "source"))
+          )
         )
       
       ),
@@ -80,7 +90,7 @@ tagList(
       
       tabPanel(value = "checklist_pathways", titleModuleUI(id = "checklist_pathways"), 
         
-        plotTriasUI(id = "checklist_tablePathway", outputType = "table"),
+        plotTriasUI(id = "checklist_tablePathway", outputType = "table", exportGraph = FALSE),
         plotTriasUI(id = "checklist_pathway1"),
         plotTriasUI(id = "checklist_pathway1Trend"),
         plotTriasUI(id = "checklist_pathway2"),

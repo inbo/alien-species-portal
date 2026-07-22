@@ -10,12 +10,14 @@
 exotenData <- loadTabularData(type = "indicators")
 unionlistData <- loadTabularData(type = "unionlist")
 occurrenceData <- loadTabularData(type = "occurrence")
-translations <- loadMetaData(type = "ui")
 
+# Translations
+translation_dir <- download_translations()
+i18n <<- Translator$new(translation_csvs_path = translation_dir)
 ##
 ## Combine duplicated keys
 ##
-simpleData <- tableIndicators(exotenData = exotenData, 
+simpleData <- tableIndicators(exotenData = exotenData %>% mutate(vernacular_name_col = vernacular_name_nl), 
   unionlistData = unionlistData,
   occurrenceData = occurrenceData)
 
@@ -54,21 +56,20 @@ test_that("Trigger errors data filtering" , {
 test_that("Translate exoten data", {
     
 #    exotenData <- loadTabularData(type = "indicators")
-    translations <- loadMetaData(language = "nl")
     
     time1 <- Sys.time()
-    exotenData[, pathway_level2_translate := translate(translations, do.call(paste, c(.SD, sep = "_")))$title,
+    exotenData[, pathway_level2_translate := translate(do.call(paste, c(.SD, sep = "_")))$title,
       .SDcols = c("pathway_level1", "pathway_level2")]
     print(Sys.time() - time1)
 #    exotenData$habitat_translate <- sapply(exotenData$habitat, function(x) 
-#        paste(translate(translations, strsplit(x, split = "\\|")[[1]])$title, collapse = "|"))
+#        paste(translate(strsplit(x, split = "\\|")[[1]])$title, collapse = "|"))
 #    print(Sys.time() - time1)
     exotenData[, ':=' (
-        pathway_level1_translate = translate(translations, pathway_level1)$title,
-        native_continent_translate = translate(translations, native_continent)$title,
-        native_range_translate = translate(translations, native_range)$title,
-        degree_of_establishment_translate = translate(translations, degree_of_establishment)$title,
-        habitat_translate = translate(translations, habitat)$title
+        pathway_level1_translate = translate(pathway_level1)$title,
+        native_continent_translate = translate(native_continent)$title,
+        native_range_translate = translate(native_range)$title,
+        degree_of_establishment_translate = translate(degree_of_establishment)$title,
+        habitat_translate = translate(habitat)$title
       )]    
     print(Sys.time() - time1)
     
@@ -86,16 +87,16 @@ test_that("Define user choices and filter data", {
     
     habitatChoices <- attr(exotenData, "habitats")
     exotenData[, ':=' (
-        pathway_level1_translate = translate(translations, pathway_level1)$title,
-        pathway_level2_translate = translate(translations, pathway_level2)$title)
+        pathway_level1_translate = translate(pathway_level1)$title,
+        pathway_level2_translate = translate(pathway_level2)$title)
     ]
     pwChoices <- createDoubleChoices(exotenData = exotenData, 
       columns = c("pathway_level1", "pathway_level2"))
     expect_type(pwChoices, "list")
     
     exotenData[, ':=' (
-        native_continent_translate = translate(translations, native_continent)$title,
-        native_range_translate = translate(translations, native_range)$title)
+        native_continent_translate = translate(native_continent)$title,
+        native_range_translate = translate(native_range)$title)
     ]
     nativeChoices <- createDoubleChoices(exotenData = exotenData,
       columns = c("native_continent", "native_range"))
@@ -204,13 +205,12 @@ test_that("Grafiek: Aantal geïntroduceerde uitheemse soorten per jaar per regio
 # TABLE: tableIntroductionPathway
 test_that("Introduction pathways per category", {
     
-    uiText <- loadMetaData(language = "nl")
-    exotenData$pathway_level1 <- translate(uiText, exotenData$pathway_level1)$title
-    exotenData$pathway_level2 <- translate(uiText, exotenData$pathway_level2)$title
+    exotenData$pathway_level1 <- translate(exotenData$pathway_level1)$title
+    exotenData$pathway_level2 <- translate(exotenData$pathway_level2)$title
     
     tmpResult <- plotTrias(triasFunction = "get_table_pathways", df = exotenData,
       triasArgs = list(species_names = "species"),
-      outputType = "table", uiText = NULL)
+      outputType = "table")
     expect_type(tmpResult, "list")
     
     expect_s3_class(tmpResult$data, "data.frame")
@@ -238,8 +238,8 @@ test_that("CBD Level 1/2 introduction pathways", {
     
     # Level 2
     exotenData[, ':=' (
-        pathway_level1_translate = translate(translations, pathway_level1)$title,
-        pathway_level2_translate = translate(translations, pathway_level2)$title)
+        pathway_level1_translate = translate(pathway_level1)$title,
+        pathway_level2_translate = translate(pathway_level2)$title)
     ]
     levelOneChoice <- createDoubleChoices(exotenData = exotenData, 
       columns = c("pathway_level1", "pathway_level2"))[[1]]$id

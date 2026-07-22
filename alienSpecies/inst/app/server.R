@@ -4,6 +4,11 @@ function(input, output, session) {
   # -------------
   
   observe({
+      update_lang(attr(results$translations, "language"))
+      results$language <- attr(results$translations, "language")
+    })
+  
+  observe({
       
       if (doDebug)
         shinyjs::showLog()
@@ -35,29 +40,98 @@ function(input, output, session) {
   
   results <- reactiveValues(
     # Default language is dutch
+    language = "en",
     translations = loadMetaData(language = "en", local = doDebug),
-    searchId = "",
+    searchId = list(),
     renderedTabs = c("start", "checklist_taxa"),
     exoten_timeNA = defaultTimeNA,
     exoten_time = defaultTime,
-    species_choice = ""
+    species_choice = "",
+    filter_pwLevel2 = NULL,
+    filter_nativeRange = NULL
   )
   
   
   # Select language
-  observeEvent(input$translate_nl, results$translations <- loadMetaData(language = "nl", local = doDebug))
-  observeEvent(input$translate_fr, results$translations <- loadMetaData(language = "fr", local = doDebug))
-  observeEvent(input$translate_en, results$translations <- loadMetaData(language = "en", local = doDebug))
+  observeEvent(input$translate_nl, {
+      
+      showModal(
+        modalDialog(
+          title = translate("confirmLanguageChange")$title,
+          footer = tagList(
+            actionButton(inputId = "confirm_nl", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
+            modalButton(label = NULL, icon = icon("xmark"))
+          ),
+          easyClose = FALSE,
+          
+          translate("confirmLanguageChange")$description      
+        )
+      )
+    })
+  
+  observeEvent(input$confirm_nl, {
+      update_lang("nl")
+      results$language <- "nl"
+      
+      removeModal()
+    })
+  
+  
+  observeEvent(input$translate_fr, {
+      
+      showModal(
+        modalDialog(
+          title = translate("confirmLanguageChange")$title,
+          footer = tagList(
+            actionButton(inputId = "confirm_fr", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
+            modalButton(label = NULL, icon = icon("xmark"))
+          ),
+          easyClose = FALSE,
+          
+          translate("confirmLanguageChange")$description      
+        )
+      )
+    })
+  
+  observeEvent(input$confirm_fr, {
+      update_lang("fr")
+      results$language <- "fr"
+      
+      removeModal()
+    })
+  
+  observeEvent(input$translate_en, {
+      
+      showModal(
+        modalDialog(
+          title = translate("confirmLanguageChange")$title,
+          footer = tagList(
+            actionButton(inputId = "confirm_en", label = NULL, icon = icon("check", style = "color: #fff"), style = "background-color: #356196;"),
+            modalButton(label = NULL, icon = icon("xmark"))
+          ),
+          easyClose = FALSE,
+          
+          translate("confirmLanguageChange")$description      
+        )
+      )
+    })
+  
+  observeEvent(input$confirm_en, {
+      update_lang("en")
+      results$language <- "en"
+      
+      removeModal()
+    })
   
   results$switchTranslation <- reactive(
-    input$translate_nl + input$translate_fr + input$translate_en
+    input$confirm_nl + input$confirm_fr + input$confirm_en
   )
   
   
   # Version
   # -------
   
-  versionServer(id = "main", uiText = reactive(results$translations))
+  versionServer(id = "main")
   
   
   # URL Query
@@ -65,12 +139,15 @@ function(input, output, session) {
   
   shareLink <- reactive({
       
-      searchId <- if (input$tabs != "start")
+      searchId <- if (input$tabs %in% c("checklist_indicators", "species_information"))
           results$searchId else 
-          ""
-      languageId <- paste0("&language=", attr(results$translations, "language"))
+          list()
+      searchId$language <- results$language
+      searchId$page <- input$tabs
       
-      paste0("http://alienspecies.inbo.be/?page=", input$tabs, languageId, searchId)
+      createQueryString(
+        baseUrl = config::get("url", file = system.file("config.yml", package = "alienSpecies")),
+        query = searchId)
       
     })
     
@@ -156,7 +233,7 @@ function(input, output, session) {
   # ----------
   
   output$shareLink <- renderUI(
-    actionLink(inputId = "showShare", label = translate(results$translations, "shareLink"))
+    actionLink(inputId = "showShare", label = translate("shareLink")$title)
   )
   
   # Landing page
@@ -169,6 +246,9 @@ function(input, output, session) {
   
   # Render tabpanel upon need
   observeEvent(input$tabs, {
+      
+      # Reset filters from other page
+      results$searchId <- list()      
       
       # render only once
       req(!input$tabs %in% results$renderedTabs)
@@ -192,42 +272,22 @@ function(input, output, session) {
           results$renderedTabs <- c(results$renderedTabs, "species_information")
           
         },
-        early_warning = {
-          session$sendCustomMessage(type = "openURL", list(message = "
-                window.open('https://alert.riparias.be', '_blank').focus(); 
-                "))
-        },
         other_db = {
-          output$db_content <- renderUI({
-              
-              tileChoices <- c("mica_db", "radius_db")
-              tileNames <- lapply(tileChoices, function(iChoice){
-                  foto <- list.files(path = system.file("app", "www", package = "alienSpecies"), pattern = iChoice)
-                  title <- translate(data = results$translations, id = iChoice)$title
-                  HTML(paste0(
-                      "<div class='radio-tiles-title'>", title, "</div>",
-                      "<div class='radio-tiles-image'>", 
-                      img(src = foto, width = "100%", `aspect-ratio` = "400/270"), "</div>"
-                    ))
-                })
-              
-              tags$div(style = "margin-top: -20px;",
-                radioButtons(
-                  inputId = "db_navigate", label = "", inline = TRUE,
-                  choiceValues = tileChoices, choiceNames = tileNames,
-                  selected = character(0)
-                ),
-                tags$script("$('.radio-inline').addClass('radio-tiles');")
-              )
-              
-            })
-          source(file.path("serverFiles", "serverDB.R"), local = TRUE)
+          
           results$renderedTabs <- c(results$renderedTabs, "other_db")
+          
+        }, faq = {
+          
+          results$renderedTabs <- c(results$renderedTabs, "faq")
           
         }
         
       )
       
     })
+    
+    dbServer(id = "dbPage")
+    simpleHTMLPageServer(id = "about", language = reactive(results$language))
+    simpleHTMLPageServer(id = "faq", language = reactive(results$language))
   
 }

@@ -1,9 +1,10 @@
 #' Run the shiny application with specific settings and install missing dependencies
 #' @param ... further arguments that can be passed to \code{\link[shiny]{runApp}}
+#' @inheritParams shiny::runApp
 #' @return no return value
 #' @importFrom shiny runApp
 #' @export
-runShiny <- function(...) {
+runShiny <- function(..., port = 3838) {
   
   # (1) Check S3 data - On UAT only, not PRD
   if (config::get("datacheck", file = system.file("config.yml", package = "alienSpecies")))
@@ -19,7 +20,7 @@ runShiny <- function(...) {
   # (2) Run the application
   if (exists("errorApp") && is(errorApp, "shiny.appobj"))
     errorApp else 
-    runApp(appDir = system.file("app", package = "alienSpecies"), ...)
+    runApp(appDir = system.file("app", package = "alienSpecies"), port = port, ...)
   
   
 }

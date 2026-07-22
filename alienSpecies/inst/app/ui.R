@@ -1,11 +1,36 @@
 shinyUI(
   
   bootstrapPage(
+    # Use i18n in UI for translations
+    usei18n(i18n),
     
     ## For debugging
     uiOutput("debug"),
     
     shinyjs::useShinyjs(),
+    tags$head(
+      tags$script(HTML("
+            $(document).on('shiny:connected', function() {
+            // Function to update all leaflet attribution links
+            function updateLeafletLinks() {
+            $('.leaflet-control-attribution a').attr('target', '_blank');
+            }
+            
+            setTimeout(updateLeafletLinks, 100);
+            
+            // Create observer for all future leaflet maps
+            var observer = new MutationObserver(function(mutations) {
+            updateLeafletLinks();
+            });
+            
+            // Observe the entire body for new leaflet maps
+            observer.observe(document.body, { 
+            childList: true, 
+            subtree: true 
+            });
+            });
+            "))
+    ),
     
     ## Header
     ## ------
@@ -37,10 +62,8 @@ shinyUI(
       tags$div(class = "navbar1", 
         navbarPage(
           title = tags$div(
-            HTML("&emsp;"),
-            img(src = "logoTrias.png", height = "45px", style = "margin-right: 10px"), 
-            img(src = "logo.png", float = "top", height = "45px"),
-            style = "margin-top: -13px; margin-bottom: -13px; margin-left: -150px; margin-right: 50px;",
+            tags$a(href = "https://www.inbo.be", target = "_blank", 
+              tags$img(src = "www/logo.png", height = "45px;")),
             tags$script(HTML(paste("var header = $('.navbar > .container');",
                   "header.append('<div style=\"float:right;\">", 
                   versionUI(id = "main"),"</div>')"))
@@ -53,11 +76,20 @@ shinyUI(
           ),
           
           # Shape data source + contact e-mail
-          header = tags$header(tags$div(align = "right", style = "margin-top: 60px; padding-right: 15px;",
+          header = tags$header(
+            tags$div(align = "right", style = "margin-top: 60px; padding-right: 15px;",
               tags$p(
                 tags$div(uiOutput("shareLink"), style = "display: inline-block;"))
-            )
-          ),
+            ),
+            tags$div(align = "right", style = "padding-right: 15px;",
+              tags$p(
+                actionLink(inputId = "translate_en", label = "EN"),
+                "-",
+                actionLink(inputId = "translate_fr", label = "FR"),
+                "-", 
+                actionLink(inputId = "translate_nl", label = "NL")
+              )
+          )),
           
           windowTitle = "Alien Species Portal",
           fluid = FALSE, 
@@ -71,9 +103,12 @@ shinyUI(
             uiOutput("indicators_content")),
           tabPanel(title = uiOutput("species_title"), value = "species_information",
             uiOutput("species_content")),
-          tabPanel(title = uiOutput("early_title"), value = "early_warning"),
-          tabPanel(title = uiOutput("db_title"), value = "other_db",
-            tags$div(class = "noButton", style = "margin-top:20px;", uiOutput("db_content")))
+          dbUI(id = "dbPage"),
+          # TODO Remove check once we know the about HTML file is available in aspbo (https://github.com/inbo/aspbo/issues/468)
+          if (any(grepl("^ABOUT.*\\.html$", jsonlite::fromJSON(httr::content(httr::GET(paste0("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML?ref=", if (Sys.getenv("R_CONFIG_ACTIVE") == "production") "main" else "uat")), "text", encoding = "UTF-8"))$name, ignore.case = TRUE))) {
+            simpleHTMLPageUI(id = "about")
+          },
+          simpleHTMLPageUI(id = "faq")
         )
       
       )

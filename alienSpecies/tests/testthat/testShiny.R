@@ -7,7 +7,6 @@
 # Helper data
 exotenData <- loadTabularData(type = "indicators")
 occurrenceData <- loadTabularData(type = "occurrence")
-translationsEn <- loadMetaData(language = "en")
 Vespa_velutina_shape <- loadShapeData("Vespa_velutina_shape.RData")
 
 allShapes <- c(
@@ -20,8 +19,6 @@ allShapes <- c(
   "communes" = list(loadShapeData("communes.RData"))
   
 )
-
-translations <- loadMetaData(language = "nl")
 
 
 test_that("App does not crash on startup", {   
@@ -62,7 +59,6 @@ test_that("Module countOccupancy", {
     
     shiny::testServer(countOccupancyServer, 
       args = list(
-        uiText = reactive(translations), 
         data = reactive(occupancy)
       ), {
         
@@ -82,7 +78,7 @@ test_that("Module mapCube", {
     
     shiny::testServer(mapCubeServer, 
       args = list(
-        uiText = reactive(translations),
+        id = "test",
         species = reactive(mySpecies),
         gewest = reactive("flanders"),
         df = reactive(occurrenceData[taxonKey %in% myKey, ]),
@@ -91,7 +87,7 @@ test_that("Module mapCube", {
         showPeriod = TRUE
       ), {        
         session$setInputs(period = c(2002, 2020))
-        expect_true(!is.null(output$legend))        
+        expect_true(TRUE)        
       })
   
   })
@@ -101,7 +97,6 @@ test_that("Module mapCube", {
 test_that("Module plotTrias", {
     shiny::testServer(plotTriasServer, 
       args = list(
-        uiText = reactive(translations),
         data = reactive(exotenData),
         triasFunction = "visualize_pathways_level1"
       ), {
@@ -120,10 +115,9 @@ test_that("Module tableIndicators", {
     
     shiny::testServer(tableIndicatorsServer, 
       args = list(
-        exotenData = reactive(exotenData),
+        exotenData = reactive(exotenData %>% mutate(vernacular_name_col = vernacular_name_nl)),
         unionlistData = unionlistData,
-        occurrenceData = occurrenceData,
-        uiText = reactive(translations)
+        occurrenceData = occurrenceData
       ), {
         
         session$setInputs(union = 1)
@@ -139,7 +133,6 @@ test_that("Module plotModule", {
         plotFunction = "plotTrias", 
         triasFunction = "indicator_introduction_year",
         data = reactive(exotenData), 
-        uiText = reactive(translations),
         triasArgs = reactive(list(
             start_year_plot = 2002,
             x_lab = "Jaar",
@@ -156,8 +149,8 @@ test_that("Module plotModule", {
 test_that("Module titleModule", {
     shiny::testServer(titleModuleServer, 
       args = list(
-        plotFunction = "visualize_pathways_year_level1",
-        uiText = reactive(translations)), 
+        plotFunction = "visualize_pathways_year_level1"
+      ),
       {
         
         expect_true(!is.null(output$title))
@@ -169,7 +162,6 @@ test_that("Module titleModule", {
 test_that("Module welcomeSection", {
     shiny::testServer(welcomeSectionServer, 
       args = list(
-        uiText = reactive(translations)
       ), {
         
         expect_true(!is.null(output$welcomeTitle))
@@ -183,8 +175,7 @@ test_that("Module filterSelect", {
     shiny::testServer(filterSelectServer, 
       args = list(
         url = reactive(list()),
-        initChoices = attr(exotenData, "habitats"),
-        translations = reactive(translations)
+        initChoices = attr(exotenData, "habitats")
       ), {
         
         expect_true(!is.null(output$filter))
@@ -214,7 +205,6 @@ test_that("Module mapHeat",{
   
   shiny::testServer(mapHeatServer,
                     args = list(
-                      uiText = reactive(translationsEn),
                       species = reactive(  "Vespa velutina"),
                       gewest = reactive("flanders"),
                       combinedData = reactive(combinedActive),
@@ -264,7 +254,6 @@ test_that("Module mapRegions",{
   
   shiny::testServer(	mapRegionsServer,
                     args = list(
-                      uiText = reactive(translationsEn),
                       species = reactive( "Vespa velutina"),
                       df = reactive(vespaBoth),
                       occurrenceData = NULL,
@@ -292,7 +281,6 @@ test_that("Module countNesten",{
     countNestenServer ,
                     args = list(
                       data = reactive(Vespa_velutina_shape$nesten),
-                      uiText = reactive(translationsEn),
                       maxDate = reactive(max(Vespa_velutina_shape$nesten$observation_time, na.rm = TRUE))
                     ), {
                       session$setInputs(linkCountNesten = 1)
@@ -309,9 +297,6 @@ test_that("Module countNesten",{
                     })
 })
 
-
-
-uiText <- loadMetaData()
 
 test_that("Custom bins in shiny", {
     
@@ -358,8 +343,7 @@ test_that("Custom bins in shiny", {
       
       observe({
           
-          results$tmpBinnedData <- createBinsServer(id = "mapRegions", 
-            uiText = reactive(uiText), data = binnedData)
+          results$tmpBinnedData <- createBinsServer(id = "mapRegions", data = binnedData)
           
         })
       

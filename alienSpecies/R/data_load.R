@@ -86,7 +86,7 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
   fileNames <- switch(type, 
     ui = paste0("translations", c("", "_simple", "_regions")),
     keys = "keys",
-    harmonia = "harmonia_info"
+    harmonia = "PRA_links"
   )
   
   allData <- sapply(fileNames, function(iFile) { 
@@ -131,7 +131,7 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
       
     },
     keys = allData$keys,
-    harmonia = allData$harmonia[, c("gbif_taxonkey", "harmonia_url")]
+    harmonia = allData$PRA_links[, c("gbif_taxonkey", "url", "url_type")]
   )
   
   if (type == "ui")
@@ -146,7 +146,7 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
 
 
 
-#' Create data with occupancy for t0 and t1 data
+#' Create data with occupancy for tX data
 #' 
 #' @author mvarewyck
 #' @importFrom data.table dcast setDT as.data.table
@@ -154,13 +154,23 @@ loadMetaData <- function(type = c("ui", "keys", "harmonia"),
 
 loadOccupancyData <- function() {
   
-  readS3(file = "dfCube.RData")
+  #  readS3(file = "dfCube.RData") # Old file
   
+  # TODO fetch correct file from bucket
+  dfCube <- read.csv(system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"), sep = ",", encoding = "UTF-8")
   dfCube$cell_code10 <- NULL
-  dfCube$year <- NULL
-  dfTable <- dcast(data = setDT(as.data.frame(table(dfCube))), 
+  
+  # Gather occupancy data per tX
+  dfTable <- dcast(data = setDT(as.data.frame(table(dfCube %>% select(-period)))), 
     species ~ source, value.var = "Freq")
-  dfTable$total <- dfTable$t0 + dfTable$t1
+  dfTable$total <- rowSums(dfTable[ , !(names(dfTable) %in% "species")])
+  
+  # Gather period definitions per tX
+  dfPeriod <- dcast(data = unique(dfCube[, c("species", "source", "period")]), 
+    species ~ source, value.var = "period")
+  tCols <- setdiff(names(dfPeriod), "species")
+  setnames(dfPeriod, old = tCols, new = paste0(tCols, "_period"))
+  dfTable <- dfTable %>% merge(dfPeriod)
   
   dfTable <- dfTable[order(dfTable$total), ]
   dfTable$species <- factor(dfTable$species, levels = unique(dfTable$species)) # sort by freq in barchart
@@ -212,47 +222,60 @@ getRegionNames <- function(x) {
 
 
 #' Translate text given id
-#' @param data data.frame with columns title and id
 #' @param id character, row identifier for the \code{data}
 #' 
 #' @return character 
 #' 
 #' @author mvarewyck
 #' @export
-translate <- function(data = loadMetaData(type = "ui"), id) {
+translate <- function(id) {
   
   # id NA
   if (all(is.na(id)))
-    return(data)
+    return(id)
   
+  translation <- suppressWarnings(
+    data.frame(id = id, title = c(i18n$t(paste0(id, "_title"))), description = c(suppressWarnings(i18n$t(paste0(id, "_description")))))
+  )
   
   # Composite translations e.g. habitats
   compositeIds <- grepl("|", id, fixed = TRUE)
   if (any(compositeIds)) {
-    
     newIds <- unique(id[compositeIds])
-    data <- rbind(data,
-      data.frame(id = newIds, t(as.data.frame(sapply(newIds, function(x)
-                apply(data[match(strsplit(x, split = "\\|")[[1]], data$id), c("title", "description")], 2, paste, collapse = "|")))))
-    )
     
+    compositeTranslations <- sapply(newIds, function(x) {
+        paste(i18n$t(paste0(strsplit(x, split = "\\|")[[1]], "_title")), collapse = "|")
+      })
+    
+    translation[compositeIds, "title"] <- compositeTranslations[translation[compositeIds, "id"]]
   } 
   
-  # Helpfull during development to see which are missing
-  # can be turned of in production
-  if (!is.null(data) & !all(id %in% data$id)) {
-    if (!all(is.na(id[!id %in% data$id])))
-      message("Not in translation file: ", vectorToTitleString(id[!id %in% data$id]))
+  # Translations with hover
+  hoverIds <- grepl("\\{\\{\\{hover_", translation$description, fixed = FALSE)
+  if (any(hoverIds)) {
+    newIds <- unique(translation[hoverIds, "description"])
+    
+    hoverTranslations <- sapply(newIds, function(x) {
+        matches <- stringr::str_extract_all(x, "\\{\\{\\{hover_.*?\\}\\}\\}")[[1]]
+        keys <- stringr::str_match(matches, "\\{\\{\\{(.*?)\\}\\}\\}")[,2]
+        for (i in seq_along(keys)) {
+          x <- gsub(
+            pattern = paste0("\\{\\{\\{", keys[i], "\\}\\}\\}"), 
+            replacement = i18n$t(paste0(keys[i], "_description")), 
+            x = x
+          )
+        }
+        x
+      })
+    
+    translation[hoverIds, "description"] <- hoverTranslations
   }
   
-  data <- rbind(
-    data,
-    # empty if no match
-    data.frame(id = id, title = id, description = "")
-  )
+  idsWithoutTranslation <- which(endsWith(translation$title, "_title"))
+  translation[idsWithoutTranslation, "title"] <- translation[idsWithoutTranslation, "id"]
+  translation[endsWith(translation$description, "_description"), "description"] <- ""
   
-  data[match(id, data$id), c("title", "description")]
-  
+  translation
 }
 
 
