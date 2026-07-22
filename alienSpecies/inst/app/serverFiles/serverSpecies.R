@@ -90,7 +90,7 @@ output$species_disclaimer <- renderUI({
     
     disclaimerId <- paste0("obs_disclaimer_", input$species_choice)
     
-    if (translate(disclaimerId)$title != disclaimerId) {
+    if (translate(disclaimerId)$description != "") {
       
       tags$div(
         class = "info-box",
