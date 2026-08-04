@@ -14,64 +14,66 @@
 dbServer <- function(id) {
   
   moduleServer(id, function(input, output, session) {
-      
+
       ns <- session$ns
-      
-      resetNavigation <- reactiveVal(FALSE)
-      
+
       output$title <- renderUI({
-          
-          translate(id = "other_db")$title  
-          
+
+          translate(id = "other_db")$title
+
         })
-      
+
       output$content <- renderUI({
-          
-          tileChoices <- c("early_warning", "mica_db", "radius_db")
-          tileNames <- lapply(tileChoices, function(iChoice){
-              foto <- list.files(path = system.file("app", "www", package = "alienSpecies"), pattern = iChoice)
-              title <- translate(id = iChoice)$title
-              hover <- translate(id = iChoice)$description
-              HTML(paste0(
-                  "<div class='radio-tiles-title' title='", hover, "'>", title, "</div>",
-                  "<div class='radio-tiles-image'>", 
-                  img(src = foto, width = "100%", `aspect-ratio` = "400/270", title = hover), "</div>"
-                ))
+
+          df <- read.csv(system.file("data", "other_dashboards.csv", package = "alienSpecies"),
+            stringsAsFactors = FALSE)
+
+          cards <- apply(df, 1, function(db) {
+
+              foto <- list.files(
+                path = system.file("app", "www", package = "alienSpecies"),
+                pattern = db["id"]
+              )
+
+              translation <- translate(id = db["translationId"])
+              title <- translation$title
+              description <- translation$description
+
+              tags$div(
+                class = "db-link-card",
+
+                tags$h1(
+                  class = "db-link-title",
+                  tags$a(title, href = db["url"], target = "_blank")
+                ),
+
+                tags$div(
+                  class = "db-link-body",
+
+                  tags$div(
+                    class = "db-link-image",
+                    tags$img(src = foto)
+                  ),
+
+                  tags$div(
+                    class = "db-link-content",
+                    tags$p(description),
+                    tags$em(
+                      "URL link: ",
+                      tags$a(title, href = db["url"], target = "_blank")
+                    )
+                  )
+                )
+              )
             })
-          
-          if (resetNavigation())
-            resetNavigation(FALSE)
-          
-          tags$div(style = "margin-top: -20px;",
-            radioButtons(
-              inputId = ns("navigate"), label = "", inline = TRUE,
-              choiceValues = tileChoices, choiceNames = tileNames,
-              selected = character(0)
-            ),
-            tags$script("$('.radio-inline').addClass('radio-tiles');")
+
+          tags$div(
+            class = "db-link-wrapper",
+            cards
           )
-          
+
         })
-      
-      observeEvent(input$navigate, {
-          
-          switch(input$navigate, 
-            "early_warning" = session$sendCustomMessage(type = "openURL", list(message = "
-                  window.open('https://alert.riparias.be', '_blank').focus(); 
-                  ")), 
-            "mica_db" = session$sendCustomMessage(type = "openURL", list(message = "
-                  window.open('https://mica.inbo.be/', '_blank').focus(); 
-                  ")),
-            "radius_db" = session$sendCustomMessage(type = "openURL", list(message = "
-                  window.open('https://radius-project.shinyapps.io/dashboard/', '_blank').focus(); 
-                  "))
-          )
-          
-          resetNavigation(TRUE)
-          
-        })
-      
-      
+
     })
   
 }
