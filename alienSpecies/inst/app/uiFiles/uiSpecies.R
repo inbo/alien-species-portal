@@ -43,6 +43,9 @@ tagList(
           mapRegionsUI(id = "indicators_facet", showUnit = FALSE, facet = TRUE)
         )
       ),
+      tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps",
+        mapRasterUI("risk")
+      ),
       
       tabPanel(titleModuleUI(id = "species_reporting"), 
         value = "species_reporting",
@@ -62,9 +65,6 @@ tagList(
         value = "species_more",
         tabsetPanel(id = "species_more",
           tabPanel(titleModuleUI(id = "species_habitats"), value = "species_habitats"),
-          tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps",
-            mapRasterUI("risk")
-          ),
           tabPanel(titleModuleUI(id = "species_links"), value = "species_links",
             htmlSectionUI("links")
           ),
