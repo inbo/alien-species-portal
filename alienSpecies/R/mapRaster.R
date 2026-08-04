@@ -118,7 +118,7 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
           
           lapply(names(filters), function(iName) {
               
-              column(4, 
+              column(3, 
                 selectInput(inputId = ns(iName), 
                   label = translate(iName)$title,
                   choices = filters[[iName]],
