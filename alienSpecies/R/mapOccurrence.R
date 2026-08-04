@@ -989,7 +989,7 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
     uiOutput(ns("titleMapOccurrence")),
     uiOutput(ns("descriptionMapOccurrence")),
     
-    if (!grepl("observations", id)) {
+    if (grepl("observations", id)) {
       wellPanel(
         fixedRow(uiOutput(ns("filters")),
           if (showLegend)
@@ -1013,21 +1013,24 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
     
     tags$br(),
 
-    if (!grepl("observations", id) && showPeriod) {
+    if (grepl("observations", id) && showPeriod) {
 
       tagList(
+        plotModuleUI(id = ns("countOccurrence"), height = "200px"),
+        
         wellPanel(
           fixedRow(
-            uiOutput(ns("typeTimeseries"))
-          )
+            column(6,
+              uiOutput(ns("typeTimeseries"))
+            )),
+            uiOutput(ns("period")),
+          
         ),
-        plotModuleUI(id = ns("countOccurrence"), height = "200px"),
-        uiOutput(ns("period")),
         tableModuleUI(id = ns("countOccurrence"))
       )
     },
     
-    if (grepl("observations", id))
+    if (!grepl("observations", id))
       tagList(
         plotModuleUI(id = ns("countOccurrence"), height = "200px"),
         wellPanel(
