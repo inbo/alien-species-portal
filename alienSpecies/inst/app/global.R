@@ -51,6 +51,9 @@ if (!doDebug | !exists("occurrenceData"))
 if (!doDebug | !exists("taxaChoices"))
   taxaChoices <- loadTabularData(type = "taxachoices")
 
+# Cap taxa search at family level, exclude species-level choices (issue #205)
+taxaChoices <- taxaChoices[lengths(strsplit(taxaChoices$long, " > ", fixed = TRUE)) < 6, ]
+
 # Load occupancy data from createOccupancyCube()
 if (!doDebug | !exists("occupancy"))
   occupancy <- loadOccupancyData()
@@ -81,6 +84,14 @@ if (!doDebug | !exists("allShapes"))
     "communes" = list(loadShapeData("communes.RData"))
     #readShapeData(extension = ".geojson")
   )
+
+# Attach Natura 2000 status (per 1x1 km cell) to occurrence data, for the
+# Occupancy tab's Region filter - status is based on the 1km cell an
+# observation falls in, not on whether the containing 10km cell overlaps
+# a Natura 2000 area
+natura2000Lookup <- as.data.table(sf::st_drop_geometry(allShapes$utm1_bel_with_regions)[, c("CELLCODE", "isNatura2000")])
+setnames(natura2000Lookup, "CELLCODE", "cell_code1")
+occurrenceData[natura2000Lookup, on = "cell_code1", isNatura2000 := i.isNatura2000]
 
 dictionary <- loadMetaData(type = "keys")
 

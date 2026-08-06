@@ -620,18 +620,24 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
       
       # Subset on filters
       filterData <- reactive({
-          
+
           filterData <- df()
-          
+
           # Other filters
           if (!is.null(filter()))
             for (iFilter in names(filter())) {
               if (!is.null(input[[iFilter]]))
                 filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
             }
-          
+
+          # Restrict to Natura 2000 areas, based on the 1km cell of each
+          # observation (not on whether the 10km cell it rolls up into overlaps
+          # a Natura 2000 area anywhere)
+          if (!is.null(input$naturaFilter) && input$naturaFilter == "Natura 2000 areas only")
+            filterData <- filterData[(isNatura2000), ]
+
           filterData
-          
+
         })
       
       # Subset on period
