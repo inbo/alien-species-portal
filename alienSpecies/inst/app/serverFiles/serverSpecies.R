@@ -21,6 +21,9 @@ lapply(c("observations", "indicators", "reporting", "management", "more",
       plotFunction = iName
     ))
 
+# GRIIS is an acronym, not a translatable word - display as-is (all caps)
+titleModuleServer(id = "species_griis", plotFunction = "GRIIS")
+
 welcomeSectionServer(id = "species")
 
 
@@ -619,14 +622,14 @@ observe({
     # https://stackoverflow.com/a/64324799
     
     # Conditionally enable 'More'
-    moreChoices <- unique(c(keysRiskMap, keysLinks, harmoniaData$gbif_taxonkey))
+    moreChoices <- unique(c(keysLinks, harmoniaData$gbif_taxonkey))
     shinyjs::toggleState(
-      selector = '#species_tabs a[data-value="species_more"', 
+      selector = '#species_tabs a[data-value="species_more"',
       condition = input$species_choice %in% moreChoices
     )
-    # Risk maps
+    # Risk maps (top-level tab, not nested under 'More')
     shinyjs::toggleState(
-      selector = '#species_more a[data-value="species_risk_maps"', 
+      selector = '#species_tabs a[data-value="species_risk_maps"',
       condition = input$species_choice %in% keysRiskMap
     )
     # All other subpanels
@@ -648,9 +651,8 @@ observe({
     )
     
     if (input$species_choice %in% moreChoices)
-      updateTabsetPanel(session = session, inputId = "species_more", 
-        selected = if (input$species_choice %in% keysRiskMap)
-            "species_risk_maps" else if (input$species_choice %in% keysLinks)
+      updateTabsetPanel(session = session, inputId = "species_more",
+        selected = if (input$species_choice %in% keysLinks)
             "species_links" else if (input$species_choice %in% harmoniaData$gbif_taxonkey)
             "species_risk_management") else
       updateTabsetPanel(session = session, inputId = "species_tabs", 
@@ -659,6 +661,21 @@ observe({
             "species_observations")
   
   })
+
+# GRIIS
+observe({
+
+    req(input$species_choice)
+
+    griisServer(
+      id = "griis",
+      exotenData = exotenData,
+      species = taxonName,
+      language = reactive(results$language)
+    )
+
+  })
+
 
 # Risk maps
 ## test with "Psittacula krameri"

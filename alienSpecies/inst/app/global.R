@@ -121,10 +121,13 @@ regionChoices <- sort(unique(exotenData$locality))
 bronChoices <- sort(levels(exotenData$source))
 
 
-# Available species for risk maps (Species > More > Risk maps)
-request <- httr::GET("https://api.github.com/repos/trias-project/risk-maps/contents/public/geotiffs")
-keysRiskMap <- unique(sapply(httr::content(request), function(x) 
-      strsplit(gsub("public/geotiffs/be_", "", x$path), split = "_")[[1]][1]))
+# Available species for risk maps (Species information > Risk maps)
+# New source (issue #207): inbo/wisdm-maps-iasportal, one subfolder named after
+# the taxonKey per species under data/ - TODO: branch "uat" is hardcoded here,
+# same as the "main" branch was hardcoded for the old source; revisit once this
+# is promoted to production (may need a config.yml-style uat/production split)
+request <- httr::GET("https://api.github.com/repos/inbo/wisdm-maps-iasportal/contents/data?ref=uat")
+keysRiskMap <- unique(sapply(httr::content(request), function(x) x$name))
 
 # Available species for links (Species > More > Links)
 request <- httr::GET("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML")

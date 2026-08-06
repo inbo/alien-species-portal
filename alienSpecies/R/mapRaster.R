@@ -67,6 +67,32 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
 
 
 
+#' Build the expected risk map file name (WISDM naming convention, issue #207)
+#'
+#' @param taxonKey character/numeric, GBIF taxon key
+#' @param period character, one of "current", "2041-2070", "2071-2100"
+#' @param scenario character, one of "baseline", "ssp126", "ssp370", "ssp585";
+#' ignored when \code{period == "current"} (that period only ever combines
+#' with the baseline scenario, and has no scenario token in the file name)
+#' @param suffix character, "" for a prediction file, "_diff" for a difference
+#' file, "_SD" for a confidence file
+#' @param source character, "Combined" (default) or "Climate" (fallback for
+#' species without a Combined model)
+#' @return character, file name (without path)
+#'
+#' @export
+riskMapFileName <- function(taxonKey, period, scenario, suffix = "", source = "Combined") {
+
+  periodScenario <- if (period == "current")
+    "current" else
+    paste(period, scenario, sep = "_")
+
+  paste0(taxonKey, "_", source, "_", periodScenario, "_ensemble", suffix, ".tif")
+
+}
+
+
+
 #' Shiny module for creating the plot \code{\link{mapCube}} - server side
 #' 
 #' @inheritParams welcomeSectionServer
@@ -81,7 +107,7 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
 #' @importFrom htmlwidgets saveWidget
 #' @importFrom webshot2 webshot
 #' @importFrom terra values rast
-#' @importFrom httr http_status GET
+#' @importFrom httr http_status GET content
 #' @importFrom utils download.file
 #' @export
 mapRasterServer <- function(id, species, gewest, taxonKey) {
@@ -102,51 +128,91 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
       
       
       output$filters <- renderUI({
-          
+
           # Filter choices
-          modelScenarios <- c("hist", "rcp26", "rcp45", "rcp85")
-          names(modelScenarios) <- translate(modelScenarios)$title
-          
+          periodChoices <- c("current", "2041-2070", "2071-2100")
+          names(periodChoices) <- translate(periodChoices)$title
+
+          scenarioChoices <- c("baseline", "ssp126", "ssp370", "ssp585")
+          names(scenarioChoices) <- translate(scenarioChoices)$title
+
           modelTypes <- c("riskMap", "confMap", "diffMap")
           names(modelTypes) <- translate(modelTypes)$title
-          
-          
+
+
           filters <- list(
-            modelScenario = modelScenarios,
+            period = periodChoices,
+            scenario = scenarioChoices,
             modelType = modelTypes
           )
-          
+
           lapply(names(filters), function(iName) {
-              
-              column(3, 
-                selectInput(inputId = ns(iName), 
+
+              column(3,
+                selectInput(inputId = ns(iName),
                   label = translate(iName)$title,
                   choices = filters[[iName]],
                   multiple = FALSE))
-              
+
             })
-          
+
         })
-      
-      
+
+
+      # Period "current" only ever combines with scenario "baseline";
+      # the other periods combine with the other (non-baseline) scenarios
+      observeEvent(input$period, {
+
+          req(input$period)
+
+          scenarioChoices <- if (input$period == "current")
+            "baseline" else
+            c("ssp126", "ssp370", "ssp585")
+          names(scenarioChoices) <- translate(scenarioChoices)$title
+
+          updateSelectInput(session, inputId = "scenario",
+            choices = scenarioChoices, selected = scenarioChoices[1])
+
+        })
+
+
+      # Type dropdown determines both the file suffix and the storage subfolder
+      typeFolder <- reactive(switch(input$modelType,
+          riskMap = "Predictions", confMap = "Confidence", diffMap = "Difference"))
+      typeSuffix <- reactive(switch(input$modelType,
+          riskMap = "", confMap = "_SD", diffMap = "_diff"))
+
       rasterFile <- reactive({
-          
-          req(input$modelScenario)
+
+          req(input$period)
+          req(input$scenario)
           req(!is.null(input$modelType))
-          
-          tiffPath <- "https://raw.githubusercontent.com/trias-project/risk-maps/main/public/geotiffs"
-          tiffFile <- paste0(
-            paste("be", taxonKey(), input$modelScenario, sep = "_"),
-            if (input$modelType != "riskMap") 
-              paste0("_", gsub("Map", "", input$modelType)), 
-            ".4326.tif")
-          
-          toReturn <- file.path(tiffPath, tiffFile)
-          
-          if (httr::http_status(httr::GET(toReturn))$category == "Client error")
-            NULL else
-            toReturn
-          
+
+          # List once, so the Combined -> Climate fallback (species with no
+          # Combined model) is a lookup in an already-fetched listing, not an
+          # extra live request
+          listing <- httr::GET(paste0(
+              "https://api.github.com/repos/inbo/wisdm-maps-iasportal/contents/data/",
+              taxonKey(), "/", typeFolder(), "?ref=uat"))
+
+          if (httr::http_status(listing)$category == "Client error")
+            return(NULL)
+
+          availableFiles <- sapply(httr::content(listing), function(x) x$name)
+
+          wantedFile <- riskMapFileName(taxonKey(), input$period, input$scenario,
+            suffix = typeSuffix(), source = "Combined")
+
+          if (!wantedFile %in% availableFiles)
+            wantedFile <- riskMapFileName(taxonKey(), input$period, input$scenario,
+              suffix = typeSuffix(), source = "Climate")
+
+          if (!wantedFile %in% availableFiles)
+            return(NULL)
+
+          file.path("https://raw.githubusercontent.com/inbo/wisdm-maps-iasportal/uat/data",
+            taxonKey(), typeFolder(), wantedFile)
+
         })
       
       output$warningFile <- renderUI({
