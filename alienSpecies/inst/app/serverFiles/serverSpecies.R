@@ -771,7 +771,8 @@ observeEvent(species_readyForDownload(), {
             "plotSpecies.Rmd",
             "plotLandscape.Rmd",
             "logo.png",
-            "logoTrias.png"
+            "logoTrias.png",
+            "bcubed.png",
           ), package = "alienSpecies")
         toFiles <- file.path(tempdir(), basename(fromFiles))
         for (i in seq_along(fromFiles)) {
