@@ -220,16 +220,17 @@ optimalSteps <- function(values, maxCuts = 10) {
 #' 
 #' @return character, path of logo file
 #' @param type character, defines which logo is returned; should be one of 
-#' \code{c("inbo", "trias")}
+#' \code{c("inbo", "trias", "b3")}
 #' @author mvarewyck
 #' @export
-getPathLogo <- function(type = c("inbo", "trias", "combined")) {
+getPathLogo <- function(type = c("inbo", "trias", "b3", "combined")) {
   
   type <- match.arg(type)
   
   system.file("app/www", switch(type,
       inbo = "logo.png",
       trias = "logoTrias.png",
+      b3 = "bcubed.png",                          
       combined = "logoCombined.png"
     ), package = "alienSpecies")
 
