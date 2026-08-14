@@ -78,10 +78,12 @@ observe({
       taxaChoices[, label := vernacular_name_list] 
       setkey(taxaChoices, vernacular_name_list)
     } else {
-      taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
-          gsub("</b>", paste0("</b> <i>", strsplit(taxaChoices$vernacular_name_list[i],
-                split = ", ")[[1]][1], "</i>"), taxaChoices$html[i])
-      )     
+      taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i) {
+          vernacular <- strsplit(taxaChoices$vernacular_name_list[i], split = ", ")[[1]][1]
+          if (is.na(vernacular))
+            taxaChoices$html[i] else
+            gsub("</b>", paste0("</b> <i>", vernacular, "</i>"), taxaChoices$html[i])
+        })
       taxaChoices[, label := latin_name]
       setkey(taxaChoices, latin_name)
     }
@@ -519,7 +521,12 @@ observeEvent(input$exoten_tabs, {
     countOccupancyServer(id = "checklist",
       data = occupancySelected
     )
-    
+
+    ## Plot Target 6 indicator
+    target6Server(id = "checklist",
+      data = reactive(target6Data)
+    )
+
   })
 
 

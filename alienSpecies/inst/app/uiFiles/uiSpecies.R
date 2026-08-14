@@ -43,6 +43,11 @@ tagList(
           mapRegionsUI(id = "indicators_facet", showUnit = FALSE, facet = TRUE)
         )
       ),
+      tabPanel(titleModuleUI(id = "species_griis"), value = "species_griis",
+        tags$div(style = "margin-top: 10px;",
+          griisUI("griis")
+        )
+      ),
       tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps",
         mapRasterUI("risk")
       ),

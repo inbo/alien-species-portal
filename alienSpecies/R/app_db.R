@@ -57,7 +57,7 @@ dbServer <- function(id) {
 
                   tags$div(
                     class = "db-link-content",
-                    tags$p(description),
+                    tags$p(HTML(description)),
                     tags$em(
                       "URL link: ",
                       tags$a(title, href = db["url"], target = "_blank")

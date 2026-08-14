@@ -281,9 +281,10 @@ p, li, label {
 }
 
 .db-link-card {
+    box-sizing: border-box;
     border: 1px solid #ddd;
     border-radius: 4px;
-    padding-left: 18px;
+    padding: 5px 20px 5px 5px;
     margin-bottom: 18px;
     background: white;
 }

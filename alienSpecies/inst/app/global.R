@@ -60,9 +60,14 @@ if (!doDebug | !exists("occupancy"))
 
 # TODO fetch correct file from bucket
 dfCube <- read.csv(
-    system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"), 
+    system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"),
     sep = ",", encoding = "UTF-8"
   )
+
+# Target 6 indicator (BCubed issue #208) - temporary local file, standing in
+# for the real S3-hosted file until aspbo#659 resolves
+target6File <- "estimated_rates_solow_costello_effective_annual_rates_heavily_filtering.csv"
+target6Data <- read.csv(system.file("data", target6File, package = "alienSpecies"))
 
 
 # Specify default year to show (and default max to show in time ranges)
