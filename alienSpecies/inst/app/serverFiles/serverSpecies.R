@@ -29,36 +29,99 @@ welcomeSectionServer(id = "species")
 
 # Species selection
 results$species_choices <- reactive({
-    
+
     # Observations
     taxChoices <- occurrenceData[!duplicated(taxonKey), scientificName]
     # Reporting
     reportChoices <- dfCube[!duplicated(dfCube$species) & !dfCube$species %in% taxChoices, "species"]
-    
+
     choiceNames <- sort(c(taxChoices, reportChoices))
     choices <- dictionary$taxonKey[match(choiceNames, dictionary$scientificName)]
-    
+
     names(choices) <- choiceNames
     choices
-    
+
+  })
+
+# Same shape as taxaChoices (serverChecklist.R) - backs the "search by common
+# name" checkbox below
+results$speciesChoicesData <- reactive({
+
+    choices <- results$species_choices()
+
+    speciesData <- data.table(
+      value = unname(choices),
+      latin_name = names(choices)
+    )
+
+    # exotenData has one row per species x locality, occasionally with
+    # differing vernacular names across localities - keep exactly one row per
+    # species, matching the same `!duplicated()` convention already used for
+    # results$species_choices() above
+    vernacularCols <- c("vernacular_name_nl", "vernacular_name_en", "vernacular_name_fr")
+    vernacularLookup <- exotenData[!duplicated(species), c("species", vernacularCols), with = FALSE]
+    # Some rows store missing vernacular names as the literal string "NA"
+    # rather than a real NA (issue #205's taxa-search fix hit the same thing)
+    for (col in vernacularCols)
+      vernacularLookup[get(col) == "NA", (col) := NA]
+
+    speciesData <- merge(speciesData, vernacularLookup, by.x = "latin_name", by.y = "species", all.x = TRUE)
+    speciesData[, html := paste0("<b>", latin_name, "</b>")]
+
+    speciesData
+
   })
 
 
 observe({
 
-    # Trigger update when changing tab or language - a language switch alone
-    # doesn't change any of the other dependencies below, so without this the
-    # selectize's server-side search registration goes stale and stops
-    # responding until the tab is re-entered
-    results$language
+    # Trigger update when changing tab, language, or the vernacular-name
+    # search toggle - a language switch alone doesn't change any of the other
+    # dependencies below, so without this the selectize's server-side search
+    # registration goes stale and stops responding until the tab is re-entered
+    req(!is.null(input$species_searchVernacular))
 
-    if (input$tabs == "species_information")
+    if (input$tabs == "species_information") {
+
+      speciesData <- data.table::copy(results$speciesChoicesData())
+      speciesData[, vernacular_name_list := get(paste0("vernacular_name_", results$language))]
+
+      # Search on latin or vernacular name - mirrors the identical checkbox
+      # for exoten_taxa in serverChecklist.R
+      if (input$species_searchVernacular) {
+        speciesData[, showHtml := sapply(seq_len(.N), function(i)
+            gsub("<b>.*</b>", paste0("<b>",
+                if (is.na(vernacular_name_list[i])) "" else vernacular_name_list[i],
+                "</b> <i>", latin_name[i], "</i>"), html[i]))]
+        speciesData[, label := ifelse(is.na(vernacular_name_list), latin_name, vernacular_name_list)]
+        setkey(speciesData, label)
+      } else {
+        speciesData[, showHtml := sapply(seq_len(.N), function(i) {
+            vernacular <- vernacular_name_list[i]
+            if (is.na(vernacular))
+              html[i] else
+              gsub("</b>", paste0("</b> <i>", vernacular, "</i>"), html[i])
+          })]
+        speciesData[, label := latin_name]
+        setkey(speciesData, label)
+      }
+
       updateSelectizeInput(session = session, inputId = "species_choice",
-        choices = results$species_choices(),
+        choices = speciesData,
         selected = if (results$species_choice == "" & !is.null(urlSearch()$taxonkey))
           urlSearch()$taxonkey else
           results$species_choice,
-        server = TRUE)
+        server = TRUE,
+        options = list(
+          render = I(
+            "{
+              option: function(item, escape) {
+              return '<div class=\"long-selectize\">' + item.showHtml + '</div>'; }
+              }"
+          ))
+      )
+
+    }
 
   })
 

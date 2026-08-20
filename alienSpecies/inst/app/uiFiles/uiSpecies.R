@@ -13,7 +13,8 @@ tagList(
       fixedRow(
         column(6,
           selectizeInput(inputId = "species_choice", label = NULL, choices = NULL,
-            width = "100%")),
+            width = "100%"),
+          checkboxInput(inputId = "species_searchVernacular", label = translate("vernacular_name")$title)),
         column(6,
           selectInput(inputId = "species_gewest", label = NULL,
             choices = NULL, multiple = TRUE, width = "100%")),
