@@ -173,6 +173,42 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
           updateSelectInput(session, inputId = "scenario",
             choices = scenarioChoices, selected = scenarioChoices[1])
 
+          # Period "current" (-> scenario "baseline") never has a Difference
+          # map (nothing to diff against itself)
+          modelTypes <- if (input$period == "current")
+            c("riskMap", "confMap") else
+            c("riskMap", "confMap", "diffMap")
+          names(modelTypes) <- translate(modelTypes)$title
+
+          selectedType <- if (isolate(input$modelType) %in% modelTypes)
+            isolate(input$modelType) else
+            modelTypes[1]
+
+          updateSelectInput(session, inputId = "modelType",
+            choices = modelTypes, selected = selectedType)
+
+        })
+
+
+      # Mirror image of the above: Difference maps are never valid for
+      # period "current", so selecting Difference removes "current" from
+      # the period choices too
+      observeEvent(input$modelType, {
+
+          req(input$modelType)
+
+          periodChoices <- c("current", "2041-2070", "2071-2100")
+          if (input$modelType == "diffMap")
+            periodChoices <- setdiff(periodChoices, "current")
+          names(periodChoices) <- translate(periodChoices)$title
+
+          selectedPeriod <- if (isolate(input$period) %in% periodChoices)
+            isolate(input$period) else
+            periodChoices[1]
+
+          updateSelectInput(session, inputId = "period",
+            choices = periodChoices, selected = selectedPeriod)
+
         })
 
 
