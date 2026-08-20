@@ -17,21 +17,25 @@
 #' @author mvarewyck
 #' @import ggplot2
 #' @importFrom plotly ggplotly
+#' @importFrom INBOtheme theme_inbo
 #' @export
 target6Indicator <- function(df, xLab = translate("year")$title,
   yLab = translate("target6_yLab")$title) {
 
+  # Leave color/fill unset so both geoms pick up INBOtheme's package-wide
+  # default (INBO blue, #356196) - the same house style "Number of newly
+  # introduced species per year" gets, for the same reason: it doesn't set
+  # an explicit color either. Only alpha is set, to get the same pale ribbon.
   p <- ggplot(df, aes(x = Year, y = Annual_Rate)) +
     geom_ribbon(
       aes(ymin = Lower_CI_95, ymax = Upper_CI_95),
-      fill = "grey70",
-      alpha = 0.5
+      alpha = 0.1
     ) +
     geom_line(
-      color = "black",
       linewidth = 1
     ) +
-    labs(x = xLab, y = yLab)
+    labs(x = xLab, y = yLab) +
+    INBOtheme::theme_inbo(transparent = TRUE)
 
   list(plot = ggplotly(p), data = df)
 
