@@ -31,12 +31,15 @@ griisServer <- function(id, exotenData, species, language) {
           validate(need(nrow(row) > 0, translate("noData")$title))
 
           vernacularName <- row[[paste0("vernacular_name_", language())]][1]
+          pathway <- paste(row$pathway_level1[1], row$pathway_level2[1], sep = ": ")
 
           # Same columns (and labels) as the Checklist Indicators > Taxa table
-          labelKeys <- c("species", "vernacular_name_col", "gbifLink", "last_observed",
-            "habitat", "sourceLink")
-          values <- c(row$species[1], vernacularName, row$gbifLink[1],
-            row$last_observed[1], row$habitat[1], row$sourceLink[1])
+          labelKeys <- c("species", "vernacular_name_col", "gbifLink", "habitat",
+            "first_observed", "last_observed", "degree_of_establishment", "pathway",
+            "sourceLink")
+          values <- c(row$species[1], vernacularName, row$gbifLink[1], row$habitat[1],
+            row$first_observed[1], row$last_observed[1], row$degree_of_establishment[1],
+            pathway, row$sourceLink[1])
 
           DT::datatable(
             data.frame(field = tools::toTitleCase(names(displayName(labelKeys))), value = values),
