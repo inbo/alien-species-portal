@@ -45,16 +45,21 @@ results$species_choices <- reactive({
 
 
 observe({
-    
-    # Trigger update when changing tab
+
+    # Trigger update when changing tab or language - a language switch alone
+    # doesn't change any of the other dependencies below, so without this the
+    # selectize's server-side search registration goes stale and stops
+    # responding until the tab is re-entered
+    results$language
+
     if (input$tabs == "species_information")
       updateSelectizeInput(session = session, inputId = "species_choice",
         choices = results$species_choices(),
         selected = if (results$species_choice == "" & !is.null(urlSearch()$taxonkey))
           urlSearch()$taxonkey else
           results$species_choice,
-        server = TRUE)    
-    
+        server = TRUE)
+
   })
 
 # Save choice when leaving this tab
