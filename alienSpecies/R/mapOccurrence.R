@@ -106,35 +106,40 @@ createCubeData <- function(df, shapeData, groupVariable,
 #' available choices is (subset of) \code{c("flanders", "brussels", "wallonia")}; 
 #' NULL by default; if NULL all available regions are seleted
 #' @param addYLabel boolean whether to add a Y label
+#' @param naturaFilter character, currently selected "Region" filter value
+#' ("entireRegion" or "natura2000Only"); NULL if not applicable - shown as a
+#' constant "Selected areas" column in the table, not used for filtering
+#' here (that already happens upstream)
 #' @inheritParams trendYearRegion
 #' @return plotly
-#' 
+#'
 #' @author mvarewyck
 #' @import plotly
 #' @importFrom INBOtheme inbo_lichtgrijs inbo_steun_blauw
 #' @importFrom data.table setkey uniqueN
 #' @export
-countOccurrence <- function(df, spatialLevel = c("Number of observations", "Number of occupied 10 × 10 km grid cells", "Number of occupied 1 × 1 km grid cells"), minYear = 1950,
+countOccurrence <- function(df, spatialLevel = c("n", "cell_code1", "cell_code10"), minYear = 1950,
   period = c(2000, 2018), combine = FALSE,
-  regions = NULL, addYLabel = FALSE) {
-  
+  regions = NULL, addYLabel = FALSE, naturaFilter = NULL) {
+
   # For R CMD check
   count <- year <- selected <- region <- . <- NULL
-  
+
   if (is.null(regions))
     regions <- c("flanders", "brussels", "wallonia")
+  # Regions as originally selected, for the combined-region table label below -
+  # `regions` itself gets narrowed further down to whichever are actually
+  # present in the data, which isn't the same thing
+  selectedRegions <- regions
   currentYear <- as.numeric(format(Sys.Date(), "%Y"))
-  
-  spatialLevel <- match.arg(spatialLevel)
-  iCode <- switch(spatialLevel,
-    "Number of observations" = "n",
-    "Number of occupied 1 × 1 km grid cells" = "cell_code1",
-    "Number of occupied 10 × 10 km grid cells" = "cell_code10"
-  )
+
+  iCode <- match.arg(spatialLevel)
+
+  metricLabel <- translate(paste0("spatialLevel_", iCode))$title
 
   yLabel <- ifelse(
     addYLabel,
-    translate("countOccurrence_yLabel")$title,
+    metricLabel,
     ""
   )
   
@@ -188,17 +193,19 @@ countOccurrence <- function(df, spatialLevel = c("Number of observations", "Numb
   
   if ("region" %in% colnames(df)) {
     # with region information
-    
+
     nOccurred <- df[, .(count = sum(count)), by = .(year, region, selected)]
     setkey(nOccurred, year, region)
-    returnData <- nOccurred[, .(year, region, count)]
-    
+    # Table should only show the selected period, not the greyed-out years
+    # shown in the chart
+    returnData <- nOccurred[(selected), .(year, region, count)]
+
   } else {
-    
+
     nOccurred <- df[, .(count = sum(count)), by = .(year, selected)]
     setkey(nOccurred, year)
-    returnData <- nOccurred[order(nOccurred$year, decreasing = TRUE), ]
-    
+    returnData <- nOccurred[(selected)][order(year, decreasing = TRUE), .(year, count)]
+
   }
   
   myPlot <- plot_ly(data = nOccurred[nOccurred$selected, ], 
@@ -221,9 +228,27 @@ countOccurrence <- function(df, spatialLevel = c("Number of observations", "Numb
       barmode = "stack",
       legend = list(orientation = 'h', x = 0.5, y = 1, xanchor = "center")
   )
-  
-  
-  list(plot = myPlot, data = returnData, columnNames = colnames(returnData))
+
+  # Combined regions: show the actual combined region name (e.g. "Belgium")
+  # instead of the generic "selected"/"not selected" placeholder
+  if ("region" %in% colnames(returnData) && combine)
+    returnData$region <- combinedRegionLabel(selectedRegions)
+
+  # Which areas the "Region" filter (Natura 2000) currently applies to - a
+  # single value for the whole table, not per-row
+  if (!is.null(naturaFilter))
+    returnData$selectedAreas <- translate(naturaFilter)$title
+
+  columnNames <- sapply(colnames(returnData), function(col)
+      switch(col,
+        year = translate("year")$title,
+        region = translate("region")$title,
+        count = metricLabel,
+        selectedAreas = translate("selectedAreas")$title,
+        col
+      ), USE.NAMES = FALSE)
+
+  list(plot = myPlot, data = returnData, columnNames = columnNames)
   
 }
 
@@ -596,25 +621,25 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
         })
       
       output$naturaFilter <- renderUI({
-          
-          regionChoices <- c("Entire region", "Natura 2000 areas only")
-          #names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x)$title)
-          
-          selectInput(inputId = ns("naturaFilter"), 
-            label = "Region", #translate(uiText(), "legend")$title,
-            choices = regionChoices)
-          
+
+          regionChoices <- c("entireRegion", "natura2000Only")
+          names(regionChoices) <- sapply(regionChoices, function(x) translate(x)$title)
+
+          selectInput(inputId = ns("naturaFilter"),
+            label = translate("region_filter")$title,
+            choices = regionChoices, selected = "entireRegion")
+
         })
-      
+
       output$typeTimeseries <- renderUI({
-          
-          typeChoices <- c("Number of observations", "Number of occupied 10 × 10 km grid cells", "Number of occupied 1 × 1 km grid cells")
-          #names(legendChoices) <- sapply(legendChoices, function(x) translate(uiText(), x)$title)
-          
-          selectInput(inputId = ns("typeTimeseries"), 
-            label = "Spatial level", #translate(uiText(), "legend")$title,
-            choices = typeChoices)
-          
+
+          typeChoices <- c("n", "cell_code1", "cell_code10")
+          names(typeChoices) <- sapply(typeChoices, function(x) translate(paste0("spatialLevel_", x))$title)
+
+          selectInput(inputId = ns("typeTimeseries"),
+            label = translate("spatialLevel")$title,
+            choices = typeChoices, selected = "cell_code1")
+
         })
       
       
@@ -633,7 +658,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           # Restrict to Natura 2000 areas, based on the 1km cell of each
           # observation (not on whether the 10km cell it rolls up into overlaps
           # a Natura 2000 area anywhere)
-          if (!is.null(input$naturaFilter) && input$naturaFilter == "Natura 2000 areas only")
+          if (!is.null(input$naturaFilter) && input$naturaFilter == "natura2000Only")
             filterData <- filterData[(isNatura2000), ]
 
           filterData
@@ -932,7 +957,8 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
         combine = reactive(input$combine),
         spatialLevel = reactive(input$typeTimeseries),
         regions = gewest,
-        addYLabel = grepl("observations", id)
+        addYLabel = grepl("observations", id),
+        naturaFilter = reactive(input$naturaFilter)
       )
       
       

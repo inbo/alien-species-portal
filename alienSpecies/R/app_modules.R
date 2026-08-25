@@ -112,6 +112,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @param groupChoices reactive character, defines the choices for group variable;
 #' if NULL no groupChoices available
 #' @param addYLabel reactive boolean, see \code{\link{countOccurrence}}
+#' @param naturaFilter reactive character, see \code{\link{countOccurrence}}
 #' @return no return value; plot output object is created
 #' @author mvarewyck
 #' @import shiny
@@ -120,7 +121,8 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @export
 plotModuleServer <- function(id, plotFunction, data,
   outputType = NULL, triasFunction = NULL, triasArgs = NULL, groupChoices = NULL,
-  period = NULL, regions = NULL, combine = NULL, addYLabel = NULL, spatialLevel = NULL) {
+  period = NULL, regions = NULL, combine = NULL, addYLabel = NULL, spatialLevel = NULL,
+  naturaFilter = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -198,6 +200,8 @@ plotModuleServer <- function(id, plotFunction, data,
                 list(combine = combine()),
               if (!is.null(spatialLevel))
                 list(spatialLevel = spatialLevel()),
+              if (!is.null(naturaFilter))
+                list(naturaFilter = naturaFilter()),
               # Input
               if (!is.null(input$group))
                 list(groupVar = input$group),
@@ -299,7 +303,8 @@ plotModuleServer <- function(id, plotFunction, data,
                   selection = "single",
                   options = list(dom = 'ftp',
                     pageLength = 10,
-                    order = list(list(0, "desc")))
+                    order = list(list(0, "desc")),
+                    autoWidth = FALSE)
                 )
               else
                 DT::datatable(resultFct()$data, rownames = FALSE,

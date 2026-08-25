@@ -77,6 +77,30 @@ vectorToTitleString <- function(vector) {
 }
 
 
+#' Combined label for a set of selected regions (e.g. for a table column
+#' showing which regions were combined into one row)
+#'
+#' @param regions character vector, subset of \code{c("flanders", "wallonia", "brussels")}
+#' @return character, "Belgium" if all three regions are given, the region
+#' names joined with "and" (translated) if 2, or the single translated
+#' region name if 1
+#'
+#' @export
+combinedRegionLabel <- function(regions) {
+
+  if (setequal(regions, c("flanders", "wallonia", "brussels")))
+    return(translate("Belgi\u00EB")$title)
+
+  names <- translate(regions)$title
+
+  if (length(names) == 1)
+    return(names)
+
+  paste(paste(names[-length(names)], collapse = ", "), translate("and")$title, names[length(names)])
+
+}
+
+
 #' Transform numeric vector with years ready to be in title
 #' 
 #' @param year numeric, vector with year values for which to print the range
