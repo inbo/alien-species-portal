@@ -304,7 +304,11 @@ plotModuleServer <- function(id, plotFunction, data,
                   options = list(dom = 'ftp',
                     pageLength = 10,
                     order = list(list(0, "desc")),
-                    autoWidth = FALSE)
+                    autoWidth = FALSE,
+                    columnDefs = list(list(
+                        width = paste0(round(100 / ncol(resultFct()$data)), "%"),
+                        targets = "_all"))
+                  )
                 )
               else
                 DT::datatable(resultFct()$data, rownames = FALSE,
