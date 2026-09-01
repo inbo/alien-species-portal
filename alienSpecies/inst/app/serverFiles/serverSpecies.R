@@ -54,18 +54,21 @@ results$speciesChoicesData <- reactive({
       latin_name = names(choices)
     )
 
-    # exotenData has one row per species x locality, occasionally with
-    # differing vernacular names across localities - keep exactly one row per
-    # species, matching the same `!duplicated()` convention already used for
-    # results$species_choices() above
-    vernacularCols <- c("vernacular_name_nl", "vernacular_name_en", "vernacular_name_fr")
-    vernacularLookup <- exotenData[!duplicated(species), c("species", vernacularCols), with = FALSE]
+    # taxaChoices (serverChecklist.R) already carries the full comma-joined
+    # list of vernacular-name synonyms per language (built in
+    # createTaxaChoices(), data_create.R) - reuse it here instead of
+    # re-deriving from exotenData, which only has the single canonical name
+    vernacularCols <- c("vernacular_name_nl_list", "vernacular_name_en_list", "vernacular_name_fr_list")
+    vernacularLookup <- taxaChoices[, c("latin_name", vernacularCols), with = FALSE]
     # Some rows store missing vernacular names as the literal string "NA"
     # rather than a real NA (issue #205's taxa-search fix hit the same thing)
     for (col in vernacularCols)
       vernacularLookup[get(col) == "NA", (col) := NA]
+    completeness <- rowSums(sapply(vernacularCols, function(col)
+      ifelse(is.na(vernacularLookup[[col]]), 0, nchar(vernacularLookup[[col]]))))
+    vernacularLookup <- unique(vernacularLookup[order(-completeness)], by = "latin_name")
 
-    speciesData <- merge(speciesData, vernacularLookup, by.x = "latin_name", by.y = "species", all.x = TRUE)
+    speciesData <- merge(speciesData, vernacularLookup, by = "latin_name", all.x = TRUE)
     speciesData[, html := paste0("<b>", latin_name, "</b>")]
 
     speciesData
@@ -84,7 +87,7 @@ observe({
     if (input$tabs == "species_information") {
 
       speciesData <- data.table::copy(results$speciesChoicesData())
-      speciesData[, vernacular_name_list := get(paste0("vernacular_name_", results$language))]
+      speciesData[, vernacular_name_list := get(paste0("vernacular_name_", results$language, "_list"))]
 
       # Search on latin or vernacular name - mirrors the identical checkbox
       # for exoten_taxa in serverChecklist.R
@@ -97,7 +100,8 @@ observe({
         setkey(speciesData, label)
       } else {
         speciesData[, showHtml := sapply(seq_len(.N), function(i) {
-            vernacular <- vernacular_name_list[i]
+            vernacular <- if (is.na(vernacular_name_list[i])) NA else
+              strsplit(vernacular_name_list[i], split = ", ")[[1]][1]
             if (is.na(vernacular))
               html[i] else
               gsub("</b>", paste0("</b> <i>", vernacular, "</i>"), html[i])
