@@ -76,6 +76,15 @@ results$speciesChoicesData <- reactive({
   })
 
 
+firstVernacularName <- function(vernacularList) {
+  if (is.na(vernacularList))
+    return(NA)
+  parts <- strsplit(vernacularList, split = ", ")[[1]]
+  nonParen <- parts[!startsWith(parts, "(")]
+  if (length(nonParen)) nonParen[1] else parts[1]
+}
+
+
 observe({
 
     # Trigger update when changing tab, language, or the vernacular-name
@@ -92,16 +101,20 @@ observe({
       # Search on latin or vernacular name - mirrors the identical checkbox
       # for exoten_taxa in serverChecklist.R
       if (input$species_searchVernacular) {
-        speciesData[, showHtml := sapply(seq_len(.N), function(i)
-            gsub("<b>.*</b>", paste0("<b>",
-                if (is.na(vernacular_name_list[i])) "" else vernacular_name_list[i],
-                "</b> <i>", latin_name[i], "</i>"), html[i]))]
+        # Search matches against the full synonym list (label), but only one
+        # representative synonym is shown in the dropdown - showing every
+        # synonym made options for species with many of them unreadably
+        # cluttered
+        speciesData[, showHtml := sapply(seq_len(.N), function(i) {
+            vernacular <- firstVernacularName(vernacular_name_list[i])
+            gsub("<b>.*</b>", paste0("<b>", if (is.na(vernacular)) "" else vernacular,
+                "</b> <i>", latin_name[i], "</i>"), html[i])
+          })]
         speciesData[, label := ifelse(is.na(vernacular_name_list), latin_name, vernacular_name_list)]
         setkey(speciesData, label)
       } else {
         speciesData[, showHtml := sapply(seq_len(.N), function(i) {
-            vernacular <- if (is.na(vernacular_name_list[i])) NA else
-              strsplit(vernacular_name_list[i], split = ", ")[[1]][1]
+            vernacular <- firstVernacularName(vernacular_name_list[i])
             if (is.na(vernacular))
               html[i] else
               gsub("</b>", paste0("</b> <i>", vernacular, "</i>"), html[i])

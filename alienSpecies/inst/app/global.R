@@ -51,8 +51,7 @@ if (!doDebug | !exists("occurrenceData"))
 if (!doDebug | !exists("taxaChoices"))
   taxaChoices <- loadTabularData(type = "taxachoices")
 
-# Cap taxa search at family level, exclude species-level choices (issue #205)
-taxaChoices <- taxaChoices[lengths(strsplit(taxaChoices$long, " > ", fixed = TRUE)) < 6, ]
+taxaChoicesFamily <- taxaChoices[lengths(strsplit(taxaChoices$long, " > ", fixed = TRUE)) < 6, ]
 
 # Load occupancy data from createOccupancyCube()
 if (!doDebug | !exists("occupancy"))
