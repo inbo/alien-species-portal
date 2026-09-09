@@ -118,8 +118,10 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
     function(input, output, session) {
       
       ns <- session$ns
-      
-      
+
+      periodIds <- c(current = "Current", "2041-2070" = "2041-2070", "2071-2100" = "2071-2100")
+      scenarioIds <- c(baseline = "Baseline", ssp126 = "SSP1-2.6", ssp370 = "SSP3-7.0", ssp585 = "SSP5-8.5")
+
       noData <- reactive(translate("noData")$title)
       tmpTranslation <- reactive(translate(ns("mapRaster")))
       
@@ -131,10 +133,10 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
 
           # Filter choices
           periodChoices <- c("current", "2041-2070", "2071-2100")
-          names(periodChoices) <- translate(periodChoices)$title
+          names(periodChoices) <- translate(periodIds[periodChoices])$title
 
           scenarioChoices <- c("baseline", "ssp126", "ssp370", "ssp585")
-          names(scenarioChoices) <- translate(scenarioChoices)$title
+          names(scenarioChoices) <- translate(scenarioIds[scenarioChoices])$title
 
           modelTypes <- c("riskMap", "confMap", "diffMap")
           names(modelTypes) <- translate(modelTypes)$title
@@ -168,7 +170,7 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
           scenarioChoices <- if (input$period == "current")
             "baseline" else
             c("ssp126", "ssp370", "ssp585")
-          names(scenarioChoices) <- translate(scenarioChoices)$title
+          names(scenarioChoices) <- translate(scenarioIds[scenarioChoices])$title
 
           updateSelectInput(session, inputId = "scenario",
             choices = scenarioChoices, selected = scenarioChoices[1])
@@ -200,7 +202,7 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
           periodChoices <- c("current", "2041-2070", "2071-2100")
           if (input$modelType == "diffMap")
             periodChoices <- setdiff(periodChoices, "current")
-          names(periodChoices) <- translate(periodChoices)$title
+          names(periodChoices) <- translate(periodIds[periodChoices])$title
 
           selectedPeriod <- if (isolate(input$period) %in% periodChoices)
             isolate(input$period) else
