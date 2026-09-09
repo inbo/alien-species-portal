@@ -122,6 +122,8 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
       periodIds <- c(current = "Current", "2041-2070" = "2041-2070", "2071-2100" = "2071-2100")
       scenarioIds <- c(baseline = "Baseline", ssp126 = "SSP1-2.6", ssp370 = "SSP3-7.0", ssp585 = "SSP5-8.5")
 
+      filterLabelIds <- c(period = "period", scenario = "Scenario", modelType = "modelType")
+
       noData <- reactive(translate("noData")$title)
       tmpTranslation <- reactive(translate(ns("mapRaster")))
       
@@ -152,7 +154,7 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
 
               column(3,
                 selectInput(inputId = ns(iName),
-                  label = translate(iName)$title,
+                  label = translate(filterLabelIds[iName])$title,
                   choices = filters[[iName]],
                   multiple = FALSE))
 
