@@ -106,35 +106,40 @@ createCubeData <- function(df, shapeData, groupVariable,
 #' available choices is (subset of) \code{c("flanders", "brussels", "wallonia")}; 
 #' NULL by default; if NULL all available regions are seleted
 #' @param addYLabel boolean whether to add a Y label
+#' @param naturaFilter character, currently selected "Region" filter value
+#' ("entireRegion" or "natura2000Only"); NULL if not applicable - shown as a
+#' constant "Selected areas" column in the table, not used for filtering
+#' here (that already happens upstream)
 #' @inheritParams trendYearRegion
 #' @return plotly
-#' 
+#'
 #' @author mvarewyck
 #' @import plotly
 #' @importFrom INBOtheme inbo_lichtgrijs inbo_steun_blauw
 #' @importFrom data.table setkey uniqueN
 #' @export
-countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
-  period = c(2000, 2018), combine = FALSE, 
-  regions = NULL, addYLabel = FALSE) {
-  
-  
+countOccurrence <- function(df, spatialLevel = c("n", "cell_code1", "cell_code10"), minYear = 1950,
+  period = c(2000, 2018), combine = FALSE,
+  regions = NULL, addYLabel = FALSE, naturaFilter = NULL) {
+
   # For R CMD check
   count <- year <- selected <- region <- . <- NULL
-  
+
   if (is.null(regions))
     regions <- c("flanders", "brussels", "wallonia")
+  # Regions as originally selected, for the combined-region table label below -
+  # `regions` itself gets narrowed further down to whichever are actually
+  # present in the data, which isn't the same thing
+  selectedRegions <- regions
   currentYear <- as.numeric(format(Sys.Date(), "%Y"))
-  
-  spatialLevel <- match.arg(spatialLevel)
-  iCode <- switch(spatialLevel,
-    '1km' = "cell_code1",
-    '10km' = "cell_code10"
-  )
-  
+
+  iCode <- match.arg(spatialLevel)
+
+  metricLabel <- translate(paste0("spatialLevel_", iCode))$title
+
   yLabel <- ifelse(
     addYLabel,
-    translate("countOccurrence_yLabel")$title,
+    metricLabel,
     ""
   )
   
@@ -179,24 +184,29 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
   }
   
   if (!"count" %in% colnames(df))
-    df <- df[, .(count = uniqueN(base::get(iCode))), by = .(year, region, selected)]
+    if(iCode == "n"){
+      df <- df[, .(count = sum(base::get(iCode))), by = .(year, region, selected)]
+    } else{
+      df <- df[, .(count = uniqueN(base::get(iCode))), by = .(year, region, selected)]
+    }
+    
   
   if ("region" %in% colnames(df)) {
     # with region information
-    
+
     nOccurred <- df[, .(count = sum(count)), by = .(year, region, selected)]
     setkey(nOccurred, year, region)
-    returnData <- nOccurred[, .(year, region, count)]
-    
+    # Table should only show the selected period, not the greyed-out years
+    # shown in the chart
+    returnData <- nOccurred[(selected), .(year, region, count)]
+
   } else {
-    
+
     nOccurred <- df[, .(count = sum(count)), by = .(year, selected)]
     setkey(nOccurred, year)
-    returnData <- nOccurred
-    
+    returnData <- nOccurred[(selected)][order(year, decreasing = TRUE), .(year, count)]
+
   }
-  
-  
   
   myPlot <- plot_ly(data = nOccurred[nOccurred$selected, ], 
       x = ~year, y = ~count, type = "bar",
@@ -212,15 +222,33 @@ countOccurrence <- function(df, spatialLevel = c("1km", "10km"), minYear = 1950,
       xaxis = list(title = translate("year")$title, range = c(minYear, currentYear)),
       yaxis = list(title = list(
           text = yLabel,
-          font = list(size = 10)
-        )),
+          font = list(size = 8)
+        ), automargin = TRUE),
       showlegend = !combine & !is.null(nOccurred$region),
       barmode = "stack",
       legend = list(orientation = 'h', x = 0.5, y = 1, xanchor = "center")
   )
-  
-  
-  list(plot = myPlot, data = returnData)
+
+  # Combined regions: show the actual combined region name (e.g. "Belgium")
+  # instead of the generic "selected"/"not selected" placeholder
+  if ("region" %in% colnames(returnData) && combine)
+    returnData$region <- combinedRegionLabel(selectedRegions)
+
+  # Which areas the "Region" filter (Natura 2000) currently applies to - a
+  # single value for the whole table, not per-row
+  if (!is.null(naturaFilter))
+    returnData$selectedAreas <- translate(naturaFilter)$title
+
+  columnNames <- sapply(colnames(returnData), function(col)
+      switch(col,
+        year = translate("year")$title,
+        region = translate("region")$title,
+        count = metricLabel,
+        selectedAreas = translate("selectedAreas")$title,
+        col
+      ), USE.NAMES = FALSE)
+
+  list(plot = myPlot, data = returnData, columnNames = columnNames)
   
 }
 
@@ -592,21 +620,49 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           
         })
       
+      output$naturaFilter <- renderUI({
+
+          regionChoices <- c("entireRegion", "natura2000Only")
+          names(regionChoices) <- sapply(regionChoices, function(x) translate(x)$title)
+
+          selectInput(inputId = ns("naturaFilter"),
+            label = translate("region_filter")$title,
+            choices = regionChoices, selected = "entireRegion")
+
+        })
+
+      output$typeTimeseries <- renderUI({
+
+          typeChoices <- c("n", "cell_code1", "cell_code10")
+          names(typeChoices) <- sapply(typeChoices, function(x) translate(paste0("spatialLevel_", x))$title)
+
+          selectInput(inputId = ns("typeTimeseries"),
+            label = translate("spatialLevel")$title,
+            choices = typeChoices, selected = "cell_code1")
+
+        })
+      
       
       # Subset on filters
       filterData <- reactive({
-          
+
           filterData <- df()
-          
+
           # Other filters
           if (!is.null(filter()))
             for (iFilter in names(filter())) {
               if (!is.null(input[[iFilter]]))
                 filterData <- filterData[filterData[[iFilter]] %in% input[[iFilter]], ]
             }
-          
+
+          # Restrict to Natura 2000 areas, based on the 1km cell of each
+          # observation (not on whether the 10km cell it rolls up into overlaps
+          # a Natura 2000 area anywhere)
+          if (!is.null(input$naturaFilter) && input$naturaFilter == "natura2000Only")
+            filterData <- filterData[(isNatura2000), ]
+
           filterData
-          
+
         })
       
       # Subset on period
@@ -879,8 +935,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
             sep = ";", dec = ",")
           
         })
-      
-      
+
       ## Barplot for Occurrence ##
       ## ---------------------- ##
       
@@ -900,8 +955,10 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
           }),
         period = reactive(input$period),
         combine = reactive(input$combine),
+        spatialLevel = reactive(input$typeTimeseries),
         regions = gewest,
-        addYLabel = grepl("observations", id)
+        addYLabel = grepl("observations", id),
+        naturaFilter = reactive(input$naturaFilter)
       )
       
       
@@ -964,33 +1021,48 @@ mapCubeUI <- function(id, showLegend = TRUE, showGlobe = TRUE, showPeriod = FALS
     uiOutput(ns("titleMapOccurrence")),
     uiOutput(ns("descriptionMapOccurrence")),
     
-    if (!grepl("observations", id)) {
+    if (grepl("observations", id)) {
       wellPanel(
         fixedRow(uiOutput(ns("filters")),
           if (showLegend)
-            column(6, 
+            column(4,
               uiOutput(ns("legend"))
             ),
+          column(4,
+            uiOutput(ns("naturaFilter"))
+          ),
           if (showGlobe)
-            column(6, 
+            column(4,
               actionLink(inputId = ns("globe"), label = "Show globe",
                 icon = icon("globe"))
             ),
-          column(6, checkboxInput(inputId = ns("combine"), label = "Combine all selected regions"))
+          column(4, checkboxInput(inputId = ns("combine"), label = "Combine all selected regions"))
         )
       )
     },
     uiOutput(ns("spacePlotMessage")),
     withSpinner(leafletOutput(ns("spacePlot"), height = "600px")),
     
-    if (!grepl("observations", id) && showPeriod) {
+    tags$br(),
+
+    if (grepl("observations", id) && showPeriod) {
+
       tagList(
         plotModuleUI(id = ns("countOccurrence"), height = "200px"),
-        uiOutput(ns("period"))
+        
+        wellPanel(
+          fixedRow(
+            column(6,
+              uiOutput(ns("typeTimeseries"))
+            )),
+            uiOutput(ns("period")),
+          
+        ),
+        tableModuleUI(id = ns("countOccurrence"))
       )
     },
     
-    if (grepl("observations", id))
+    if (!grepl("observations", id))
       tagList(
         plotModuleUI(id = ns("countOccurrence"), height = "200px"),
         wellPanel(

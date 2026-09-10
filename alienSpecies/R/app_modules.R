@@ -112,6 +112,7 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @param groupChoices reactive character, defines the choices for group variable;
 #' if NULL no groupChoices available
 #' @param addYLabel reactive boolean, see \code{\link{countOccurrence}}
+#' @param naturaFilter reactive character, see \code{\link{countOccurrence}}
 #' @return no return value; plot output object is created
 #' @author mvarewyck
 #' @import shiny
@@ -120,7 +121,8 @@ tableModuleUI <- function(id, includeTotal = FALSE) {
 #' @export
 plotModuleServer <- function(id, plotFunction, data,
   outputType = NULL, triasFunction = NULL, triasArgs = NULL, groupChoices = NULL,
-  period = NULL, regions = NULL, combine = NULL, addYLabel = NULL) {
+  period = NULL, regions = NULL, combine = NULL, addYLabel = NULL, spatialLevel = NULL,
+  naturaFilter = NULL) {
   
   moduleServer(id,
     function(input, output, session) {
@@ -173,11 +175,11 @@ plotModuleServer <- function(id, plotFunction, data,
           
           if (nrow(subData()) == 0) {
             output$plotMessage <- renderUI(tagList(tags$br(), tags$h4(translate("noData")$title)))
-            
+
             argList <- NULL
           } else {
             output$plotMessage <- renderUI(NULL)
-            
+
             argList <- c(
               list(
                 # General
@@ -196,6 +198,10 @@ plotModuleServer <- function(id, plotFunction, data,
                 list(regions = regions()),
               if (!is.null(combine))
                 list(combine = combine()),
+              if (!is.null(spatialLevel))
+                list(spatialLevel = spatialLevel()),
+              if (!is.null(naturaFilter))
+                list(naturaFilter = naturaFilter()),
               # Input
               if (!is.null(input$group))
                 list(groupVar = input$group),
@@ -291,16 +297,30 @@ plotModuleServer <- function(id, plotFunction, data,
       output$table <- DT::renderDT({
           
           tryCatch({
-              DT::datatable(resultFct()$data, rownames = FALSE,
-                colnames = resultFct()$columnNames,
-                selection = "single",
-                options = list(dom = 'ftp', 
-                  pageLength = if (triasFunction == "tableNesten") -1 else 5))
-              
+              if (identical(plotFunction, "countOccurrence"))
+                DT::datatable(resultFct()$data, rownames = FALSE,
+                  colnames = resultFct()$columnNames,
+                  selection = "single",
+                  options = list(dom = 'ftp',
+                    pageLength = 10,
+                    order = list(list(0, "desc")),
+                    autoWidth = FALSE,
+                    columnDefs = list(list(
+                        width = paste0(round(100 / ncol(resultFct()$data)), "%"),
+                        targets = "_all"))
+                  )
+                )
+              else
+                DT::datatable(resultFct()$data, rownames = FALSE,
+                  colnames = resultFct()$columnNames,
+                  selection = "single",
+                  options = list(dom = 'ftp',
+                    pageLength = if (identical(triasFunction, "tableNesten")) -1 else 5))
+
             },
             error = function(err)
               NULL
-          )	
+          )
           
         })
       
