@@ -67,26 +67,28 @@ observe({
     req(input$tabs == "checklist_indicators")
     req(!is.null(input$exoten_searchVernacular))
     
-    taxaChoices[ , vernacular_name_list := get(paste0("vernacular_name_", results$language, "_list"))]
+    taxaChoicesFamily[ , vernacular_name_list := get(paste0("vernacular_name_", results$language, "_list"))]
     
     # Search on latin or vernacular name
     if (input$exoten_searchVernacular) {
-      taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
+      taxaChoicesFamily$showHtml <- sapply(seq_len(nrow(taxaChoicesFamily)), function(i)
           gsub("<b>.*</b>", paste0("<b>", 
-              if (is.na(taxaChoices$vernacular_name_list[i])) "" else taxaChoices$vernacular_name_list[i], 
-              "</b> <i>", taxaChoices$latin_name[i], "</i>"), taxaChoices$html[i]))
-      taxaChoices[, label := vernacular_name_list] 
-      setkey(taxaChoices, vernacular_name_list)
+              if (is.na(taxaChoicesFamily$vernacular_name_list[i])) "" else taxaChoicesFamily$vernacular_name_list[i], 
+              "</b> <i>", taxaChoicesFamily$latin_name[i], "</i>"), taxaChoicesFamily$html[i]))
+      taxaChoicesFamily[, label := vernacular_name_list] 
+      setkey(taxaChoicesFamily, vernacular_name_list)
     } else {
-      taxaChoices$showHtml <- sapply(seq_len(nrow(taxaChoices)), function(i)
-          gsub("</b>", paste0("</b> <i>", strsplit(taxaChoices$vernacular_name_list[i],
-                split = ", ")[[1]][1], "</i>"), taxaChoices$html[i])
-      )     
-      taxaChoices[, label := latin_name]
-      setkey(taxaChoices, latin_name)
+      taxaChoicesFamily$showHtml <- sapply(seq_len(nrow(taxaChoicesFamily)), function(i) {
+          vernacular <- strsplit(taxaChoicesFamily$vernacular_name_list[i], split = ", ")[[1]][1]
+          if (is.na(vernacular))
+            taxaChoicesFamily$html[i] else
+            gsub("</b>", paste0("</b> <i>", vernacular, "</i>"), taxaChoicesFamily$html[i])
+        })
+      taxaChoicesFamily[, label := latin_name]
+      setkey(taxaChoicesFamily, latin_name)
     }
     
-    updateSelectizeInput(session, inputId = "exoten_taxa", choices = taxaChoices,
+    updateSelectizeInput(session, inputId = "exoten_taxa", choices = taxaChoicesFamily,
       selected = if ((is.null(all(isolate(results$exoten_taxa))) || all(isolate(results$exoten_taxa) == "")) & !is.null(urlSearch()$taxa))
           strsplit(urlSearch()$taxa, ",")[[1]] else
           isolate(results$exoten_taxa),
@@ -301,8 +303,8 @@ results$exoten_data <- reactive({
 #      subData <- filterCombo(exotenData = subData, inputValue = input$exoten_taxa, 
 #        inputLevels = taxaLevels)
       matchRow <- sapply(input$exoten_taxa, function(iChoice)
-          match(iChoice, taxaChoices$value))
-      subData <- filterCombo(exotenData = subData, inputValue = taxaChoices$long[matchRow],
+          match(iChoice, taxaChoicesFamily$value))
+      subData <- filterCombo(exotenData = subData, inputValue = taxaChoicesFamily$long[matchRow],
         inputLevels = taxaLevels)
     }
       
@@ -519,7 +521,12 @@ observeEvent(input$exoten_tabs, {
     countOccupancyServer(id = "checklist",
       data = occupancySelected
     )
-    
+
+    ## Plot Target 6 indicator
+    target6Server(id = "checklist",
+      data = reactive(target6Data)
+    )
+
   })
 
 

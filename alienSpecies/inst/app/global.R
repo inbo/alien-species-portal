@@ -51,15 +51,22 @@ if (!doDebug | !exists("occurrenceData"))
 if (!doDebug | !exists("taxaChoices"))
   taxaChoices <- loadTabularData(type = "taxachoices")
 
+taxaChoicesFamily <- taxaChoices[lengths(strsplit(taxaChoices$long, " > ", fixed = TRUE)) < 6, ]
+
 # Load occupancy data from createOccupancyCube()
 if (!doDebug | !exists("occupancy"))
   occupancy <- loadOccupancyData()
 
 # TODO fetch correct file from bucket
 dfCube <- read.csv(
-    system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"), 
+    system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"),
     sep = ",", encoding = "UTF-8"
   )
+
+# Target 6 indicator (BCubed issue #208) - temporary local file, standing in
+# for the real S3-hosted file until aspbo#659 resolves
+target6File <- "estimated_rates_solow_costello_effective_annual_rates_heavily_filtering.csv"
+target6Data <- read.csv(system.file("data", target6File, package = "alienSpecies"))
 
 
 # Specify default year to show (and default max to show in time ranges)
@@ -81,6 +88,14 @@ if (!doDebug | !exists("allShapes"))
     "communes" = list(loadShapeData("communes.RData"))
     #readShapeData(extension = ".geojson")
   )
+
+# Attach Natura 2000 status (per 1x1 km cell) to occurrence data, for the
+# Occupancy tab's Region filter - status is based on the 1km cell an
+# observation falls in, not on whether the containing 10km cell overlaps
+# a Natura 2000 area
+natura2000Lookup <- as.data.table(sf::st_drop_geometry(allShapes$utm1_bel_with_regions)[, c("CELLCODE", "isNatura2000")])
+setnames(natura2000Lookup, "CELLCODE", "cell_code1")
+occurrenceData[natura2000Lookup, on = "cell_code1", isNatura2000 := i.isNatura2000]
 
 dictionary <- loadMetaData(type = "keys")
 
@@ -110,10 +125,13 @@ regionChoices <- sort(unique(exotenData$locality))
 bronChoices <- sort(levels(exotenData$source))
 
 
-# Available species for risk maps (Species > More > Risk maps)
-request <- httr::GET("https://api.github.com/repos/trias-project/risk-maps/contents/public/geotiffs")
-keysRiskMap <- unique(sapply(httr::content(request), function(x) 
-      strsplit(gsub("public/geotiffs/be_", "", x$path), split = "_")[[1]][1]))
+# Available species for risk maps (Species information > Risk maps)
+# New source (issue #207): inbo/wisdm-maps-iasportal, one subfolder named after
+# the taxonKey per species under data/ - TODO: branch "uat" is hardcoded here,
+# same as the "main" branch was hardcoded for the old source; revisit once this
+# is promoted to production (may need a config.yml-style uat/production split)
+request <- httr::GET("https://api.github.com/repos/inbo/wisdm-maps-iasportal/contents/data?ref=uat")
+keysRiskMap <- unique(sapply(httr::content(request), function(x) x$name))
 
 # Available species for links (Species > More > Links)
 request <- httr::GET("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML")

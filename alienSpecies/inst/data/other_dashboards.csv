@@ -1,0 +1,4 @@
+id,url,translationId
+early_warning,https://alert.riparias.be,Early_alert_dashboard
+mica_db,https://mica.inbo.be/,MICA_dashboard
+radius_db,https://radius-project.shinyapps.io/dashboard/,RadIUS_dashboard

@@ -13,7 +13,8 @@ tagList(
       fixedRow(
         column(6,
           selectizeInput(inputId = "species_choice", label = NULL, choices = NULL,
-            width = "100%")),
+            width = "100%"),
+          checkboxInput(inputId = "species_searchVernacular", label = translate("vernacular_name")$title)),
         column(6,
           selectInput(inputId = "species_gewest", label = NULL,
             choices = NULL, multiple = TRUE, width = "100%")),
@@ -43,6 +44,14 @@ tagList(
           mapRegionsUI(id = "indicators_facet", showUnit = FALSE, facet = TRUE)
         )
       ),
+      tabPanel(titleModuleUI(id = "species_griis"), value = "species_griis",
+        tags$div(style = "margin-top: 10px;",
+          griisUI("griis")
+        )
+      ),
+      tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps",
+        mapRasterUI("risk")
+      ),
       
       tabPanel(titleModuleUI(id = "species_reporting"), 
         value = "species_reporting",
@@ -62,9 +71,6 @@ tagList(
         value = "species_more",
         tabsetPanel(id = "species_more",
           tabPanel(titleModuleUI(id = "species_habitats"), value = "species_habitats"),
-          tabPanel(titleModuleUI(id = "species_risk_maps"), value = "species_risk_maps",
-            mapRasterUI("risk")
-          ),
           tabPanel(titleModuleUI(id = "species_links"), value = "species_links",
             htmlSectionUI("links")
           ),
