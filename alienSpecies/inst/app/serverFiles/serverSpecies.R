@@ -795,7 +795,7 @@ observeEvent(species_readyForDownload(), {
           output_file = tmpReport,
           intermediates_dir = tempdir(),
           output_options = list(
-            bigLogo = getPathLogo(type = "combined")
+            bigLogo = getPathLogo(type = c("inbo", "trias", "b3"))
           ),
           quiet = TRUE
         )})
