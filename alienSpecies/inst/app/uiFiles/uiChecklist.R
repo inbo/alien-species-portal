@@ -82,10 +82,11 @@ tagList(
       
       ),
       
-      tabPanel(value = "checklist_trend", titleModuleUI(id = "checklist_trend"), 
+      tabPanel(value = "checklist_trend", titleModuleUI(id = "checklist_trend"),
         plotTriasUI(id = "checklist-count"),
         plotTriasUI(id = "checklist-cum"),
-        countOccupancyUI(id = "checklist")
+        countOccupancyUI(id = "checklist"),
+        target6UI(id = "checklist")
       ),
       
       tabPanel(value = "checklist_pathways", titleModuleUI(id = "checklist_pathways"), 

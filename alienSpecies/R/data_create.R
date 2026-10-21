@@ -267,8 +267,9 @@ createTaxaChoices <- function(exotenData) {
   setnames(subData, new = "speciesKey", old = "key")
   
   speciesLevels <- c("kingdom", "phylum", "class", "order", "family", "species")
-  
-  choices <- as.data.table(do.call(rbind, lapply(seq_along(speciesLevels), function(i) {
+
+  # Cap taxa search at family level, exclude species-level choices (issue #205)
+  choices <- as.data.table(do.call(rbind, lapply(seq_len(length(speciesLevels) - 1), function(i) {
           
           iLevel <- speciesLevels[i]
           keyVar <- paste0(iLevel, "Key")
