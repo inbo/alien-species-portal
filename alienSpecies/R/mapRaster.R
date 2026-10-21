@@ -21,7 +21,7 @@
 #' @export
 
 mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral", 
-  legend = "topright", legendScale = "risk", addGlobe = FALSE) {
+  legend = "topright", legendScale = "risk", addGlobe = FALSE, modelType = "riskMap") {
   
   
   # Base map
@@ -31,13 +31,28 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
   if (addGlobe)
     rasterMap <- addProviderTiles(rasterMap, providers$CartoDB.Positron)
   
-  
   if (is.null(rasterInput))
     return(rasterMap)
-  
-  rasterPal <- colorNumeric(palette = colors, domain = c(0, 1), 
-    na.color = "transparent", reverse = TRUE)
-  
+
+  if(modelType == "diffMap") {
+    rasterPal <- colorNumeric(palette = "RdBu", domain = c(-1, 1), 
+                              na.color = "transparent", reverse = TRUE)
+    legendSeq <- seq(-1, 1, by = 0.4)
+    legendLabels <- c(
+      paste("-1 -", translate("diffLow")$title), # e.g. "Decrease"
+      rep("", length(legendSeq) - 2), 
+      paste("1 -", translate("diffHigh")$title)  # e.g. "Increase"
+    )
+  } else {
+    rasterPal <- colorNumeric(palette = colors, domain = c(0, 1), 
+                              na.color = "transparent", reverse = TRUE)
+    legendSeq <- seq(0, 1, by = 0.2)
+    legendLabels <- c(
+      paste("0 -", translate(paste0(legendScale, "Low"))$title), 
+      rep("", length(legendSeq) - 2), 
+      paste("1 -", translate(paste0(legendScale, "High"))$title)
+    )
+  }
   
   if (legend != "none")
     rasterMap <- addLegend(
@@ -45,11 +60,8 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
       position = legend,
       values = values(rasterInput),
       opacity = 0.8,
-      colors = rasterPal(seq(0, 1, by = 0.2)),
-      labels = c(
-        paste("0 -", translate(paste0(legendScale, "Low"))$title), 
-        rep("", 4), 
-        paste("1 -", translate(paste0(legendScale, "High"))$title)),
+      colors = rasterPal(legendSeq),
+      labels = legendLabels,
       title = translate("legend")$title,
       layerId = "legend"
     )
@@ -290,13 +302,16 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
       
       # Send map to the UI
       output$spacePlot <- renderLeaflet({
-          
+
+        req(input$modelType)
+        
           mapRaster(
             rasterInput = rasterInput(),
             baseMap = addBaseMap(regions = gewest()),
             colors = colors,
             legendScale = isolate(gsub("Map", "", input$modelType)),
-            addGlobe = isolate(input$globe %% 2 == 1)
+            addGlobe = isolate(input$globe %% 2 == 1),
+            modelType = isolate(input$modelType)
           ) %>%
           leaflet.extras::addFullscreenControl() %>% 
           leaflet.extras2::addEasyprint(    # use leaflets personal functionality to download maps
@@ -348,23 +363,36 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
           proxy %>% removeControl(layerId = "legend")
           
           if (input$legend != "none") {
-            
             req(rasterInput())
-            
-            rasterPal <- colorNumeric(palette = colors, domain = c(0, 1), 
-              na.color = "transparent", reverse = TRUE)
-            
+            req(input$modelType)
+          
             legendScale <- gsub("Map", "", input$modelType)
+            
+            if(input$modelType != "diffMap"){
+              rasterPal <- colorNumeric(palette = colors, domain = c(0, 1), na.color = "transparent", reverse = TRUE)
+              legendSeq <- seq(0, 1, by = 0.2)
+              legendLabels <- c(
+                  paste("0 -", translate(paste0(legendScale, "Low"))$title), 
+                  rep("", 4), 
+                  paste("1 -", translate(paste0(legendScale, "High"))$title)
+                )
+    
+            }else{
+             rasterPal <- colorNumeric(palette = "RdBu", domain = c(-1, 1), na.color = "transparent", reverse = TRUE)
+             legendSeq <- seq(-1, 1, by = 0.4)
+             legendLabels <- c(
+                  paste("-1 -", translate("diffDecrease")$title), 
+                  rep("", length(legendSeq) - 2), 
+                  paste("1 -", translate("diffIncrease")$title)
+                )
+              }
             
             proxy %>% addLegend(
               position = input$legend,
               values = terra::values(rasterInput()),
               opacity = 0.8,
-              colors = rasterPal(seq(0, 1, by = 0.2)),
-              labels = c(
-                paste("0 -", translate(paste0(legendScale, "Low"))$title), 
-                rep("", 4), 
-                paste("1 -", translate(paste0(legendScale, "High"))$title)),
+              colors = rasterPal(legendSeq),
+              labels = legendLabels,
               title = translate("legend")$title,
               layerId = "legend"
             )                      
@@ -372,18 +400,36 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
           }
           
         })
+
+        observe({
+            req(rasterInput())
+            req(input$modelType)
+            
+            if (input$modelType == "diffMap") {
+              rasterPal <- colorNumeric(palette = "RdBu", domain = c(-1, 1), na.color = "transparent", reverse = TRUE)
+            } else {
+              rasterPal <- colorNumeric(palette = colors, domain = c(0, 1), na.color = "transparent", reverse = TRUE)
+            }
+          
+            leafletProxy("spacePlot") %>%
+              clearImages() %>%
+              addRasterImage(rasterInput(), colors = rasterPal, opacity = 0.8)
+          })
       
       
       # Create final map (for download)
       finalMap <- reactive({
-          
+
+        req(input$modelType)
+        
           newMap <- mapRaster(
             rasterInput = rasterInput(),
             baseMap = addBaseMap(regions = gewest()),
             colors = colors,
             legend = input$legend,
             legendScale = gsub("Map", "", input$modelType),
-            addGlobe = input$globe %% 2 == 1
+            addGlobe = input$globe %% 2 == 1,
+            modelType = input$modelType
           )
           
           # save the zoom level and centering to the map object
