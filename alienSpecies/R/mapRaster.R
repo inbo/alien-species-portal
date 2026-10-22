@@ -29,7 +29,7 @@ mapRaster <- function(rasterInput, baseMap = addBaseMap(), colors = "Spectral",
     addScaleBar(position = "bottomleft")
   
   if (addGlobe)
-    rasterMap <- addProviderTiles(rasterMap, providers$CartoDB.Positron)
+    rasterMap <- addProviderTiles(rasterMap, providers$Esri.WorldGrayCanvas)
   
   if (is.null(rasterInput))
     return(rasterMap)
@@ -337,7 +337,7 @@ mapRasterServer <- function(id, species, gewest, taxonKey) {
               updateActionLink(session, inputId = "globe", 
                 label = translate("hideGlobe")$title)
               
-              proxy %>% addProviderTiles(providers$CartoDB.Positron,
+              proxy %>% addProviderTiles(providers$Esri.WorldGrayCanvas,
                 options = providerTileOptions(zIndex = -10))
               
             } else {
