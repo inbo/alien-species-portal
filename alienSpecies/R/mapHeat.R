@@ -134,7 +134,7 @@ mapHeat <- function(combinedData, baseMap = addBaseMap(), colors, blur = NULL, s
   ah_map <- baseMap
   
   if (addGlobe)
-    ah_map <- addProviderTiles(ah_map, providers$CartoDB.Positron)
+    ah_map <- addProviderTiles(ah_map, providers$Esri.WorldGrayCanvas)
   
   
   if (legend != "none")
@@ -379,7 +379,7 @@ mapHeatServer <- function(id, species, gewest, combinedData, filter, colors,
               updateActionLink(session, inputId = "globe", 
                 label = translate("hideGlobe")$title)
               
-              proxy %>% addProviderTiles(providers$CartoDB.Positron)
+              proxy %>% addProviderTiles(providers$Esri.WorldGrayCanvas)
               
             } else {
               

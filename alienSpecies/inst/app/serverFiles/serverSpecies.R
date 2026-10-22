@@ -804,7 +804,7 @@ observe({
       url = harmoniaData$url[matchingLinks],
       linkText = sapply(matchingLinks, function(iLink)
           switch(harmoniaData$url_type[iLink],
-            harmonia = "Harmonia+ Risk Assessment",
+            harmonia = "Harmonia+",
             iasregulation = "IAS Regulation",
             harmoniaData$url_type[iLink])
       )
