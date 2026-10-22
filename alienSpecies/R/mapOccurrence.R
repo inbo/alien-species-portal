@@ -390,7 +390,7 @@ mapCube <- function(cubeShape, baseMap = addBaseMap(), legend = "none",
   # Add background map
   if (addGlobe) {
     
-    myMap <- addProviderTiles(myMap, providers$CartoDB.Positron)
+    myMap <- addProviderTiles(myMap, providers$Esri.WorldGrayCanvas)
     
   }
   
@@ -429,7 +429,7 @@ mapOccurrence <- function(occurrenceData, baseMap = addBaseMap(),
   # Add background map - needed for clusters to be shown and before addMarkers()
   if (addGlobe) {
     
-    myMap <- addProviderTiles(myMap, providers$CartoDB.Positron)
+    myMap <- addProviderTiles(myMap, providers$Esri.WorldGrayCanvas)
     
   } else warning("Clusters will not be displayed.")
   
@@ -791,7 +791,7 @@ mapCubeServer <- function(id, species, gewest, df, shapeData,
               updateActionLink(session, inputId = "globe", 
                 label = translate("hideGlobe")$title)
               
-              proxy %>% addProviderTiles(providers$CartoDB.Positron)
+              proxy %>% addProviderTiles(providers$Esri.WorldGrayCanvas)
               
             } else {
               
