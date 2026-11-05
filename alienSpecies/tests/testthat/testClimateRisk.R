@@ -47,7 +47,7 @@ test_that("Create climate risk map", {
     myPlot <- mapRaster(rasterInput = rasterInput, addGlobe = FALSE)
     expect_is(myPlot, "leaflet")
     
-    myPlot %>% addProviderTiles(providers$CartoDB.Positron,
+    myPlot %>% addProviderTiles(providers$Esri.WorldGrayCanvas,
       options = providerTileOptions(zIndex = -10))
     
   })

@@ -305,7 +305,7 @@ mapRegions <- function(managementData, occurrenceData = NULL, shapeData,
   # Add background
   if (addGlobe) {
     
-    myMap <- addProviderTiles(myMap, providers$CartoDB.Positron)
+    myMap <- addProviderTiles(myMap, providers$Esri.WorldGrayCanvas)
     
   }
   
@@ -1146,7 +1146,7 @@ mapRegionsServer <- function(id, species, gewest, df, occurrenceData, shapeData,
             
             if (input$globe) {
               
-              proxy %>% addProviderTiles(providers$CartoDB.Positron)
+              proxy %>% addProviderTiles(providers$Esri.WorldGrayCanvas)
               
             } else {
               
