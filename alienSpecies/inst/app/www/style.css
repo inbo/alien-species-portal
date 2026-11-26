@@ -322,3 +322,133 @@ p, li, label {
 .db-link-content {
     flex: 1;
 }
+
+/*** Start page hero slideshow & bottom horizontal tiles ***/
+/* Break out of Bootstrap's fixed .container width on the start tab */
+.tab-pane[data-value="start"] {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+}
+
+/* Full-viewport hero container below the fixed navbar + language bar */
+.front-hero-wrapper {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 105px);
+  min-height: 540px;
+  overflow: hidden;
+}
+
+/* Make slickR fill the entire hero container */
+.front-hero-wrapper .slick-slider,
+.front-hero-wrapper .slick-list,
+.front-hero-wrapper .slick-track,
+.front-hero-wrapper .slick-slide,
+.front-hero-wrapper .slick-slide > div {
+  height: 100% !important;
+}
+
+.front-hero-wrapper .slick-slide img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.front-hero-wrapper .slick-dots {
+  bottom: 8px !important;
+  margin-top: 0 !important;
+  z-index: 4;
+}
+
+.front-hero-wrapper .slick-dots li button:before {
+  color: #ffffff !important;
+}
+
+/* Dark gradient overlay so white welcome text stands out */
+.front-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.30) 0%,
+    rgba(0, 0, 0, 0.45) 55%,
+    rgba(0, 0, 0, 0.70) 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Foreground Flex column: centers welcome text and pins tiles to the bottom */
+.front-hero-content {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 20px 35px 20px;
+  pointer-events: none;
+}
+
+.front-welcome-box {
+  margin-top: auto;
+  margin-bottom: auto;
+  max-width: 900px;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.front-welcome-title {
+  color: #ffffff !important;
+  font-weight: bold;
+  font-size: 2.1em;
+  line-height: 1.3;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+  margin: 0;
+}
+
+/* Bottom horizontal row for your 4 existing radio-tiles */
+.front-bottom-tiles {
+  width: 100%;
+  max-width: 1050px;
+  pointer-events: auto;
+}
+
+.front-bottom-tiles .shiny-options-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+  gap: 14px;
+  flex-wrap: nowrap;
+}
+
+/* Override width: 30% from existing .radio-tiles so all 4 sit side-by-side */
+.front-bottom-tiles .radio-tiles {
+  flex: 1 1 0;
+  width: auto !important;
+  max-width: 230px;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  background-color: #ffffff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.front-bottom-tiles .radio-tiles:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.front-bottom-tiles .radio-tiles-title {
+  font-size: 15px !important;
+  height: 44px !important;
+  padding: 4px 8px;
+  line-height: 1.2;
+}
+
+.front-bottom-tiles .radio-tiles-image > img {
+  height: 110px;
+  width: 100%;
+  object-fit: cover;
+}
