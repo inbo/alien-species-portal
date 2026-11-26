@@ -43,6 +43,54 @@ output$start_tiles <- renderUI({
       
   })
 
+output$start_page <- renderUI({
+  img <- list.files(
+    path = system.file("app", "www", package = "alienSpecies"),
+    pattern = "^carousel",
+    full.names = TRUE
+  )
+  
+  div(
+    class = "front-hero-wrapper",
+    
+    # 1. Background 4-image slickR slideshow
+    slickR::slickR(
+      obj = img,
+      slideId = "carousel",
+      slideType = "img",
+      width = "100%",
+      padding = 0
+    ) +
+      slickR::settings(
+        dots = TRUE,
+        arrows = FALSE,
+        autoplay = TRUE,
+        autoplaySpeed = 5000,
+        fade = TRUE
+      ),
+    
+    # 2. Dark gradient overlay for readable white text
+    div(class = "front-hero-overlay"),
+    
+    # 3. Foreground content: centered welcome text + bottom horizontal tiles
+    div(
+      class = "front-hero-content",
+      
+      div(
+        class = "front-welcome-box",
+        tags$h1(
+          class = "front-welcome-title",
+          "Welkom op het exotenportaal van het Instituut voor Natuur- en Bosonderzoek"
+        )
+      ),
+      
+      div(
+        class = "front-bottom-tiles",
+        uiOutput("start_tiles")
+      )
+    )
+  )
+})
 
 observeEvent(input$start_navigate, {
     
