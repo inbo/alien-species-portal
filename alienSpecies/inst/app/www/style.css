@@ -401,7 +401,7 @@ position: relative;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 30px 20px 35px 20px;
+  padding: 30px 20px 160px 20px; /* Onderkant blijft exact op 160px staan */
   pointer-events: none;
 }
 
