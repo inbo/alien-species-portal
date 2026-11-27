@@ -76,12 +76,12 @@ observeEvent(input$tabs, {
 })
 
 # Titles for pages in navbar
-output$checklist_title <- renderUI({
-  translate(id = tabChoices[2])$title  
+output$species_title <- renderUI({
+  translate(id = "species_information")$title  
 })
 
-output$species_title <- renderUI({
-  translate(id = tabChoices[3])$title  
+output$checklist_title <- renderUI({
+  translate(id = "checklist_indicators")$title  
 })
 
 # Pictures for carousel
