@@ -410,8 +410,8 @@ p, li, label {
 
 /* Bottom horizontal row for your 4 existing radio-tiles */
 .front-bottom-tiles {
-  width: 100%;
-  max-width: 1050px;
+  width: 90%;
+  max-width: 1400px;
   pointer-events: auto;
 }
 
@@ -419,36 +419,114 @@ p, li, label {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: stretch;
-  gap: 14px;
+  align-items: center;
+  gap: 24px;
   flex-wrap: nowrap;
 }
 
-/* Override width: 30% from existing .radio-tiles so all 4 sit side-by-side */
+/* Tegel in ruststand: transparant met dunne witte omlijning */
 .front-bottom-tiles .radio-tiles {
   flex: 1 1 0;
   width: auto !important;
-  max-width: 230px;
+  max-width: 320px;
   margin: 0 !important;
-  padding-left: 0 !important;
-  background-color: #ffffff;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 0 !important;
+  background-color: transparent !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+  border-radius: 8px;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.25s ease,
+              box-shadow 0.25s ease,
+              border-color 0.25s ease;
+  cursor: pointer;
 }
 
-.front-bottom-tiles .radio-tiles:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-}
-
+/* Tekst in ruststand: nu standaard op het grotere formaat */
 .front-bottom-tiles .radio-tiles-title {
-  font-size: 15px !important;
-  height: 44px !important;
-  padding: 4px 8px;
-  line-height: 1.2;
+  font-size: clamp(15px, 1.25vw, 18.5px) !important;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ffffff !important;
+  background-color: transparent !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+  height: auto !important;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  line-height: 1.3;
+  transition: color 0.25s ease, text-shadow 0.25s ease, transform 0.25s ease;
 }
 
-.front-bottom-tiles .radio-tiles-image > img {
-  height: 110px;
-  width: 100%;
-  object-fit: cover;
+/* Hover, active & geselecteerde staat: tegel vergroot iets sterker (1.06) en wordt spierwit */
+.front-bottom-tiles .radio-tiles:hover,
+.front-bottom-tiles .radio-tiles:active,
+.front-bottom-tiles .radio-tiles:focus,
+.front-bottom-tiles .radio-inline input:checked ~ span div,
+.front-bottom-tiles .radio-inline input:checked + span .radio-tiles {
+  transform: translateY(-5px) scale(1.06);
+  background-image: none !important;
+  background-color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+  outline: none !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.48);
+}
+
+/* Hover, active & geselecteerde tekst: INBO-roze en een grotere zoom (1.10) */
+.front-bottom-tiles .radio-tiles:hover .radio-tiles-title,
+.front-bottom-tiles .radio-tiles:hover > span > .radio-tiles-title,
+.front-bottom-tiles .radio-tiles:active .radio-tiles-title,
+.front-bottom-tiles .radio-tiles:focus .radio-tiles-title,
+.front-bottom-tiles .radio-tiles:active > span > .radio-tiles-title,
+.front-bottom-tiles .radio-inline input:checked ~ span .radio-tiles-title,
+.front-bottom-tiles .radio-inline input:checked + span .radio-tiles-title {
+  color: #c04384 !important;
+  background-color: transparent !important;
+  transform: scale(1.10);
+  text-shadow: none !important;
+}
+
+/* Verberg de oude foto-container voor de zekerheid */
+.front-bottom-tiles .radio-tiles-image {
+  display: none !important;
+}
+
+/* 1. Zorg dat de content direct onder de vaste navbar van 50px begint */
+body {
+  padding-top: 50px;
+}
+
+/* 2. Versienummer verder naar rechts + Deel link & talen links ervan */
+.navbar > .container {
+  position: relative;
+  width: 96%;
+  max-width: 1600px;
+}
+
+.top-right-controls {
+  float: right;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 50px;
+  margin-right: -15px; /* Duwt het versienummer wat verder naar rechts */
+  white-space: nowrap;
+}
+
+.top-right-controls #shareLink,
+.top-right-controls .lang-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #595959;
+}
+
+.top-right-controls .version-wrapper {
+  margin-left: 14px; /* Extra ademruimte tussen EN-FR-NL en v1.3.1 */
 }
