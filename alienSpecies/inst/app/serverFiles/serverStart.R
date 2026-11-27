@@ -19,7 +19,25 @@ output$start_tiles <- renderUI({
   tileChoices <- tabChoices[-1]
   
   # TODO Remove check once we know the about HTML file is available in aspbo (https://github.com/inbo/aspbo/issues/468)
-  if (!any(grepl("^ABOUT.*\\.html$", jsonlite::fromJSON(httr::content(httr::GET(paste0("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML?ref=", if (Sys.getenv("R_CONFIG_ACTIVE") == "production") "main" else "uat")), "text", encoding = "UTF-8"))$name, ignore.case = TRUE))) {
+  about_files <- tryCatch({
+    pat <- Sys.getenv("GITHUB_PAT")
+    headers <- if (nzchar(pat)) httr::add_headers(Authorization = paste("token", pat)) else NULL
+    res <- httr::GET(
+      paste0(
+        "https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML?ref=",
+        if (Sys.getenv("R_CONFIG_ACTIVE") == "production") "main" else "uat"
+      ),
+      headers
+    )
+    if (httr::status_code(res) == 200) {
+      parsed <- jsonlite::fromJSON(httr::content(res, "text", encoding = "UTF-8"))
+      if (is.data.frame(parsed) && "name" %in% names(parsed)) parsed$name else character(0)
+    } else {
+      character(0)
+    }
+  }, error = function(e) character(0))
+  
+  if (!any(grepl("^ABOUT.*\\.html$", about_files, ignore.case = TRUE))) {
     tileChoices <- tileChoices[tileChoices != "about"]
   }
   
