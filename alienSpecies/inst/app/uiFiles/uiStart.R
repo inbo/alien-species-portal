@@ -12,9 +12,9 @@ tagList(
                     
                     tags$div( class = "front-welcome-box",
                               tags$h1(class = "front-welcome-title",
-                                      translate("welcome")$title),
+                                      translate("welcomeTitle")$title),
                               tags$p(class = "front-welcome-subtitle",
-                                     translate("welcome")$description)),
+                                     translate("welcomeTitle")$description)),
                     
                     tags$div(class = "front-bottom-tiles noButton",
                              uiOutput("start_tiles"))
