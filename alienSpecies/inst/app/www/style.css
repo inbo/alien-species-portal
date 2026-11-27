@@ -177,7 +177,7 @@ p, li, label {
 .navbar-brand > div {
     margin-top: -13px; 
     margin-bottom: -13px; 
-    margin-left: -150px; 
+    margin-left: 0px; 
     margin-right: 50px;
 }
 
