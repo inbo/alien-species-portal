@@ -332,14 +332,14 @@ p, li, label {
 
 /* Full-viewport hero container below the fixed navbar + language bar */
 .front-hero-wrapper {
-  position: relative;
+position: relative;
   width: 100%;
-  height: calc(100vh - 105px);
+  height: calc(100vh - 50px);
   min-height: 540px;
   overflow: hidden;
 }
 
-/* Make slickR fill the entire hero container */
+
 .front-hero-wrapper .slick-slider,
 .front-hero-wrapper .slick-list,
 .front-hero-wrapper .slick-track,
@@ -352,6 +352,13 @@ p, li, label {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover;
+  transform: scale(1);
+  transition: transform 7.5s ease-out;
+}
+
+/* Subtle B-Cubed slow zoom on the active slide while fading */
+.front-hero-wrapper .slick-slide.slick-active img {
+  transform: scale(1.06);
 }
 
 .front-hero-wrapper .slick-dots {
@@ -362,6 +369,13 @@ p, li, label {
 
 .front-hero-wrapper .slick-dots li button:before {
   color: #ffffff !important;
+  opacity: 0.6;
+}
+
+.front-hero-wrapper .slick-dots li.slick-active button:before {
+  color: #ffffff !important;
+  opacity: 1;
+  
 }
 
 /* Dark gradient overlay so white welcome text stands out */
