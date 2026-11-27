@@ -102,10 +102,12 @@ output$hero_carousel <- slickR::renderSlickR({
   ) +
     slickR::settings(
       autoplay = TRUE,
-      autoplaySpeed = 5000,
+      autoplaySpeed = 6000,   # Time each image stays visible (6s)
+      speed = 1800,           # Cross-fade duration (1.8s smooth dissolve)
+      fade = TRUE,
+      cssEase = "ease-in-out",
       dots = TRUE,
       arrows = FALSE,
-      fade = TRUE,
       infinite = TRUE,
       pauseOnHover = FALSE
     )
