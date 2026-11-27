@@ -59,39 +59,44 @@ tagList(
                                       tags$div(class = "species-griis-summary",
                                                griisUI("griis"),
                                                tags$script(HTML("
-                                                 (function() {
-                                                   var labelMap = {
-                                                     // English
-                                                     'GBIF Taxonomic ID (Taxonkey)': 'GBIF taxonkey',
-                                                     'Year of First Observation': 'First observation',
-                                                     'Year of Last Observation': 'Last observation',
-                                                     'Degree of Establishment': 'Establishment',
-                                                     // Dutch
-                                                     'GBIF Taxonomische ID (Taxonkey)': 'GBIF taxonkey',
-                                                     'Jaar van eerste waarneming': 'Eerste waarneming',
-                                                     'Jaar van laatste waarneming': 'Laatste waarneming',
-                                                     'Mate van vestiging': 'Vestiging',
-                                                     // French
-                                                     'Identifiant taxonomique GBIF (Taxonkey)': 'Taxonkey GBIF',
-                                                     'Année de première observation': 'Première observation',
-                                                     'Année de dernière observation': 'Dernière observation',
-                                                     'Degré d\\'établissement': 'Établissement'
-                                                   };
-                                                   function shortenGriisLabels(container) {
-                                                     container.querySelectorAll('table tbody td:first-child').forEach(function(td) {
-                                                       var txt = td.textContent.trim();
-                                                       if (labelMap[txt]) {
-                                                         td.textContent = labelMap[txt];
-                                                       }
-                                                     });
-                                                   }
-                                                   var target = document.querySelector('.species-griis-summary');
-                                                   if (target) {
-                                                     new MutationObserver(function() { shortenGriisLabels(target); })
-                                                       .observe(target, { childList: true, subtree: true });
-                                                   }
-                                                 })();
-                                               "))
+           (function() {
+             var labelMap = {
+               // English
+               'gangbare namen': 'Gangbare namen',
+               'gbif taxonomic id (taxonkey)': 'GBIF taxonkey',
+               'year of first observation': 'First observation',
+               'year of last observation': 'Last observation',
+               'degree of establishment': 'Establishment',
+               // Dutch
+               'gbif taxonomisch id (taxonkey)': 'GBIF taxonkey',
+               'gbif taxonomisch id (taxonkey)': 'GBIF taxonkey',
+               'gbif taxonomische id (taxonkey)': 'GBIF taxonkey',
+               'jaar van eerste waarneming': 'Eerste waarneming',
+               'jaar van laatste waarneming': 'Laatste waarneming',
+               'mate van vestiging': 'Vestiging',
+               // French
+               'identifiant taxonomique gbif (taxonkey)': 'Taxonkey GBIF',
+               'année de première observation': 'Première observation',
+               'année de dernière observation': 'Dernière observation',
+               'degré d\\'établissement': 'Établissement',
+               'voie d\\'introduction': 'Introduction'
+             };
+             function shortenGriisLabels(container) {
+               container.querySelectorAll('table tbody td:first-child').forEach(function(td) {
+                 var key = td.textContent.trim().toLowerCase();
+                 if (labelMap[key]) {
+                   td.textContent = labelMap[key];
+                 }
+               });
+             }
+             var target = document.querySelector('.species-griis-summary');
+             if (target) {
+               shortenGriisLabels(target);
+               new MutationObserver(function() { shortenGriisLabels(target); })
+                 .observe(target, { childList: true, subtree: true });
+             }
+           })();
+         "))
                                       )
                              )
                     ),
