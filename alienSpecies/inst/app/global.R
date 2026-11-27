@@ -39,8 +39,8 @@ i18n$set_translation_language("id")
 ### Data
 ### -----------
 
-tabChoices <- c("start", "checklist_indicators", "species_information", 
-  "other_db", "about", "faq", "management")[1:6]
+tabChoices <- c("start", "species_information", "checklist_indicators", 
+                "other_db", "about", "faq", "management")[1:6]
 
 if (!doDebug | !exists("exotenData"))
   exotenData <- loadTabularData(type = "indicators")
@@ -59,9 +59,9 @@ if (!doDebug | !exists("occupancy"))
 
 # TODO fetch correct file from bucket
 dfCube <- read.csv(
-    system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"),
-    sep = ",", encoding = "UTF-8"
-  )
+  system.file("extdata", "trendOccupancy_belgium.csv", package = "alienSpecies"),
+  sep = ",", encoding = "UTF-8"
+)
 
 # Target 6 indicator (BCubed issue #208) - temporary local file, standing in
 # for the real S3-hosted file until aspbo#659 resolves
@@ -125,18 +125,49 @@ regionChoices <- sort(unique(exotenData$locality))
 bronChoices <- sort(levels(exotenData$source))
 
 
+# Helper voor veilige GitHub API calls met optionele GITHUB_PAT
+pat <- Sys.getenv("GITHUB_PAT")
+gh_headers <- if (nzchar(pat)) httr::add_headers(Authorization = paste("token", pat)) else NULL
+
 # Available species for risk maps (Species information > Risk maps)
 # New source (issue #207): inbo/wisdm-maps-iasportal, one subfolder named after
 # the taxonKey per species under data/ - TODO: branch "uat" is hardcoded here,
 # same as the "main" branch was hardcoded for the old source; revisit once this
 # is promoted to production (may need a config.yml-style uat/production split)
-request <- httr::GET("https://api.github.com/repos/inbo/wisdm-maps-iasportal/contents/data?ref=uat")
-keysRiskMap <- unique(sapply(httr::content(request), function(x) x$name))
+keysRiskMap <- tryCatch({
+  request <- httr::GET("https://api.github.com/repos/inbo/wisdm-maps-iasportal/contents/data?ref=uat", gh_headers)
+  if (httr::status_code(request) == 200) {
+    unique(unlist(lapply(httr::content(request), function(x) {
+      if (is.list(x) && !is.null(x$name)) x$name else NULL
+    })))
+  } else {
+    warning("GitHub API call voor keysRiskMap mislukt met status: ", httr::status_code(request))
+    character(0)
+  }
+}, error = function(e) {
+  warning("Fout bij ophalen keysRiskMap: ", conditionMessage(e))
+  character(0)
+})
 
 # Available species for links (Species > More > Links)
-request <- httr::GET("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML")
-keysLinks <- unique(sapply(httr::content(request), function(x) 
-      strsplit(gsub("HTML_pages/HTML/", "", x$path), split = "_")[[1]][1]))
+keysLinks <- tryCatch({
+  request <- httr::GET("https://api.github.com/repos/inbo/aspbo/contents/HTML_pages/HTML", gh_headers)
+  if (httr::status_code(request) == 200) {
+    unique(unlist(lapply(httr::content(request), function(x) {
+      if (is.list(x) && !is.null(x$path)) {
+        strsplit(gsub("HTML_pages/HTML/", "", x$path), split = "_")[[1]][1]
+      } else {
+        NULL
+      }
+    })))
+  } else {
+    warning("GitHub API call voor keysLinks mislukt met status: ", httr::status_code(request))
+    character(0)
+  }
+}, error = function(e) {
+  warning("Fout bij ophalen keysLinks: ", conditionMessage(e))
+  character(0)
+})
 
 # Available species for Harmonia+ DB (Species > More > Risk assessment)
 harmoniaData <- loadMetaData(type = "harmonia")
